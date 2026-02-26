@@ -9,6 +9,7 @@
 //                         Used to build success_url and cancel_url.
 
 import Stripe from 'npm:stripe@14';
+import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -31,22 +32,31 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Look up the user's email from Supabase Auth
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    );
+    const { data: { user } } = await supabase.auth.admin.getUserById(user_id);
+    const customerEmail = user?.email ?? undefined;
+
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
       apiVersion: '2024-04-10',
     });
 
-    const appUrl = Deno.env.get('APP_URL') ?? 'https://biteinsightapp.com';
+    const appUrl = Deno.env.get('APP_URL') ?? 'https://biteinsight.app';
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
+      customer_email: customerEmail,
       line_items: [
         { price: Deno.env.get('STRIPE_PRICE_ID')!, quantity: 1 },
       ],
       // On success, redirect back to the app. On mobile the deep link
       // biteinsight:// will open the app; on web this lands on /upgrade-success.
       success_url: `${appUrl}/upgrade-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${appUrl}/upgrade`,
+      cancel_url: `${appUrl}`,
       // Store the Supabase user ID so the stripe-webhook can identify the user
       metadata: { user_id },
       subscription_data: { metadata: { user_id } },
