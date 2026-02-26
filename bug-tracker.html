@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BiteInsight — Bug Tracker</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@300;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #e2f1ee;
+    --primary: #023432;
+    --secondary: #00776f;
+    --accent: #3b9586;
+    --surface: #ffffff;
+    --surface-tertiary: #f1f8f7;
+    --stroke: #aad4cd;
+    --negative: #ff3f42;
+    --positive: #3b9586;
+    --warning: #ffc72d;
+    --orange: #ff8736;
+  }
+
+  body {
+    font-family: 'Figtree', sans-serif;
+    background: var(--bg);
+    color: var(--primary);
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .header h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.6px; line-height: 36px; }
+  .header h1 span { color: var(--secondary); }
+  .header-actions { display: flex; gap: 8px; align-items: center; }
+
+  /* Sync indicator — compact, sits in header */
+  .sync-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: #ccc;
+    flex-shrink: 0;
+  }
+  .sync-dot.live { background: var(--positive); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* ── Burger menu ── */
+  .menu-wrap { position: relative; }
+  .menu-trigger {
+    width: 40px; height: 40px; border-radius: 10px; border: 1.5px solid var(--stroke);
+    background: var(--surface); cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 20px; color: var(--secondary); transition: background 0.15s;
+  }
+  .menu-trigger:hover { background: var(--surface-tertiary); }
+  .menu-dropdown {
+    display: none; position: absolute; top: 46px; right: 0; z-index: 50;
+    background: var(--surface); border: 1px solid var(--stroke); border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(2,52,50,0.12); min-width: 200px; overflow: hidden;
+  }
+  .menu-dropdown.open { display: block; }
+  .menu-item {
+    display: flex; align-items: center; gap: 10px; padding: 12px 16px;
+    font-family: 'Figtree', sans-serif; font-size: 14px; font-weight: 700;
+    color: var(--primary); cursor: pointer; border: none; background: none; width: 100%; text-align: left;
+    transition: background 0.1s;
+  }
+  .menu-item:hover { background: var(--surface-tertiary); }
+  .menu-item .mi-icon { font-size: 16px; width: 20px; text-align: center; }
+  .menu-sep { height: 1px; background: var(--stroke); margin: 4px 8px; }
+  .menu-item.sync-active .mi-label { color: var(--positive); }
+
+  /* ── Buttons ── */
+  .btn {
+    font-family: 'Figtree', sans-serif; font-weight: 700; font-size: 14px;
+    border: none; border-radius: 999px; padding: 10px 20px; cursor: pointer;
+    transition: all 0.15s ease; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-accent { background: var(--accent); color: #fff; }
+  .btn-execute {
+    background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff;
+    font-size: 15px; padding: 12px 28px; box-shadow: 0 4px 16px rgba(2,52,50,0.25);
+  }
+  .btn-execute:hover { box-shadow: 0 6px 24px rgba(2,52,50,0.35); }
+  .btn-letsgo {
+    background: linear-gradient(135deg, #00776f, #3b9586); color: #fff;
+    font-size: 15px; padding: 12px 28px; box-shadow: 0 4px 16px rgba(59,149,134,0.3);
+    position: relative; overflow: hidden;
+  }
+  .btn-letsgo:hover { box-shadow: 0 6px 24px rgba(59,149,134,0.45); }
+  .btn-letsgo.sending { opacity: 0.7; pointer-events: none; }
+  .btn-letsgo.sent { background: linear-gradient(135deg, #009a1f, #3b9586); }
+  .btn-outline { background: transparent; color: var(--primary); border: 1.5px solid var(--stroke); }
+  .btn-outline:hover { background: var(--surface-tertiary); }
+  .btn-ghost { background: transparent; color: var(--secondary); padding: 6px 12px; }
+  .btn-danger { background: var(--negative); color: #fff; }
+  .btn-signoff { background: var(--positive); color: #fff; }
+  .btn-small { font-size: 12px; padding: 6px 14px; }
+
+  /* ── Stats bar ── */
+  .stats-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  .stat-chip {
+    background: var(--surface); border: 1px solid var(--stroke); border-radius: 999px;
+    padding: 6px 16px; font-size: 13px; font-weight: 700;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .stat-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .stat-dot.open { background: var(--negative); }
+  .stat-dot.in-progress { background: var(--warning); }
+  .stat-dot.fixed { background: var(--orange); }
+  .stat-dot.signed-off { background: var(--positive); }
+
+  /* ── Filter tabs ── */
+  .filter-bar { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+  .filter-tab {
+    font-family: 'Figtree', sans-serif; font-weight: 700; font-size: 13px;
+    background: var(--surface); border: 1.5px solid transparent; border-radius: 999px;
+    padding: 6px 16px; cursor: pointer; color: var(--secondary); transition: all 0.15s;
+  }
+  .filter-tab:hover { border-color: var(--stroke); }
+  .filter-tab.active { background: var(--surface-tertiary); border-color: var(--stroke); color: var(--primary); }
+  .filter-count {
+    font-size: 11px; background: var(--stroke); color: var(--primary);
+    border-radius: 999px; padding: 1px 7px; margin-left: 4px;
+  }
+
+  /* ── Bug list ── */
+  .bug-list { display: flex; flex-direction: column; gap: 8px; }
+  .bug-card {
+    background: var(--surface); border: 1px solid var(--stroke); border-radius: 16px;
+    padding: 16px; box-shadow: 0 2px 8px rgba(2,52,50,0.06); transition: all 0.15s; cursor: pointer;
+  }
+  .bug-card:hover { box-shadow: 0 4px 16px rgba(2,52,50,0.1); }
+  .bug-card.selected { border-color: var(--accent); border-width: 2px; }
+  .bug-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .bug-title { font-size: 16px; font-weight: 700; line-height: 20px; flex: 1; }
+  .bug-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  /* Badges */
+  .badge {
+    font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px;
+    text-transform: uppercase; letter-spacing: 0.3px;
+  }
+  .badge-open { background: #ffe0e0; color: var(--negative); }
+  .badge-in-progress { background: #fff3d0; color: #b8860b; }
+  .badge-fixed { background: #ffe8d6; color: var(--orange); }
+  .badge-signed-off { background: #d4f0e0; color: #1a7a4a; }
+  .badge-critical { background: var(--negative); color: #fff; }
+  .badge-high { background: var(--orange); color: #fff; }
+  .badge-medium { background: var(--warning); color: #333; }
+  .badge-low { background: var(--stroke); color: var(--primary); }
+
+  .bug-description { font-size: 14px; font-weight: 300; line-height: 21px; color: var(--secondary); margin-bottom: 8px; }
+  .bug-files { font-size: 12px; font-weight: 300; color: var(--accent); }
+  .bug-files code { background: var(--surface-tertiary); padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-right: 4px; }
+  .bug-date { font-size: 11px; color: #999; margin-top: 6px; }
+  .bug-resolution {
+    font-size: 13px; font-weight: 300; line-height: 19px; color: var(--secondary);
+    margin-top: 8px; padding: 8px 12px; background: var(--surface-tertiary); border-radius: 8px;
+    border-left: 3px solid var(--positive);
+  }
+  .bug-resolution strong { font-weight: 700; color: var(--primary); display: block; margin-bottom: 2px; font-size: 12px; }
+
+  /* Bug detail expand */
+  .bug-detail { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--stroke); }
+  .bug-card.expanded .bug-detail { display: block; }
+  .detail-row { display: flex; gap: 16px; margin-bottom: 8px; font-size: 13px; }
+  .detail-row strong { min-width: 120px; font-weight: 700; color: var(--primary); }
+  .detail-row span { font-weight: 300; color: var(--secondary); white-space: pre-wrap; }
+  .detail-actions { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+
+  /* ── Execute section ── */
+  .execute-section {
+    margin-top: 32px; background: var(--surface); border: 2px solid var(--stroke);
+    border-radius: 16px; padding: 24px;
+  }
+  .execute-section h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .execute-section p { font-size: 14px; font-weight: 300; color: var(--secondary); margin-bottom: 16px; line-height: 21px; }
+  .execute-options { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* Toast */
+  .copied-toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px);
+    background: var(--primary); color: #fff; padding: 12px 24px; border-radius: 999px;
+    font-weight: 700; font-size: 14px; transition: transform 0.3s ease; z-index: 1000;
+  }
+  .copied-toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* Modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(2,52,50,0.4);
+    z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border-radius: 16px; padding: 32px; width: 90%;
+    max-width: 560px; max-height: 90vh; overflow-y: auto; box-shadow: 0 16px 48px rgba(2,52,50,0.2);
+  }
+  .modal h2 { font-size: 24px; font-weight: 700; margin-bottom: 20px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; color: var(--primary); }
+  .form-group input, .form-group textarea, .form-group select {
+    width: 100%; font-family: 'Figtree', sans-serif; font-size: 14px; font-weight: 300;
+    padding: 10px 14px; border: 1.5px solid var(--stroke); border-radius: 8px;
+    background: var(--surface-tertiary); color: var(--primary); outline: none; transition: border-color 0.15s;
+  }
+  .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--accent); }
+  .form-group textarea { resize: vertical; min-height: 80px; }
+  .form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 24px; }
+
+  .empty-state { text-align: center; padding: 64px 24px; color: var(--secondary); }
+  .empty-state h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .empty-state p { font-size: 14px; font-weight: 300; line-height: 21px; }
+</style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<div class="header">
+  <div class="header-left">
+    <h1>Bug <span>Tracker</span></h1>
+    <div class="sync-dot" id="syncDot" title="Live sync disconnected"></div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-primary" onclick="openModal()">+ New Bug</button>
+    <div class="menu-wrap">
+      <button class="menu-trigger" id="menuTrigger" onclick="toggleMenu()" title="Options">&#8942;</button>
+      <div class="menu-dropdown" id="menuDropdown">
+        <button class="menu-item" onclick="importBugs(); closeMenu();">
+          <span class="mi-icon">&#8593;</span><span class="mi-label">Import bugs.json</span>
+        </button>
+        <button class="menu-item" onclick="exportBugs(); closeMenu();">
+          <span class="mi-icon">&#8595;</span><span class="mi-label">Export bugs.json</span>
+        </button>
+        <div class="menu-sep"></div>
+        <button class="menu-item" id="syncMenuItem" onclick="connectFile(); closeMenu();">
+          <span class="mi-icon">&#9672;</span><span class="mi-label">Connect Live Sync</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="stats-bar" id="statsBar"></div>
+
+<div class="filter-bar" id="filterBar">
+  <button class="filter-tab active" data-filter="all" onclick="setFilter('all')">All</button>
+  <button class="filter-tab" data-filter="open" onclick="setFilter('open')">Open</button>
+  <button class="filter-tab" data-filter="in-progress" onclick="setFilter('in-progress')">In Progress</button>
+  <button class="filter-tab" data-filter="review" onclick="setFilter('review')">Ready for Review</button>
+  <button class="filter-tab" data-filter="archive" onclick="setFilter('archive')">Archive</button>
+</div>
+
+<div class="bug-list" id="bugList"></div>
+
+<div class="execute-section">
+  <h2>Execute with Claude Code</h2>
+  <p>Send bugs directly to Claude Code, or copy the prompt to your clipboard.</p>
+  <div class="execute-options">
+    <button class="btn btn-letsgo" id="letsGoBtn" onclick="letsGo()">&#9889; Let's Go — All Open Bugs</button>
+    <button class="btn btn-letsgo" id="letsGoSelectedBtn" onclick="letsGoSelected()" style="background: linear-gradient(135deg, var(--accent), #5bb5a6);">&#9889; Let's Go — Selected Only</button>
+  </div>
+  <div style="margin-top: 8px; position: relative; display: inline-block;">
+    <button class="btn btn-ghost btn-small" onclick="toggleCopyMenu()" id="copyMenuTrigger" style="font-size:13px; color: var(--secondary);">&#9776; Copy prompt instead</button>
+    <div id="copyMenu" style="display:none; position:absolute; bottom:110%; left:0; background:var(--surface); border:1px solid var(--stroke); border-radius:10px; box-shadow:0 6px 20px rgba(2,52,50,0.12); overflow:hidden; z-index:30; min-width:200px;">
+      <button class="menu-item" onclick="executeAll(); closeCopyMenu();">
+        <span class="mi-icon">&#128203;</span><span class="mi-label">Copy — All Open Bugs</span>
+      </button>
+      <button class="menu-item" onclick="executeSelected(); closeCopyMenu();">
+        <span class="mi-icon">&#9745;</span><span class="mi-label">Copy — Selected Only</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="copied-toast" id="toast">Copied to clipboard!</div>
+
+<!-- New / Edit Bug Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2 id="modalTitle">Log a New Bug</h2>
+    <input type="hidden" id="editId" value="">
+    <div class="form-group">
+      <label>Title</label>
+      <input type="text" id="bugTitle" placeholder="Brief summary of the issue">
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="bugDesc" placeholder="What's happening? What did you expect instead?"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Steps to Reproduce</label>
+      <textarea id="bugSteps" placeholder="1. Go to...&#10;2. Tap on...&#10;3. Observe..."></textarea>
+    </div>
+    <div class="form-group" style="display:flex; gap:12px;">
+      <div style="flex:1;">
+        <label>Priority</label>
+        <select id="bugPriority">
+          <option value="critical">Critical</option>
+          <option value="high">High</option>
+          <option value="medium" selected>Medium</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
+      <div style="flex:1;">
+        <label>Status</label>
+        <select id="bugStatus">
+          <option value="open" selected>Open</option>
+          <option value="in-progress">In Progress</option>
+          <option value="fixed">Fixed (Ready for Review)</option>
+          <option value="signed-off">Signed Off</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Affected Files (comma-separated)</label>
+      <input type="text" id="bugFiles" placeholder="e.g. app/(tabs)/index.tsx, components/Button.tsx">
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveBug()">Save Bug</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const STORAGE_KEY = 'biteinsight_bugs';
+  let currentFilter = 'all';
+  let selectedBugs = new Set();
+  let pollInterval = null;
+  let lastFileContent = '';
+
+  // ── Data helpers ──
+  function getBugs() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }
+  function saveBugsToStorage(bugs) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bugs));
+  }
+  function generateId() {
+    return 'BUG-' + Date.now().toString(36).toUpperCase();
+  }
+
+  // ── Menu ──
+  function toggleMenu() {
+    document.getElementById('menuDropdown').classList.toggle('open');
+  }
+  function closeMenu() {
+    document.getElementById('menuDropdown').classList.remove('open');
+  }
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.menu-wrap')) closeMenu();
+  });
+
+  // ── Modal ──
+  function openModal(bug = null) {
+    document.getElementById('modal').classList.add('open');
+    if (bug) {
+      document.getElementById('modalTitle').textContent = 'Edit Bug';
+      document.getElementById('editId').value = bug.id;
+      document.getElementById('bugTitle').value = bug.title;
+      document.getElementById('bugDesc').value = bug.description || '';
+      document.getElementById('bugSteps').value = bug.steps || '';
+      document.getElementById('bugPriority').value = bug.priority;
+      document.getElementById('bugStatus').value = bug.status;
+      document.getElementById('bugFiles').value = (bug.files || []).join(', ');
+    } else {
+      document.getElementById('modalTitle').textContent = 'Log a New Bug';
+      document.getElementById('editId').value = '';
+      document.getElementById('bugTitle').value = '';
+      document.getElementById('bugDesc').value = '';
+      document.getElementById('bugSteps').value = '';
+      document.getElementById('bugPriority').value = 'medium';
+      document.getElementById('bugStatus').value = 'open';
+      document.getElementById('bugFiles').value = '';
+    }
+  }
+  function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+  function saveBug() {
+    const title = document.getElementById('bugTitle').value.trim();
+    if (!title) return alert('Title is required');
+    const bugs = getBugs();
+    const editId = document.getElementById('editId').value;
+    const files = document.getElementById('bugFiles').value.split(',').map(f => f.trim()).filter(Boolean);
+    const bugData = {
+      title,
+      description: document.getElementById('bugDesc').value.trim(),
+      steps: document.getElementById('bugSteps').value.trim(),
+      priority: document.getElementById('bugPriority').value,
+      status: document.getElementById('bugStatus').value,
+      files,
+    };
+    if (editId) {
+      const idx = bugs.findIndex(b => b.id === editId);
+      if (idx !== -1) bugs[idx] = { ...bugs[idx], ...bugData, updatedAt: new Date().toISOString() };
+    } else {
+      bugs.unshift({ id: generateId(), ...bugData, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+    }
+    saveBugsToStorage(bugs);
+    closeModal();
+    render();
+  }
+
+  function deleteBug(id) {
+    if (!confirm('Delete this bug?')) return;
+    saveBugsToStorage(getBugs().filter(b => b.id !== id));
+    selectedBugs.delete(id);
+    render();
+  }
+
+  // ── Status actions ──
+  function signOff(id) {
+    const bugs = getBugs();
+    const bug = bugs.find(b => b.id === id);
+    if (!bug) return;
+    bug.status = 'signed-off';
+    bug.updatedAt = new Date().toISOString();
+    saveBugsToStorage(bugs);
+    render();
+    showToast('Bug signed off');
+  }
+
+  function reopenBug(id) {
+    const bugs = getBugs();
+    const bug = bugs.find(b => b.id === id);
+    if (!bug) return;
+    bug.status = 'open';
+    bug.updatedAt = new Date().toISOString();
+    saveBugsToStorage(bugs);
+    render();
+    showToast('Bug reopened');
+  }
+
+  function toggleStatus(id) {
+    const bugs = getBugs();
+    const bug = bugs.find(b => b.id === id);
+    if (!bug) return;
+    const cycle = { 'open': 'in-progress', 'in-progress': 'fixed', 'fixed': 'signed-off', 'signed-off': 'open' };
+    bug.status = cycle[bug.status];
+    bug.updatedAt = new Date().toISOString();
+    saveBugsToStorage(bugs);
+    render();
+  }
+
+  function toggleSelect(id, e) {
+    e.stopPropagation();
+    if (selectedBugs.has(id)) selectedBugs.delete(id); else selectedBugs.add(id);
+    render();
+  }
+
+  function toggleExpand(id) {
+    const el = document.querySelector(`[data-bug-id="${id}"]`);
+    if (el) el.classList.toggle('expanded');
+  }
+
+  // ── Filters ──
+  function setFilter(filter) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+    render();
+  }
+  function getFilteredBugs() {
+    const bugs = getBugs();
+    if (currentFilter === 'all') return bugs.filter(b => b.status !== 'signed-off');
+    if (currentFilter === 'review') return bugs.filter(b => b.status === 'fixed');
+    if (currentFilter === 'archive') return bugs.filter(b => b.status === 'signed-off');
+    if (['critical', 'high'].includes(currentFilter)) return bugs.filter(b => b.priority === currentFilter);
+    return bugs.filter(b => b.status === currentFilter);
+  }
+
+  // ── Clipboard ──
+  function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
+      return navigator.clipboard.writeText(text).then(() => true).catch(() => fallbackCopy(text));
+    }
+    return Promise.resolve(fallbackCopy(text));
+  }
+  function fallbackCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch(e) {}
+    document.body.removeChild(ta);
+    return ok;
+  }
+  function showPromptModal(text) {
+    let overlay = document.getElementById('promptModal');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'promptModal';
+      overlay.className = 'modal-overlay';
+      overlay.innerHTML = `
+        <div class="modal">
+          <h2>Prompt Ready</h2>
+          <p style="font-size:14px;font-weight:300;color:var(--secondary);margin-bottom:12px;">
+            Copy the text below and paste it into Claude Code.
+          </p>
+          <textarea id="promptText" readonly style="
+            width:100%;height:260px;font-family:monospace;font-size:12px;
+            padding:12px;border:1.5px solid var(--stroke);border-radius:8px;
+            background:var(--surface-tertiary);color:var(--primary);resize:vertical;
+          "></textarea>
+          <div class="form-actions">
+            <button class="btn btn-outline" onclick="document.getElementById('promptModal').classList.remove('open')">Close</button>
+            <button class="btn btn-primary" onclick="
+              document.getElementById('promptText').select();
+              document.execCommand('copy');
+              this.textContent='Copied!';
+              setTimeout(()=>this.textContent='Copy All',1500);
+            ">Copy All</button>
+          </div>
+        </div>`;
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('open'); });
+      document.body.appendChild(overlay);
+    }
+    document.getElementById('promptText').value = text;
+    overlay.classList.add('open');
+    setTimeout(() => document.getElementById('promptText').select(), 100);
+  }
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+  }
+
+  // ── Execute ──
+  function buildPrompt(bugs) {
+    const lines = [
+      'I need you to work through the following bugs from the BiteInsight bug tracker.',
+      'Read bugs.json in the project root for the full list. Here are the bugs to fix:\n',
+    ];
+    bugs.forEach((b, i) => {
+      lines.push(`## Bug ${i + 1}: ${b.title} [${b.id}]`);
+      lines.push(`Priority: ${b.priority.toUpperCase()}`);
+      lines.push(`Status: ${b.status}`);
+      if (b.description) lines.push(`Description: ${b.description}`);
+      if (b.steps) lines.push(`Steps to reproduce: ${b.steps}`);
+      if (b.files && b.files.length) lines.push(`Affected files: ${b.files.join(', ')}`);
+      lines.push('');
+    });
+    lines.push('For each bug:');
+    lines.push('1. Investigate the root cause');
+    lines.push('2. Implement the fix');
+    lines.push('3. Update bugs.json to mark the bug as "fixed" with a resolution note');
+    lines.push('4. Move to the next bug');
+    lines.push('\nWork through them in priority order (critical > high > medium > low).');
+    return lines.join('\n');
+  }
+
+  function executeAll() {
+    const bugs = getBugs().filter(b => b.status === 'open' || b.status === 'in-progress');
+    if (!bugs.length) return showToast('No open bugs to execute');
+    const prompt = buildPrompt(bugs);
+    copyToClipboard(prompt).then(ok => ok ? showToast('Prompt copied — paste into Claude Code!') : showPromptModal(prompt));
+  }
+  function executeSelected() {
+    const bugs = getBugs().filter(b => selectedBugs.has(b.id));
+    if (!bugs.length) return showToast('No bugs selected');
+    const prompt = buildPrompt(bugs);
+    copyToClipboard(prompt).then(ok => ok ? showToast('Prompt copied — paste into Claude Code!') : showPromptModal(prompt));
+  }
+
+  // ── Copy menu ──
+  function toggleCopyMenu() { const m = document.getElementById('copyMenu'); m.style.display = m.style.display === 'none' ? 'block' : 'none'; }
+  function closeCopyMenu() { document.getElementById('copyMenu').style.display = 'none'; }
+  document.addEventListener('click', (e) => { if (!e.target.closest('#copyMenuTrigger') && !e.target.closest('#copyMenu')) closeCopyMenu(); });
+
+  // ── Let's Go — send directly to Claude Code ──
+  async function sendToClaude(prompt, btnId) {
+    const btn = document.getElementById(btnId);
+    const origText = btn.innerHTML;
+    btn.classList.add('sending');
+    btn.innerHTML = '&#9889; Sending to Claude...';
+    try {
+      const res = await fetch('/api/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        btn.classList.remove('sending');
+        btn.classList.add('sent');
+        btn.innerHTML = '&#10003; Sent to Claude Code!';
+        showToast('Prompt sent to Claude Code!');
+        setTimeout(() => { btn.classList.remove('sent'); btn.innerHTML = origText; }, 3000);
+      } else {
+        throw new Error(data.error || 'Failed');
+      }
+    } catch (err) {
+      btn.classList.remove('sending');
+      btn.innerHTML = origText;
+      console.error('Execute error:', err);
+      showToast('Failed — copying to clipboard instead');
+      const ok = await copyToClipboard(prompt);
+      if (ok) showToast('Prompt copied to clipboard');
+      else showPromptModal(prompt);
+    }
+  }
+
+  function letsGo() {
+    const bugs = getBugs().filter(b => b.status === 'open' || b.status === 'in-progress');
+    if (!bugs.length) return showToast('No open bugs to execute');
+    sendToClaude(buildPrompt(bugs), 'letsGoBtn');
+  }
+  function letsGoSelected() {
+    const bugs = getBugs().filter(b => selectedBugs.has(b.id));
+    if (!bugs.length) return showToast('No bugs selected');
+    sendToClaude(buildPrompt(bugs), 'letsGoSelectedBtn');
+  }
+
+  // ── Import / Export ──
+  function exportBugs() {
+    const blob = new Blob([JSON.stringify(getBugs(), null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = 'bugs.json'; a.click();
+    showToast('Exported bugs.json');
+  }
+  function importBugs() {
+    const input = document.createElement('input');
+    input.type = 'file'; input.accept = '.json';
+    input.onchange = (e) => {
+      const file = e.target.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const bugs = JSON.parse(ev.target.result);
+          if (!Array.isArray(bugs)) throw new Error();
+          saveBugsToStorage(bugs); render();
+          showToast('Imported ' + bugs.length + ' bugs');
+        } catch { alert('Invalid bugs.json file'); }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }
+
+  // ── Render ──
+  function priorityOrder(p) { return { critical: 0, high: 1, medium: 2, low: 3 }[p] ?? 4; }
+
+  function render() {
+    const bugs = getFilteredBugs();
+    const allBugs = getBugs();
+
+    // Stats
+    const stats = { open: 0, 'in-progress': 0, fixed: 0, 'signed-off': 0 };
+    allBugs.forEach(b => { stats[b.status] = (stats[b.status] || 0) + 1; });
+    document.getElementById('statsBar').innerHTML = `
+      <div class="stat-chip"><span class="stat-dot open"></span> ${stats.open} Open</div>
+      <div class="stat-chip"><span class="stat-dot in-progress"></span> ${stats['in-progress']} In Progress</div>
+      <div class="stat-chip"><span class="stat-dot fixed"></span> ${stats.fixed} Review</div>
+      <div class="stat-chip"><span class="stat-dot signed-off"></span> ${stats['signed-off']} Archived</div>
+    `;
+
+    // Update filter counts
+    const reviewCount = allBugs.filter(b => b.status === 'fixed').length;
+    const reviewTab = document.querySelector('[data-filter="review"]');
+    if (reviewTab) {
+      reviewTab.innerHTML = 'Ready for Review' + (reviewCount > 0 ? ` <span class="filter-count">${reviewCount}</span>` : '');
+    }
+    const archiveCount = allBugs.filter(b => b.status === 'signed-off').length;
+    const archiveTab = document.querySelector('[data-filter="archive"]');
+    if (archiveTab) {
+      archiveTab.innerHTML = 'Archive' + (archiveCount > 0 ? ` <span class="filter-count">${archiveCount}</span>` : '');
+    }
+
+    const list = document.getElementById('bugList');
+    if (!bugs.length) {
+      const labels = { all: 'No bugs yet', open: 'No open bugs', 'in-progress': 'No in-progress bugs',
+        review: 'Nothing to review', archive: 'Archive is empty' };
+      list.innerHTML = `<div class="empty-state"><h3>${labels[currentFilter] || 'No bugs'}</h3>
+        <p>${currentFilter === 'all' ? 'Click "+ New Bug" to log your first issue.' : 'Try a different tab.'}</p></div>`;
+      return;
+    }
+
+    const sorted = [...bugs].sort((a, b) => priorityOrder(a.priority) - priorityOrder(b.priority));
+
+    list.innerHTML = sorted.map(bug => {
+      const sel = selectedBugs.has(bug.id);
+      const date = bug.createdAt ? new Date(bug.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+      const isReview = bug.status === 'fixed';
+      const isSignedOff = bug.status === 'signed-off';
+
+      // Show resolution note for fixed / signed-off bugs
+      const resolutionHtml = bug.resolution
+        ? `<div class="bug-resolution"><strong>Resolution:</strong> ${bug.resolution}</div>` : '';
+
+      // Context-aware action buttons
+      let actionButtons = '';
+      if (isReview) {
+        actionButtons = `
+          <button class="btn btn-signoff btn-small" onclick="event.stopPropagation(); signOff('${bug.id}')">Sign Off</button>
+          <button class="btn btn-outline btn-small" onclick="event.stopPropagation(); reopenBug('${bug.id}')">Reopen</button>`;
+      } else if (isSignedOff) {
+        actionButtons = `
+          <button class="btn btn-outline btn-small" onclick="event.stopPropagation(); reopenBug('${bug.id}')">Reopen</button>`;
+      } else {
+        actionButtons = `
+          <button class="btn btn-accent btn-small" onclick="event.stopPropagation(); toggleStatus('${bug.id}')">Cycle Status</button>`;
+      }
+      actionButtons += `
+        <button class="btn btn-outline btn-small" onclick="event.stopPropagation(); openModal(getBugs().find(b=>b.id==='${bug.id}'))">Edit</button>
+        <button class="btn btn-danger btn-small" onclick="event.stopPropagation(); deleteBug('${bug.id}')">Delete</button>`;
+
+      return `
+        <div class="bug-card ${sel ? 'selected' : ''}" data-bug-id="${bug.id}" onclick="toggleExpand('${bug.id}')">
+          <div class="bug-card-header">
+            <input type="checkbox" ${sel ? 'checked' : ''} onclick="toggleSelect('${bug.id}', event)" style="margin-right:8px; accent-color: var(--accent); width:16px; height:16px;">
+            <span class="bug-title">${bug.title}</span>
+            <div class="bug-meta">
+              <span class="badge badge-${bug.priority}">${bug.priority}</span>
+              <span class="badge badge-${bug.status}">${bug.status === 'fixed' ? 'review' : bug.status === 'signed-off' ? 'archived' : bug.status}</span>
+            </div>
+          </div>
+          ${bug.description ? `<div class="bug-description">${bug.description}</div>` : ''}
+          ${resolutionHtml}
+          ${bug.files && bug.files.length ? `<div class="bug-files">${bug.files.map(f => '<code>' + f + '</code>').join(' ')}</div>` : ''}
+          <div class="bug-date">${bug.id}${date ? ' &middot; ' + date : ''}</div>
+          ${isReview ? `<div style="margin-top:10px; display:flex; gap:6px;">
+            <button class="btn btn-signoff btn-small" onclick="event.stopPropagation(); signOff('${bug.id}')">&#10003; Sign Off</button>
+            <button class="btn btn-outline btn-small" onclick="event.stopPropagation(); reopenBug('${bug.id}')">Reopen</button>
+          </div>` : ''}
+          <div class="bug-detail">
+            ${bug.steps ? `<div class="detail-row"><strong>Steps to Reproduce:</strong><span>${bug.steps}</span></div>` : ''}
+            ${bug.createdAt ? `<div class="detail-row"><strong>Created:</strong><span>${bug.createdAt}</span></div>` : ''}
+            ${bug.updatedAt ? `<div class="detail-row"><strong>Updated:</strong><span>${bug.updatedAt}</span></div>` : ''}
+            <div class="detail-actions">${actionButtons}</div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Live Sync via Local API ──
+  const API_BASE = '/api/bugs';
+  let isLive = false;
+
+  async function connectFile() {
+    try {
+      const res = await fetch(API_BASE);
+      if (!res.ok) throw new Error();
+      const bugs = await res.json();
+      if (!Array.isArray(bugs)) throw new Error();
+      lastFileContent = JSON.stringify(bugs);
+      saveBugsToLocalStorage(bugs); render();
+      if (pollInterval) clearInterval(pollInterval);
+      pollInterval = setInterval(pollFromAPI, 3000);
+      isLive = true; updateSyncUI(true);
+      showToast('Live sync connected');
+    } catch {
+      showToast('Start the server first: node bug-server.js');
+    }
+  }
+  async function pollFromAPI() {
+    try {
+      const res = await fetch(API_BASE);
+      if (!res.ok) { disconnectSync(); return; }
+      const text = await res.text();
+      if (text === lastFileContent) return;
+      lastFileContent = text;
+      const bugs = JSON.parse(text);
+      if (!Array.isArray(bugs)) return;
+      saveBugsToLocalStorage(bugs); render();
+    } catch { disconnectSync(); }
+  }
+  async function pushToAPI(bugs) {
+    if (!isLive) return;
+    try {
+      const data = JSON.stringify(bugs, null, 2);
+      lastFileContent = data;
+      await fetch(API_BASE, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: data });
+    } catch { console.warn('API write failed'); }
+  }
+  function disconnectSync() {
+    if (pollInterval) clearInterval(pollInterval);
+    pollInterval = null; isLive = false; updateSyncUI(false);
+  }
+  function updateSyncUI(connected) {
+    const dot = document.getElementById('syncDot');
+    dot.classList.toggle('live', connected);
+    dot.title = connected ? 'Live sync active' : 'Live sync disconnected';
+    const mi = document.getElementById('syncMenuItem');
+    if (connected) {
+      mi.classList.add('sync-active');
+      mi.querySelector('.mi-label').textContent = 'Live Sync Active';
+    } else {
+      mi.classList.remove('sync-active');
+      mi.querySelector('.mi-label').textContent = 'Connect Live Sync';
+    }
+  }
+
+  function saveBugsToLocalStorage(bugs) { localStorage.setItem(STORAGE_KEY, JSON.stringify(bugs)); }
+  const _origSave = saveBugsToStorage;
+  saveBugsToStorage = function(bugs) { saveBugsToLocalStorage(bugs); if (isLive) pushToAPI(bugs); };
+
+  if (window.location.protocol !== 'file:') connectFile();
+
+  // ── Event listeners ──
+  document.getElementById('modal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('modal')) closeModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+    if (e.key === 'n' && e.ctrlKey) { e.preventDefault(); openModal(); }
+  });
+
+  render();
+</script>
+</body>
+</html>
