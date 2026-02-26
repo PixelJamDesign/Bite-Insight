@@ -90,6 +90,12 @@ function RootLayoutInner() {
           <Stack screenOptions={{ headerShown: false, animation: 'none' }}>
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="scan-result" />
+            <Stack.Screen name="edit-profile" />
+            <Stack.Screen name="onboarding" />
+            <Stack.Screen name="family-members" />
+            <Stack.Screen name="add-family-member" />
+            <Stack.Screen name="upgrade-success" />
             <Stack.Screen name="+not-found" />
           </Stack>
         </Animated.View>

@@ -14,8 +14,47 @@
 //            customer.subscription.updated
 //            customer.subscription.deleted
 
-import Stripe from 'npm:stripe@14';
+import Stripe from 'npm:stripe@17';
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { crypto } from 'https://deno.land/std@0.224.0/crypto/mod.ts';
+
+// Manual Stripe webhook signature verification — avoids SDK version / subtle-crypto issues in Deno.
+async function verifyStripeSignature(
+  payload: string,
+  sigHeader: string,
+  secret: string,
+  toleranceSec = 300,
+): Promise<boolean> {
+  const parts = Object.fromEntries(
+    sigHeader.split(',').map((p) => {
+      const [k, v] = p.split('=');
+      return [k, v];
+    }),
+  );
+  const timestamp = parts['t'];
+  const v1 = parts['v1'];
+  if (!timestamp || !v1) return false;
+
+  // Timing tolerance check
+  const now = Math.floor(Date.now() / 1000);
+  if (Math.abs(now - Number(timestamp)) > toleranceSec) return false;
+
+  // Compute expected signature
+  const signedPayload = `${timestamp}.${payload}`;
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(signedPayload));
+  const expected = Array.from(new Uint8Array(sig))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+
+  return expected === v1;
+}
 
 Deno.serve(async (req) => {
   const signature = req.headers.get('stripe-signature');
@@ -24,20 +63,21 @@ Deno.serve(async (req) => {
   }
 
   const body = await req.text();
+  const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET')!;
+
+  // Verify the webhook signature manually
+  const valid = await verifyStripeSignature(body, signature, webhookSecret);
+  if (!valid) {
+    console.error('Webhook signature verification failed. sig header:', signature.substring(0, 40) + '...');
+    return new Response('Invalid signature', { status: 400 });
+  }
 
   let event: Stripe.Event;
   try {
-    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
-      apiVersion: '2024-04-10',
-    });
-    event = stripe.webhooks.constructEvent(
-      body,
-      signature,
-      Deno.env.get('STRIPE_WEBHOOK_SECRET')!,
-    );
+    event = JSON.parse(body) as Stripe.Event;
   } catch (err) {
-    console.error('Webhook signature verification failed:', err);
-    return new Response('Invalid signature', { status: 400 });
+    console.error('Failed to parse webhook body:', err);
+    return new Response('Invalid payload', { status: 400 });
   }
 
   const supabase = createClient(

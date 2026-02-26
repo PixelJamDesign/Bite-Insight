@@ -227,6 +227,40 @@ export default function SignUpScreen() {
     }
   }
 
+  // ── Quick Sign-up: create account with just Step 1 data, skip to app ────────
+  // Called from steps 2-4 after the user passed Step 1 validation via handleNext.
+  async function handleCreateAndSkip() {
+    if (!fullName.trim() || !email.trim() || !password.trim()) return;
+    setLoading(true);
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: fullName } },
+    });
+    if (error) {
+      setLoading(false);
+      Alert.alert('Sign up failed', error.message);
+      return;
+    }
+    const user = data.user;
+    if (user) {
+      if (avatarUri) await uploadAvatar(user.id, avatarUri);
+      await supabase.from('profiles').upsert({
+        id: user.id,
+        full_name: fullName,
+        age: age.trim() ? parseInt(age.trim(), 10) : null,
+      });
+    }
+    setLoading(false);
+    if (data.session === null) {
+      Alert.alert(
+        'Check your email',
+        'We sent a confirmation link to your email address. Please verify to continue.',
+      );
+    }
+    // AuthGuard will redirect to (tabs) once session is active
+  }
+
   // ── Progress indicator ───────────────────────────────────────────────────────
   function renderProgress() {
     const { nextLabel } = STEPS[step - 1];
@@ -507,6 +541,18 @@ export default function SignUpScreen() {
                 setDietaryPrefs(prev => toggle(prev, item))
               )}
             </View>
+          )}
+
+          {/* Quick-start link — shown on steps 2-4 so users can create
+              their account without filling health/allergy/dietary prefs */}
+          {step >= 2 && (
+            <TouchableOpacity
+              style={styles.skipBtn}
+              onPress={handleCreateAndSkip}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.skipText}>Skip for now — I'll set this up later</Text>
+            </TouchableOpacity>
           )}
 
           <View style={{ height: 120 }} />
@@ -884,5 +930,19 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_700Bold',
     fontWeight: '700',
     color: '#fff',
+  },
+  skipBtn: {
+    alignSelf: 'center',
+    marginTop: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+  },
+  skipText: {
+    fontSize: 15,
+    fontFamily: 'Figtree_400Regular',
+    fontWeight: '400',
+    color: Colors.secondary,
+    letterSpacing: -0.15,
+    textDecorationLine: 'underline',
   },
 });

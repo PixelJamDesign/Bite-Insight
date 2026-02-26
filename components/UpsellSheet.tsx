@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useUpsellSheet } from '@/lib/upsellSheetContext';
 import { useSubscription } from '@/lib/subscriptionContext';
 import BiteInsightPlusLogo from '../assets/images/logo-biteinsight-plus.svg';
@@ -66,9 +67,13 @@ export function UpsellSheet() {
   const { visible, hideUpsell } = useUpsellSheet();
   const { isPlus, purchasing, purchasePlus, restorePurchases } = useSubscription();
 
-  // Auto-dismiss the sheet the moment the user becomes a subscriber
+  // When purchase completes (isPlus flips to true while the sheet is open),
+  // dismiss the sheet and navigate to the success screen.
   useEffect(() => {
-    if (isPlus && visible) hideUpsell();
+    if (isPlus && visible) {
+      hideUpsell();
+      router.replace('/upgrade-success');
+    }
   }, [isPlus]);
   const insets = useSafeAreaInsets();
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;

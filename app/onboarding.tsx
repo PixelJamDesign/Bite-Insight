@@ -266,16 +266,14 @@ export default function OnboardingScreen() {
           )}
         </View>
 
-        {/* Skip link */}
-        {pos === 0 && (
-          <TouchableOpacity
-            style={styles.skipBtn}
-            onPress={() => router.replace('/(tabs)/')}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.skipText}>Skip for now</Text>
-          </TouchableOpacity>
-        )}
+        {/* Skip link — available on every step */}
+        <TouchableOpacity
+          style={styles.skipBtn}
+          onPress={() => router.replace('/(tabs)/')}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.skipText}>Skip for now — I'll set this up later</Text>
+        </TouchableOpacity>
 
         <View style={{ height: 120 }} />
       </ScrollView>
@@ -502,16 +500,17 @@ const styles = StyleSheet.create({
 
   skipBtn: {
     alignSelf: 'center',
-    marginTop: 16,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    marginTop: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
   },
   skipText: {
-    fontSize: 14,
-    fontFamily: 'Figtree_300Light',
-    fontWeight: '300',
-    color: `${Colors.primary}70`,
-    letterSpacing: -0.14,
+    fontSize: 15,
+    fontFamily: 'Figtree_400Regular',
+    fontWeight: '400',
+    color: Colors.secondary,
+    letterSpacing: -0.15,
+    textDecorationLine: 'underline',
   },
 
   footer: {

@@ -34,14 +34,54 @@ function cleanToken(raw: string): string {
 }
 
 /**
+ * Pre-process raw ingredient text before splitting on commas:
+ *
+ * 1. Strip trailing disclaimers that follow the ingredient list
+ *    (e.g. "Produced from genetically modified sugar beets",
+ *     "May contain traces of nuts").
+ *
+ * 2. Flatten bracketed sub-ingredient lists by replacing [ ] with commas.
+ *    "Milk chocolate flavour coating [sugar, cocoa butter, chocolate]"
+ *    becomes "Milk chocolate flavour coating, sugar, cocoa butter, chocolate".
+ *    This preserves both the parent ingredient name and its sub-ingredients.
+ *
+ * 3. Handle nested brackets and curly braces the same way.
+ */
+function preprocessIngredientText(text: string): string {
+  // Strip trailing disclaimer sentences that follow the ingredient list.
+  // These are separated from the last ingredient by a period or period-space.
+  // Common patterns: "Produced from …", "May contain …", "Contains …",
+  // "Manufactured in …", "Packaged in …", "Made in …", "Not a …",
+  // "For allergen …", "See …", "Store …", "Best before …".
+  let s = text.replace(
+    /\.\s*(produced|may contain|contains|manufactured|packaged|made|not a|for allergen|see |store |best before)\b[^,;]*/gi,
+    '',
+  );
+
+  // Remove any remaining trailing period that ended the ingredient list
+  s = s.replace(/\.\s*$/, '');
+
+  // Flatten brackets (and curly braces) into commas so sub-ingredients
+  // become top-level tokens.  "coating [sugar, butter]" → "coating , sugar, butter "
+  s = s.replace(/[\[\]{}<>]/g, ',');
+
+  // Collapse multiple consecutive commas / semicolons (from bracket replacement)
+  s = s.replace(/[,;]\s*[,;]+/g, ',');
+
+  return s;
+}
+
+/**
  * Parses raw ingredients text (English) into an array of clean, sentence-cased
  * ingredient names.  Deduplicates and filters out empty / garbage entries.
  */
 export function parseIngredientsText(text: string): string[] {
   if (!text) return [];
 
+  const preprocessed = preprocessIngredientText(text);
+
   const cleaned = [...new Set(
-    text
+    preprocessed
       .split(/[,;]/)
       .map((s) => cleanToken(s))
       .filter((s) => s.length > 1 && !/^\d+$/.test(s))
@@ -49,6 +89,27 @@ export function parseIngredientsText(text: string): string[] {
   )];
 
   return cleaned.map((s) => s.charAt(0).toUpperCase() + s.slice(1));
+}
+
+/**
+ * Cleans a single structured ingredient name.  Strips bracket fragments,
+ * trailing disclaimers and OCR artifacts.  Exported so scan-result.tsx can
+ * scrub the OFF structured JSON entries as well.
+ */
+export function cleanIngredientName(raw: string): string {
+  let s = raw;
+  // Strip trailing disclaimer text after a period
+  s = s.replace(
+    /\.\s*(produced|may contain|contains|manufactured|packaged|made|not a|for allergen|see |store |best before)\b.*/gi,
+    '',
+  );
+  // Remove stray brackets
+  s = s.replace(/[\[\]{}<>]/g, ' ');
+  // Remove trailing periods
+  s = s.replace(/\.\s*$/, '');
+  // Clean token (parenthetical content, percentages, numbers, etc.)
+  s = cleanToken(s);
+  return s;
 }
 
 // ── Hybrid ingredient builder ────────────────────────────────────────────────
