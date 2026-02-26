@@ -317,35 +317,31 @@ export default function ScannerScreen() {
 
         {/* Overlay UI — absolutely positioned over the camera */}
         <View style={[styles.overlay, StyleSheet.absoluteFillObject]} pointerEvents="box-none">
-          {/* Top bar */}
+          {/* Top bar — back button + region selector */}
           <SafeAreaView edges={['top']} pointerEvents="box-none">
             <View style={styles.topBar}>
               <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
                 <Ionicons name="arrow-back" size={24} color="#fff" />
               </TouchableOpacity>
-              <Text style={styles.topTitle}>Scan Food Label</Text>
-              <View style={{ width: 44 }} />
+              {isPlus ? (
+                <TouchableOpacity
+                  style={styles.switcherPill}
+                  onPress={() => setRegionPickerVisible(true)}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="globe-outline" size={16} color="#fff" />
+                  <Text style={styles.switcherText}>{selectedRegion.label}</Text>
+                  <Ionicons name="chevron-down" size={14} color="rgba(255,255,255,0.7)" />
+                </TouchableOpacity>
+              ) : (
+                <View style={{ width: 44 }} />
+              )}
             </View>
           </SafeAreaView>
 
-          {/* Region selector pill — only shown for Plus subscribers */}
-          {isPlus && (
-            <View style={styles.switcherRow}>
-              <TouchableOpacity
-                style={styles.switcherPill}
-                onPress={() => setRegionPickerVisible(true)}
-                activeOpacity={0.85}
-              >
-                <Ionicons name="globe-outline" size={16} color="#fff" />
-                <Text style={styles.switcherText}>{selectedRegion.label}</Text>
-                <Ionicons name="chevron-down" size={14} color="rgba(255,255,255,0.7)" />
-              </TouchableOpacity>
-            </View>
-          )}
-
-          {/* Scan frame */}
+          {/* Scan frame — centered rectangle */}
           <View style={styles.frameArea} pointerEvents="none">
-            <View style={styles.frame}>
+            <View style={styles.webFrame}>
               <View style={[styles.corner, styles.topLeft]} />
               <View style={[styles.corner, styles.topRight]} />
               <View style={[styles.corner, styles.bottomLeft]} />
@@ -359,14 +355,8 @@ export default function ScannerScreen() {
             )}
           </View>
 
-          {/* Bottom hint */}
-          <SafeAreaView edges={['bottom']} pointerEvents="none">
-            <View style={styles.bottomBar}>
-              <Text style={styles.bottomHint}>
-                Supports EAN-13, EAN-8, UPC-A and QR codes
-              </Text>
-            </View>
-          </SafeAreaView>
+          {/* Spacer to balance the layout */}
+          <View style={{ height: 80 }} />
         </View>
 
         {/* Region picker modal — Plus subscribers only */}
@@ -538,6 +528,8 @@ export default function ScannerScreen() {
 }
 
 const FRAME_SIZE = 260;
+const FRAME_WIDTH = 300;
+const FRAME_HEIGHT = 180;
 const CORNER_SIZE = 32;
 const CORNER_THICKNESS = 4;
 
@@ -611,6 +603,11 @@ const styles = StyleSheet.create({
   frame: {
     width: FRAME_SIZE,
     height: FRAME_SIZE,
+    position: 'relative',
+  },
+  webFrame: {
+    width: FRAME_WIDTH,
+    height: FRAME_HEIGHT,
     position: 'relative',
   },
   corner: {
