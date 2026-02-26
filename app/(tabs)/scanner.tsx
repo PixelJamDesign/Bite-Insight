@@ -465,7 +465,7 @@ export default function ScannerScreen() {
 
         {/* Scan frame */}
         <View style={styles.frameArea}>
-          <View style={styles.frame}>
+          <View style={styles.nativeFrame}>
             <View style={[styles.corner, styles.topLeft]} />
             <View style={[styles.corner, styles.topRight]} />
             <View style={[styles.corner, styles.bottomLeft]} />
@@ -603,6 +603,11 @@ const styles = StyleSheet.create({
   frame: {
     width: FRAME_SIZE,
     height: FRAME_SIZE,
+    position: 'relative',
+  },
+  nativeFrame: {
+    width: FRAME_WIDTH,
+    height: FRAME_HEIGHT,
     position: 'relative',
   },
   webFrame: {
