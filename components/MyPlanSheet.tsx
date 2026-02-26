@@ -117,6 +117,9 @@ export function MyPlanSheet() {
       Linking.openURL('https://apps.apple.com/account/subscriptions');
     } else if (Platform.OS === 'android') {
       Linking.openURL('https://play.google.com/store/account/subscriptions');
+    } else {
+      // Web: Stripe Customer Portal
+      Linking.openURL('https://billing.stripe.com/p/login/5kQfZaa1Lc3bdwb1qr4gg00');
     }
   }
 

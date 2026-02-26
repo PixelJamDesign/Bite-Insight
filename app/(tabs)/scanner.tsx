@@ -217,27 +217,53 @@ export default function ScannerScreen() {
         .from('profiles')
         .upsert({ id: session?.user.id }, { onConflict: 'id', ignoreDuplicates: true });
 
-      const { data: insertData, error } = await supabase
+      // Check if this barcode was already scanned by this user
+      const { data: existing } = await supabase
         .from('scans')
-        .insert({
-          user_id: session?.user.id,
-          barcode: result.data,
-          product_name: productName,
-          brand,
-          image_url: imageUrl,
-          nutriscore_grade: nutriscoreGrade,
-          flagged_count: 0,
-        })
         .select('id')
+        .eq('user_id', session?.user.id)
+        .eq('barcode', result.data)
+        .limit(1)
         .single();
 
-      if (error) throw error;
+      let scanId: string;
+
+      if (existing) {
+        // Update existing scan: bump timestamp + refresh product data
+        await supabase
+          .from('scans')
+          .update({
+            scanned_at: new Date().toISOString(),
+            product_name: productName,
+            brand,
+            image_url: imageUrl,
+            nutriscore_grade: nutriscoreGrade,
+          })
+          .eq('id', existing.id);
+        scanId = existing.id;
+      } else {
+        const { data: insertData, error } = await supabase
+          .from('scans')
+          .insert({
+            user_id: session?.user.id,
+            barcode: result.data,
+            product_name: productName,
+            brand,
+            image_url: imageUrl,
+            nutriscore_grade: nutriscoreGrade,
+            flagged_count: 0,
+          })
+          .select('id')
+          .single();
+        if (error) throw error;
+        scanId = insertData.id;
+      }
 
       setProcessing(false);
       router.push({
         pathname: '/scan-result',
         params: {
-          scanId: insertData.id,
+          scanId,
           productName,
           brand: brand ?? '',
           imageUrl: imageUrl ?? '',
