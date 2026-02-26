@@ -50,6 +50,7 @@ Deno.serve(async (req) => {
       mode: 'subscription',
       payment_method_types: ['card'],
       customer_email: customerEmail,
+      allow_promotion_codes: true,
       line_items: [
         { price: Deno.env.get('STRIPE_PRICE_ID')!, quantity: 1 },
       ],
