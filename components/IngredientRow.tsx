@@ -58,16 +58,18 @@ export function IngredientRow({
           style={[styles.actionBtn, styles.dislikeBtn, preference === 'disliked' && styles.activeDislke]}
           onPress={onDislike}
           activeOpacity={0.8}
+          hitSlop={{ top: 8, right: 4, bottom: 8, left: 8 }}
         >
-          <Ionicons name="close" size={ 20} color="#fff" />
+          <Ionicons name="close" size={22} color="#fff" />
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.actionBtn, styles.likeBtn, preference === 'liked' && styles.activeLike]}
           onPress={onLike}
           activeOpacity={0.8}
+          hitSlop={{ top: 8, right: 8, bottom: 8, left: 4 }}
         >
-          <Ionicons name="checkmark" size={20} color="#fff" />
+          <Ionicons name="checkmark" size={22} color="#fff" />
         </TouchableOpacity>
 
         {showFlag && (
@@ -75,6 +77,7 @@ export function IngredientRow({
             style={[styles.flagBtn, preference === 'flagged' && styles.activeFlag]}
             onPress={onFlag}
             activeOpacity={0.8}
+            hitSlop={{ top: 8, right: 8, bottom: 8, left: 4 }}
           >
             <MenuFlaggedIcon
               size={18}
@@ -136,12 +139,12 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 8,
   },
   actionBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
   },

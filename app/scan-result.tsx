@@ -28,6 +28,7 @@ import {
   parseIngredientsText,
   buildHybridIngredients,
   translateToEnglish,
+  cleanIngredientName,
 } from '@/lib/ingredientsCleaner';
 import SwitchIcon from '@/assets/icons/switch.svg';
 import InfoIcon from '@/assets/icons/info.svg';
@@ -784,10 +785,17 @@ function categoriseIngredients(
     // Dietary conflicts
     if (userPrefs.includes('vegan') && ing.vegan === 'no') reason = 'vegan';
     if (!reason && userPrefs.includes('vegetarian') && ing.vegetarian === 'no') reason = 'vegetarian';
-    // User-flagged ingredients
+    // User-flagged ingredients — match using whole-word boundaries to avoid
+    // false positives (e.g. "sugar" should not flag inside "sugarcane").
     if (!reason && flaggedSet.size > 0) {
-      if ([...flaggedSet].some((f) => ingText.includes(f) || f.includes(ingText))) {
-        reason = 'user_flagged';
+      for (const f of flaggedSet) {
+        if (ingText === f) { reason = 'user_flagged'; break; }
+        // Whole-word boundary match: "sugar" matches "brown sugar" but not "sugarcane"
+        const escaped = f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        if (new RegExp(`\\b${escaped}\\b`).test(ingText)) {
+          reason = 'user_flagged';
+          break;
+        }
       }
     }
 
@@ -1712,6 +1720,212 @@ const flaggedSheetStyles = StyleSheet.create({
   },
 });
 
+// ── Common food additive / ingredient descriptions ──────────────────────────
+// Covers E-numbers and hard-to-read ingredient names. Keyed by lowercase name
+// or OFF id (e.g. "en:e476"). Looked up by exact match, then by E-number
+// extraction, then by substring.
+const ADDITIVE_DESCRIPTIONS: Record<string, { what: string; why: string }> = {
+  'en:e322': { what: 'Lecithin — a natural emulsifier usually derived from soy or sunflower seeds.', why: 'It helps blend ingredients that normally don\'t mix (like oil and water). Widely used and considered safe.' },
+  'en:e322i': { what: 'Lecithin — a natural emulsifier usually derived from soy or sunflower seeds.', why: 'It helps blend ingredients that normally don\'t mix (like oil and water). Widely used and considered safe.' },
+  'en:e330': { what: 'Citric acid — a natural acid found in citrus fruits like lemons and oranges.', why: 'Used as a preservative and flavour enhancer. It occurs naturally in many foods and is considered safe.' },
+  'en:e331': { what: 'Sodium citrate — the sodium salt of citric acid.', why: 'Used as a flavour enhancer and acidity regulator. Found naturally in citrus fruits and considered safe.' },
+  'en:e339': { what: 'Sodium phosphate — a mineral salt used in food processing.', why: 'Acts as an emulsifier and moisture retainer. Safe in normal food amounts, though excessive phosphate intake should be monitored.' },
+  'en:e412': { what: 'Guar gum — a natural thickener extracted from guar beans.', why: 'Used to thicken and stabilise foods. It\'s a soluble fibre and generally well tolerated.' },
+  'en:e414': { what: 'Gum arabic — a natural gum from acacia trees.', why: 'Used as a stabiliser and emulsifier. It\'s a natural plant-based ingredient and considered safe.' },
+  'en:e415': { what: 'Xanthan gum — a thickener produced by bacterial fermentation.', why: 'Widely used in sauces, dressings and gluten-free baking. Considered safe and is a common kitchen ingredient.' },
+  'en:e440': { what: 'Pectin — a natural gelling agent found in fruit.', why: 'Used to set jams and jellies. It\'s a natural plant fibre and perfectly safe.' },
+  'en:e450': { what: 'Diphosphates — mineral salts used as raising agents.', why: 'Commonly found in baking powder. Safe in normal food amounts.' },
+  'en:e460': { what: 'Cellulose — plant fibre, the main structural component of plant cell walls.', why: 'Used as a bulking agent and anti-caking agent. It\'s indigestible fibre and safe to consume.' },
+  'en:e466': { what: 'Carboxymethyl cellulose — a modified plant fibre used as a thickener.', why: 'Used to improve texture in sauces and ice cream. Generally recognised as safe.' },
+  'en:e471': { what: 'Mono- and diglycerides of fatty acids — emulsifiers derived from plant or animal fats.', why: 'Used to help ingredients mix smoothly. Very common in bread, ice cream and margarine.' },
+  'en:e472e': { what: 'DATEM (diacetyl tartaric acid esters) — an emulsifier used in baking.', why: 'Strengthens dough and improves bread texture. Considered safe.' },
+  'en:e476': { what: 'Polyglycerol polyricinoleate (PGPR) — an emulsifier made from castor oil and glycerol.', why: 'Used in chocolate to improve flow and reduce the amount of cocoa butter needed. Approved as safe by food authorities worldwide.' },
+  'en:e500': { what: 'Sodium bicarbonate — baking soda.', why: 'A common household ingredient used as a raising agent. Perfectly safe.' },
+  'en:e501': { what: 'Potassium carbonate — a mineral salt used as a raising agent.', why: 'Similar to baking soda. Used in baking and considered safe.' },
+  'en:e503': { what: 'Ammonium carbonate — a traditional raising agent.', why: 'Used in flat baked goods like cookies. Breaks down completely during baking.' },
+  'en:e507': { what: 'Hydrochloric acid — a mineral acid used for pH adjustment.', why: 'Used in tiny amounts to regulate acidity. Naturally present in your stomach.' },
+  'en:e509': { what: 'Calcium chloride — a mineral salt.', why: 'Used as a firming agent in canned vegetables and cheese-making. Considered safe.' },
+  'en:e516': { what: 'Calcium sulphate — a mineral used in food processing.', why: 'Used in tofu-making and as a dough conditioner. A natural mineral and considered safe.' },
+  'en:e551': { what: 'Silicon dioxide — a natural mineral (silica).', why: 'Used as an anti-caking agent to keep powders flowing freely. Found naturally in many foods.' },
+  'en:e621': { what: 'Monosodium glutamate (MSG) — a flavour enhancer.', why: 'Adds savoury/umami flavour. Glutamate occurs naturally in tomatoes, parmesan cheese and mushrooms. Generally considered safe, though some people report sensitivity.' },
+  'en:e901': { what: 'Beeswax — a natural wax produced by honeybees.', why: 'Used as a glazing agent on sweets and fruit. Natural and safe (not suitable for vegans).' },
+  'en:e903': { what: 'Carnauba wax — a natural plant wax from Brazilian palm leaves.', why: 'Used as a coating/glazing agent. Plant-based and considered safe.' },
+  'en:e904': { what: 'Shellac — a natural resin secreted by lac insects.', why: 'Used as a glazing agent on sweets and pills. Considered safe (not suitable for vegans).' },
+  'en:e950': { what: 'Acesulfame K — an artificial sweetener.', why: 'About 200× sweeter than sugar with zero calories. Approved by food safety authorities, though some prefer to avoid artificial sweeteners.' },
+  'en:e951': { what: 'Aspartame — an artificial sweetener.', why: 'One of the most studied food additives. Approved as safe, though people with PKU (phenylketonuria) should avoid it.' },
+  'en:e955': { what: 'Sucralose — an artificial sweetener made from sugar.', why: 'About 600× sweeter than sugar with zero calories. Widely approved as safe.' },
+  'en:e960': { what: 'Steviol glycosides (Stevia) — a natural sweetener from the stevia plant.', why: 'A plant-based, zero-calorie sweetener. Considered safe and a popular sugar alternative.' },
+  'en:e965': { what: 'Maltitol — a sugar alcohol used as a sweetener.', why: 'Lower calorie than sugar with less impact on blood glucose. May cause digestive discomfort in large amounts.' },
+  // Common non-E-number ingredient names
+  'polyglycerol polyricinoleate': { what: 'An emulsifier (also known as E476 or PGPR) made from castor oil and glycerol.', why: 'Used in chocolate to improve flow and reduce cocoa butter. Approved as safe worldwide.' },
+  'soy lecithin': { what: 'A natural emulsifier extracted from soybeans.', why: 'One of the most common food additives — helps blend oil and water. Safe unless you have a soy allergy.' },
+  'soya lecithin': { what: 'A natural emulsifier extracted from soybeans.', why: 'One of the most common food additives — helps blend oil and water. Safe unless you have a soy allergy.' },
+  'sunflower lecithin': { what: 'A natural emulsifier extracted from sunflower seeds.', why: 'Allergen-friendly alternative to soy lecithin. Considered safe.' },
+  'xanthan gum': { what: 'A thickener produced by bacterial fermentation of sugar.', why: 'Widely used in sauces, dressings and gluten-free baking. Considered safe.' },
+  'guar gum': { what: 'A natural thickener extracted from guar beans.', why: 'Used to thicken and stabilise foods. It\'s a soluble fibre and generally well tolerated.' },
+  'carrageenan': { what: 'A thickener and stabiliser extracted from red seaweed.', why: 'Used in dairy products and plant milks. Generally recognised as safe, though some studies suggest it may irritate sensitive guts.' },
+  'maltodextrin': { what: 'A starch-derived carbohydrate used as a thickener or filler.', why: 'Has a high glycemic index but is used in small amounts. Considered safe as a food additive.' },
+  'sodium benzoate': { what: 'A preservative — the sodium salt of benzoic acid, which occurs naturally in berries.', why: 'Prevents mould and bacterial growth. Safe at approved levels.' },
+  'potassium sorbate': { what: 'A preservative — the potassium salt of sorbic acid.', why: 'Prevents mould and yeast growth. Widely used and considered safe.' },
+  'calcium carbonate': { what: 'Chalk — a natural mineral and a source of calcium.', why: 'Used as a colour (white), acidity regulator and calcium supplement. Perfectly safe.' },
+  'mono- and diglycerides of fatty acids': { what: 'Emulsifiers derived from plant or animal fats (also known as E471).', why: 'Used to help ingredients mix smoothly. Very common in processed foods and considered safe.' },
+  'tbhq': { what: 'Tert-butylhydroquinone — a synthetic antioxidant.', why: 'Used in small amounts to prevent fats from going rancid. Approved as safe at regulated levels.' },
+  'pgpr': { what: 'Polyglycerol polyricinoleate (E476) — an emulsifier.', why: 'Used in chocolate to improve texture. Approved as safe worldwide.' },
+  'ascorbic acid': { what: 'Vitamin C — an essential nutrient.', why: 'Used as an antioxidant and preservative. It\'s simply vitamin C and perfectly safe.' },
+  'tocopherol': { what: 'Vitamin E — a natural antioxidant.', why: 'Used to prevent fats from going rancid. It\'s an essential vitamin and safe.' },
+  'sodium bicarbonate': { what: 'Baking soda — a common raising agent.', why: 'Used in baking to help doughs rise. A household staple and perfectly safe.' },
+  'citric acid': { what: 'A natural acid found in citrus fruits like lemons and oranges.', why: 'Used as a preservative and flavour enhancer. Occurs naturally in many foods and is safe.' },
+  'malic acid': { what: 'A natural acid found in apples and other fruits.', why: 'Used as a flavour enhancer to add tartness. Natural and safe.' },
+  'lactic acid': { what: 'A natural acid produced during fermentation.', why: 'Found in yoghurt, sauerkraut and sourdough. Natural and safe.' },
+  'pectin': { what: 'A natural gelling agent found in fruit (especially apples and citrus peel).', why: 'Used to set jams and jellies. It\'s a natural plant fibre and perfectly safe.' },
+  'inulin': { what: 'A natural prebiotic fibre found in chicory root.', why: 'Supports gut health by feeding beneficial bacteria. Generally safe, though large amounts can cause bloating.' },
+};
+
+/**
+ * Look up a plain-English description for an ingredient.
+ * Tries: OFF id → lowercase name → E-number extraction.
+ */
+function getAdditiveDescription(ing: OffIngredient): { what: string; why: string } | null {
+  const id = (ing.id ?? '').toLowerCase();
+  if (ADDITIVE_DESCRIPTIONS[id]) return ADDITIVE_DESCRIPTIONS[id];
+
+  const name = ing.text.toLowerCase().trim();
+  if (ADDITIVE_DESCRIPTIONS[name]) return ADDITIVE_DESCRIPTIONS[name];
+
+  // Try extracting an E-number from the id (e.g. "en:e476i" → "en:e476")
+  const eMatch = id.match(/^(en:e\d+)/);
+  if (eMatch && ADDITIVE_DESCRIPTIONS[eMatch[1]]) return ADDITIVE_DESCRIPTIONS[eMatch[1]];
+
+  return null;
+}
+
+// ── Ingredient Info Sheet (for OK / Safe ingredients) ────────────────────────
+function IngredientInfoSheet({
+  ingredient,
+  category,
+  onClose,
+}: {
+  ingredient: OffIngredient | null;
+  category: 'ok' | 'safe';
+  onClose: () => void;
+}) {
+  const insets = useSafeAreaInsets();
+  const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+  const backdropAnim = useRef(new Animated.Value(0)).current;
+  const [mounted, setMounted] = useState(false);
+  const lastRef = useRef<OffIngredient | null>(null);
+  if (ingredient) lastRef.current = ingredient;
+  const display = ingredient ?? lastRef.current;
+
+  useEffect(() => {
+    if (ingredient) {
+      setMounted(true);
+      slideAnim.setValue(SCREEN_HEIGHT);
+      backdropAnim.setValue(0);
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 320,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(backdropAnim, {
+          toValue: 1,
+          duration: 260,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else if (mounted) {
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: SCREEN_HEIGHT,
+          duration: 250,
+          easing: Easing.in(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(backdropAnim, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start(() => setMounted(false));
+    }
+  }, [ingredient]);
+
+  if (!mounted || !display) return null;
+
+  const desc = getAdditiveDescription(display);
+  const iconColor = category === 'ok' ? Extra.poorOrange : Extra.positiveGreen;
+  const iconName = category === 'ok' ? 'alert-circle' : 'checkmark-circle';
+  const categoryLabel = category === 'ok' ? 'OK' : 'Safe';
+
+  return (
+    <Modal
+      visible={mounted}
+      transparent
+      animationType="none"
+      onRequestClose={onClose}
+      statusBarTranslucent
+    >
+      <Animated.View
+        style={[flaggedSheetStyles.backdrop, { opacity: backdropAnim }]}
+        pointerEvents="box-none"
+      >
+        <TouchableOpacity
+          style={StyleSheet.absoluteFill}
+          onPress={onClose}
+          activeOpacity={1}
+        />
+      </Animated.View>
+
+      <Animated.View
+        style={[
+          flaggedSheetStyles.sheet,
+          {
+            transform: [{ translateY: slideAnim }],
+            paddingBottom: insets.bottom + 24,
+          },
+        ]}
+      >
+        <View style={flaggedSheetStyles.handle} />
+
+        <TouchableOpacity
+          style={flaggedSheetStyles.closeBtn}
+          onPress={onClose}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="close" size={22} color={Colors.primary} />
+        </TouchableOpacity>
+
+        <View style={flaggedSheetStyles.content}>
+          <View style={[flaggedSheetStyles.iconCircle, { backgroundColor: `${iconColor}18` }]}>
+            <Ionicons name={iconName} size={24} color={iconColor} />
+          </View>
+          <Text style={flaggedSheetStyles.ingredientName}>
+            {display.text.charAt(0).toUpperCase() + display.text.slice(1)}
+          </Text>
+          <View style={flaggedSheetStyles.descriptionBox}>
+            <Text style={flaggedSheetStyles.reasonTitle}>
+              Classified as {categoryLabel}
+            </Text>
+            {desc ? (
+              <>
+                <Text style={flaggedSheetStyles.reasonBody}>{desc.what}</Text>
+                <Text style={flaggedSheetStyles.reasonBody}>{desc.why}</Text>
+              </>
+            ) : (
+              <Text style={flaggedSheetStyles.reasonBody}>
+                This is a food additive commonly used in processed foods.
+                It has been approved by food safety authorities for use in food products.
+              </Text>
+            )}
+          </View>
+        </View>
+      </Animated.View>
+    </Modal>
+  );
+}
+
 // ── Insight explanation text ─────────────────────────────────────────────────
 const INSIGHT_EXPLANATIONS: Record<InsightKey, string> = {
   glycemic:        'Glycemic impact estimates how quickly this product may raise blood sugar based on its sugar, carbohydrate and fibre content. This is especially relevant for managing diabetes, PCOS and metabolic conditions.',
@@ -1958,6 +2172,7 @@ export default function ScanResultScreen() {
   const [activeFamilyProfile, setActiveFamilyProfile] = useState<FamilyProfile | null>(null);
   const [insightSheetDef, setInsightSheetDef] = useState<{ def: InsightDef; result: ImpactResult } | null>(null);
   const [flaggedSheetIng, setFlaggedSheetIng] = useState<FlaggedIngredient | null>(null);
+  const [infoSheetIng, setInfoSheetIng] = useState<{ ing: OffIngredient; category: 'ok' | 'safe' } | null>(null);
 
   // When opened from History, nutritional params are absent — fetch them from OFF.
   type OffPayload = {
@@ -2239,18 +2454,22 @@ export default function ScanResultScreen() {
   // Ingredients parsing for Ingredients tab — clean text-based list
   const ingredientsList: string[] = parseIngredientsText(ingredientsText);
 
-  // Structured OFF ingredients — deduplicated raw JSON for metadata (vegan/vegetarian flags)
+  // Structured OFF ingredients — deduplicated, cleaned raw JSON for metadata (vegan/vegetarian flags)
   const rawStructured: OffIngredient[] = ingredientsJsonRaw
     ? (() => {
         try {
           const raw = JSON.parse(ingredientsJsonRaw) as OffIngredient[];
           const seen = new Set<string>();
-          return raw.filter((ing) => {
-            const key = (ing.id ?? ing.text).toLowerCase();
-            if (seen.has(key)) return false;
-            seen.add(key);
-            return true;
-          });
+          return raw
+            .map((ing) => ({ ...ing, text: cleanIngredientName(ing.text) }))
+            .filter((ing) => {
+              // Drop empty or very short entries left after cleaning
+              if (ing.text.length <= 1) return false;
+              const key = (ing.id ?? ing.text).toLowerCase();
+              if (seen.has(key)) return false;
+              seen.add(key);
+              return true;
+            });
         } catch { return []; }
       })()
     : [];
@@ -2885,9 +3104,13 @@ export default function ScanResultScreen() {
                         <View key={ing.id ?? i} style={styles.ingRowSmall}>
                           <Ionicons name="checkmark" size={24} color={Extra.poorOrange} />
                           <Text style={styles.ingName} numberOfLines={2}>{sentenceCase(ing.text)}</Text>
-                          <View style={styles.ingInfoContainer}>
+                          <TouchableOpacity
+                            style={styles.ingInfoContainer}
+                            onPress={() => setInfoSheetIng({ ing, category: 'ok' })}
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                          >
                             <InfoIcon width={16} height={16} />
-                          </View>
+                          </TouchableOpacity>
                         </View>
                       ))}
                     </View>
@@ -3012,6 +3235,13 @@ export default function ScanResultScreen() {
         onClose={() => setFlaggedSheetIng(null)}
         conditions={activeConditions}
         allergies={activeAllergies}
+      />
+
+      {/* ── OK / Safe ingredient info sheet ── */}
+      <IngredientInfoSheet
+        ingredient={infoSheetIng?.ing ?? null}
+        category={infoSheetIng?.category ?? 'ok'}
+        onClose={() => setInfoSheetIng(null)}
       />
 
       {/* ── Insight detail sheet ── */}
