@@ -528,8 +528,8 @@ export default function ScannerScreen() {
 }
 
 const FRAME_SIZE = 260;
-const FRAME_WIDTH = 300;
-const FRAME_HEIGHT = 180;
+const FRAME_WIDTH = 450;
+const FRAME_HEIGHT = 270;
 const CORNER_SIZE = 32;
 const CORNER_THICKNESS = 4;
 
