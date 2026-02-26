@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
 import { BarcodeDetector as BarcodeDetectorPolyfill } from 'barcode-detector/pure';
@@ -19,7 +19,6 @@ export function WebBarcodeScanner({ onBarcodeScanned, scanning, processing }: We
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [hasDetector, setHasDetector] = useState(true);
-  const [manualBarcode, setManualBarcode] = useState('');
 
   // Create video element and start camera
   useEffect(() => {
@@ -145,43 +144,12 @@ export function WebBarcodeScanner({ onBarcodeScanned, scanning, processing }: We
     return () => cancelAnimationFrame(rafRef.current);
   }, [cameraReady, hasDetector, detectBarcode]);
 
-  function handleManualSubmit() {
-    const code = manualBarcode.trim();
-    if (!code || processing) return;
-    onBarcodeScanned(code);
-  }
-
-  // Camera error — show manual entry
+  // Camera error
   if (cameraError) {
     return (
       <View style={styles.fallbackContainer}>
         <Ionicons name="camera-off-outline" size={48} color={Colors.secondary} />
         <Text style={styles.errorText}>{cameraError}</Text>
-        <Text style={styles.fallbackLabel}>Enter a barcode manually instead:</Text>
-        <View style={styles.inputRow}>
-          <TextInput
-            style={styles.input}
-            value={manualBarcode}
-            onChangeText={setManualBarcode}
-            placeholder="e.g. 5000159484695"
-            placeholderTextColor="#aad4cd"
-            keyboardType="number-pad"
-            returnKeyType="search"
-            onSubmitEditing={handleManualSubmit}
-            editable={!processing}
-          />
-          <TouchableOpacity
-            style={[styles.searchBtn, (!manualBarcode.trim() || processing) && styles.searchBtnDisabled]}
-            onPress={handleManualSubmit}
-            disabled={!manualBarcode.trim() || processing}
-          >
-            {processing ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Ionicons name="search" size={20} color="#fff" />
-            )}
-          </TouchableOpacity>
-        </View>
       </View>
     );
   }
@@ -198,40 +166,6 @@ export function WebBarcodeScanner({ onBarcodeScanned, scanning, processing }: We
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color="#fff" />
           <Text style={styles.loadingText}>Starting camera...</Text>
-        </View>
-      )}
-
-      {/* No BarcodeDetector — show manual entry over camera */}
-      {cameraReady && !hasDetector && (
-        <View style={styles.manualOverlay}>
-          <Text style={styles.manualTitle}>
-            Enter barcode number to search
-          </Text>
-          <View style={styles.inputRow}>
-            <TextInput
-              style={styles.input}
-              value={manualBarcode}
-              onChangeText={setManualBarcode}
-              placeholder="e.g. 5000159484695"
-              placeholderTextColor="#aad4cd"
-              keyboardType="number-pad"
-              returnKeyType="search"
-              onSubmitEditing={handleManualSubmit}
-              editable={!processing}
-              autoFocus
-            />
-            <TouchableOpacity
-              style={[styles.searchBtn, (!manualBarcode.trim() || processing) && styles.searchBtnDisabled]}
-              onPress={handleManualSubmit}
-              disabled={!manualBarcode.trim() || processing}
-            >
-              {processing ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Ionicons name="search" size={20} color="#fff" />
-              )}
-            </TouchableOpacity>
-          </View>
         </View>
       )}
     </View>
@@ -272,63 +206,5 @@ const styles = StyleSheet.create({
     color: Colors.secondary,
     textAlign: 'center',
     lineHeight: 24,
-  },
-  fallbackLabel: {
-    fontSize: 16,
-    fontFamily: 'Figtree_700Bold',
-    fontWeight: '700',
-    color: Colors.primary,
-    marginTop: 16,
-  },
-  manualOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(226,241,238,0.95)',
-    padding: 24,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    alignItems: 'center',
-    gap: 8,
-    zIndex: 2,
-  },
-  manualTitle: {
-    fontSize: 16,
-    fontFamily: 'Figtree_700Bold',
-    fontWeight: '700',
-    color: Colors.primary,
-    textAlign: 'center',
-  },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    width: '100%',
-    maxWidth: 420,
-  },
-  input: {
-    flex: 1,
-    height: 52,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#aad4cd',
-    paddingHorizontal: 16,
-    fontSize: 18,
-    fontFamily: 'Figtree_400Regular',
-    color: Colors.primary,
-    letterSpacing: 1,
-  },
-  searchBtn: {
-    width: 52,
-    height: 52,
-    backgroundColor: Colors.primary,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  searchBtnDisabled: {
-    opacity: 0.4,
   },
 });
