@@ -315,8 +315,8 @@ export default function ScannerScreen() {
           onBarcodeScanned={(data) => handleBarcodeScan({ data } as BarcodeScanningResult)}
         />
 
-        {/* Overlay UI */}
-        <View style={styles.overlay} pointerEvents="box-none">
+        {/* Overlay UI — absolutely positioned over the camera */}
+        <View style={[styles.overlay, StyleSheet.absoluteFillObject]} pointerEvents="box-none">
           {/* Top bar */}
           <SafeAreaView edges={['top']} pointerEvents="box-none">
             <View style={styles.topBar}>
