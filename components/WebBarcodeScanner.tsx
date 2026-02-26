@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
+import { BarcodeDetector as BarcodeDetectorPolyfill } from 'barcode-detector/pure';
 
 interface WebBarcodeScannerProps {
   onBarcodeScanned: (data: string) => void;
@@ -24,16 +25,17 @@ export function WebBarcodeScanner({ onBarcodeScanned, scanning, processing }: We
   useEffect(() => {
     let mounted = true;
 
-    // Check if BarcodeDetector API is available
-    if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
-      try {
-        detectorRef.current = new (window as any).BarcodeDetector({
-          formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'qr_code', 'code_128'],
-        });
-      } catch {
-        if (mounted) setHasDetector(false);
-      }
-    } else {
+    // Use native BarcodeDetector if available, otherwise use the polyfill
+    const DetectorClass: any =
+      (typeof window !== 'undefined' && 'BarcodeDetector' in window)
+        ? (window as any).BarcodeDetector
+        : BarcodeDetectorPolyfill;
+
+    try {
+      detectorRef.current = new DetectorClass({
+        formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'qr_code', 'code_128'],
+      });
+    } catch {
       if (mounted) setHasDetector(false);
     }
 
