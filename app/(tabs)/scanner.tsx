@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, Modal, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, Modal, FlatList, Platform, TextInput } from 'react-native';
 import { CameraView, useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -54,6 +54,7 @@ export default function ScannerScreen() {
   const { session } = useAuth();
   const { isPlus } = useSubscription();
   const lastScan = useRef<string | null>(null);
+  const [manualBarcode, setManualBarcode] = useState('');
 
   // Reset scanner state every time the tab comes into focus
   useFocusEffect(
@@ -61,8 +62,15 @@ export default function ScannerScreen() {
       setScanning(true);
       setProcessing(false);
       lastScan.current = null;
+      setManualBarcode('');
     }, []),
   );
+
+  function handleManualSubmit() {
+    const code = manualBarcode.trim();
+    if (!code || processing) return;
+    handleBarcodeScan({ data: code } as BarcodeScanningResult);
+  }
 
   async function handleBarcodeScan(result: BarcodeScanningResult) {
     // Debounce — ignore repeated scans of the same code
@@ -304,6 +312,99 @@ export default function ScannerScreen() {
     }
   }
 
+  // ── Web: manual barcode entry (camera not supported) ──────────────────────
+  if (Platform.OS === 'web') {
+    return (
+      <SafeAreaView style={styles.webContainer}>
+        <Text style={styles.webTitle}>Search by Barcode</Text>
+        <Text style={styles.webSubtitle}>
+          Enter a product barcode number to look it up
+        </Text>
+
+        <View style={styles.webInputRow}>
+          <TextInput
+            style={styles.webInput}
+            value={manualBarcode}
+            onChangeText={setManualBarcode}
+            placeholder="e.g. 5000159484695"
+            placeholderTextColor="#aad4cd"
+            keyboardType="number-pad"
+            returnKeyType="search"
+            onSubmitEditing={handleManualSubmit}
+            editable={!processing}
+            autoFocus
+          />
+          <TouchableOpacity
+            style={[styles.webSearchBtn, (!manualBarcode.trim() || processing) && styles.webSearchBtnDisabled]}
+            onPress={handleManualSubmit}
+            activeOpacity={0.85}
+            disabled={!manualBarcode.trim() || processing}
+          >
+            {processing ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Ionicons name="search" size={20} color="#fff" />
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {/* Region selector — Plus subscribers only */}
+        {isPlus && (
+          <TouchableOpacity
+            style={styles.webRegionPill}
+            onPress={() => setRegionPickerVisible(true)}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="globe-outline" size={16} color={Colors.secondary} />
+            <Text style={styles.webRegionText}>{selectedRegion.label}</Text>
+            <Ionicons name="chevron-down" size={14} color={Colors.secondary} />
+          </TouchableOpacity>
+        )}
+
+        <Text style={styles.webHint}>
+          Supports EAN-13, EAN-8, UPC-A and UPC-E barcodes
+        </Text>
+
+        {/* Region picker modal — Plus subscribers only */}
+        <Modal
+          visible={regionPickerVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setRegionPickerVisible(false)}
+        >
+          <TouchableOpacity
+            style={styles.switcherBackdrop}
+            activeOpacity={1}
+            onPress={() => setRegionPickerVisible(false)}
+          >
+            <View style={styles.switcherDropdown}>
+              <Text style={styles.switcherDropdownTitle}>Select region</Text>
+              <FlatList
+                data={REGIONS}
+                keyExtractor={(item) => item.code}
+                style={{ maxHeight: 340 }}
+                renderItem={({ item: region }) => (
+                  <TouchableOpacity
+                    style={styles.switcherOption}
+                    onPress={() => { setSelectedRegion(region); setRegionPickerVisible(false); }}
+                    activeOpacity={0.8}
+                  >
+                    <View style={[styles.switcherCheck, selectedRegion.code === region.code && styles.switcherCheckActive]}>
+                      {selectedRegion.code === region.code && <Ionicons name="checkmark" size={14} color="#fff" />}
+                    </View>
+                    <Text style={styles.switcherOptionText}>{region.label}</Text>
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+          </TouchableOpacity>
+        </Modal>
+      </SafeAreaView>
+    );
+  }
+
+  // ── Native: camera barcode scanner ──────────────────────────────────────────
+
   // Permission not yet determined
   if (!permission) {
     return (
@@ -446,6 +547,90 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 40,
     gap: 16,
+  },
+  // Web scanner styles
+  webContainer: {
+    flex: 1,
+    backgroundColor: Colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+    gap: 12,
+  },
+  webTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    textAlign: 'center',
+    letterSpacing: -0.56,
+  },
+  webSubtitle: {
+    fontSize: 16,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
+    color: Colors.secondary,
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 8,
+  },
+  webInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    width: '100%',
+    maxWidth: 420,
+  },
+  webInput: {
+    flex: 1,
+    height: 52,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#aad4cd',
+    paddingHorizontal: 16,
+    fontSize: 18,
+    fontFamily: 'Figtree_400Regular',
+    color: Colors.primary,
+    letterSpacing: 1,
+  },
+  webSearchBtn: {
+    width: 52,
+    height: 52,
+    backgroundColor: Colors.primary,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  webSearchBtnDisabled: {
+    opacity: 0.4,
+  },
+  webRegionPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#aad4cd',
+    borderRadius: 999,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    marginTop: 4,
+  },
+  webRegionText: {
+    fontSize: 14,
+    fontFamily: 'Figtree_700Bold',
+    fontWeight: '700',
+    color: Colors.secondary,
+    letterSpacing: -0.28,
+  },
+  webHint: {
+    fontSize: 13,
+    fontFamily: 'Figtree_300Light',
+    fontWeight: '300',
+    color: Colors.secondary,
+    textAlign: 'center',
+    marginTop: 8,
   },
   permissionTitle: {
     fontSize: 24,
