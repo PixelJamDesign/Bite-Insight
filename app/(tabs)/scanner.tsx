@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, Modal, FlatList, Platform, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, Modal, FlatList, Platform } from 'react-native';
 import { CameraView, useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,6 +9,7 @@ import { useAuth } from '@/lib/auth';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { Colors } from '@/constants/theme';
 import { getCachedProduct, cacheProduct } from '@/lib/productCache';
+import { WebBarcodeScanner } from '@/components/WebBarcodeScanner';
 
 // ── Region definitions for OFF database ──────────────────────────────────────
 type Region = { code: string; label: string; subdomain: string };
@@ -54,7 +55,6 @@ export default function ScannerScreen() {
   const { session } = useAuth();
   const { isPlus } = useSubscription();
   const lastScan = useRef<string | null>(null);
-  const [manualBarcode, setManualBarcode] = useState('');
 
   // Reset scanner state every time the tab comes into focus
   useFocusEffect(
@@ -62,15 +62,8 @@ export default function ScannerScreen() {
       setScanning(true);
       setProcessing(false);
       lastScan.current = null;
-      setManualBarcode('');
     }, []),
   );
-
-  function handleManualSubmit() {
-    const code = manualBarcode.trim();
-    if (!code || processing) return;
-    handleBarcodeScan({ data: code } as BarcodeScanningResult);
-  }
 
   async function handleBarcodeScan(result: BarcodeScanningResult) {
     // Debounce — ignore repeated scans of the same code
@@ -312,58 +305,69 @@ export default function ScannerScreen() {
     }
   }
 
-  // ── Web: manual barcode entry (camera not supported) ──────────────────────
+  // ── Web: camera barcode scanner with BarcodeDetector API ──────────────────
   if (Platform.OS === 'web') {
     return (
-      <SafeAreaView style={styles.webContainer}>
-        <Text style={styles.webTitle}>Search by Barcode</Text>
-        <Text style={styles.webSubtitle}>
-          Enter a product barcode number to look it up
-        </Text>
+      <View style={styles.container}>
+        <WebBarcodeScanner
+          scanning={scanning}
+          processing={processing}
+          onBarcodeScanned={(data) => handleBarcodeScan({ data } as BarcodeScanningResult)}
+        />
 
-        <View style={styles.webInputRow}>
-          <TextInput
-            style={styles.webInput}
-            value={manualBarcode}
-            onChangeText={setManualBarcode}
-            placeholder="e.g. 5000159484695"
-            placeholderTextColor="#aad4cd"
-            keyboardType="number-pad"
-            returnKeyType="search"
-            onSubmitEditing={handleManualSubmit}
-            editable={!processing}
-            autoFocus
-          />
-          <TouchableOpacity
-            style={[styles.webSearchBtn, (!manualBarcode.trim() || processing) && styles.webSearchBtnDisabled]}
-            onPress={handleManualSubmit}
-            activeOpacity={0.85}
-            disabled={!manualBarcode.trim() || processing}
-          >
-            {processing ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Ionicons name="search" size={20} color="#fff" />
+        {/* Overlay UI */}
+        <View style={styles.overlay} pointerEvents="box-none">
+          {/* Top bar */}
+          <SafeAreaView edges={['top']} pointerEvents="box-none">
+            <View style={styles.topBar}>
+              <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+                <Ionicons name="arrow-back" size={24} color="#fff" />
+              </TouchableOpacity>
+              <Text style={styles.topTitle}>Scan Food Label</Text>
+              <View style={{ width: 44 }} />
+            </View>
+          </SafeAreaView>
+
+          {/* Region selector pill — only shown for Plus subscribers */}
+          {isPlus && (
+            <View style={styles.switcherRow}>
+              <TouchableOpacity
+                style={styles.switcherPill}
+                onPress={() => setRegionPickerVisible(true)}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="globe-outline" size={16} color="#fff" />
+                <Text style={styles.switcherText}>{selectedRegion.label}</Text>
+                <Ionicons name="chevron-down" size={14} color="rgba(255,255,255,0.7)" />
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Scan frame */}
+          <View style={styles.frameArea} pointerEvents="none">
+            <View style={styles.frame}>
+              <View style={[styles.corner, styles.topLeft]} />
+              <View style={[styles.corner, styles.topRight]} />
+              <View style={[styles.corner, styles.bottomLeft]} />
+              <View style={[styles.corner, styles.bottomRight]} />
+            </View>
+            <Text style={styles.frameHint}>
+              {processing ? 'Processing...' : 'Point at a barcode to scan'}
+            </Text>
+            {processing && (
+              <ActivityIndicator size="large" color="#fff" style={{ marginTop: 16 }} />
             )}
-          </TouchableOpacity>
+          </View>
+
+          {/* Bottom hint */}
+          <SafeAreaView edges={['bottom']} pointerEvents="none">
+            <View style={styles.bottomBar}>
+              <Text style={styles.bottomHint}>
+                Supports EAN-13, EAN-8, UPC-A and QR codes
+              </Text>
+            </View>
+          </SafeAreaView>
         </View>
-
-        {/* Region selector — Plus subscribers only */}
-        {isPlus && (
-          <TouchableOpacity
-            style={styles.webRegionPill}
-            onPress={() => setRegionPickerVisible(true)}
-            activeOpacity={0.85}
-          >
-            <Ionicons name="globe-outline" size={16} color={Colors.secondary} />
-            <Text style={styles.webRegionText}>{selectedRegion.label}</Text>
-            <Ionicons name="chevron-down" size={14} color={Colors.secondary} />
-          </TouchableOpacity>
-        )}
-
-        <Text style={styles.webHint}>
-          Supports EAN-13, EAN-8, UPC-A and UPC-E barcodes
-        </Text>
 
         {/* Region picker modal — Plus subscribers only */}
         <Modal
@@ -399,7 +403,7 @@ export default function ScannerScreen() {
             </View>
           </TouchableOpacity>
         </Modal>
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -547,90 +551,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 40,
     gap: 16,
-  },
-  // Web scanner styles
-  webContainer: {
-    flex: 1,
-    backgroundColor: Colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 32,
-    gap: 12,
-  },
-  webTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
-    textAlign: 'center',
-    letterSpacing: -0.56,
-  },
-  webSubtitle: {
-    fontSize: 16,
-    fontWeight: '300',
-    fontFamily: 'Figtree_300Light',
-    color: Colors.secondary,
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 8,
-  },
-  webInputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    width: '100%',
-    maxWidth: 420,
-  },
-  webInput: {
-    flex: 1,
-    height: 52,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#aad4cd',
-    paddingHorizontal: 16,
-    fontSize: 18,
-    fontFamily: 'Figtree_400Regular',
-    color: Colors.primary,
-    letterSpacing: 1,
-  },
-  webSearchBtn: {
-    width: 52,
-    height: 52,
-    backgroundColor: Colors.primary,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  webSearchBtnDisabled: {
-    opacity: 0.4,
-  },
-  webRegionPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#aad4cd',
-    borderRadius: 999,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    marginTop: 4,
-  },
-  webRegionText: {
-    fontSize: 14,
-    fontFamily: 'Figtree_700Bold',
-    fontWeight: '700',
-    color: Colors.secondary,
-    letterSpacing: -0.28,
-  },
-  webHint: {
-    fontSize: 13,
-    fontFamily: 'Figtree_300Light',
-    fontWeight: '300',
-    color: Colors.secondary,
-    textAlign: 'center',
-    marginTop: 8,
   },
   permissionTitle: {
     fontSize: 24,
