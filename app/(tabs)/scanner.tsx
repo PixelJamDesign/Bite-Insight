@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, Modal, FlatList, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, Modal, FlatList, Platform, Dimensions } from 'react-native';
 import { CameraView, useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -528,8 +528,9 @@ export default function ScannerScreen() {
 }
 
 const FRAME_SIZE = 260;
-const FRAME_WIDTH = 450;
-const FRAME_HEIGHT = 270;
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const FRAME_WIDTH = Math.min(450, SCREEN_WIDTH * 0.9);
+const FRAME_HEIGHT = FRAME_WIDTH * 0.6;
 const CORNER_SIZE = 32;
 const CORNER_THICKNESS = 4;
 
