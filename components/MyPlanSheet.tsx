@@ -118,8 +118,10 @@ export function MyPlanSheet() {
     } else if (Platform.OS === 'android') {
       Linking.openURL('https://play.google.com/store/account/subscriptions');
     } else {
-      // Web: Stripe Customer Portal
-      Linking.openURL('https://billing.stripe.com/p/login/5kQfZaa1Lc3bdwb1qr4gg00');
+      // Web: Stripe Customer Portal — pre-fill email so user doesn't have to type it
+      const email = session?.user?.email;
+      const portalUrl = 'https://billing.stripe.com/p/login/5kQfZaa1Lc3bdwb1qr4gg00';
+      Linking.openURL(email ? `${portalUrl}?prefilled_email=${encodeURIComponent(email)}` : portalUrl);
     }
   }
 
