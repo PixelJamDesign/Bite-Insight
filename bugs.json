@@ -1,0 +1,37 @@
+[
+  {
+    "id": "BUG-MM2DCZ8R",
+    "title": "Login form feedback.",
+    "description": "We need to show an error (use the same style as the allergy panel we've previously designed) for when a password is wrong.\n\nWhen the email is entered and doesnt match a record in the supabase auth table, can we prompt them to sign-up?",
+    "steps": "",
+    "priority": "medium",
+    "status": "open",
+    "files": [],
+    "createdAt": "2026-02-25T18:29:54.411Z",
+    "updatedAt": "2026-02-25T18:29:54.411Z"
+  },
+  {
+    "id": "BUG-MM2C57DK",
+    "title": "Change the selector on the scanner viewport",
+    "priority": "MEDIUM",
+    "status": "signed-off",
+    "description": "Currently there is a selector for different family members. Can we change this to be a region selector (only available to Bite Insight+ users).",
+    "files": [
+      "app/(tabs)/scanner.tsx"
+    ],
+    "updatedAt": "2026-02-25T18:41:08.187Z",
+    "resolution": "Replaced the family member switcher pill and modal with a region selector. Defined 10 regions (World, UK, US, FR, DE, ES, IT, AU, CA, NL) that map to Open Food Facts subdomains. The selector is only visible to Plus subscribers. Free users get their device locale region automatically. Also fixed the TODO on the OFF API call to use the selected region."
+  },
+  {
+    "id": "BUG-MM2BYQEU",
+    "title": "Move the grab handle for reordering to the other side",
+    "priority": "MEDIUM",
+    "status": "signed-off",
+    "description": "I want to move the grab handle when a user edits the family profiles to the right side instead of the left. We also need to make the icon slightly bigger as its too small.",
+    "files": [
+      "app/family-members.tsx"
+    ],
+    "updatedAt": "2026-02-25T18:41:09.305Z",
+    "resolution": "Moved the drag handle from before the checkbox (left side) to after the rowInfo (right side) in the EditRow component. Increased the reorder icon size from 22 to 30 and the handle touch target from 28px to 36x36px."
+  }
+]
