@@ -10,6 +10,7 @@ interface WebBarcodeScannerProps {
 }
 
 export function WebBarcodeScanner({ onBarcodeScanned, scanning, processing }: WebBarcodeScannerProps) {
+  const containerRef = useRef<View>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const detectorRef = useRef<any>(null);
@@ -19,27 +20,52 @@ export function WebBarcodeScanner({ onBarcodeScanned, scanning, processing }: We
   const [hasDetector, setHasDetector] = useState(true);
   const [manualBarcode, setManualBarcode] = useState('');
 
-  // Start the camera
+  // Create video element and start camera
   useEffect(() => {
     let mounted = true;
 
-    async function startCamera() {
-      // Check if BarcodeDetector API is available
-      if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
-        try {
-          detectorRef.current = new (window as any).BarcodeDetector({
-            formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'qr_code', 'code_128'],
-          });
-        } catch {
-          if (mounted) setHasDetector(false);
-        }
-      } else {
+    // Check if BarcodeDetector API is available
+    if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
+      try {
+        detectorRef.current = new (window as any).BarcodeDetector({
+          formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'qr_code', 'code_128'],
+        });
+      } catch {
         if (mounted) setHasDetector(false);
       }
+    } else {
+      if (mounted) setHasDetector(false);
+    }
 
+    // Create a real HTML video element and inject it into the DOM
+    const video = document.createElement('video');
+    video.setAttribute('playsinline', 'true');
+    video.setAttribute('autoplay', 'true');
+    video.muted = true;
+    video.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:0;';
+    videoRef.current = video;
+
+    // Attach video to the container DOM node
+    const tryAttach = () => {
+      const node = (containerRef.current as any);
+      // React Native Web exposes the underlying DOM node
+      const domNode: HTMLElement | null =
+        node instanceof HTMLElement ? node :
+        node?._nativeTag ? document.querySelector(`[data-rnw="${node._nativeTag}"]`) :
+        null;
+      // Fallback: find by data attribute we set
+      const target = domNode || document.getElementById('web-scanner-container');
+      if (target && !target.contains(video)) {
+        target.style.position = 'relative';
+        target.style.overflow = 'hidden';
+        target.insertBefore(video, target.firstChild);
+      }
+    };
+
+    async function startCamera() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+          video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
           audio: false,
         });
 
@@ -49,21 +75,26 @@ export function WebBarcodeScanner({ onBarcodeScanned, scanning, processing }: We
         }
 
         streamRef.current = stream;
+        video.srcObject = stream;
 
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.setAttribute('playsinline', 'true');
-          await videoRef.current.play();
-          setCameraReady(true);
-        }
+        video.onloadedmetadata = () => {
+          video.play().then(() => {
+            if (mounted) setCameraReady(true);
+          }).catch(() => {
+            if (mounted) setCameraError('Could not start camera playback.');
+          });
+        };
+
+        // Attach after a tick to ensure the container DOM node exists
+        requestAnimationFrame(tryAttach);
       } catch (err: any) {
         if (mounted) {
           if (err.name === 'NotAllowedError') {
             setCameraError('Camera access was denied. Please allow camera access in your browser settings.');
-          } else if (err.name === 'NotFoundError') {
+          } else if (err.name === 'NotFoundError' || err.name === 'OverconstrainedError') {
             setCameraError('No camera found on this device.');
           } else {
-            setCameraError('Could not access camera.');
+            setCameraError(`Could not access camera: ${err.message || err.name}`);
           }
         }
       }
@@ -78,6 +109,10 @@ export function WebBarcodeScanner({ onBarcodeScanned, scanning, processing }: We
         streamRef.current.getTracks().forEach(t => t.stop());
         streamRef.current = null;
       }
+      if (video.parentNode) {
+        video.parentNode.removeChild(video);
+      }
+      videoRef.current = null;
     };
   }, []);
 
@@ -150,22 +185,12 @@ export function WebBarcodeScanner({ onBarcodeScanned, scanning, processing }: We
   }
 
   return (
-    <View style={styles.container}>
-      {/* Camera video feed */}
-      <video
-        ref={videoRef as any}
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-        }}
-        muted
-        playsInline
-      />
-
+    <View
+      ref={containerRef}
+      style={styles.container}
+      // @ts-ignore — web-only prop for DOM fallback lookup
+      nativeID="web-scanner-container"
+    >
       {/* Loading spinner while camera initializes */}
       {!cameraReady && (
         <View style={styles.loadingOverlay}>
@@ -178,9 +203,8 @@ export function WebBarcodeScanner({ onBarcodeScanned, scanning, processing }: We
       {cameraReady && !hasDetector && (
         <View style={styles.manualOverlay}>
           <Text style={styles.manualTitle}>
-            Your browser doesn't support barcode detection
+            Enter barcode number to search
           </Text>
-          <Text style={styles.manualHint}>Enter the barcode number manually:</Text>
           <View style={styles.inputRow}>
             <TextInput
               style={styles.input}
@@ -224,6 +248,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
+    zIndex: 1,
   },
   loadingText: {
     color: 'rgba(255,255,255,0.7)',
@@ -264,6 +289,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 16,
     alignItems: 'center',
     gap: 8,
+    zIndex: 2,
   },
   manualTitle: {
     fontSize: 16,
@@ -271,14 +297,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Colors.primary,
     textAlign: 'center',
-  },
-  manualHint: {
-    fontSize: 14,
-    fontFamily: 'Figtree_300Light',
-    fontWeight: '300',
-    color: Colors.secondary,
-    textAlign: 'center',
-    marginBottom: 4,
   },
   inputRow: {
     flexDirection: 'row',
