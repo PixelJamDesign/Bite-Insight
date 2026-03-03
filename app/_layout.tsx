@@ -1,9 +1,8 @@
-import '../global.css';
-import { useEffect } from 'react';
-import { Redirect, Stack, useRootNavigationState, useSegments } from 'expo-router';
+import { useEffect, useRef } from 'react';
+import { Redirect, Stack, useRootNavigationState, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
-import { Animated, View, Text } from 'react-native';
+import { Animated, Linking, View, Text } from 'react-native';
 import { Session } from '@supabase/supabase-js';
 import {
   Figtree_300Light,
@@ -12,7 +11,7 @@ import {
   useFonts,
 } from '@expo-google-fonts/figtree';
 import { SessionProvider, useAuth } from '@/lib/auth';
-import { supabaseConfigured } from '@/lib/supabase';
+import { supabase, supabaseConfigured } from '@/lib/supabase';
 import { TransitionProvider, useTransition } from '@/lib/transitionContext';
 import { UpsellSheetProvider } from '@/lib/upsellSheetContext';
 import { MyPlanSheetProvider } from '@/lib/myPlanSheetContext';
@@ -32,12 +31,18 @@ function AuthGuard({ session }: { session: Session | null }) {
   if (!navigationState?.key) return null;
 
   const inAuthGroup = segments[0] === '(auth)';
+  const inResetPassword = segments[0] === 'reset-password';
+
+  // Allow the reset-password screen regardless of session state —
+  // the deep-link handler sets the session just before navigating here,
+  // but there's a render cycle gap we don't want to fight with.
+  if (inResetPassword) return null;
 
   if (!session && !inAuthGroup) {
     return <Redirect href="/(auth)/login" />;
   }
   if (session && inAuthGroup) {
-    return <Redirect href="/(tabs)/" />;
+    return <Redirect href="/(tabs)" />;
   }
   return null;
 }
@@ -46,6 +51,34 @@ function AuthGuard({ session }: { session: Session | null }) {
 // Keeping this separate is necessary because a component can't consume a context
 // it provides itself; the provider must be an ancestor.
 function RootLayoutInner() {
+  const router = useRouter();
+  const handledUrl = useRef(false);
+
+  // Handle deep links for password reset.
+  // Supabase sends: biteinsight://reset-password#access_token=...&type=recovery
+  useEffect(() => {
+    async function handleUrl(url: string) {
+      const fragment = url.split('#')[1];
+      if (!fragment) return;
+      const params = new URLSearchParams(fragment);
+      if (params.get('type') !== 'recovery') return;
+      const access_token = params.get('access_token');
+      const refresh_token = params.get('refresh_token');
+      if (!access_token || !refresh_token || handledUrl.current) return;
+      handledUrl.current = true;
+      try {
+        await supabase.auth.setSession({ access_token, refresh_token });
+      } catch { /* ignore — screen will show an error if session is invalid */ }
+      router.replace('/reset-password');
+    }
+
+    // Cold start: app opened via deep link
+    Linking.getInitialURL().then((url) => { if (url) handleUrl(url); });
+    // Warm start: URL received while app is running
+    const sub = Linking.addEventListener('url', ({ url }) => handleUrl(url));
+    return () => sub.remove();
+  }, []);
+
   const [fontsLoaded] = useFonts({
     Figtree_300Light,
     Figtree_400Regular,
@@ -96,6 +129,7 @@ function RootLayoutInner() {
             <Stack.Screen name="family-members" />
             <Stack.Screen name="add-family-member" />
             <Stack.Screen name="upgrade-success" />
+            <Stack.Screen name="reset-password" />
             <Stack.Screen name="+not-found" />
           </Stack>
         </Animated.View>

@@ -5,10 +5,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { supabase } from '@/lib/supabase';
+import { safeBack } from '@/lib/safeBack';
 import { useAuth } from '@/lib/auth';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { Colors } from '@/constants/theme';
 import { getCachedProduct, cacheProduct } from '@/lib/productCache';
+import { getOfflineProduct } from '@/lib/offlineDatabase';
 import { WebBarcodeScanner } from '@/components/WebBarcodeScanner';
 
 // ── Region definitions for OFF database ──────────────────────────────────────
@@ -130,7 +132,39 @@ export default function ScannerScreen() {
         ingredientsJson = cached.ingredientsJson ?? null;
         offLang         = cached.offLang ?? null;
       } else {
-        // ── Tier 2: Open Food Facts API ───────────────────────────────────────
+        // ── Tier 2: Offline UK database (if downloaded) ─────────────────────
+        const offlineResult = await getOfflineProduct(result.data);
+        if (offlineResult) {
+          productName     = offlineResult.productName;
+          brand           = offlineResult.brand;
+          imageUrl        = offlineResult.imageUrl;
+          quantity        = offlineResult.quantity;
+          nutriscoreGrade = offlineResult.nutriscoreGrade;
+          energyKcal      = offlineResult.energyKcal;
+          carbs           = offlineResult.carbs;
+          sugars          = offlineResult.sugars;
+          fiber           = offlineResult.fiber;
+          fat             = offlineResult.fat;
+          saturatedFat    = offlineResult.saturatedFat;
+          proteins        = offlineResult.proteins;
+          salt            = offlineResult.salt;
+          servingSize         = offlineResult.servingSize;
+          energyKcalServing   = offlineResult.energyKcalServing;
+          carbsServing        = offlineResult.carbsServing;
+          sugarsServing       = offlineResult.sugarsServing;
+          fiberServing        = offlineResult.fiberServing;
+          fatServing          = offlineResult.fatServing;
+          saturatedFatServing = offlineResult.saturatedFatServing;
+          proteinsServing     = offlineResult.proteinsServing;
+          saltServing         = offlineResult.saltServing;
+          ingredientsText = offlineResult.ingredientsText;
+          allergens       = offlineResult.allergens ? offlineResult.allergens.split(',').filter(Boolean) : [];
+          ingredientsJson = offlineResult.ingredientsJson ?? null;
+          offLang         = offlineResult.offLang ?? null;
+        }
+
+        // ── Tier 3: Open Food Facts API ─────────────────────────────────────
+        if (!offlineResult) {
         const offBaseUrl = getOFFBaseUrl(selectedRegion);
         try {
           const offRes = await fetch(
@@ -179,6 +213,7 @@ export default function ScannerScreen() {
         } catch {
           // Network unavailable — continue with empty product data
         }
+        } // end if (!offlineResult)
 
         // Save to local cache for future offline use (fire-and-forget)
         cacheProduct({
@@ -320,7 +355,7 @@ export default function ScannerScreen() {
           {/* Top bar — back button + region selector */}
           <SafeAreaView edges={['top']} pointerEvents="box-none">
             <View style={styles.topBar}>
-              <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+              <TouchableOpacity style={styles.backBtn} onPress={safeBack}>
                 <Ionicons name="arrow-back" size={24} color="#fff" />
               </TouchableOpacity>
               {isPlus ? (
@@ -440,7 +475,7 @@ export default function ScannerScreen() {
         {/* Top bar */}
         <SafeAreaView edges={['top']}>
           <View style={styles.topBar}>
-            <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+            <TouchableOpacity style={styles.backBtn} onPress={safeBack}>
               <Ionicons name="arrow-back" size={24} color="#fff" />
             </TouchableOpacity>
             <Text style={styles.topTitle}>Scan Food Label</Text>

@@ -30,6 +30,7 @@ import {
   translateToEnglish,
   cleanIngredientName,
 } from '@/lib/ingredientsCleaner';
+import { safeBack } from '@/lib/safeBack';
 import SwitchIcon from '@/assets/icons/switch.svg';
 import InfoIcon from '@/assets/icons/info.svg';
 import BigBackIcon from '@/assets/icons/big_back.svg';
@@ -2524,7 +2525,7 @@ export default function ScanResultScreen() {
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {/* Back button */}
       <View style={styles.backRow}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
+        <TouchableOpacity style={styles.backBtn} onPress={safeBack} activeOpacity={0.7}>
           <BigBackIcon width={32} height={32} />
         </TouchableOpacity>
       </View>
