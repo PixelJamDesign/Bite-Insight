@@ -508,7 +508,8 @@ export default function LoginScreen() {
         <View style={desktopStyles.leftPanel}>
           <Image
             source={require('@/assets/images/login-bg.jpg')}
-            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, objectPosition: '38% 70%' } as any}
             resizeMode="cover"
           />
 
