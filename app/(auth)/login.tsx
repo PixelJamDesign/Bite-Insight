@@ -14,6 +14,8 @@ import {
   UIManager,
   Animated,
   Easing,
+  Image,
+  useWindowDimensions,
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,6 +23,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/theme';
 import LogoFull from '../../assets/images/logo-full.svg';
+import TaglineSvg from '../../assets/images/tagline.svg';
 import {
   isBiometricAvailable,
   isBiometricEnabled,
@@ -64,6 +67,9 @@ export default function LoginScreen() {
 
   const nameOpacity    = useRef(new Animated.Value(0)).current;
   const nameTranslateY = useRef(new Animated.Value(-20)).current;
+
+  const { width } = useWindowDimensions();
+  const isDesktopWeb = Platform.OS === 'web' && width >= 1024;
 
   // Check biometric availability on mount
   useEffect(() => {
@@ -272,7 +278,9 @@ export default function LoginScreen() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) { setErrorMsg('Please enter a valid email address.'); return; }
 
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(trimmed);
+    const { error } = await supabase.auth.resetPasswordForEmail(trimmed, {
+      redirectTo: 'biteinsight://reset-password',
+    });
     setLoading(false);
     if (error) { setErrorMsg(error.message); return; }
 
@@ -291,6 +299,296 @@ export default function LoginScreen() {
     ? (resetSent ? switchToLogin : handleForgotPassword)
     : isSignUp ? handleSignUp : handleLogin;
 
+  // ── Shared card content (used by both mobile and desktop layouts) ───────────
+
+  const cardContent = (
+    <>
+      <View style={styles.cardHeader}>
+        <Text style={styles.cardTitle}>
+          {isForgot ? 'Reset Password' : isSignUp ? 'Create Account' : 'Hello there!'}
+        </Text>
+        <Text style={styles.cardSubtitle}>
+          {isForgot
+            ? "Enter your email and we'll send you a reset link."
+            : isSignUp
+              ? 'Start your healthy journey today.'
+              : 'Enter your details to sign in.'}
+        </Text>
+      </View>
+
+      {isForgot && resetSent ? (
+        <View style={styles.successCard}>
+          <View style={styles.successIconRow}>
+            <Ionicons name="checkmark-circle" size={24} color={Colors.status.positive} />
+            <Text style={styles.successTitle}>Check your inbox</Text>
+          </View>
+          <Text style={styles.successBody}>
+            We've sent a password reset link to{' '}
+            <Text style={styles.successEmail}>{email.trim()}</Text>.
+            {'\n'}Check your spam folder if you don't see it.
+          </Text>
+        </View>
+      ) : (
+        <View style={styles.fields}>
+          {isSignUp && (
+            <Animated.View style={{ opacity: nameOpacity, transform: [{ translateY: nameTranslateY }] }}>
+              <View style={[styles.inputWrapper, nameFocused && styles.inputFocused]}>
+                <View style={styles.inputIcon}>
+                  <Ionicons name="person-outline" size={22} color={Colors.primary} />
+                </View>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Full name"
+                  placeholderTextColor={PLACEHOLDER}
+                  autoCapitalize="words"
+                  value={fullName}
+                  onChangeText={(v) => { setFullName(v); clearError(); }}
+                  onFocus={() => setNameFocused(true)}
+                  onBlur={() => setNameFocused(false)}
+                />
+              </View>
+            </Animated.View>
+          )}
+
+          <View style={[styles.inputWrapper, emailFocused && styles.inputFocused]}>
+            <View style={styles.inputIcon}>
+              <Ionicons name="mail-outline" size={22} color={Colors.primary} />
+            </View>
+            <TextInput
+              style={styles.input}
+              placeholder="Email address"
+              placeholderTextColor={PLACEHOLDER}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              value={email}
+              onChangeText={(v) => { setEmail(v); clearError(); }}
+              onFocus={() => setEmailFocused(true)}
+              onBlur={isForgot ? () => setEmailFocused(false) : checkEmailOnBlur}
+            />
+          </View>
+
+          {!isForgot && (
+            <View style={styles.passwordBlock}>
+              <View style={[styles.inputWrapper, passwordFocused && styles.inputFocused]}>
+                <View style={styles.inputIcon}>
+                  <Ionicons name="lock-closed-outline" size={22} color={Colors.primary} />
+                </View>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Password"
+                  placeholderTextColor={PLACEHOLDER}
+                  secureTextEntry={!showPassword}
+                  value={password}
+                  onChangeText={(v) => { setPassword(v); clearError(); }}
+                  onFocus={() => setPasswordFocused(true)}
+                  onBlur={() => setPasswordFocused(false)}
+                />
+                <TouchableOpacity onPress={() => setShowPassword((v) => !v)} activeOpacity={0.7}>
+                  <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={22} color={Colors.primary} />
+                </TouchableOpacity>
+              </View>
+              {isSignUp && passwordFocused && (() => {
+                const rules = [
+                  { label: 'At least ', bold: 'one letter', met: /[a-zA-Z]/.test(password) },
+                  { label: 'At least ', bold: 'one capital letter', met: /[A-Z]/.test(password) },
+                  { label: 'At least ', bold: 'one number', met: /\d/.test(password) },
+                  { label: 'Be at least ', bold: '8 characters', met: password.length >= 8 },
+                ];
+                return (
+                  <View style={styles.pwRules}>
+                    <Text style={styles.pwRulesTitle}>Password must meet the following requirements:</Text>
+                    {rules.map((r) => (
+                      <View key={r.bold} style={styles.pwRuleRow}>
+                        <Ionicons
+                          name={r.met ? 'checkmark' : 'close'}
+                          size={18}
+                          color={r.met ? Colors.status.positive : Colors.status.negative}
+                        />
+                        <Text style={[styles.pwRuleText, { color: r.met ? Colors.status.positive : Colors.status.negative }]}>
+                          {r.label}<Text style={styles.pwRuleBold}>{r.bold}</Text>
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                );
+              })()}
+              {mode === 'login' && (
+                <TouchableOpacity style={styles.forgotWrapper} activeOpacity={0.7} onPress={switchToForgot}>
+                  <Text style={styles.forgotText}>Forgotten password?</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+        </View>
+      )}
+
+      {!!errorMsg && (
+        <View style={styles.errorCard}>
+          <View style={styles.errorBadge}>
+            <Ionicons name="warning" size={11} color="#fff" />
+            <Text style={styles.errorBadgeText}>Error</Text>
+          </View>
+          <Text style={styles.errorText}>{errorMsg}</Text>
+          {showSignUpNudge && (
+            <TouchableOpacity activeOpacity={0.7} onPress={switchToSignUp}>
+              <Text style={styles.errorLink}>Don't have an account? Sign Up</Text>
+            </TouchableOpacity>
+          )}
+          {showSignInNudge && (
+            <TouchableOpacity activeOpacity={0.7} onPress={switchToLogin}>
+              <Text style={styles.errorLink}>Already have an account? Sign In</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+
+      <TouchableOpacity
+        style={styles.signInBtn}
+        onPress={actionHandler}
+        disabled={loading}
+        activeOpacity={0.88}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.signInText}>{actionLabel}</Text>
+        )}
+      </TouchableOpacity>
+
+      {biometricReady && mode === 'login' && !loading && (
+        <TouchableOpacity
+          style={styles.biometricBtn}
+          onPress={handleBiometricLogin}
+          activeOpacity={0.7}
+        >
+          <Ionicons
+            name={biometricLabel.includes('Face') ? 'scan-outline' : 'finger-print-outline'}
+            size={22}
+            color={Colors.secondary}
+          />
+          <Text style={styles.biometricText}>Sign in with {biometricLabel}</Text>
+        </TouchableOpacity>
+      )}
+    </>
+  );
+
+  const signUpRow = (
+    <View style={styles.signUpRow}>
+      {mode === 'login' ? (
+        <>
+          <Text style={styles.signUpPrompt}>Don't have an account? </Text>
+          <TouchableOpacity activeOpacity={0.7} onPress={switchToSignUp}>
+            <Text style={styles.signUpLink}>Sign Up for Free</Text>
+          </TouchableOpacity>
+        </>
+      ) : (
+        <>
+          <Text style={styles.signUpPrompt}>
+            {isForgot ? 'Remember your password? ' : 'Already have an account? '}
+          </Text>
+          <TouchableOpacity activeOpacity={0.7} onPress={switchToLogin}>
+            <Text style={styles.signUpLink}>Sign In</Text>
+          </TouchableOpacity>
+        </>
+      )}
+    </View>
+  );
+
+  // ── Desktop two-column layout ────────────────────────────────────────────────
+
+  if (isDesktopWeb) {
+    const nutriColors: Record<string, string> = {
+      A: '#009a1f', B: '#b8d828', C: '#ffc72d', D: '#ff8736', E: '#ff3f42',
+    };
+    return (
+      <View style={desktopStyles.container}>
+
+        {/* Left panel — lifestyle photo with decorative floating cards */}
+        <View style={desktopStyles.leftPanel}>
+          <Image
+            source={require('@/assets/images/login-bg.jpg')}
+            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+            resizeMode="cover"
+          />
+
+          {/* Walkers product card */}
+          <View style={[desktopStyles.floatingCard, desktopStyles.productCard]}>
+            <Text style={desktopStyles.dkBrand}>Walkers</Text>
+            <View style={desktopStyles.dkProductRow}>
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={desktopStyles.dkProductName}>Prawn Cocktail Crisps{'\n'}(Grab Bag)</Text>
+                <Text style={desktopStyles.dkWeight}>45g</Text>
+              </View>
+            </View>
+            <View style={desktopStyles.dkNutriRow}>
+              <Text style={desktopStyles.dkNutriLabel}>Nutri-score</Text>
+              <View style={desktopStyles.dkNutriBadgePoor}>
+                <Text style={desktopStyles.dkNutriBadgeText}>Poor</Text>
+              </View>
+              <View style={desktopStyles.dkNutriCircles}>
+                {(['A', 'B', 'C', 'D', 'E'] as const).map((g) => (
+                  <View
+                    key={g}
+                    style={[
+                      desktopStyles.dkNutriCircle,
+                      { backgroundColor: nutriColors[g] },
+                      g !== 'D' && { opacity: 0.1 },
+                    ]}
+                  >
+                    <Text style={desktopStyles.dkNutriGrade}>{g}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </View>
+
+          {/* Glycemic impact card */}
+          <View style={[desktopStyles.floatingCard, desktopStyles.impactCard]}>
+            <Ionicons name="happy-outline" size={26} color={Colors.secondary} style={{ alignSelf: 'center' }} />
+            <Text style={desktopStyles.dkImpactTitle}>Glycemic impact</Text>
+            <View style={desktopStyles.dkImpactBadge}>
+              <Text style={desktopStyles.dkImpactBadgeText}>Low</Text>
+            </View>
+          </View>
+
+          {/* Harmful ingredient card */}
+          <View style={[desktopStyles.floatingCard, desktopStyles.ingredientCard]}>
+            <View style={desktopStyles.dkIngredientHeader}>
+              <Text style={desktopStyles.dkIngredientCount}>1 ingredient</Text>
+              <Text style={desktopStyles.dkIngredientText}> is considered </Text>
+              <Text style={desktopStyles.dkIngredientHarmful}>harmful</Text>
+            </View>
+            <View style={desktopStyles.dkIngredientRow}>
+              <Ionicons name="close-circle" size={13} color={Colors.status.negative} />
+              <Text style={desktopStyles.dkIngredientName}>Sugar</Text>
+              <Ionicons name="information-circle-outline" size={13} color={Colors.secondary} />
+            </View>
+          </View>
+        </View>
+
+        {/* Right panel — login form */}
+        <ScrollView
+          style={desktopStyles.rightPanel}
+          contentContainerStyle={desktopStyles.rightScroll}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={desktopStyles.dkLogoArea}>
+            <LogoFull width={220} height={57} />
+            <TaglineSvg width={178} height={12} />
+          </View>
+          <View style={desktopStyles.loginCard}>
+            {cardContent}
+          </View>
+          {signUpRow}
+        </ScrollView>
+      </View>
+    );
+  }
+
+  // ── Mobile layout ────────────────────────────────────────────────────────────
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
@@ -307,194 +605,10 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>
-                {isForgot ? 'Reset Password' : isSignUp ? 'Create Account' : 'Hello there!'}
-              </Text>
-              <Text style={styles.cardSubtitle}>
-                {isForgot
-                  ? 'Enter your email and we\'ll send you a reset link.'
-                  : isSignUp
-                    ? 'Start your healthy journey today.'
-                    : 'Enter your details to sign in.'}
-              </Text>
-            </View>
-
-            {isForgot && resetSent ? (
-              <View style={styles.successCard}>
-                <View style={styles.successIconRow}>
-                  <Ionicons name="checkmark-circle" size={24} color={Colors.status.positive} />
-                  <Text style={styles.successTitle}>Check your inbox</Text>
-                </View>
-                <Text style={styles.successBody}>
-                  We've sent a password reset link to{' '}
-                  <Text style={styles.successEmail}>{email.trim()}</Text>.
-                  {'\n'}Check your spam folder if you don't see it.
-                </Text>
-              </View>
-            ) : (
-            <View style={styles.fields}>
-              {isSignUp && (
-                <Animated.View style={{ opacity: nameOpacity, transform: [{ translateY: nameTranslateY }] }}>
-                  <View style={[styles.inputWrapper, nameFocused && styles.inputFocused]}>
-                    <View style={styles.inputIcon}>
-                      <Ionicons name="person-outline" size={22} color={Colors.primary} />
-                    </View>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Full name"
-                      placeholderTextColor={PLACEHOLDER}
-                      autoCapitalize="words"
-                      value={fullName}
-                      onChangeText={(v) => { setFullName(v); clearError(); }}
-                      onFocus={() => setNameFocused(true)}
-                      onBlur={() => setNameFocused(false)}
-                    />
-                  </View>
-                </Animated.View>
-              )}
-
-              <View style={[styles.inputWrapper, emailFocused && styles.inputFocused]}>
-                <View style={styles.inputIcon}>
-                  <Ionicons name="mail-outline" size={22} color={Colors.primary} />
-                </View>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Email address"
-                  placeholderTextColor={PLACEHOLDER}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  value={email}
-                  onChangeText={(v) => { setEmail(v); clearError(); }}
-                  onFocus={() => setEmailFocused(true)}
-                  onBlur={isForgot ? () => setEmailFocused(false) : checkEmailOnBlur}
-                />
-              </View>
-
-              {!isForgot && (
-              <View style={styles.passwordBlock}>
-                <View style={[styles.inputWrapper, passwordFocused && styles.inputFocused]}>
-                  <View style={styles.inputIcon}>
-                    <Ionicons name="lock-closed-outline" size={22} color={Colors.primary} />
-                  </View>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Password"
-                    placeholderTextColor={PLACEHOLDER}
-                    secureTextEntry={!showPassword}
-                    value={password}
-                    onChangeText={(v) => { setPassword(v); clearError(); }}
-                    onFocus={() => setPasswordFocused(true)}
-                    onBlur={() => setPasswordFocused(false)}
-                  />
-                  <TouchableOpacity onPress={() => setShowPassword((v) => !v)} activeOpacity={0.7}>
-                    <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={22} color={Colors.primary} />
-                  </TouchableOpacity>
-                </View>
-                {isSignUp && passwordFocused && (() => {
-                  const rules = [
-                    { label: 'At least ', bold: 'one letter', met: /[a-zA-Z]/.test(password) },
-                    { label: 'At least ', bold: 'one capital letter', met: /[A-Z]/.test(password) },
-                    { label: 'At least ', bold: 'one number', met: /\d/.test(password) },
-                    { label: 'Be at least ', bold: '8 characters', met: password.length >= 8 },
-                  ];
-                  return (
-                    <View style={styles.pwRules}>
-                      <Text style={styles.pwRulesTitle}>Password must meet the following requirements:</Text>
-                      {rules.map((r) => (
-                        <View key={r.bold} style={styles.pwRuleRow}>
-                          <Ionicons
-                            name={r.met ? 'checkmark' : 'close'}
-                            size={18}
-                            color={r.met ? Colors.status.positive : Colors.status.negative}
-                          />
-                          <Text style={[styles.pwRuleText, { color: r.met ? Colors.status.positive : Colors.status.negative }]}>
-                            {r.label}<Text style={styles.pwRuleBold}>{r.bold}</Text>
-                          </Text>
-                        </View>
-                      ))}
-                    </View>
-                  );
-                })()}
-                {mode === 'login' && (
-                  <TouchableOpacity style={styles.forgotWrapper} activeOpacity={0.7} onPress={switchToForgot}>
-                    <Text style={styles.forgotText}>Forgotten password?</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-              )}
-            </View>
-            )}
-
-            {!!errorMsg && (
-              <View style={styles.errorCard}>
-                <View style={styles.errorBadge}>
-                  <Ionicons name="warning" size={11} color="#fff" />
-                  <Text style={styles.errorBadgeText}>Error</Text>
-                </View>
-                <Text style={styles.errorText}>{errorMsg}</Text>
-                {showSignUpNudge && (
-                  <TouchableOpacity activeOpacity={0.7} onPress={switchToSignUp}>
-                    <Text style={styles.errorLink}>Don't have an account? Sign Up</Text>
-                  </TouchableOpacity>
-                )}
-                {showSignInNudge && (
-                  <TouchableOpacity activeOpacity={0.7} onPress={switchToLogin}>
-                    <Text style={styles.errorLink}>Already have an account? Sign In</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            )}
-
-            <TouchableOpacity
-              style={styles.signInBtn}
-              onPress={actionHandler}
-              disabled={loading}
-              activeOpacity={0.88}
-            >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.signInText}>{actionLabel}</Text>
-              )}
-            </TouchableOpacity>
-
-            {biometricReady && mode === 'login' && !loading && (
-              <TouchableOpacity
-                style={styles.biometricBtn}
-                onPress={handleBiometricLogin}
-                activeOpacity={0.7}
-              >
-                <Ionicons
-                  name={biometricLabel.includes('Face') ? 'scan-outline' : 'finger-print-outline'}
-                  size={22}
-                  color={Colors.secondary}
-                />
-                <Text style={styles.biometricText}>Sign in with {biometricLabel}</Text>
-              </TouchableOpacity>
-            )}
+            {cardContent}
           </View>
 
-          <View style={styles.signUpRow}>
-            {mode === 'login' ? (
-              <>
-                <Text style={styles.signUpPrompt}>Don't have an account? </Text>
-                <TouchableOpacity activeOpacity={0.7} onPress={switchToSignUp}>
-                  <Text style={styles.signUpLink}>Sign Up for Free</Text>
-                </TouchableOpacity>
-              </>
-            ) : (
-              <>
-                <Text style={styles.signUpPrompt}>
-                  {isForgot ? 'Remember your password? ' : 'Already have an account? '}
-                </Text>
-                <TouchableOpacity activeOpacity={0.7} onPress={switchToLogin}>
-                  <Text style={styles.signUpLink}>Sign In</Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </View>
+          {signUpRow}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -711,5 +825,218 @@ const styles = StyleSheet.create({
     color: Colors.secondary,
     letterSpacing: 0,
     lineHeight: 20,
+  },
+});
+
+const desktopStyles = StyleSheet.create({
+  // ── Outer containers ─────────────────────────────────────────────────────────
+  container: {
+    flex: 1,
+    flexDirection: 'row',
+    backgroundColor: Colors.background,
+  },
+  leftPanel: {
+    flex: 1,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  rightPanel: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  rightScroll: {
+    flexGrow: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 40,
+    gap: 32,
+  },
+  dkLogoArea: {
+    alignItems: 'center',
+    gap: 8,
+  },
+  loginCard: {
+    width: 500,
+    backgroundColor: Colors.surface.secondary,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.stroke.primary,
+    padding: 24,
+    gap: 24,
+    shadowColor: '#444770',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+
+  // ── Decorative floating cards ─────────────────────────────────────────────────
+  floatingCard: {
+    position: 'absolute',
+    backgroundColor: Colors.surface.secondary,
+    borderRadius: 10,
+    shadowColor: '#3f6962',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  productCard: {
+    left: '38%',
+    top: '50%',
+    width: 185,
+    padding: 12,
+    gap: 6,
+  },
+  impactCard: {
+    left: '72%',
+    top: '47%',
+    width: 98,
+    padding: 10,
+    gap: 6,
+    alignItems: 'center',
+  },
+  ingredientCard: {
+    left: '36%',
+    top: '69%',
+    width: 190,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    gap: 6,
+  },
+
+  // ── Product card internals ────────────────────────────────────────────────────
+  dkBrand: {
+    fontSize: 9,
+    fontFamily: 'Figtree_300Light',
+    fontWeight: '300',
+    color: Colors.secondary,
+  },
+  dkProductRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  dkProductName: {
+    fontSize: 13,
+    fontFamily: 'Figtree_700Bold',
+    fontWeight: '700',
+    color: Colors.primary,
+    letterSpacing: -0.26,
+    lineHeight: 17,
+  },
+  dkWeight: {
+    fontSize: 9,
+    fontFamily: 'Figtree_300Light',
+    fontWeight: '300',
+    color: Colors.secondary,
+    marginTop: 2,
+  },
+  dkNutriRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  dkNutriLabel: {
+    fontSize: 8,
+    fontFamily: 'Figtree_700Bold',
+    fontWeight: '700',
+    color: Colors.primary,
+    letterSpacing: -0.16,
+    flex: 1,
+  },
+  dkNutriBadgePoor: {
+    backgroundColor: '#ff8736',
+    borderRadius: 999,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+  },
+  dkNutriBadgeText: {
+    fontSize: 8,
+    fontFamily: 'Figtree_700Bold',
+    fontWeight: '700',
+    color: '#fff',
+    letterSpacing: -0.16,
+  },
+  dkNutriCircles: {
+    flexDirection: 'row',
+    gap: 2,
+  },
+  dkNutriCircle: {
+    width: 14,
+    height: 17,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dkNutriGrade: {
+    fontSize: 8,
+    fontFamily: 'Figtree_700Bold',
+    fontWeight: '700',
+    color: '#fff',
+  },
+
+  // ── Impact card internals ─────────────────────────────────────────────────────
+  dkImpactTitle: {
+    fontSize: 10,
+    fontFamily: 'Figtree_700Bold',
+    fontWeight: '700',
+    color: Colors.primary,
+    letterSpacing: -0.2,
+    textAlign: 'center',
+  },
+  dkImpactBadge: {
+    backgroundColor: '#009a1f',
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    alignSelf: 'center',
+  },
+  dkImpactBadgeText: {
+    fontSize: 10,
+    fontFamily: 'Figtree_700Bold',
+    fontWeight: '700',
+    color: '#fff',
+    letterSpacing: -0.2,
+  },
+
+  // ── Ingredient card internals ─────────────────────────────────────────────────
+  dkIngredientHeader: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'baseline',
+  },
+  dkIngredientCount: {
+    fontSize: 11,
+    fontFamily: 'Figtree_700Bold',
+    fontWeight: '700',
+    color: Colors.primary,
+    letterSpacing: -0.22,
+  },
+  dkIngredientText: {
+    fontSize: 11,
+    fontFamily: 'Figtree_300Light',
+    fontWeight: '300',
+    color: Colors.secondary,
+  },
+  dkIngredientHarmful: {
+    fontSize: 11,
+    fontFamily: 'Figtree_700Bold',
+    fontWeight: '700',
+    color: Colors.status.negative,
+    letterSpacing: -0.22,
+  },
+  dkIngredientRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  dkIngredientName: {
+    flex: 1,
+    fontSize: 10,
+    fontFamily: 'Figtree_700Bold',
+    fontWeight: '700',
+    color: Colors.primary,
+    letterSpacing: -0.2,
   },
 });

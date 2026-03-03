@@ -14,6 +14,7 @@ import {
   Animated,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { safeBack } from '@/lib/safeBack';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -216,7 +217,7 @@ export default function AddFamilyMemberScreen() {
   }
 
   function handleBack() {
-    if (step === 1) router.back();
+    if (step === 1) safeBack();
     else setStep(s => s - 1);
   }
 
@@ -248,7 +249,7 @@ export default function AddFamilyMemberScreen() {
 
     setSaving(false);
     if (error) Alert.alert('Save failed', error.message);
-    else router.back();
+    else safeBack();
   }
 
   // ── Progress indicator ────────────────────────────────────────────────────
