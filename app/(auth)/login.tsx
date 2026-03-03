@@ -15,6 +15,7 @@ import {
   Animated,
   Easing,
   Image,
+  ImageBackground,
   useWindowDimensions,
 } from 'react-native';
 import { router } from 'expo-router';
@@ -505,13 +506,13 @@ export default function LoginScreen() {
       <View style={desktopStyles.container}>
 
         {/* Left panel — lifestyle photo with decorative floating cards */}
-        <View style={desktopStyles.leftPanel}>
-          <Image
-            source={require('@/assets/images/login-bg.jpg')}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, objectPosition: '38% 70%' } as any}
-            resizeMode="cover"
-          />
+        <ImageBackground
+          source={require('@/assets/images/login-bg.jpg')}
+          style={desktopStyles.leftPanel}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          imageStyle={{ objectPosition: '38% 70%' } as any}
+          resizeMode="cover"
+        >
 
           {/* Walkers product card */}
           <View style={[desktopStyles.floatingCard, desktopStyles.productCard]}>
@@ -566,7 +567,7 @@ export default function LoginScreen() {
               <Ionicons name="information-circle-outline" size={13} color={Colors.secondary} />
             </View>
           </View>
-        </View>
+        </ImageBackground>
 
         {/* Right panel — login form */}
         <ScrollView
@@ -838,7 +839,6 @@ const desktopStyles = StyleSheet.create({
   },
   leftPanel: {
     flex: 1,
-    position: 'relative',
     overflow: 'hidden',
   },
   rightPanel: {
