@@ -13,7 +13,7 @@ import {
   Alert,
   TextInput,
 } from 'react-native';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { Ionicons } from '@expo/vector-icons';
 import { ConfirmSheet } from './ConfirmSheet';
@@ -530,13 +530,14 @@ const myDataStyles = StyleSheet.create({
     letterSpacing: -0.32,
   },
   tallItem: {
-    height: 72,
-    paddingVertical: 16,
+    height: 'auto' as any,
+    minHeight: 72,
+    paddingVertical: 12,
   },
   tallestItem: {
     height: 'auto' as any,
     minHeight: 72,
-    paddingVertical: 16,
+    paddingVertical: 12,
   },
   itemTextGroup: {
     flex: 1,
