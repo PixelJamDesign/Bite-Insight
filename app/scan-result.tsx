@@ -24,6 +24,7 @@ import type { UserProfile, FamilyProfile, DietaryTag } from '@/lib/types';
 import { useActiveFamily } from '@/lib/activeFamilyContext';
 import { FamilySwitcherSheet } from '@/components/FamilySwitcherSheet';
 import { TickIcon } from '@/components/MenuIcons';
+import { NoImagePlaceholder } from '@/components/NoImagePlaceholder';
 import {
   parseIngredientsText,
   buildHybridIngredients,
@@ -2552,7 +2553,7 @@ export default function ScanResultScreen() {
             </View>
           ) : (
             <View style={[styles.imageCard, styles.imagePlaceholder]}>
-              <Ionicons name="image-outline" size={30} color={Colors.secondary} />
+              <NoImagePlaceholder />
             </View>
           )}
         </View>

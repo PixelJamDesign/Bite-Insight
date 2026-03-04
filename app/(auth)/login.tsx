@@ -66,6 +66,8 @@ export default function LoginScreen() {
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  const passwordRef = useRef<TextInput>(null);
+
   const nameOpacity    = useRef(new Animated.Value(0)).current;
   const nameTranslateY = useRef(new Animated.Value(-20)).current;
 
@@ -366,6 +368,11 @@ export default function LoginScreen() {
               onChangeText={(v) => { setEmail(v); clearError(); }}
               onFocus={() => setEmailFocused(true)}
               onBlur={isForgot ? () => setEmailFocused(false) : checkEmailOnBlur}
+              returnKeyType={isForgot ? 'go' : 'next'}
+              onSubmitEditing={() => {
+                if (isForgot) { handleForgotPassword(); }
+                else { passwordRef.current?.focus(); }
+              }}
             />
           </View>
 
@@ -376,6 +383,7 @@ export default function LoginScreen() {
                   <Ionicons name="lock-closed-outline" size={22} color={Colors.primary} />
                 </View>
                 <TextInput
+                  ref={passwordRef}
                   style={styles.input}
                   placeholder="Password"
                   placeholderTextColor={PLACEHOLDER}
@@ -384,6 +392,8 @@ export default function LoginScreen() {
                   onChangeText={(v) => { setPassword(v); clearError(); }}
                   onFocus={() => setPasswordFocused(true)}
                   onBlur={() => setPasswordFocused(false)}
+                  returnKeyType="go"
+                  onSubmitEditing={actionHandler}
                 />
                 <TouchableOpacity onPress={() => setShowPassword((v) => !v)} activeOpacity={0.7}>
                   <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={22} color={Colors.primary} />
