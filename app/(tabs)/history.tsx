@@ -21,6 +21,7 @@ import { Colors, Shadows, Spacing } from '@/constants/theme';
 import { sentenceCase } from '@/lib/text';
 import { ScreenLayout } from '@/components/ScreenLayout';
 import { useTabBarSlide } from '@/lib/tabBarContext';
+import { NoImagePlaceholder } from '@/components/NoImagePlaceholder';
 import type { Scan } from '@/lib/types';
 
 // ─── Nutriscore colours ────────────────────────────────────────────────────────
@@ -313,7 +314,7 @@ function ScanCard({ scan, onPress, onDelete }: { scan: Scan; onPress: () => void
           <Image source={{ uri: scan.image_url }} style={styles.productImage} resizeMode="cover" />
         ) : (
           <View style={[styles.productImage, styles.productImagePlaceholder]}>
-            <Ionicons name="image-outline" size={24} color={Colors.secondary} />
+            <NoImagePlaceholder />
           </View>
         )}
         <View style={styles.cardContent}>
@@ -959,8 +960,6 @@ const styles = StyleSheet.create({
     width: 24,
     height: 36,
     borderRadius: 999,
-    borderWidth: 2,
-    borderColor: Colors.surface.secondary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -970,6 +969,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     lineHeight: 20,
+    textShadowColor: 'rgba(0,0,0,0.29)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   chevronBox: {
     width: 20,
