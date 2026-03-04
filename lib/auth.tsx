@@ -24,7 +24,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        // Stale/invalid refresh token — clear local session
+        supabase.auth.signOut();
+        setSession(null);
+        setLoading(false);
+        return;
+      }
       setSession(session);
       setLoading(false);
       if (session?.user?.id) {
