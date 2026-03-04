@@ -75,6 +75,11 @@ export default function ScannerScreen() {
     setProcessing(true);
 
     try {
+      // Fire profile upsert immediately — doesn't depend on product data
+      const profilePromise = supabase
+        .from('profiles')
+        .upsert({ id: session?.user.id }, { onConflict: 'id', ignoreDuplicates: true });
+
       let productName = 'Unknown Product';
       let brand: string | null = null;
       let imageUrl: string | null = null;
@@ -247,59 +252,12 @@ export default function ScannerScreen() {
         }).catch(() => {/* non-critical — ignore cache write failures */});
       }
 
-      // ── Save scan to Supabase ───────────────────────────────────────────────
-      // Ensure profile row exists (guards against trigger timing gaps)
-      await supabase
-        .from('profiles')
-        .upsert({ id: session?.user.id }, { onConflict: 'id', ignoreDuplicates: true });
-
-      // Check if this barcode was already scanned by this user
-      const { data: existing } = await supabase
-        .from('scans')
-        .select('id')
-        .eq('user_id', session?.user.id)
-        .eq('barcode', result.data)
-        .limit(1)
-        .single();
-
-      let scanId: string;
-
-      if (existing) {
-        // Update existing scan: bump timestamp + refresh product data
-        await supabase
-          .from('scans')
-          .update({
-            scanned_at: new Date().toISOString(),
-            product_name: productName,
-            brand,
-            image_url: imageUrl,
-            nutriscore_grade: nutriscoreGrade,
-          })
-          .eq('id', existing.id);
-        scanId = existing.id;
-      } else {
-        const { data: insertData, error } = await supabase
-          .from('scans')
-          .insert({
-            user_id: session?.user.id,
-            barcode: result.data,
-            product_name: productName,
-            brand,
-            image_url: imageUrl,
-            nutriscore_grade: nutriscoreGrade,
-            flagged_count: 0,
-          })
-          .select('id')
-          .single();
-        if (error) throw error;
-        scanId = insertData.id;
-      }
-
+      // ── Navigate immediately — don't block on Supabase ────────────────────
       setProcessing(false);
       router.push({
         pathname: '/scan-result',
         params: {
-          scanId,
+          scanId: '',
           productName,
           brand: brand ?? '',
           imageUrl: imageUrl ?? '',
@@ -329,6 +287,46 @@ export default function ScannerScreen() {
           offLang: offLang ?? 'en',
         },
       });
+
+      // ── Save scan to Supabase in background ─────────────────────────────────
+      (async () => {
+        // Wait for profile upsert + check existing scan in parallel
+        const [, { data: existing }] = await Promise.all([
+          profilePromise,
+          supabase
+            .from('scans')
+            .select('id')
+            .eq('user_id', session?.user.id)
+            .eq('barcode', result.data)
+            .limit(1)
+            .single(),
+        ]);
+
+        if (existing) {
+          await supabase
+            .from('scans')
+            .update({
+              scanned_at: new Date().toISOString(),
+              product_name: productName,
+              brand,
+              image_url: imageUrl,
+              nutriscore_grade: nutriscoreGrade,
+            })
+            .eq('id', existing.id);
+        } else {
+          await supabase
+            .from('scans')
+            .insert({
+              user_id: session?.user.id,
+              barcode: result.data,
+              product_name: productName,
+              brand,
+              image_url: imageUrl,
+              nutriscore_grade: nutriscoreGrade,
+              flagged_count: 0,
+            });
+        }
+      })().catch((err) => console.error('Background scan save failed:', err));
     } catch (err) {
       console.error('Scan error:', err);
       setProcessing(false);
