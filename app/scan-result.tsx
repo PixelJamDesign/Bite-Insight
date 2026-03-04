@@ -3264,7 +3264,7 @@ const styles = StyleSheet.create({
   // Back button (Figma node 3263-6137 — plain icon, no circle bg)
   backRow: {
     paddingHorizontal: Spacing.s,
-    paddingTop: 6,
+    paddingTop: Spacing.l,
     paddingBottom: 2,
   },
   backBtn: {
