@@ -59,13 +59,18 @@ import {
   disableBiometric,
 } from '@/lib/biometrics';
 import {
-  getOfflineDbInfo,
-  checkForUpdate,
+  fetchGlobalManifest,
+  getDownloadedRegions,
+  getRegionInfo,
   startDownload,
   cancelDownload,
   deleteOfflineDb,
-  OfflineDbInfo,
-  OfflineDbRemoteInfo,
+  deleteAllOfflineDbs,
+  GlobalManifest,
+  RegionDbInfo,
+  RegionCode,
+  REGION_INFO,
+  ALL_REGIONS,
 } from '@/lib/offlineDatabase';
 
 type MenuScreen = 'main' | 'ingredients' | 'account' | 'settings' | 'security' | 'mydata' | 'password' | 'offlinedb';
@@ -159,6 +164,8 @@ function AccountScreen({ goBack, onGo, onNavigate }: { goBack: () => void; onGo:
 }
 
 function SettingsScreen({ goBack, onNavigate }: { goBack: () => void; onNavigate: (s: MenuScreen) => void }) {
+  const { isPlus } = useSubscription();
+  const { showUpsell } = useUpsellSheet();
   return (
     <>
       <View style={styles.subHeader}>
@@ -176,7 +183,13 @@ function SettingsScreen({ goBack, onNavigate }: { goBack: () => void; onNavigate
         <NavItem icon={<MenuCookieIcon color={Colors.secondary} />} label="Cookie Policy" onPress={() => {}} />
         <NavItem icon={<MenuDataIcon color={Colors.secondary} />} label="My Data" onPress={() => onNavigate('mydata')} chevron />
         {Platform.OS !== 'web' && (
-          <NavItem icon={<Ionicons name="cloud-download-outline" size={22} color={Colors.secondary} />} label="Offline Database" onPress={() => onNavigate('offlinedb')} chevron />
+          <NavItem
+            icon={<Ionicons name="cloud-download-outline" size={22} color={Colors.secondary} />}
+            label="Offline Database"
+            onPress={isPlus ? () => onNavigate('offlinedb') : showUpsell}
+            chevron
+            plus={!isPlus}
+          />
         )}
       </View>
     </>
@@ -578,69 +591,135 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function OfflineDatabaseScreen({ goBack }: { goBack: () => void }) {
-  const [info, setInfo] = useState<OfflineDbInfo>({
-    status: 'not-downloaded',
-    version: null,
-    productCount: null,
-    fileSizeBytes: null,
-    downloadProgress: 0,
-    error: null,
-  });
-  const [remoteInfo, setRemoteInfo] = useState<OfflineDbRemoteInfo | null>(null);
-  const [checkingUpdate, setCheckingUpdate] = useState(false);
-  const [deleteSheetVisible, setDeleteSheetVisible] = useState(false);
+type RegionState = {
+  info: RegionDbInfo;
+  remoteSize: number | null;
+  remoteProductCount: number | null;
+};
 
+function OfflineDatabaseScreen({ goBack }: { goBack: () => void }) {
+  const [regions, setRegions] = useState<Record<RegionCode, RegionState>>(() => {
+    const init = {} as Record<RegionCode, RegionState>;
+    for (const code of ALL_REGIONS) {
+      init[code] = {
+        info: { status: 'not-downloaded', version: null, productCount: null, fileSizeBytes: null, downloadProgress: 0, error: null },
+        remoteSize: null,
+        remoteProductCount: null,
+      };
+    }
+    return init;
+  });
+  const [loading, setLoading] = useState(true);
+  const [deleteTarget, setDeleteTarget] = useState<RegionCode | 'all' | null>(null);
+
+  // Load manifest + local status on mount
   useEffect(() => {
     (async () => {
-      const dbInfo = await getOfflineDbInfo();
-      setInfo(dbInfo);
+      const [manifest, downloaded] = await Promise.all([
+        fetchGlobalManifest(),
+        getDownloadedRegions(),
+      ]);
 
-      setCheckingUpdate(true);
-      const remote = await checkForUpdate();
-      setRemoteInfo(remote);
-      setCheckingUpdate(false);
+      // Fetch info for all downloaded regions
+      const infos: Record<string, RegionDbInfo> = {};
+      for (const code of downloaded) {
+        infos[code] = await getRegionInfo(code);
+      }
+
+      setRegions((prev) => {
+        const next = { ...prev };
+        for (const code of ALL_REGIONS) {
+          const remote = manifest?.regions?.[code];
+          next[code] = {
+            info: infos[code] ?? prev[code].info,
+            remoteSize: remote?.sizeBytes ?? null,
+            remoteProductCount: remote?.productCount ?? null,
+          };
+        }
+        return next;
+      });
+      setLoading(false);
     })();
   }, []);
 
-  async function handleDownload() {
-    setInfo((prev) => ({ ...prev, status: 'downloading', downloadProgress: 0, error: null }));
+  async function handleDownload(region: RegionCode) {
+    setRegions((prev) => ({
+      ...prev,
+      [region]: {
+        ...prev[region],
+        info: { ...prev[region].info, status: 'downloading', downloadProgress: 0, error: null },
+      },
+    }));
+
     try {
-      await startDownload((progress) => {
-        setInfo((prev) => ({ ...prev, downloadProgress: progress }));
+      await startDownload(region, (progress) => {
+        setRegions((prev) => ({
+          ...prev,
+          [region]: {
+            ...prev[region],
+            info: { ...prev[region].info, downloadProgress: progress },
+          },
+        }));
       });
-      const updated = await getOfflineDbInfo();
-      setInfo(updated);
-      setRemoteInfo(null);
-    } catch (err: any) {
-      setInfo((prev) => ({
+
+      const updated = await getRegionInfo(region);
+      setRegions((prev) => ({
         ...prev,
-        status: 'error',
-        error: err?.message || 'Download failed. Please try again.',
+        [region]: { ...prev[region], info: updated },
+      }));
+    } catch (err: any) {
+      setRegions((prev) => ({
+        ...prev,
+        [region]: {
+          ...prev[region],
+          info: { ...prev[region].info, status: 'error', error: err?.message || 'Download failed.' },
+        },
       }));
     }
   }
 
-  async function handleCancel() {
-    await cancelDownload();
-    setInfo((prev) => ({ ...prev, status: 'not-downloaded', downloadProgress: 0 }));
+  async function handleCancel(region: RegionCode) {
+    await cancelDownload(region);
+    setRegions((prev) => ({
+      ...prev,
+      [region]: {
+        ...prev[region],
+        info: { ...prev[region].info, status: 'not-downloaded', downloadProgress: 0 },
+      },
+    }));
   }
 
   async function handleDelete() {
-    await deleteOfflineDb();
-    setInfo({
-      status: 'not-downloaded',
-      version: null,
-      productCount: null,
-      fileSizeBytes: null,
-      downloadProgress: 0,
-      error: null,
-    });
-    setDeleteSheetVisible(false);
-    // Re-check remote info
-    const remote = await checkForUpdate();
-    setRemoteInfo(remote);
+    if (!deleteTarget) return;
+
+    if (deleteTarget === 'all') {
+      await deleteAllOfflineDbs();
+      setRegions((prev) => {
+        const next = { ...prev };
+        for (const code of ALL_REGIONS) {
+          next[code] = {
+            ...prev[code],
+            info: { status: 'not-downloaded', version: null, productCount: null, fileSizeBytes: null, downloadProgress: 0, error: null },
+          };
+        }
+        return next;
+      });
+    } else {
+      await deleteOfflineDb(deleteTarget);
+      setRegions((prev) => ({
+        ...prev,
+        [deleteTarget]: {
+          ...prev[deleteTarget],
+          info: { status: 'not-downloaded', version: null, productCount: null, fileSizeBytes: null, downloadProgress: 0, error: null },
+        },
+      }));
+    }
+    setDeleteTarget(null);
   }
+
+  // Compute totals
+  const downloadedRegions = ALL_REGIONS.filter((c) => regions[c].info.status === 'ready');
+  const totalBytes = downloadedRegions.reduce((sum, c) => sum + (regions[c].info.fileSizeBytes ?? 0), 0);
 
   return (
     <>
@@ -653,152 +732,157 @@ function OfflineDatabaseScreen({ goBack }: { goBack: () => void }) {
       </View>
 
       <View style={offlineDbStyles.sections}>
-        {/* Description */}
         <Text style={offlineDbStyles.description}>
-          Download the UK food database for instant offline scanning. Once downloaded, barcode scans will work without an internet connection.
+          Download regional food databases for offline barcode scanning. Once downloaded, scans work without an internet connection.
         </Text>
 
-        {/* ── Not downloaded / Error ── */}
-        {(info.status === 'not-downloaded' || info.status === 'error') && (
-          <View style={styles.navList}>
-            {remoteInfo && (
-              <View style={offlineDbStyles.infoCard}>
-                <View style={offlineDbStyles.infoRow}>
-                  <Text style={offlineDbStyles.infoLabel}>Download size</Text>
-                  <Text style={offlineDbStyles.infoValue}>{formatBytes(remoteInfo.sizeBytes)}</Text>
-                </View>
-              </View>
-            )}
-
-            {info.status === 'error' && info.error && (
-              <Text style={offlineDbStyles.errorText}>{info.error}</Text>
-            )}
-
-            <TouchableOpacity
-              style={offlineDbStyles.downloadBtn}
-              onPress={handleDownload}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="cloud-download-outline" size={20} color="#fff" />
-              <Text style={offlineDbStyles.downloadBtnText}>
-                {info.status === 'error' ? 'Retry Download' : 'Download UK Database'}
-              </Text>
-            </TouchableOpacity>
-
-            {checkingUpdate && !remoteInfo && (
-              <View style={offlineDbStyles.checkingRow}>
-                <ActivityIndicator size="small" color={Colors.secondary} />
-                <Text style={offlineDbStyles.checkingText}>Checking available database...</Text>
-              </View>
-            )}
+        {loading ? (
+          <View style={offlineDbStyles.checkingRow}>
+            <ActivityIndicator size="small" color={Colors.secondary} />
+            <Text style={offlineDbStyles.checkingText}>Loading regions...</Text>
           </View>
-        )}
-
-        {/* ── Downloading ── */}
-        {info.status === 'downloading' && (
-          <View style={styles.navList}>
-            <View style={offlineDbStyles.progressCard}>
-              <Text style={offlineDbStyles.progressLabel}>
-                Downloading... {Math.round(info.downloadProgress * 100)}%
-              </Text>
-              <View style={offlineDbStyles.progressTrack}>
-                <View
-                  style={[
-                    offlineDbStyles.progressFill,
-                    { width: `${Math.round(info.downloadProgress * 100)}%` as any },
-                  ]}
-                />
-              </View>
-            </View>
-            <TouchableOpacity
-              style={offlineDbStyles.cancelBtn}
-              onPress={handleCancel}
-              activeOpacity={0.7}
-            >
-              <Text style={offlineDbStyles.cancelBtnText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* ── Ready (downloaded) ── */}
-        {info.status === 'ready' && (
+        ) : (
           <>
-            <View style={styles.navList}>
-              {/* Product count */}
-              <View style={styles.navItem}>
-                <View style={styles.navIcon}>
-                  <MenuScannerIcon color={Colors.secondary} />
-                </View>
-                <Text style={styles.navLabel}>Products available</Text>
-                <Text style={myDataStyles.statValue}>
-                  {info.productCount?.toLocaleString() ?? '—'}
-                </Text>
-              </View>
+            {/* ── Region list ── */}
+            <View style={{ gap: 12 }}>
+              {ALL_REGIONS.map((code) => {
+                const r = regions[code];
+                const { label, flag } = REGION_INFO[code];
+                const { status, downloadProgress, productCount, fileSizeBytes, error } = r.info;
 
-              {/* File size */}
-              <View style={styles.navItem}>
-                <View style={styles.navIcon}>
-                  <MenuDataIcon color={Colors.secondary} />
-                </View>
-                <Text style={styles.navLabel}>Storage used</Text>
-                <Text style={myDataStyles.statValue}>
-                  {info.fileSizeBytes ? formatBytes(info.fileSizeBytes) : '—'}
-                </Text>
-              </View>
+                return (
+                  <View key={code} style={offlineDbStyles.regionCard}>
+                    {/* Header row: flag + label + size */}
+                    <View style={offlineDbStyles.regionHeader}>
+                      <Text style={offlineDbStyles.regionFlag}>{flag}</Text>
+                      <View style={{ flex: 1 }}>
+                        <Text style={offlineDbStyles.regionLabel}>{label}</Text>
+                        <Text style={offlineDbStyles.regionMeta}>
+                          {status === 'ready'
+                            ? `${(productCount ?? 0).toLocaleString()} products  ·  ${fileSizeBytes ? formatBytes(fileSizeBytes) : '—'}`
+                            : r.remoteProductCount
+                              ? `${(r.remoteProductCount).toLocaleString()} products  ·  ${r.remoteSize ? formatBytes(r.remoteSize) : '—'}`
+                              : r.remoteSize
+                                ? formatBytes(r.remoteSize)
+                                : ''
+                          }
+                        </Text>
+                      </View>
+                    </View>
 
-              {/* Version */}
-              <View style={styles.navItem}>
-                <View style={styles.navIcon}>
-                  <MenuHistoryIcon color={Colors.secondary} />
-                </View>
-                <Text style={styles.navLabel}>Database version</Text>
-                <Text style={myDataStyles.statValue}>{info.version ?? '—'}</Text>
-              </View>
+                    {/* Action area */}
+                    {status === 'not-downloaded' && (
+                      <TouchableOpacity
+                        style={offlineDbStyles.downloadBtn}
+                        onPress={() => handleDownload(code)}
+                        activeOpacity={0.7}
+                      >
+                        <Ionicons name="cloud-download-outline" size={18} color="#fff" />
+                        <Text style={offlineDbStyles.downloadBtnText}>Download</Text>
+                      </TouchableOpacity>
+                    )}
+
+                    {status === 'error' && (
+                      <>
+                        {error && <Text style={offlineDbStyles.errorText}>{error}</Text>}
+                        <TouchableOpacity
+                          style={offlineDbStyles.downloadBtn}
+                          onPress={() => handleDownload(code)}
+                          activeOpacity={0.7}
+                        >
+                          <Ionicons name="refresh-outline" size={18} color="#fff" />
+                          <Text style={offlineDbStyles.downloadBtnText}>Retry</Text>
+                        </TouchableOpacity>
+                      </>
+                    )}
+
+                    {status === 'downloading' && (
+                      <View style={{ gap: 8 }}>
+                        <View style={offlineDbStyles.progressCard}>
+                          <Text style={offlineDbStyles.progressLabel}>
+                            Downloading... {Math.round(downloadProgress * 100)}%
+                          </Text>
+                          <View style={offlineDbStyles.progressTrack}>
+                            <View
+                              style={[
+                                offlineDbStyles.progressFill,
+                                { width: `${Math.round(downloadProgress * 100)}%` as any },
+                              ]}
+                            />
+                          </View>
+                        </View>
+                        <TouchableOpacity onPress={() => handleCancel(code)} activeOpacity={0.7}>
+                          <Text style={offlineDbStyles.cancelBtnText}>Cancel</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+
+                    {status === 'ready' && (
+                      <View style={offlineDbStyles.readyRow}>
+                        <View style={offlineDbStyles.readyBadge}>
+                          <Ionicons name="checkmark-circle" size={16} color={Colors.status.positive} />
+                          <Text style={offlineDbStyles.readyText}>Downloaded</Text>
+                        </View>
+                        <TouchableOpacity
+                          onPress={() => setDeleteTarget(code)}
+                          activeOpacity={0.7}
+                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        >
+                          <Ionicons name="trash-outline" size={18} color={Colors.status.negative} />
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </View>
+                );
+              })}
             </View>
 
-            {/* Update available */}
-            {remoteInfo && (
-              <TouchableOpacity
-                style={offlineDbStyles.updateBtn}
-                onPress={handleDownload}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="refresh-outline" size={20} color="#fff" />
-                <Text style={offlineDbStyles.downloadBtnText}>
-                  Update to {remoteInfo.version}
-                </Text>
-              </TouchableOpacity>
+            {/* ── Storage summary ── */}
+            {downloadedRegions.length > 0 && (
+              <View style={styles.navList}>
+                <Text style={myDataStyles.sectionHeading}>Storage</Text>
+                <View style={styles.navItem}>
+                  <View style={styles.navIcon}>
+                    <MenuDataIcon color={Colors.secondary} />
+                  </View>
+                  <Text style={styles.navLabel}>Total used</Text>
+                  <Text style={myDataStyles.statValue}>
+                    {formatBytes(totalBytes)} ({downloadedRegions.length} {downloadedRegions.length === 1 ? 'region' : 'regions'})
+                  </Text>
+                </View>
+                {downloadedRegions.length > 1 && (
+                  <TouchableOpacity
+                    style={[styles.navItem, myDataStyles.dangerItem, myDataStyles.tallItem]}
+                    onPress={() => setDeleteTarget('all')}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.navIcon}>
+                      <Ionicons name="trash-outline" size={22} color={Colors.status.negative} />
+                    </View>
+                    <View style={myDataStyles.itemTextGroup}>
+                      <Text style={[styles.navLabel, myDataStyles.dangerLabel]}>Delete all databases</Text>
+                      <Text style={myDataStyles.dangerSubtext}>Free up all offline storage.</Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
+              </View>
             )}
-
-            {/* Delete */}
-            <View style={styles.navList}>
-              <Text style={myDataStyles.sectionHeading}>Storage</Text>
-              <TouchableOpacity
-                style={[styles.navItem, myDataStyles.dangerItem, myDataStyles.tallItem]}
-                onPress={() => setDeleteSheetVisible(true)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.navIcon}>
-                  <Ionicons name="trash-outline" size={22} color={Colors.status.negative} />
-                </View>
-                <View style={myDataStyles.itemTextGroup}>
-                  <Text style={[styles.navLabel, myDataStyles.dangerLabel]}>Delete offline database</Text>
-                  <Text style={myDataStyles.dangerSubtext}>Free up storage on your device.</Text>
-                </View>
-              </TouchableOpacity>
-            </View>
           </>
         )}
       </View>
 
       <ConfirmSheet
-        visible={deleteSheetVisible}
-        onClose={() => setDeleteSheetVisible(false)}
+        visible={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
-        title="Delete offline database?"
-        description="This will remove the downloaded UK food database from your device. You can download it again at any time. Your scan history will not be affected."
+        title={deleteTarget === 'all' ? 'Delete all offline databases?' : `Delete ${deleteTarget ? REGION_INFO[deleteTarget as RegionCode]?.label : ''} database?`}
+        description={
+          deleteTarget === 'all'
+            ? 'This will remove all downloaded food databases from your device. You can download them again at any time. Your scan history will not be affected.'
+            : `This will remove the ${deleteTarget ? REGION_INFO[deleteTarget as RegionCode]?.label : ''} food database from your device. You can download it again at any time.`
+        }
         confirmPhrase="DELETE"
-        confirmLabel="Delete database"
+        confirmLabel={deleteTarget === 'all' ? 'Delete all' : 'Delete database'}
       />
     </>
   );
@@ -816,32 +900,39 @@ const offlineDbStyles = StyleSheet.create({
     letterSpacing: 0,
     lineHeight: 24,
   },
-  infoCard: {
-    backgroundColor: Colors.background,
+  regionCard: {
+    backgroundColor: Colors.surface.secondary,
     borderWidth: 1,
     borderColor: '#aad4cd',
-    borderRadius: 12,
+    borderRadius: 16,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 14,
+    gap: 12,
   },
-  infoRow: {
+  regionHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 12,
   },
-  infoLabel: {
-    fontSize: 16,
-    fontWeight: '300',
-    fontFamily: 'Figtree_300Light',
-    color: Colors.primary,
-    letterSpacing: 0,
+  regionFlag: {
+    fontSize: 28,
   },
-  infoValue: {
+  regionLabel: {
     fontSize: 16,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
-    letterSpacing: -0.32,
+    letterSpacing: 0,
+    lineHeight: 20,
+  },
+  regionMeta: {
+    fontSize: 13,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
+    color: Colors.secondary,
+    letterSpacing: -0.13,
+    lineHeight: 18,
+    marginTop: 2,
   },
   downloadBtn: {
     flexDirection: 'row',
@@ -849,72 +940,69 @@ const offlineDbStyles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     backgroundColor: Colors.primary,
-    borderRadius: 16,
-    paddingVertical: 14,
+    borderRadius: 12,
+    paddingVertical: 12,
   },
   downloadBtnText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: '#fff',
-    letterSpacing: -0.32,
-  },
-  updateBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: Colors.accent,
-    borderRadius: 16,
-    paddingVertical: 14,
-  },
-  cancelBtn: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
+    letterSpacing: -0.28,
   },
   cancelBtnText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.secondary,
-    letterSpacing: -0.32,
+    letterSpacing: -0.28,
+    textAlign: 'center',
   },
   progressCard: {
-    backgroundColor: Colors.background,
-    borderWidth: 1,
-    borderColor: '#aad4cd',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    gap: 12,
+    gap: 8,
   },
   progressLabel: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
-    letterSpacing: -0.32,
+    letterSpacing: -0.28,
   },
   progressTrack: {
-    height: 8,
+    height: 6,
     backgroundColor: Colors.surface.tertiary,
-    borderRadius: 4,
+    borderRadius: 3,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
     backgroundColor: Colors.accent,
-    borderRadius: 4,
+    borderRadius: 3,
+  },
+  readyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  readyBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  readyText: {
+    fontSize: 14,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.status.positive,
+    letterSpacing: -0.28,
   },
   errorText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '300',
     fontFamily: 'Figtree_300Light',
     color: Colors.status.negative,
-    letterSpacing: -0.14,
-    lineHeight: 21,
-    paddingHorizontal: 4,
+    letterSpacing: -0.13,
+    lineHeight: 18,
   },
   checkingRow: {
     flexDirection: 'row',

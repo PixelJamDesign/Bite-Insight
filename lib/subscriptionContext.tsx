@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
-import { Platform, Linking } from 'react-native';
+import { Platform, Linking, Alert } from 'react-native';
 import { supabase } from './supabase';
 import { useAuth } from './auth';
 
@@ -107,6 +107,10 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
         if (!pkg) {
           console.warn('No RevenueCat offering/package found');
+          Alert.alert(
+            'No subscription available',
+            'We couldn\'t find any subscription packages. Please try again later.',
+          );
           return;
         }
 
@@ -114,7 +118,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         if (customerInfo.entitlements.active['plus']) {
           setIsPlus(true);
         }
-      } else {
+      } else if (Platform.OS === 'web') {
         // ── Web: Stripe Checkout via Supabase Edge Function ─────────────────
         const { data, error } = await supabase.functions.invoke('create-stripe-checkout', {
           body: { user_id: session.user.id },
@@ -124,7 +128,18 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
           return;
         }
         (window as Window).location.href = data.url;
+      } else {
+        // ── Native but RevenueCat not configured (Expo Go / dev build) ──────
+        Alert.alert(
+          'Purchases unavailable',
+          'In-app purchases are not available in Expo Go. Please use a TestFlight or App Store build to subscribe.',
+        );
       }
+    } catch (err: any) {
+      // User cancelled the purchase — RevenueCat throws with userCancelled flag
+      if (err?.userCancelled) return;
+      console.warn('purchasePlus error:', err);
+      Alert.alert('Purchase failed', err?.message || 'Something went wrong. Please try again.');
     } finally {
       setPurchasing(false);
     }
