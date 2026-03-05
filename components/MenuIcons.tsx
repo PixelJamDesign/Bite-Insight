@@ -256,6 +256,29 @@ export function MenuCookieIcon({ color, size = 22 }: IconProps) {
   );
 }
 
+export function MenuFaceIdIcon({ color, size = 22 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      {/* Top-left corner */}
+      <Path d="M2 8V6C2 3.79086 3.79086 2 6 2H8" stroke={color} strokeWidth={2} strokeLinecap="round" />
+      {/* Top-right corner */}
+      <Path d="M16 2H18C20.2091 2 22 3.79086 22 6V8" stroke={color} strokeWidth={2} strokeLinecap="round" />
+      {/* Bottom-left corner */}
+      <Path d="M2 16V18C2 20.2091 3.79086 22 6 22H8" stroke={color} strokeWidth={2} strokeLinecap="round" />
+      {/* Bottom-right corner */}
+      <Path d="M16 22H18C20.2091 22 22 20.2091 22 18V16" stroke={color} strokeWidth={2} strokeLinecap="round" />
+      {/* Left eye */}
+      <Path d="M8 8V10" stroke={color} strokeWidth={2} strokeLinecap="round" />
+      {/* Right eye */}
+      <Path d="M16 8V10" stroke={color} strokeWidth={2} strokeLinecap="round" />
+      {/* Nose */}
+      <Path d="M12 8V13H13" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      {/* Mouth */}
+      <Path d="M9 16C9.5 17 10.5 17.5 12 17.5C13.5 17.5 14.5 17 15 16" stroke={color} strokeWidth={2} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
 export function MenuDataIcon({ color, size = 22 }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 18 22" fill="none">

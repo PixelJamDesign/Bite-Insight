@@ -19,7 +19,7 @@ import { CachedProduct } from '@/lib/productCache';
 // ── Configuration ────────────────────────────────────────────────────────────
 // Update these after uploading the built database to Supabase Storage.
 const SUPABASE_STORAGE_BASE =
-  'https://YOUR_PROJECT.supabase.co/storage/v1/object/public/offline-databases';
+  'https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/offline-databases';
 const MANIFEST_URL = `${SUPABASE_STORAGE_BASE}/manifest.json`;
 const DB_DOWNLOAD_URL = `${SUPABASE_STORAGE_BASE}/offline_uk_products.db`;
 

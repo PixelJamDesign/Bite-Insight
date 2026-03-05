@@ -33,6 +33,7 @@ import {
   MenuPersonalIcon,
   MenuFamilyIcon,
   MenuLockIcon,
+  MenuFaceIdIcon,
   MenuNotificationsIcon,
   MenuHelpIcon,
   MenuPrivacyIcon,
@@ -231,7 +232,7 @@ function SecurityScreen({ goBack }: { goBack: () => void }) {
             <View style={styles.toggleRow}>
               <View style={styles.toggleLeft}>
                 <View style={styles.navIcon}>
-                  <MenuLockIcon color={Colors.secondary} />
+                  <MenuFaceIdIcon color={Colors.secondary} />
                 </View>
                 <Text style={styles.navLabel}>{label}</Text>
               </View>

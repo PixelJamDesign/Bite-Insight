@@ -19,6 +19,7 @@ if (Platform.OS === 'android') {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as SecureStore from 'expo-secure-store';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
@@ -54,6 +55,18 @@ function getWeekStart(): Date {
   monday.setDate(now.getDate() - daysSinceMonday);
   monday.setHours(0, 0, 0, 0);
   return monday;
+}
+
+const INSIGHT_DISMISS_KEY = 'insight_dismissed_date';
+const todayStr = () => new Date().toISOString().slice(0, 10);
+
+/** Pick one insight deterministically based on today's date. */
+function getTodayInsight(insights: DailyInsight[]): DailyInsight | null {
+  if (insights.length === 0) return null;
+  const d = todayStr();
+  let hash = 0;
+  for (const ch of d) hash = ((hash << 5) - hash + ch.charCodeAt(0)) | 0;
+  return insights[Math.abs(hash) % insights.length];
 }
 
 function getGreeting(): string {
@@ -100,15 +113,38 @@ export default function HomeDashboard() {
 
     const weekStart = getWeekStart().toISOString();
 
-    const [profileRes, insightRes, scansRes, ingredientsRes] = await Promise.all([
+    const [profileRes, scansRes, ingredientsRes] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', userId).single(),
-      supabase.from('daily_insights').select('*').order('created_at', { ascending: false }).limit(1).single(),
       supabase.from('scans').select('id').eq('user_id', userId).gte('scanned_at', weekStart),
       supabase.from('ingredients').select('*'),
     ]);
 
     if (profileRes.data) setProfile(profileRes.data);
-    if (insightRes.data) setInsight(insightRes.data);
+
+    // ── Daily insight: filter by user tags, pick one for today, check dismissal ──
+    const userTags: string[] = [
+      ...(profileRes.data?.dietary_preferences ?? []),
+      ...(profileRes.data?.health_conditions ?? []),
+      ...(profileRes.data?.allergies ?? []),
+    ];
+
+    const insightQuery = userTags.length > 0
+      ? supabase.from('daily_insights').select('*').overlaps('suitable_for', userTags)
+      : supabase.from('daily_insights').select('*');
+    const insightRes = await insightQuery;
+
+    const picked = getTodayInsight((insightRes.data ?? []) as DailyInsight[]);
+    setInsight(picked);
+
+    // Check if already dismissed today
+    try {
+      const dismissedDate = Platform.OS === 'web'
+        ? localStorage.getItem(INSIGHT_DISMISS_KEY)
+        : await SecureStore.getItemAsync(INSIGHT_DISMISS_KEY);
+      setInsightDismissed(dismissedDate === todayStr());
+    } catch {
+      setInsightDismissed(false);
+    }
     if (scansRes.data) setScanCount(scansRes.data.length);
     const prefsMap: Record<string, UserIngredientPreference['preference']> = {};
     if (profileRes.data) {
@@ -245,7 +281,16 @@ export default function HomeDashboard() {
         {insight && !insightDismissed && (
           <DailyInsightCard
             insight={insight}
-            onDismiss={() => setInsightDismissed(true)}
+            onDismiss={async () => {
+              setInsightDismissed(true);
+              try {
+                if (Platform.OS === 'web') {
+                  localStorage.setItem(INSIGHT_DISMISS_KEY, todayStr());
+                } else {
+                  await SecureStore.setItemAsync(INSIGHT_DISMISS_KEY, todayStr());
+                }
+              } catch { /* ignore storage errors */ }
+            }}
             dietaryPreferences={profile?.dietary_preferences ?? []}
             healthConditions={profile?.health_conditions ?? []}
             allergies={profile?.allergies ?? []}
