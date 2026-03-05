@@ -60,7 +60,7 @@ export interface UserIngredientPreference {
 export interface DailyInsight {
   id: string;
   content: string;
-  suitable_for: DietaryTag[];
+  suitable_for: string[];
   created_at: string;
 }
 

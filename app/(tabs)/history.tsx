@@ -59,11 +59,13 @@ type DateTab = {
   specialLabel?: 'Today' | 'Yesterday';
 };
 
-/** Last 7 days, oldest → newest */
+/** Days in the current month up to today (max last 7), oldest → newest */
 function buildDateTabs(): DateTab[] {
   const todayRaw = new Date();
+  const todayDate = todayRaw.getDate(); // 1-based day of month
+  const daysToShow = Math.min(todayDate, 7); // at most 7, but cap at day-of-month
   const tabs: DateTab[] = [];
-  for (let i = 6; i >= 0; i--) {
+  for (let i = daysToShow - 1; i >= 0; i--) {
     const d = new Date(todayRaw);
     d.setDate(todayRaw.getDate() - i);
     d.setHours(0, 0, 0, 0);
@@ -311,7 +313,7 @@ function ScanCard({ scan, onPress, onDelete }: { scan: Scan; onPress: () => void
     <Swipeable renderRightActions={renderRightActions} overshootRight={false} rightThreshold={40}>
       <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.75}>
         {scan.image_url ? (
-          <Image source={{ uri: scan.image_url }} style={styles.productImage} resizeMode="cover" />
+          <Image source={{ uri: scan.image_url }} style={styles.productImage} resizeMode="contain" />
         ) : (
           <View style={[styles.productImage, styles.productImagePlaceholder]}>
             <NoImagePlaceholder />

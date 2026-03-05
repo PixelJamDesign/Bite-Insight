@@ -13,11 +13,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import LottieView from 'lottie-react-native';
 import BiteInsightPlusLogo from '../assets/images/logo-biteinsight-plus.svg';
 
-// Same Figma asset icons used in the UpsellSheet
-const ICON_FAMILY  = { uri: 'https://www.figma.com/api/mcp/asset/9113b1c6-0f94-465a-8bc0-bd4d5c5d0774' };
-const ICON_FLAG    = { uri: 'https://www.figma.com/api/mcp/asset/f5c2d33c-946a-4c46-86dc-d5aeded3b5e7' };
-const ICON_RECIPE  = { uri: 'https://www.figma.com/api/mcp/asset/475db745-dfb2-4d81-875d-3bbaacc23ac1' };
-const ICON_BARCODE = { uri: 'https://www.figma.com/api/mcp/asset/9dcb5e2a-6c18-4ee6-895d-fb9dc436abdd' };
+// Local upsell feature icons (shared with UpsellSheet)
+const ICON_FAMILY  = require('@/assets/icons/upsell/family.webp');
+const ICON_FLAG    = require('@/assets/icons/upsell/flag.webp');
+const ICON_RECIPE  = require('@/assets/icons/upsell/recipes.webp');
+const ICON_BARCODE = require('@/assets/icons/upsell/barcode.webp');
 
 const FEATURES = [
   {
