@@ -15,7 +15,7 @@
     "ios": {
       "newArchEnabled": true,
       "supportsTablet": false,
-      "bundleIdentifier": "com.biteinsightapp.gcahill",
+      "bundleIdentifier": "com.biteinsight.app",
       "icon": {
         "light": "./assets/images/icon.png",
         "dark": "./assets/images/icon-dark.png",
