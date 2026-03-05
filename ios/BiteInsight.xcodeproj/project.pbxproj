@@ -8,11 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		1F4BE00577CAF75BBE289138 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25D7D3635AAAA6E85E6D3504 /* ExpoModulesProvider.swift */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		5FD25F9CBE5026588206C2ED /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 97B18268B3523DA534A6FB04 /* PrivacyInfo.xcprivacy */; };
-		9B09DA733841EA11BC25A31E /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F45A49E6FD2C8443D6B4286 /* ExpoModulesProvider.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		D31EBE91BB1FA2AA1E8EEA4E /* libPods-BiteInsight.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 77F292C54AD2F1003EEDEC09 /* libPods-BiteInsight.a */; };
+		D55A8DBC389FE0DA8BBC717A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 70E7638E77D494CB352CB4EA /* PrivacyInfo.xcprivacy */; };
+		EC1B29D3E201203F32D958B1 /* libPods-BiteInsight.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 99953912E3800287216E5DFF /* libPods-BiteInsight.a */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
@@ -20,16 +20,16 @@
 		13B07F961A680F5B00A75B9A /* BiteInsight.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BiteInsight.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = BiteInsight/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = BiteInsight/Info.plist; sourceTree = "<group>"; };
-		2F45A49E6FD2C8443D6B4286 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-BiteInsight/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		77F292C54AD2F1003EEDEC09 /* libPods-BiteInsight.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BiteInsight.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		87D568087E2E3FDD6014D3A7 /* Pods-BiteInsight.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BiteInsight.debug.xcconfig"; path = "Target Support Files/Pods-BiteInsight/Pods-BiteInsight.debug.xcconfig"; sourceTree = "<group>"; };
-		97B18268B3523DA534A6FB04 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = BiteInsight/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		25D7D3635AAAA6E85E6D3504 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-BiteInsight/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		3D2C040455559418BA23340E /* Pods-BiteInsight.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BiteInsight.release.xcconfig"; path = "Target Support Files/Pods-BiteInsight/Pods-BiteInsight.release.xcconfig"; sourceTree = "<group>"; };
+		70E7638E77D494CB352CB4EA /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = BiteInsight/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		99953912E3800287216E5DFF /* libPods-BiteInsight.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BiteInsight.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = BiteInsight/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
+		BD722EF3027C49C765DE1767 /* Pods-BiteInsight.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BiteInsight.debug.xcconfig"; path = "Target Support Files/Pods-BiteInsight/Pods-BiteInsight.debug.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = BiteInsight/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* BiteInsight-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "BiteInsight-Bridging-Header.h"; path = "BiteInsight/BiteInsight-Bridging-Header.h"; sourceTree = "<group>"; };
-		F214E8E1C3ED98A99C9631C0 /* Pods-BiteInsight.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BiteInsight.release.xcconfig"; path = "Target Support Files/Pods-BiteInsight/Pods-BiteInsight.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,7 +37,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D31EBE91BB1FA2AA1E8EEA4E /* libPods-BiteInsight.a in Frameworks */,
+				EC1B29D3E201203F32D958B1 /* libPods-BiteInsight.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -53,26 +53,44 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				97B18268B3523DA534A6FB04 /* PrivacyInfo.xcprivacy */,
+				70E7638E77D494CB352CB4EA /* PrivacyInfo.xcprivacy */,
 			);
 			name = BiteInsight;
+			sourceTree = "<group>";
+		};
+		16F4A1AFBA0309ED269ECC30 /* ExpoModulesProviders */ = {
+			isa = PBXGroup;
+			children = (
+				51FE73A40F8D9FB2D721DF7B /* BiteInsight */,
+			);
+			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				77F292C54AD2F1003EEDEC09 /* libPods-BiteInsight.a */,
+				99953912E3800287216E5DFF /* libPods-BiteInsight.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		69432FF0ACC54DB24B235FAC /* ExpoModulesProviders */ = {
+		310CD4058D8B07879A5A45CA /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				FA06DA9BB5A9112FC6C806A2 /* BiteInsight */,
+				BD722EF3027C49C765DE1767 /* Pods-BiteInsight.debug.xcconfig */,
+				3D2C040455559418BA23340E /* Pods-BiteInsight.release.xcconfig */,
 			);
-			name = ExpoModulesProviders;
+			name = Pods;
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		51FE73A40F8D9FB2D721DF7B /* BiteInsight */ = {
+			isa = PBXGroup;
+			children = (
+				25D7D3635AAAA6E85E6D3504 /* ExpoModulesProvider.swift */,
+			);
+			name = BiteInsight;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -89,8 +107,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				CE4438EE13E0072F41B6E0A8 /* Pods */,
-				69432FF0ACC54DB24B235FAC /* ExpoModulesProviders */,
+				310CD4058D8B07879A5A45CA /* Pods */,
+				16F4A1AFBA0309ED269ECC30 /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -114,24 +132,6 @@
 			path = BiteInsight/Supporting;
 			sourceTree = "<group>";
 		};
-		CE4438EE13E0072F41B6E0A8 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				87D568087E2E3FDD6014D3A7 /* Pods-BiteInsight.debug.xcconfig */,
-				F214E8E1C3ED98A99C9631C0 /* Pods-BiteInsight.release.xcconfig */,
-			);
-			name = Pods;
-			path = Pods;
-			sourceTree = "<group>";
-		};
-		FA06DA9BB5A9112FC6C806A2 /* BiteInsight */ = {
-			isa = PBXGroup;
-			children = (
-				2F45A49E6FD2C8443D6B4286 /* ExpoModulesProvider.swift */,
-			);
-			name = BiteInsight;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -140,13 +140,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "BiteInsight" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				F70A61B3409C9F0C9776935D /* [Expo] Configure project */,
+				3E7233AE7842228359311D89 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				AE97A5EA41D3A1B8690C8D89 /* [CP] Embed Pods Frameworks */,
+				DC2B3089E20B5A4818BB5581 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -196,7 +196,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				5FD25F9CBE5026588206C2ED /* PrivacyInfo.xcprivacy in Resources */,
+				D55A8DBC389FE0DA8BBC717A /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -242,6 +242,30 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
+		3E7233AE7842228359311D89 /* [Expo] Configure project */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/.xcode.env",
+				"$(SRCROOT)/.xcode.env.local",
+				"$(SRCROOT)/BiteInsight/BiteInsight.entitlements",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-BiteInsight/expo-configure-project.sh",
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(SRCROOT)/Pods/Target Support Files/Pods-BiteInsight/ExpoModulesProvider.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-BiteInsight/expo-configure-project.sh\"\n";
+		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -284,7 +308,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BiteInsight/Pods-BiteInsight-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		AE97A5EA41D3A1B8690C8D89 /* [CP] Embed Pods Frameworks */ = {
+		DC2B3089E20B5A4818BB5581 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -306,30 +330,6 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BiteInsight/Pods-BiteInsight-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		F70A61B3409C9F0C9776935D /* [Expo] Configure project */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"$(SRCROOT)/.xcode.env",
-				"$(SRCROOT)/.xcode.env.local",
-				"$(SRCROOT)/BiteInsight/BiteInsight.entitlements",
-				"$(SRCROOT)/Pods/Target Support Files/Pods-BiteInsight/expo-configure-project.sh",
-			);
-			name = "[Expo] Configure project";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(SRCROOT)/Pods/Target Support Files/Pods-BiteInsight/ExpoModulesProvider.swift",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-BiteInsight/expo-configure-project.sh\"\n";
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -338,7 +338,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				9B09DA733841EA11BC25A31E /* ExpoModulesProvider.swift in Sources */,
+				1F4BE00577CAF75BBE289138 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -347,7 +347,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 87D568087E2E3FDD6014D3A7 /* Pods-BiteInsight.debug.xcconfig */;
+			baseConfigurationReference = BD722EF3027C49C765DE1767 /* Pods-BiteInsight.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -383,7 +383,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = F214E8E1C3ED98A99C9631C0 /* Pods-BiteInsight.release.xcconfig */;
+			baseConfigurationReference = 3D2C040455559418BA23340E /* Pods-BiteInsight.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
