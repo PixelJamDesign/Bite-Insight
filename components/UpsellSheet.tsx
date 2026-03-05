@@ -19,13 +19,12 @@ import { useUpsellSheet } from '@/lib/upsellSheetContext';
 import { useSubscription } from '@/lib/subscriptionContext';
 import BiteInsightPlusLogo from '../assets/images/logo-biteinsight-plus.svg';
 
-// Feature icon image sources — sourced from Figma.
-// Replace with local require() assets before going to production.
-const ICON_FAMILY   = { uri: 'https://www.figma.com/api/mcp/asset/9113b1c6-0f94-465a-8bc0-bd4d5c5d0774' };
-const ICON_FLAG     = { uri: 'https://www.figma.com/api/mcp/asset/f5c2d33c-946a-4c46-86dc-d5aeded3b5e7' };
-const ICON_RECIPE   = { uri: 'https://www.figma.com/api/mcp/asset/475db745-dfb2-4d81-875d-3bbaacc23ac1' };
-const ICON_BARCODE  = { uri: 'https://www.figma.com/api/mcp/asset/9dcb5e2a-6c18-4ee6-895d-fb9dc436abdd' };
-const ICON_FREE     = { uri: 'https://www.figma.com/api/mcp/asset/9abc6e9b-b7d2-4b20-aaf1-3dbb2c8c09a3' };
+// Feature icon image sources — local assets
+const ICON_FAMILY   = require('@/assets/icons/upsell/family.webp');
+const ICON_FLAG     = require('@/assets/icons/upsell/flag.webp');
+const ICON_RECIPE   = require('@/assets/icons/upsell/recipes.webp');
+const ICON_BARCODE  = require('@/assets/icons/upsell/barcode.webp');
+const ICON_FREE     = require('@/assets/icons/upsell/plus.webp');
 
 const FEATURES = [
   { icon: ICON_FAMILY,  label: 'Create and manage family profiles' },
