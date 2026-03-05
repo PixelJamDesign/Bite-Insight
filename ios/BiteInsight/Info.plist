@@ -28,7 +28,7 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>biteinsight</string>
-          <string>com.biteinsightapp.gcahill</string>
+          <string>com.biteinsight.app</string>
         </array>
       </dict>
     </array>

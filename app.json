@@ -15,7 +15,7 @@
     "ios": {
       "newArchEnabled": true,
       "supportsTablet": false,
-      "bundleIdentifier": "com.biteinsightapp.gcahill",
+      "bundleIdentifier": "com.biteinsight.app",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "BiteInsight needs camera access to scan food labels and barcodes.",
