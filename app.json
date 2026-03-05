@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "BiteInsight",
+    "name": "Bite Insight",
     "slug": "gcahill",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -16,6 +16,11 @@
       "newArchEnabled": true,
       "supportsTablet": false,
       "bundleIdentifier": "com.biteinsightapp.gcahill",
+      "icon": {
+        "light": "./assets/images/icon.png",
+        "dark": "./assets/images/icon-dark.png",
+        "tinted": "./assets/images/icon-tinted.png"
+      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "BiteInsight needs camera access to scan food labels and barcodes.",
@@ -73,6 +78,12 @@
         "projectId": "dcda6136-ab96-4037-8f10-40fc2a71d25a"
       }
     },
-    "owner": "biteinsightapp"
+    "owner": "biteinsightapp",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/dcda6136-ab96-4037-8f10-40fc2a71d25a"
+    }
   }
 }
