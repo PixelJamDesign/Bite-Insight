@@ -101,15 +101,29 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       if (Platform.OS !== 'web' && Purchases && rcConfigured.current) {
         // ── Native: StoreKit (iOS) / Google Play (Android) ──────────────────
         const offerings = await Purchases.getOfferings();
+
+        // Debug: log exactly what RevenueCat returns so we can diagnose issues
+        console.log('[RC] offerings.current:', JSON.stringify({
+          id: offerings.current?.identifier,
+          monthly: offerings.current?.monthly?.identifier ?? null,
+          packagesCount: offerings.current?.availablePackages.length ?? 0,
+          packages: offerings.current?.availablePackages.map(p => ({
+            id: p.identifier,
+            product: p.product.identifier,
+            price: p.product.priceString,
+          })) ?? [],
+          allOfferingsCount: offerings.all ? Object.keys(offerings.all).length : 0,
+        }, null, 2));
+
         const pkg =
           offerings.current?.monthly ??
           offerings.current?.availablePackages[0];
 
         if (!pkg) {
-          console.warn('No RevenueCat offering/package found');
+          console.warn('[RC] No package found. offerings.current is', offerings.current?.identifier ?? 'null');
           Alert.alert(
             'No subscription available',
-            'We couldn\'t find any subscription packages. Please try again later.',
+            `We couldn't find any subscription packages. This usually means Apple is still processing your products. Please try again in a few hours.\n\nOffering: ${offerings.current?.identifier ?? 'none'}\nPackages: ${offerings.current?.availablePackages.length ?? 0}`,
           );
           return;
         }
