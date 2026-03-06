@@ -24,6 +24,7 @@ import { Colors, Shadows } from '@/constants/theme';
 import { ScreenLayout } from '@/components/ScreenLayout';
 import { MenuLikedIcon, MenuDislikedIcon, MenuFlaggedIcon, ActionSearchIcon, ActionPenIcon } from '@/components/MenuIcons';
 import { IngredientDetailModal } from '@/components/IngredientDetailModal';
+import { FlagReasonSheet } from '@/components/FlagReasonSheet';
 import type { Ingredient, DietaryTag } from '@/lib/types';
 
 type PreferenceTab = 'liked' | 'disliked' | 'flagged';
@@ -94,6 +95,12 @@ export default function IngredientPreferencesScreen() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const searchInputRef = useRef<TextInput>(null);
   const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
+  const [flagReasonTarget, setFlagReasonTarget] = useState<PreferenceItem | null>(null);
+  const [profileMeta, setProfileMeta] = useState<{
+    health_conditions: string[];
+    allergies: string[];
+    dietary_preferences: string[];
+  }>({ health_conditions: [], allergies: [], dietary_preferences: [] });
 
   function toIngredient(item: PreferenceItem): Ingredient {
     return {
@@ -106,6 +113,25 @@ export default function IngredientPreferencesScreen() {
       dietary_tags: (item.ingredients.dietary_tags ?? []) as DietaryTag[],
     };
   }
+
+  // Fetch profile meta for FlagReasonSheet
+  useEffect(() => {
+    if (!session?.user) return;
+    supabase
+      .from('profiles')
+      .select('health_conditions, allergies, dietary_preferences')
+      .eq('id', session.user.id)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          setProfileMeta({
+            health_conditions: data.health_conditions ?? [],
+            allergies: data.allergies ?? [],
+            dietary_preferences: data.dietary_preferences ?? [],
+          });
+        }
+      });
+  }, [session?.user?.id]);
 
   useEffect(() => {
     setSearchActive(false);
@@ -193,6 +219,15 @@ export default function IngredientPreferencesScreen() {
       .from('profiles')
       .update({ [col]: current.filter((id) => id !== ingredientId) })
       .eq('id', session.user.id);
+
+    // Clean up flag reason when removing a flagged ingredient
+    if (activeTab === 'flagged') {
+      await supabase
+        .from('ingredient_flag_reasons')
+        .delete()
+        .eq('user_id', session.user.id)
+        .eq('ingredient_id', ingredientId);
+    }
   }
 
   async function handleDeleteSelected() {
@@ -250,6 +285,15 @@ export default function IngredientPreferencesScreen() {
         [toCol]: [...new Set([...toList, ingredientId])],
       })
       .eq('id', session.user.id);
+
+    // Clean up flag reason when moving away from flagged
+    if (activeTab === 'flagged' && targetPref !== 'flagged') {
+      await supabase
+        .from('ingredient_flag_reasons')
+        .delete()
+        .eq('user_id', session.user.id)
+        .eq('ingredient_id', ingredientId);
+    }
   }
 
   type MenuAction = {
@@ -279,7 +323,7 @@ export default function IngredientPreferencesScreen() {
       actions.push({
         label: 'Flag Ingredient',
         renderIcon: (color) => <MenuFlaggedIcon size={18} color={color} />,
-        onPress: () => handleMove(item.ingredient_id, 'flagged'),
+        onPress: () => { closeMenu(); setFlagReasonTarget(item); },
       });
     }
     actions.push({
@@ -595,10 +639,43 @@ export default function IngredientPreferencesScreen() {
         setSelectedIngredient(null);
       }}
       onFlag={() => {
-        if (selectedIngredient && activeTab !== 'flagged') handleMove(selectedIngredient.id, 'flagged');
+        if (selectedIngredient && activeTab !== 'flagged') {
+          // Find the PreferenceItem for this ingredient to pass to FlagReasonSheet
+          const item = items.find((i) => i.ingredient_id === selectedIngredient.id);
+          if (item) setFlagReasonTarget(item);
+        }
         setSelectedIngredient(null);
       }}
       showFlag={isPlus}
+    />
+
+    {/* ── Flag reason sheet ── */}
+    <FlagReasonSheet
+      visible={flagReasonTarget !== null}
+      ingredientName={flagReasonTarget?.ingredients.name ?? ''}
+      onClose={() => setFlagReasonTarget(null)}
+      onConfirm={async (reason) => {
+        if (!flagReasonTarget || !session?.user) return;
+        const ingredientId = flagReasonTarget.ingredient_id;
+        setFlagReasonTarget(null);
+
+        // Move ingredient to flagged list
+        await handleMove(ingredientId, 'flagged');
+
+        // Persist the flag reason
+        await supabase.from('ingredient_flag_reasons').upsert(
+          {
+            user_id: session.user.id,
+            ingredient_id: ingredientId,
+            reason_category: reason.category,
+            reason_text: reason.text,
+          },
+          { onConflict: 'user_id,ingredient_id' }
+        );
+      }}
+      healthConditions={profileMeta.health_conditions}
+      allergies={profileMeta.allergies}
+      dietaryPreferences={profileMeta.dietary_preferences}
     />
 
     {/* ── Floating action menu — web + Android ── */}

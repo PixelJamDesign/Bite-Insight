@@ -32,6 +32,7 @@ import { DailyInsightCard } from '@/components/DailyInsightCard';
 import { useMenu } from '@/lib/menuContext';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { UpsellBanner } from '@/components/UpsellBanner';
+import { FlagReasonSheet } from '@/components/FlagReasonSheet';
 import type { UserProfile, DailyInsight, Ingredient, UserIngredientPreference } from '@/lib/types';
 import Logo from '../../assets/images/logo.svg';
 
@@ -102,6 +103,7 @@ export default function HomeDashboard() {
     Record<string, UserIngredientPreference['preference']>
   >({});
   const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
+  const [flagReasonTarget, setFlagReasonTarget] = useState<Ingredient | null>(null);
   const [loading, setLoading] = useState(true);
   const [avatarLoadError, setAvatarLoadError] = useState(false);
   useEffect(() => { setAvatarLoadError(false); }, [avatarUrl]);
@@ -210,6 +212,17 @@ export default function HomeDashboard() {
       flagged_ingredients: newFlagged,
     }).eq('id', session.user.id);
     if (error) console.error('[rateIngredient] update failed:', error.message);
+
+    // Clean up flag reason when ingredient is moved away from flagged
+    if (pref !== 'flagged') {
+      supabase.from('ingredient_flag_reasons')
+        .delete()
+        .eq('user_id', session.user.id)
+        .eq('ingredient_id', ingredientId)
+        .then(({ error: delErr }) => {
+          if (delErr) console.warn('[rateIngredient] flag reason cleanup failed:', delErr.message);
+        });
+    }
   }
 
   const displayName = profile?.full_name ?? session?.user?.user_metadata?.full_name ?? 'there';
@@ -368,7 +381,7 @@ export default function HomeDashboard() {
                       preference={preferences[ing.id]}
                       onLike={() => rateIngredient(ing.id, 'liked')}
                       onDislike={() => rateIngredient(ing.id, 'disliked')}
-                      onFlag={() => rateIngredient(ing.id, 'flagged')}
+                      onFlag={() => setFlagReasonTarget(ing)}
                       onTap={() => setSelectedIngredient(ing)}
                       showFlag={isPlus}
                     />
@@ -411,8 +424,10 @@ export default function HomeDashboard() {
           setSelectedIngredient(null);
         }}
         onFlag={() => {
-          if (selectedIngredient) rateIngredient(selectedIngredient.id, 'flagged');
-          setSelectedIngredient(null);
+          if (selectedIngredient) {
+            setFlagReasonTarget(selectedIngredient);
+            setSelectedIngredient(null);
+          }
         }}
         showFlag={isPlus}
       />
@@ -430,6 +445,27 @@ export default function HomeDashboard() {
           <Ionicons name={menuOpen ? 'close' : 'menu-outline'} size={24} color={Colors.primary} />
         </TouchableOpacity>
       </View>
+      {/* ── Flag Reason Sheet ── */}
+      <FlagReasonSheet
+        visible={!!flagReasonTarget}
+        ingredientName={flagReasonTarget?.name ?? ''}
+        onClose={() => setFlagReasonTarget(null)}
+        onConfirm={async (reason) => {
+          if (flagReasonTarget && session?.user) {
+            await rateIngredient(flagReasonTarget.id, 'flagged');
+            await supabase.from('ingredient_flag_reasons').upsert({
+              user_id: session.user.id,
+              ingredient_id: flagReasonTarget.id,
+              reason_category: reason.category,
+              reason_text: reason.text,
+            }, { onConflict: 'user_id,ingredient_id' });
+          }
+          setFlagReasonTarget(null);
+        }}
+        healthConditions={profile?.health_conditions ?? []}
+        allergies={profile?.allergies ?? []}
+        dietaryPreferences={profile?.dietary_preferences ?? []}
+      />
     </SafeAreaView>
   );
 }

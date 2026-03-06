@@ -751,7 +751,10 @@ type OffIngredient = {
 };
 
 type FlagReason = 'vegan' | 'vegetarian' | 'user_flagged';
-type FlaggedIngredient = OffIngredient & { flagReason: FlagReason };
+type FlaggedIngredient = OffIngredient & {
+  flagReason: FlagReason;
+  personalReason?: { category: string; text: string };
+};
 
 type IngredientCategory = {
   harmful: FlaggedIngredient[];
@@ -768,6 +771,8 @@ function categoriseIngredients(
   allergenTags: string[],   // product-level allergen tags, e.g. ["en:gluten","en:milk"]
   userPrefs: DietaryTag[],
   flaggedNames: string[],   // user's personal flagged ingredient names
+  flagReasonMap?: Record<string, { category: string; text: string }>,
+  flaggedNameToIdMap?: Record<string, string>,
 ): IngredientCategory {
   const harmful: FlaggedIngredient[] = [];
   const ok: OffIngredient[] = [];
@@ -784,24 +789,64 @@ function categoriseIngredients(
     if (ingId && allergenSet.has(ingId)) { safe.push(ing); continue; }
 
     let reason: FlagReason | null = null;
+    let matchedFlaggedName: string | null = null;
     // Dietary conflicts
     if (userPrefs.includes('vegan') && ing.vegan === 'no') reason = 'vegan';
     if (!reason && userPrefs.includes('vegetarian') && ing.vegetarian === 'no') reason = 'vegetarian';
-    // User-flagged ingredients — match using whole-word boundaries to avoid
-    // false positives (e.g. "sugar" should not flag inside "sugarcane").
+    // User-flagged ingredients — match using strict rules to avoid false
+    // positives on compound/parent ingredients.
+    //
+    // Strategies (in priority order):
+    // 1. Exact match: "chocolate" === "chocolate"
+    // 2. Starts-with: "soy lecithin" starts with "soy" ✓ (catches prefix compounds)
+    // 3. Ends-with:   "brown sugar" ends with "sugar" ✓ (catches modifier prefixes)
+    //    Combined, these avoid mid-word matches:
+    //    "milk chocolate with sweetener" — "chocolate" is neither at start nor end ✗
+    // 4. OFF id match: compare en:chocolate against ing.id
     if (!reason && flaggedSet.size > 0) {
       for (const f of flaggedSet) {
-        if (ingText === f) { reason = 'user_flagged'; break; }
-        // Whole-word boundary match: "sugar" matches "brown sugar" but not "sugarcane"
+        // 1. Exact text match
+        if (ingText === f) { reason = 'user_flagged'; matchedFlaggedName = f; break; }
+
         const escaped = f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        if (new RegExp(`\\b${escaped}\\b`).test(ingText)) {
+        // 2. Starts-with: flagged name at the beginning, followed by space or end
+        //    e.g. "soy" matches "soy lecithin", "corn" matches "corn syrup"
+        if (new RegExp(`^${escaped}s?(?:\\s|$)`).test(ingText)) {
           reason = 'user_flagged';
+          matchedFlaggedName = f;
           break;
+        }
+        // 3. Ends-with: flagged name at the end, preceded by space or start
+        //    e.g. "sugar" matches "brown sugar", "oil" matches "palm oil"
+        if (new RegExp(`(?:^|\\s)${escaped}s?$`).test(ingText)) {
+          reason = 'user_flagged';
+          matchedFlaggedName = f;
+          break;
+        }
+        // 4. OFF id match — convert flagged name to OFF id format and compare
+        if (ingId) {
+          const flaggedAsId = 'en:' + f.replace(/\s+/g, '-');
+          if (ingId === flaggedAsId) {
+            reason = 'user_flagged';
+            matchedFlaggedName = f;
+            break;
+          }
         }
       }
     }
 
-    if (reason) { harmful.push({ ...ing, flagReason: reason }); continue; }
+    if (reason) {
+      // Attach personal flag reason if available
+      let personalReason: { category: string; text: string } | undefined;
+      if (reason === 'user_flagged' && matchedFlaggedName && flagReasonMap && flaggedNameToIdMap) {
+        const ingredientUuid = flaggedNameToIdMap[matchedFlaggedName];
+        if (ingredientUuid && flagReasonMap[ingredientUuid]) {
+          personalReason = flagReasonMap[ingredientUuid];
+        }
+      }
+      harmful.push({ ...ing, flagReason: reason, personalReason });
+      continue;
+    }
 
     // E-number food additive (en:e followed by digits)
     if (/^en:e\d+/i.test(ingId)) { ok.push(ing); continue; }
@@ -1524,7 +1569,13 @@ function FlaggedIngredientSheet({
 
   if (!mounted || !display) return null;
 
-  const reason = FLAG_REASON_TEXT[display.flagReason as FlagReason];
+  // Show personal reason if available, otherwise fall back to generic text
+  const reason = display.personalReason
+    ? {
+        title: display.personalReason.text,
+        body: `You flagged this because of your ${display.personalReason.category}.`,
+      }
+    : FLAG_REASON_TEXT[display.flagReason as FlagReason];
   const substitutes = getSubstitutes(display.text, display.flagReason as FlagReason, conditions, allergies);
 
   return (
@@ -2170,6 +2221,8 @@ export default function ScanResultScreen() {
   const [tabScrollX, setTabScrollX] = useState(0);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [flaggedNames, setFlaggedNames] = useState<string[]>([]);
+  const [flagReasonMap, setFlagReasonMap] = useState<Record<string, { category: string; text: string }>>({});
+  const [flaggedNameToIdMap, setFlaggedNameToIdMap] = useState<Record<string, string>>({});
   const [switcherVisible, setSwitcherVisible] = useState(false);
   const [activeFamilyProfile, setActiveFamilyProfile] = useState<FamilyProfile | null>(null);
   const [insightSheetDef, setInsightSheetDef] = useState<{ def: InsightDef; result: ImpactResult } | null>(null);
@@ -2224,14 +2277,37 @@ export default function ScanResultScreen() {
         setProfile(data as UserProfile);
         const flaggedIds: string[] = data.flagged_ingredients ?? [];
         if (flaggedIds.length) {
+          // Fetch ingredient names + build name→id map
           supabase
             .from('ingredients')
-            .select('name')
+            .select('id, name')
             .in('id', flaggedIds)
             .then(({ data: ingData }) => {
-              setFlaggedNames(
-                (ingData ?? []).map((r: any) => r.name).filter(Boolean) as string[],
-              );
+              const names = (ingData ?? []).map((r: any) => r.name).filter(Boolean) as string[];
+              setFlaggedNames(names);
+              // Build lowercase name → UUID map for personal reason lookup
+              const nameToId: Record<string, string> = {};
+              for (const r of ingData ?? []) {
+                if (r.name) nameToId[r.name.toLowerCase()] = r.id;
+              }
+              setFlaggedNameToIdMap(nameToId);
+            });
+
+          // Fetch personal flag reasons
+          supabase
+            .from('ingredient_flag_reasons')
+            .select('ingredient_id, reason_category, reason_text')
+            .eq('user_id', data.id)
+            .in('ingredient_id', flaggedIds)
+            .then(({ data: reasonData }) => {
+              const map: Record<string, { category: string; text: string }> = {};
+              for (const r of reasonData ?? []) {
+                map[r.ingredient_id] = {
+                  category: r.reason_category,
+                  text: r.reason_text,
+                };
+              }
+              setFlagReasonMap(map);
             });
         }
       });
@@ -2494,6 +2570,8 @@ export default function ScanResultScreen() {
     allergenSource.split(',').filter(Boolean),
     activePrefs,
     flaggedNames,
+    flagReasonMap,
+    flaggedNameToIdMap,
   );
 
   // Build condition-aware nutrient thresholds from the active profile

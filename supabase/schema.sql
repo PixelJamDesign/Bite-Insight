@@ -159,6 +159,32 @@ insert into public.daily_insights (content, suitable_for) values
   ('High-protein snacks like boiled eggs, Greek yoghurt or edamame can help keep blood sugar stable between meals.', ARRAY['Diabetes', 'diabetic', 'High-Protein / Fitness', 'PCOS', 'Metabolic Syndrome'])
 on conflict do nothing;
 
+-- ── ingredient_flag_reasons ──────────────────────────────────
+-- Stores the reason a user flagged a specific ingredient
+create table if not exists public.ingredient_flag_reasons (
+  id              uuid default gen_random_uuid() primary key,
+  user_id         uuid not null references auth.users(id) on delete cascade,
+  ingredient_id   uuid not null references public.ingredients(id) on delete cascade,
+  reason_category text not null,   -- source label: 'Diabetes', 'Lactose Intolerance', 'Vegan', 'Other'
+  reason_text     text not null,   -- e.g. 'Spikes blood sugar' or free text
+  created_at      timestamptz default now(),
+  unique(user_id, ingredient_id)
+);
+
+alter table public.ingredient_flag_reasons enable row level security;
+
+create policy "Users can view own flag reasons"
+  on public.ingredient_flag_reasons for select using (auth.uid() = user_id);
+
+create policy "Users can insert own flag reasons"
+  on public.ingredient_flag_reasons for insert with check (auth.uid() = user_id);
+
+create policy "Users can update own flag reasons"
+  on public.ingredient_flag_reasons for update using (auth.uid() = user_id);
+
+create policy "Users can delete own flag reasons"
+  on public.ingredient_flag_reasons for delete using (auth.uid() = user_id);
+
 -- ── Seed: sample ingredients ───────────────────────────────
 insert into public.ingredients (name, description, dietary_tags) values
   ('Eggs', 'A great source of protein and essential nutrients like vitamin D and choline.', ARRAY['vegetarian', 'pescatarian']),
