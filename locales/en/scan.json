@@ -86,7 +86,9 @@
     "harmful": "harmful",
     "ok": "ok",
     "safe": "safe",
-    "listed": "listed"
+    "listed": "listed",
+    "matchProductName": "Matches product name",
+    "matchCategory": "Matches product category"
   },
   "toggle": {
     "perServing": "Per Serving",

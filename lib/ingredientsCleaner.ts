@@ -211,6 +211,80 @@ export function buildHybridIngredients(
   return result;
 }
 
+// ── Flagged ingredient matching ──────────────────────────────────────────────
+
+/**
+ * Strips common English plural suffixes so "breads" matches "bread",
+ * "pastas" matches "pasta", "allergies" matches "allergy", etc.
+ */
+function deplural(word: string): string {
+  if (word.endsWith('ies') && word.length > 4) return word.slice(0, -3) + 'y';
+  if (word.endsWith('es') && word.length > 3) return word.slice(0, -2);
+  if (word.endsWith('s') && !word.endsWith('ss') && word.length > 2) return word.slice(0, -1);
+  return word;
+}
+
+/**
+ * Checks whether `text` matches any of the given `flaggedNames`.
+ *
+ * Matching strategy:
+ *  - Tokenizes both strings into lowercase words
+ *  - Checks if ALL words in the flagged name appear in the target text
+ *  - Handles simple plurals: "bread" matches "breads"
+ *
+ * Returns the original (non-lowercased) flagged name that matched, or null.
+ *
+ * Examples:
+ *   matchesFlaggedIngredient("Hovis Wholemeal Bread", ["bread"]) → "bread"
+ *   matchesFlaggedIngredient("Penne Pasta 500g", ["Penne Pasta"]) → "Penne Pasta"
+ *   matchesFlaggedIngredient("en:sliced-breads", ["bread"]) → "bread"
+ *   matchesFlaggedIngredient("Chocolate Cake", ["bread"]) → null
+ */
+export function matchesFlaggedIngredient(
+  text: string,
+  flaggedNames: string[],
+): string | null {
+  if (!text || flaggedNames.length === 0) return null;
+
+  // Normalise the target text: lowercase, replace hyphens/underscores with spaces,
+  // strip "en:" OFF prefix, then tokenize into depluralized words
+  const normText = text
+    .toLowerCase()
+    .replace(/^en:/, '')
+    .replace(/[-_]/g, ' ')
+    .replace(/[^a-z0-9\s]/g, ' ');
+  const textWords = new Set(
+    normText.split(/\s+/).filter(w => w.length > 1).map(deplural),
+  );
+
+  for (const flagged of flaggedNames) {
+    const flagWords = flagged
+      .toLowerCase()
+      .replace(/[-_]/g, ' ')
+      .split(/\s+/)
+      .filter(w => w.length > 1)
+      .map(deplural);
+
+    if (flagWords.length === 0) continue;
+
+    // ALL words in the flagged name must appear in the target text
+    if (flagWords.every(fw => textWords.has(fw))) return flagged;
+  }
+
+  return null;
+}
+
+/**
+ * Normalises an OFF category tag for human-readable matching.
+ * "en:sliced-breads" → "sliced breads"
+ */
+export function normaliseCategoryTag(tag: string): string {
+  return tag
+    .replace(/^[a-z]{2}:/, '')  // strip language prefix
+    .replace(/-/g, ' ')          // hyphens → spaces
+    .toLowerCase();
+}
+
 // ── Translation ──────────────────────────────────────────────────────────────
 
 /**

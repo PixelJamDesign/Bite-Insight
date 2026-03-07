@@ -108,6 +108,7 @@ export default function ScannerScreen() {
       let saltServing: number | null = null;
       let ingredientsText: string | null = null;
       let allergens: string[] = [];
+      let categoriesTags: string[] = [];
       let ingredientsJson: string | null = null;
       let offLang: string | null = null;
 
@@ -198,6 +199,7 @@ export default function ScannerScreen() {
               ingredientsText = op.ingredients_text_en || op.ingredients_text || null;
               allergens       = op.allergens_tags ?? [];
               ingredientsJson = op.ingredients ? JSON.stringify(op.ingredients) : null;
+              categoriesTags  = op.categories_tags ?? [];
               offLang         = hasEnglishText ? 'en' : (op.lang || op.lc || 'en');
               const n = op.nutriments ?? {};
               energyKcal   = n['energy-kcal_100g'] ?? null;
@@ -287,6 +289,7 @@ export default function ScannerScreen() {
           saltServing: saltServing != null ? String(saltServing) : '',
           ingredientsText: ingredientsText ?? '',
           allergens: allergens.join(','),
+          categoriesTags: categoriesTags.join(','),
           ingredientsJson: ingredientsJson ?? '',
           offLang: offLang ?? 'en',
         },

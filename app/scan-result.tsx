@@ -31,6 +31,8 @@ import {
   buildHybridIngredients,
   translateToEnglish,
   cleanIngredientName,
+  matchesFlaggedIngredient,
+  normaliseCategoryTag,
 } from '@/lib/ingredientsCleaner';
 import { safeBack } from '@/lib/safeBack';
 import SwitchIcon from '@/assets/icons/switch.svg';
@@ -817,9 +819,11 @@ type OffIngredient = {
 };
 
 type FlagReason = 'vegan' | 'vegetarian' | 'user_flagged';
+type MatchSource = 'ingredient' | 'product-name' | 'category';
 type FlaggedIngredient = OffIngredient & {
   flagReason: FlagReason;
   personalReason?: { category: string; text: string };
+  matchSource?: MatchSource;
 };
 
 type IngredientCategory = {
@@ -839,12 +843,67 @@ function categoriseIngredients(
   flaggedNames: string[],   // user's personal flagged ingredient names
   flagReasonMap?: Record<string, { category: string; text: string }>,
   flaggedNameToIdMap?: Record<string, string>,
+  productName?: string,     // product name for product-level matching
+  categoriesTags?: string[],// OFF category tags for product-level matching
 ): IngredientCategory {
   const harmful: FlaggedIngredient[] = [];
   const ok: OffIngredient[] = [];
   const safe: OffIngredient[] = [];
   const allergenSet = new Set(allergenTags.map((a) => a.toLowerCase()));
   const flaggedSet = new Set(flaggedNames.map((n) => n.toLowerCase()));
+
+  // ── Product-level matching ─────────────────────────────────────────────────
+  // Check the product name and OFF categories against flagged ingredients.
+  // This catches cases like flagging "bread" and scanning a loaf of bread,
+  // where the word "bread" appears in the product name or categories but
+  // NOT in the ingredient list (which would be "wheat flour, water, yeast...").
+  const productMatchedNames = new Set<string>();
+
+  if (flaggedNames.length > 0) {
+    // Check product name
+    if (productName) {
+      const nameMatch = matchesFlaggedIngredient(productName, flaggedNames);
+      if (nameMatch) {
+        const lc = nameMatch.toLowerCase();
+        productMatchedNames.add(lc);
+        let personalReason: { category: string; text: string } | undefined;
+        if (flagReasonMap && flaggedNameToIdMap) {
+          const uuid = flaggedNameToIdMap[lc];
+          if (uuid && flagReasonMap[uuid]) personalReason = flagReasonMap[uuid];
+        }
+        harmful.push({
+          text: nameMatch.charAt(0).toUpperCase() + nameMatch.slice(1),
+          flagReason: 'user_flagged',
+          personalReason,
+          matchSource: 'product-name',
+        });
+      }
+    }
+
+    // Check OFF categories
+    if (categoriesTags && categoriesTags.length > 0) {
+      const normCategories = categoriesTags.map(normaliseCategoryTag);
+      for (const cat of normCategories) {
+        const catMatch = matchesFlaggedIngredient(cat, flaggedNames);
+        if (catMatch) {
+          const lc = catMatch.toLowerCase();
+          if (productMatchedNames.has(lc)) continue; // already flagged via product name
+          productMatchedNames.add(lc);
+          let personalReason: { category: string; text: string } | undefined;
+          if (flagReasonMap && flaggedNameToIdMap) {
+            const uuid = flaggedNameToIdMap[lc];
+            if (uuid && flagReasonMap[uuid]) personalReason = flagReasonMap[uuid];
+          }
+          harmful.push({
+            text: catMatch.charAt(0).toUpperCase() + catMatch.slice(1),
+            flagReason: 'user_flagged',
+            personalReason,
+            matchSource: 'category',
+          });
+        }
+      }
+    }
+  }
 
   for (const ing of ingredients) {
     const ingId = (ing.id ?? '').toLowerCase();
@@ -910,7 +969,7 @@ function categoriseIngredients(
           personalReason = flagReasonMap[ingredientUuid];
         }
       }
-      harmful.push({ ...ing, flagReason: reason, personalReason });
+      harmful.push({ ...ing, flagReason: reason, personalReason, matchSource: 'ingredient' });
       continue;
     }
 
@@ -2297,6 +2356,7 @@ export default function ScanResultScreen() {
     saltServing: string;
     ingredientsText: string;
     allergens: string;
+    categoriesTags: string;
     ingredientsJson: string;
     offLang: string;
   }>();
@@ -2409,6 +2469,7 @@ export default function ScanResultScreen() {
     saltServing: string;
     ingredientsText: string;
     allergens: string;
+    categoriesTags: string;
     ingredientsJson: string;
     offLang: string;
   };
@@ -2524,6 +2585,7 @@ export default function ScanResultScreen() {
             saltServing: n.salt_serving != null ? String(n.salt_serving) : '',
             ingredientsText: op.ingredients_text_en || op.ingredients_text || '',
             allergens: allergenTags.join(','),
+            categoriesTags: (op.categories_tags ?? []).join(','),
             ingredientsJson: op.ingredients ? JSON.stringify(op.ingredients) : '',
             offLang: op.ingredients_text_en ? 'en' : (op.lang || op.lc || 'en'),
           });
@@ -2782,6 +2844,10 @@ export default function ScanResultScreen() {
     ? activeFamilyProfile.dietary_preferences ?? []
     : profile?.dietary_preferences ?? [];
 
+  // Resolve categories from route params or OFF fetch
+  const categoriesSource = fetched?.categoriesTags ?? p.categoriesTags ?? '';
+  const categoriesArray = categoriesSource.split(',').filter(Boolean);
+
   const categorised = categoriseIngredients(
     structuredIngredients,
     allergenSource.split(',').filter(Boolean),
@@ -2789,6 +2855,8 @@ export default function ScanResultScreen() {
     flaggedNames,
     flagReasonMap,
     flaggedNameToIdMap,
+    p.productName,
+    categoriesArray,
   );
 
   // Build condition-aware nutrient thresholds from the active profile
@@ -3133,11 +3201,19 @@ export default function ScanResultScreen() {
                   </Text>
                   <View style={{ gap: 4 }}>
                     {categorised.harmful.map((ing, i) => (
-                      <View key={ing.id ?? i} style={styles.ingRow}>
+                      <View key={ing.id ?? `flag-${i}`} style={styles.ingRow}>
                         <Ionicons name="close" size={24} color={Colors.status.negative} />
-                        <Text style={styles.ingName} numberOfLines={2}>
-                          {sentenceCase(ing.text)}
-                        </Text>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.ingName} numberOfLines={2}>
+                            {sentenceCase(ing.text)}
+                          </Text>
+                          {ing.matchSource === 'product-name' && (
+                            <Text style={styles.matchSourceLabel}>{t('ingredients.matchProductName')}</Text>
+                          )}
+                          {ing.matchSource === 'category' && (
+                            <Text style={styles.matchSourceLabel}>{t('ingredients.matchCategory')}</Text>
+                          )}
+                        </View>
                         <TouchableOpacity
                           style={styles.ingInfoContainer}
                           onPress={() => setFlaggedSheetIng(ing)}
@@ -3456,9 +3532,17 @@ export default function ScanResultScreen() {
                     {/* Harmful rows: gap-2 between rows, gap-8 within row, with ⓘ info icon */}
                     <View style={{ gap: 2 }}>
                       {categorised.harmful.map((ing, i) => (
-                        <View key={ing.id ?? i} style={styles.ingRow}>
+                        <View key={ing.id ?? `flag-${i}`} style={styles.ingRow}>
                           <Ionicons name="close" size={24} color={Colors.status.negative} />
-                          <Text style={styles.ingName} numberOfLines={2}>{sentenceCase(ing.text)}</Text>
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.ingName} numberOfLines={2}>{sentenceCase(ing.text)}</Text>
+                            {ing.matchSource === 'product-name' && (
+                              <Text style={styles.matchSourceLabel}>{t('ingredients.matchProductName')}</Text>
+                            )}
+                            {ing.matchSource === 'category' && (
+                              <Text style={styles.matchSourceLabel}>{t('ingredients.matchCategory')}</Text>
+                            )}
+                          </View>
                           <TouchableOpacity
                             style={styles.ingInfoContainer}
                             onPress={() => setFlaggedSheetIng(ing)}
@@ -4327,6 +4411,15 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     letterSpacing: -0.28,
     lineHeight: 20,
+  },
+  matchSourceLabel: {
+    fontSize: 12,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
+    color: Colors.secondary,
+    letterSpacing: -0.14,
+    lineHeight: 16,
+    marginTop: 1,
   },
   ingInfoContainer: {
     width: 20,
