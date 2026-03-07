@@ -450,14 +450,14 @@ export default function HomeDashboard() {
         visible={!!flagReasonTarget}
         ingredientName={flagReasonTarget?.name ?? ''}
         onClose={() => setFlagReasonTarget(null)}
-        onConfirm={async (reason) => {
+        onConfirm={async (reasons) => {
           if (flagReasonTarget && session?.user) {
             await rateIngredient(flagReasonTarget.id, 'flagged');
             await supabase.from('ingredient_flag_reasons').upsert({
               user_id: session.user.id,
               ingredient_id: flagReasonTarget.id,
-              reason_category: reason.category,
-              reason_text: reason.text,
+              reason_category: reasons.map((r) => r.category).join(', '),
+              reason_text: reasons.map((r) => r.text).join(', '),
             }, { onConflict: 'user_id,ingredient_id' });
           }
           setFlagReasonTarget(null);

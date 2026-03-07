@@ -15,9 +15,10 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Spacing, Radius } from '@/constants/theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Colors, Spacing, Radius, Shadows } from '@/constants/theme';
 import { MenuFlaggedIcon } from './MenuIcons';
-import { buildFlagReasonGroups, type FlagReasonGroup } from '@/constants/flagReasons';
+import { buildFlagReasonGroups } from '@/constants/flagReasons';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
@@ -25,7 +26,7 @@ interface FlagReasonSheetProps {
   visible: boolean;
   ingredientName: string;
   onClose: () => void;
-  onConfirm: (reason: { category: string; text: string }) => void;
+  onConfirm: (reasons: { category: string; text: string }[]) => void;
   healthConditions: string[];
   allergies: string[];
   dietaryPreferences: string[];
@@ -46,14 +47,13 @@ export function FlagReasonSheet({
   const hasShownRef = useRef(false);
   const [mounted, setMounted] = useState(false);
 
-  // Selection state
-  const [selectedSource, setSelectedSource] = useState<string | null>(null);
-  const [selectedText, setSelectedText] = useState<string | null>(null);
+  // Multi-select state
+  const [selectedReasons, setSelectedReasons] = useState<Set<string>>(new Set());
   const [isOther, setIsOther] = useState(false);
   const [otherText, setOtherText] = useState('');
 
   const groups = buildFlagReasonGroups(healthConditions, allergies, dietaryPreferences);
-  const canConfirm = isOther ? otherText.trim().length > 0 : !!selectedText;
+  const canConfirm = selectedReasons.size > 0 || (isOther && otherText.trim().length > 0);
 
   // ── Animation ───────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -61,8 +61,7 @@ export function FlagReasonSheet({
       hasShownRef.current = true;
       setMounted(true);
       // Reset state
-      setSelectedSource(null);
-      setSelectedText(null);
+      setSelectedReasons(new Set());
       setIsOther(false);
       setOtherText('');
       slideAnim.setValue(SCREEN_HEIGHT);
@@ -99,25 +98,37 @@ export function FlagReasonSheet({
 
   if (!mounted) return null;
 
-  function selectReason(source: string, text: string) {
-    setSelectedSource(source);
-    setSelectedText(text);
-    setIsOther(false);
-    setOtherText('');
+  function toggleReason(source: string, text: string) {
+    const key = `${source}|${text}`;
+    setSelectedReasons((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
   }
 
-  function selectOther() {
-    setSelectedSource(null);
-    setSelectedText(null);
-    setIsOther(true);
+  function toggleOther() {
+    setIsOther((prev) => !prev);
+    if (isOther) setOtherText('');
   }
 
   function handleConfirm() {
-    if (isOther && otherText.trim()) {
-      onConfirm({ category: 'Other', text: otherText.trim() });
-    } else if (selectedSource && selectedText) {
-      onConfirm({ category: selectedSource, text: selectedText });
+    const reasons: { category: string; text: string }[] = [];
+    for (const key of selectedReasons) {
+      const sepIdx = key.indexOf('|');
+      reasons.push({
+        category: key.slice(0, sepIdx),
+        text: key.slice(sepIdx + 1),
+      });
     }
+    if (isOther && otherText.trim()) {
+      reasons.push({ category: 'Other', text: otherText.trim() });
+    }
+    if (reasons.length > 0) onConfirm(reasons);
   }
 
   return (
@@ -128,7 +139,7 @@ export function FlagReasonSheet({
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      {/* Backdrop */}
+      {/* Backdrop — teal-tinted */}
       <Animated.View
         style={[styles.backdrop, { opacity: backdropAnim }]}
         pointerEvents="box-none"
@@ -152,109 +163,110 @@ export function FlagReasonSheet({
             {
               transform: [{ translateY: slideAnim }],
               paddingBottom: insets.bottom + 24,
-              maxHeight: SCREEN_HEIGHT * 0.85,
+              maxHeight: SCREEN_HEIGHT * 0.88,
             },
           ]}
         >
-          {/* Handle bar */}
-          <View style={styles.handle} />
-
-          {/* Close button */}
+          {/* Close button — no bg, shadow only */}
           <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.8}>
-            <Ionicons name="close" size={20} color={Colors.secondary} />
+            <Ionicons name="close" size={24} color={Colors.primary} />
           </TouchableOpacity>
 
-          {/* Icon */}
+          {/* Flag icon circle */}
           <View style={styles.iconCircle}>
-            <MenuFlaggedIcon size={28} color={Colors.status.negative} />
+            <MenuFlaggedIcon size={32} color={Colors.primary} />
           </View>
 
-          {/* Title */}
-          <Text style={styles.title}>
-            Why are you flagging{' '}
-            <Text style={styles.ingredientHighlight}>{ingredientName}</Text>?
-          </Text>
+          {/* Two-line header */}
+          <Text style={styles.subtitleLabel}>Why are you flagging</Text>
+          <Text style={styles.ingredientTitle}>{ingredientName}?</Text>
 
-          {/* Subtitle */}
-          <Text style={styles.subtitle}>
-            {groups.length > 0
-              ? 'Select a reason based on your profile'
-              : 'Tell us why you want to flag this ingredient'}
-          </Text>
-
-          {/* Scrollable reason list */}
-          <ScrollView
-            style={styles.scrollArea}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            {groups.map((group) => (
-              <View key={group.source} style={styles.group}>
-                {/* Section header */}
-                <Text style={styles.groupHeader}>{group.source}</Text>
-                {group.reasons.map((reason) => {
-                  const active = selectedSource === group.source && selectedText === reason;
-                  return (
-                    <TouchableOpacity
-                      key={`${group.source}-${reason}`}
-                      style={[styles.reasonRow, active && styles.reasonRowActive]}
-                      onPress={() => selectReason(group.source, reason)}
-                      activeOpacity={0.7}
-                    >
-                      <View style={[styles.radio, active && styles.radioActive]}>
-                        {active && <View style={styles.radioDot} />}
-                      </View>
-                      <Text style={[styles.reasonText, active && styles.reasonTextActive]}>
-                        {reason}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            ))}
-
-            {/* "Other" option — always shown */}
-            <View style={styles.group}>
-              <Text style={styles.groupHeader}>Other</Text>
-              <TouchableOpacity
-                style={[styles.reasonRow, isOther && styles.reasonRowActive]}
-                onPress={selectOther}
-                activeOpacity={0.7}
-              >
-                <View style={[styles.radio, isOther && styles.radioActive]}>
-                  {isOther && <View style={styles.radioDot} />}
+          {/* Scrollable reason list with gradient fade */}
+          <View style={styles.scrollWrapper}>
+            <ScrollView
+              style={styles.scrollArea}
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              {groups.map((group) => (
+                <View key={group.source} style={styles.group}>
+                  {/* Section header — Heading 5 */}
+                  <Text style={styles.groupHeader}>{group.source}</Text>
+                  {group.reasons.map((reason) => {
+                    const key = `${group.source}|${reason}`;
+                    const active = selectedReasons.has(key);
+                    return (
+                      <TouchableOpacity
+                        key={key}
+                        style={[styles.reasonRow, active && styles.reasonRowActive]}
+                        onPress={() => toggleReason(group.source, reason)}
+                        activeOpacity={0.7}
+                      >
+                        <View style={[styles.checkbox, active && styles.checkboxActive]}>
+                          {active && <Ionicons name="checkmark" size={16} color="#fff" />}
+                        </View>
+                        <Text style={styles.reasonText}>{reason}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
-                <Text style={[styles.reasonText, isOther && styles.reasonTextActive]}>
-                  Enter my own reason
-                </Text>
+              ))}
+
+              {/* "Other" option — always shown */}
+              <View style={styles.group}>
+                <Text style={styles.groupHeader}>Other</Text>
+                <TouchableOpacity
+                  style={[styles.reasonRow, isOther && styles.reasonRowActive]}
+                  onPress={toggleOther}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.checkbox, isOther && styles.checkboxActive]}>
+                    {isOther && <Ionicons name="checkmark" size={16} color="#fff" />}
+                  </View>
+                  <Text style={styles.reasonText}>Enter my own reason</Text>
+                </TouchableOpacity>
+
+                {isOther && (
+                  <TextInput
+                    style={styles.otherInput}
+                    value={otherText}
+                    onChangeText={setOtherText}
+                    placeholder="e.g. Makes me feel bloated"
+                    placeholderTextColor="#aaa"
+                    multiline
+                    maxLength={200}
+                    autoFocus
+                  />
+                )}
+              </View>
+            </ScrollView>
+
+            {/* Gradient fade at bottom of scroll area */}
+            <LinearGradient
+              colors={['rgba(255,255,255,0)', 'rgba(255,255,255,1)']}
+              style={styles.scrollGradient}
+              pointerEvents="none"
+            />
+          </View>
+
+          {/* Footer buttons */}
+          <View style={styles.footer}>
+            <TouchableOpacity
+              style={[styles.confirmBtn, !canConfirm && styles.confirmBtnDisabled]}
+              onPress={handleConfirm}
+              activeOpacity={0.85}
+              disabled={!canConfirm}
+            >
+              <Text style={styles.confirmBtnText}>Flag ingredient</Text>
+            </TouchableOpacity>
+
+            <View style={styles.cancelBtnWrap}>
+              <TouchableOpacity onPress={onClose} activeOpacity={0.7} style={styles.cancelBtn}>
+                <Text style={styles.cancelBtnText}>Cancel</Text>
               </TouchableOpacity>
-
-              {isOther && (
-                <TextInput
-                  style={styles.otherInput}
-                  value={otherText}
-                  onChangeText={setOtherText}
-                  placeholder="e.g. Makes me feel bloated"
-                  placeholderTextColor="#aaa"
-                  multiline
-                  maxLength={200}
-                  autoFocus
-                />
-              )}
             </View>
-          </ScrollView>
-
-          {/* Confirm button */}
-          <TouchableOpacity
-            style={[styles.confirmBtn, !canConfirm && styles.confirmBtnDisabled]}
-            onPress={handleConfirm}
-            activeOpacity={0.85}
-            disabled={!canConfirm}
-          >
-            <MenuFlaggedIcon size={18} color="#fff" />
-            <Text style={styles.confirmBtnText}>Flag Ingredient</Text>
-          </TouchableOpacity>
+          </View>
         </Animated.View>
       </KeyboardAvoidingView>
     </Modal>
@@ -264,7 +276,7 @@ export function FlagReasonSheet({
 const styles = StyleSheet.create({
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(226,241,238,0.8)',
   },
   keyboardWrap: {
     flex: 1,
@@ -275,131 +287,128 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: Radius.l,
     borderTopRightRadius: Radius.l,
     paddingHorizontal: Spacing.m,
-    paddingTop: Spacing.xs,
+    paddingTop: Spacing.xl,
     alignItems: 'center',
-  },
-  handle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#ddd',
-    marginBottom: Spacing.s,
   },
   closeBtn: {
     position: 'absolute',
-    top: Spacing.s,
-    right: Spacing.s,
-    width: 36,
-    height: 36,
-    backgroundColor: Colors.surface.tertiary,
-    borderRadius: Radius.m,
+    top: Spacing.m,
+    right: Spacing.m,
+    width: 48,
+    height: 48,
+    borderRadius: Radius.l,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 10,
+    ...Shadows.level3,
   },
   iconCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: 'rgba(255,63,66,0.1)',
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    backgroundColor: Colors.background,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.xs,
   },
-  title: {
-    fontSize: 18,
+  subtitleLabel: {
+    // Body Regular
+    fontSize: 16,
     lineHeight: 24,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
-    letterSpacing: -0.36,
-    textAlign: 'center',
-    marginBottom: 4,
-    paddingHorizontal: Spacing.m,
-  },
-  ingredientHighlight: {
-    color: Colors.status.negative,
-  },
-  subtitle: {
-    fontSize: 14,
-    lineHeight: 21,
     fontWeight: '300',
     fontFamily: 'Figtree_300Light',
     color: Colors.secondary,
-    letterSpacing: -0.14,
+    letterSpacing: 0,
+    textAlign: 'center',
+    marginBottom: Spacing.xxs,
+  },
+  ingredientTitle: {
+    // Heading 3
+    fontSize: 24,
+    lineHeight: 30,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.48,
     textAlign: 'center',
     marginBottom: Spacing.s,
   },
+  scrollWrapper: {
+    width: '100%',
+  },
   scrollArea: {
     width: '100%',
-    maxHeight: SCREEN_HEIGHT * 0.45,
+    maxHeight: SCREEN_HEIGHT * 0.38,
   },
   scrollContent: {
-    paddingBottom: Spacing.s,
+    paddingBottom: Spacing.xl,
+  },
+  scrollGradient: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 48,
   },
   group: {
-    marginBottom: Spacing.s,
+    marginBottom: Spacing.l,
   },
   groupHeader: {
-    fontSize: 13,
-    lineHeight: 16,
+    // Heading 5
+    fontSize: 16,
+    lineHeight: 20,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
-    color: Colors.secondary,
-    letterSpacing: -0.26,
-    marginBottom: Spacing.xxs,
-    paddingLeft: 4,
+    color: Colors.primary,
+    letterSpacing: 0,
+    marginBottom: Spacing.xs,
   },
   reasonRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.xs,
-    paddingVertical: 10,
-    paddingHorizontal: Spacing.xs,
+    minHeight: 48,
+    paddingLeft: Spacing.xs,
+    paddingRight: Spacing.s,
+    paddingVertical: Spacing.xs,
     borderRadius: Radius.m,
     backgroundColor: Colors.surface.tertiary,
+    borderWidth: 1,
+    borderColor: '#aad4cd',
     marginBottom: Spacing.xxs,
   },
   reasonRowActive: {
-    backgroundColor: 'rgba(59,149,134,0.1)',
-    borderWidth: 1,
+    backgroundColor: 'rgba(59,149,134,0.08)',
     borderColor: Colors.accent,
   },
-  radio: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 1.5,
     borderColor: '#ccc',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  radioActive: {
-    borderColor: Colors.accent,
-  },
-  radioDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: Colors.accent,
+  checkboxActive: {
+    backgroundColor: Colors.secondary,
+    borderColor: Colors.secondary,
   },
   reasonText: {
+    // Heading 5
     flex: 1,
-    fontSize: 15,
-    fontWeight: '300',
-    fontFamily: 'Figtree_300Light',
-    color: Colors.primary,
+    fontSize: 16,
     lineHeight: 20,
-  },
-  reasonTextActive: {
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: 0,
   },
   otherInput: {
     width: '100%',
     minHeight: 52,
     borderWidth: 1.5,
-    borderColor: '#ddd',
+    borderColor: '#aad4cd',
     borderRadius: Radius.m,
     paddingHorizontal: Spacing.s,
     paddingVertical: Spacing.xs,
@@ -411,25 +420,51 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xxs,
     textAlignVertical: 'top',
   },
+  footer: {
+    width: '100%',
+  },
   confirmBtn: {
     width: '100%',
-    height: 52,
-    borderRadius: Radius.l,
-    backgroundColor: Colors.status.negative,
-    flexDirection: 'row',
+    paddingVertical: Spacing.s,
+    paddingHorizontal: Spacing.m,
+    borderRadius: Radius.m,
+    backgroundColor: Colors.secondary,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.xs,
-    marginTop: Spacing.xs,
   },
   confirmBtnDisabled: {
     opacity: 0.35,
   },
   confirmBtnText: {
+    // Heading 5
     fontSize: 16,
+    lineHeight: 20,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: '#fff',
-    letterSpacing: -0.16,
+    letterSpacing: 0,
+  },
+  cancelBtnWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelBtn: {
+    paddingVertical: Spacing.s,
+    paddingHorizontal: Spacing.m,
+    borderRadius: Radius.m,
+    shadowColor: 'rgba(132,161,159,1)',
+    shadowOffset: { width: 0, height: 7 },
+    shadowOpacity: 0.19,
+    shadowRadius: 14,
+    elevation: 3,
+  },
+  cancelBtnText: {
+    // Heading 5
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.secondary,
+    letterSpacing: 0,
   },
 });

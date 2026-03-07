@@ -185,6 +185,13 @@ create policy "Users can update own flag reasons"
 create policy "Users can delete own flag reasons"
   on public.ingredient_flag_reasons for delete using (auth.uid() = user_id);
 
+-- ── profiles — nutrient watchlist ─────────────────────────────
+-- JSONB array of nutrients the user wants to monitor, populated during onboarding
+-- based on their health conditions.  Each entry:
+--   { offKey, nutrient, direction, unit, source, reason }
+alter table public.profiles add column if not exists nutrient_watchlist jsonb default '[]';
+alter table public.family_profiles add column if not exists nutrient_watchlist jsonb default '[]';
+
 -- ── Seed: sample ingredients ───────────────────────────────
 insert into public.ingredients (name, description, dietary_tags) values
   ('Eggs', 'A great source of protein and essential nutrients like vitamin D and choline.', ARRAY['vegetarian', 'pescatarian']),
