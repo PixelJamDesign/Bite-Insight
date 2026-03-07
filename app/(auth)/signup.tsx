@@ -19,41 +19,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
+import { useTranslation } from 'react-i18next';
 import { supabase, uploadAvatar } from '@/lib/supabase';
 import { Colors, Shadows } from '@/constants/theme';
+import { HEALTH_CONDITION_KEYS, ALLERGY_KEYS, DIETARY_PREFERENCE_KEYS } from '@/constants/profileOptions';
 import { CameraIcon, PersonalIcon, EmailIcon, BirthdayIcon, TickIcon } from '@/components/MenuIcons';
 import Logo from '../../assets/images/logo.svg';
 
-// ── Step metadata ────────────────────────────────────────────────────────────
-const STEPS = [
-  { title: 'About You',           nextLabel: 'Health Conditions' },
-  { title: 'Health Conditions',   nextLabel: 'Allergies' },
-  { title: 'Allergies',           nextLabel: 'Dietary Preferences' },
-  { title: 'Dietary Preferences', nextLabel: null },
-] as const;
+// ── Step keys ────────────────────────────────────────────────────────────────
+type StepKey = 'aboutYou' | 'health' | 'allergies' | 'dietary';
 
-// ── Selection lists ───────────────────────────────────────────────────────────
-const HEALTH_CONDITIONS = [
-  'ADHD', 'Autism', "Chron's Disease", 'Diabetes', 'Eczema / Psoriasis',
-  'GERD / Acid Reflux', 'Heart Disease', 'High Cholesterol', 'Hypertension', 'IBS',
-  'Leaky Gut Syndrome', 'Lupus', 'ME / Chronic Fatigue', 'Metabolic Syndrome',
-  'Migraine / Chronic Headaches', 'Multiple Sclerosis', 'PCOS', 'Rheumatoid Arthritis',
-  'SIBO', 'Ulcerative Colitis',
-];
-
-const ALLERGIES = [
-  'Egg Allergy', 'Fructose Intolerance', 'Gluten Intolerance', 'Histamine Intolerance',
-  'Lactose Intolerance', 'MSG Sensitivity', 'Peanut Allergy', 'Salicylate Sensitivity',
-  'Sesame Allergy', 'Shellfish Allergy', 'Soy Allergy', 'Sulphite Sensitivity',
-  'Tree Nut Allergy',
-];
-
-const DIETARY_PREFERENCES = [
-  'Child-Friendly / Additive-Free', 'Clean Eating', 'Dairy-Free', 'FODMAP Diet',
-  'Low-Carb / Keto', 'High-Protein / Fitness', 'Paleo', 'Plant-Based',
-  'Post-Bariatric Surgery', 'Pregnancy-safe Diet', 'Sustainable / Eco',
-  'Weight Loss', 'Whole30', 'Vegan', 'Vegetarian',
-];
+const STEP_SEQUENCE: StepKey[] = ['aboutYou', 'health', 'allergies', 'dietary'];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function getInitials(name: string): string {
@@ -67,6 +43,10 @@ function toggle(list: string[], item: string): string[] {
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function SignUpScreen() {
   const insets = useSafeAreaInsets();
+  const { t: ta } = useTranslation('auth');
+  const { t: to } = useTranslation('onboarding');
+  const { t: tpo } = useTranslation('profileOptions');
+  const { t: tc } = useTranslation('common');
 
   const [step, setStep] = useState(1);
 
@@ -140,13 +120,13 @@ export default function SignUpScreen() {
 
   // ── Avatar picker ────────────────────────────────────────────────────────────
   function pickAvatar() {
-    Alert.alert('Profile Photo', 'Choose an option', [
+    Alert.alert(ta('signup.alert.profilePhotoTitle'), ta('signup.alert.profilePhotoMessage'), [
       {
-        text: 'Take Photo',
+        text: ta('signup.alert.takePhoto'),
         onPress: async () => {
           const { status } = await ImagePicker.requestCameraPermissionsAsync();
           if (status !== 'granted') {
-            Alert.alert('Permission needed', 'Camera access is required to take a photo.');
+            Alert.alert(ta('signup.alert.cameraPermissionTitle'), ta('signup.alert.cameraPermissionMessage'));
             return;
           }
           const result = await ImagePicker.launchCameraAsync({
@@ -158,7 +138,7 @@ export default function SignUpScreen() {
         },
       },
       {
-        text: 'Choose from Library',
+        text: ta('signup.alert.chooseFromLibrary'),
         onPress: async () => {
           const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],
@@ -169,7 +149,7 @@ export default function SignUpScreen() {
           if (!result.canceled) setAvatarUri(result.assets[0].uri);
         },
       },
-      { text: 'Cancel', style: 'cancel' },
+      { text: tc('buttons.cancel'), style: 'cancel' },
     ]);
   }
 
@@ -177,11 +157,11 @@ export default function SignUpScreen() {
   function handleNext() {
     if (step === 1) {
       if (!fullName.trim() || !email.trim() || !password.trim()) {
-        Alert.alert('Missing fields', 'Please fill in your name, email and password.');
+        Alert.alert(ta('signup.alert.missingFieldsTitle'), ta('signup.alert.missingFieldsMessage'));
         return;
       }
       if (password.length < 8) {
-        Alert.alert('Weak password', 'Password must be at least 8 characters.');
+        Alert.alert(ta('signup.alert.weakPasswordTitle'), ta('signup.alert.weakPasswordMessage'));
         return;
       }
     }
@@ -203,7 +183,7 @@ export default function SignUpScreen() {
     });
     if (error) {
       setLoading(false);
-      Alert.alert('Sign up failed', error.message);
+      Alert.alert(ta('signup.error.signUpFailed'), error.message);
       return;
     }
     const user = data.user;
@@ -221,8 +201,8 @@ export default function SignUpScreen() {
     setLoading(false);
     if (data.session === null) {
       Alert.alert(
-        'Check your email',
-        'We sent a confirmation link to your email address. Please verify to continue.',
+        ta('signup.alert.checkEmailTitle'),
+        ta('signup.alert.checkEmailFullMessage'),
       );
     }
   }
@@ -239,7 +219,7 @@ export default function SignUpScreen() {
     });
     if (error) {
       setLoading(false);
-      Alert.alert('Sign up failed', error.message);
+      Alert.alert(ta('signup.error.signUpFailed'), error.message);
       return;
     }
     const user = data.user;
@@ -254,8 +234,8 @@ export default function SignUpScreen() {
     setLoading(false);
     if (data.session === null) {
       Alert.alert(
-        'Check your email',
-        'We sent a confirmation link to your email address. Please verify to continue.',
+        ta('signup.alert.checkEmailTitle'),
+        ta('signup.alert.checkEmailFullMessage'),
       );
     }
     // AuthGuard will redirect to (tabs) once session is active
@@ -263,7 +243,8 @@ export default function SignUpScreen() {
 
   // ── Progress indicator ───────────────────────────────────────────────────────
   function renderProgress() {
-    const { nextLabel } = STEPS[step - 1];
+    const nextStepKey = step < STEP_SEQUENCE.length ? STEP_SEQUENCE[step] : null;
+    const nextLabel = nextStepKey ? to(`step.${nextStepKey}`) : null;
     return (
       <View style={styles.progressRow}>
         <View style={styles.progressDots}>
@@ -282,19 +263,19 @@ export default function SignUpScreen() {
             );
           })}
         </View>
-        {nextLabel && <Text style={styles.nextLabel}>Next: {nextLabel}</Text>}
+        {nextLabel && <Text style={styles.nextLabel}>{to('progress.next', { label: nextLabel })}</Text>}
       </View>
     );
   }
 
   // ── Chip card header ─────────────────────────────────────────────────────────
-  function renderChipHeader(question: string, count: number, word: string) {
+  function renderChipHeader(question: string, count: number, countText: string) {
     return (
       <View style={styles.chipCardInfo}>
         <Text style={styles.cardTitle}>{question}</Text>
         <View style={styles.countRow}>
-          <Text style={styles.countText}>You've selected </Text>
-          <Text style={styles.countBold}>{count} {word}</Text>
+          <Text style={styles.countText}>{to('chip.youveSelected')}</Text>
+          <Text style={styles.countBold}>{countText}</Text>
         </View>
         <TouchableOpacity
           style={styles.searchLink}
@@ -307,13 +288,13 @@ export default function SignUpScreen() {
           activeOpacity={0.7}
         >
           <Ionicons name="search-outline" size={16} color={Colors.secondary} />
-          <Text style={styles.searchLinkText}>Search</Text>
+          <Text style={styles.searchLinkText}>{tc('buttons.search')}</Text>
         </TouchableOpacity>
         {chipSearchActive && (
           <TextInput
             ref={chipSearchRef}
             style={styles.chipSearchInput}
-            placeholder="Search..."
+            placeholder={tc('placeholder.search')}
             placeholderTextColor={`${Colors.primary}50`}
             selectionColor={Colors.primary}
             value={chipSearch}
@@ -328,28 +309,29 @@ export default function SignUpScreen() {
 
   // ── Chip grid ────────────────────────────────────────────────────────────────
   function renderChips(
-    items: string[],
+    keys: readonly string[],
+    labelPrefix: string,
     selected: string[],
-    onToggle: (item: string) => void,
+    onToggle: (key: string) => void,
   ) {
     const filtered = chipSearch.trim()
-      ? items.filter(i => i.toLowerCase().includes(chipSearch.toLowerCase()))
-      : items;
+      ? keys.filter(k => tpo(`${labelPrefix}.${k}`).toLowerCase().includes(chipSearch.toLowerCase()))
+      : keys;
     return (
       <View style={styles.chipWrap}>
-        {filtered.map(item => {
-          const active = selected.includes(item);
+        {filtered.map(key => {
+          const active = selected.includes(key);
           return (
             <TouchableOpacity
-              key={item}
+              key={key}
               style={[styles.chip, active && styles.chipActive]}
-              onPress={() => onToggle(item)}
+              onPress={() => onToggle(key)}
               activeOpacity={0.75}
             >
               <View style={[styles.chipCheck, active && styles.chipCheckActive]}>
                 {active && <TickIcon size={12} color="#fff" />}
               </View>
-              <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>{item}</Text>
+              <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>{tpo(`${labelPrefix}.${key}`)}</Text>
             </TouchableOpacity>
           );
         })}
@@ -358,7 +340,14 @@ export default function SignUpScreen() {
   }
 
   // ── Render ───────────────────────────────────────────────────────────────────
-  const stepInfo = STEPS[step - 1];
+  const currentStepKey = STEP_SEQUENCE[step - 1];
+  const stepTitle = to(`step.${currentStepKey}`);
+  const nextStepKeyForBtn = step < STEP_SEQUENCE.length ? STEP_SEQUENCE[step] : null;
+  const nextBtnLabel = step === 4
+    ? tc('buttons.finish')
+    : nextStepKeyForBtn
+      ? to('progress.next', { label: to(`step.${nextStepKeyForBtn}`) })
+      : '';
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -375,7 +364,7 @@ export default function SignUpScreen() {
         {/* Step header */}
         <View style={styles.stepHeader}>
           <View style={styles.stepTitleRow}>
-            <Text style={styles.stepTitle}>{stepInfo.title}</Text>
+            <Text style={styles.stepTitle}>{stepTitle}</Text>
           </View>
           {renderProgress()}
         </View>
@@ -405,8 +394,8 @@ export default function SignUpScreen() {
 
               <View style={[styles.card, styles.cardWithAvatar]}>
                 <View style={styles.cardHeader}>
-                  <Text style={styles.cardTitle}>Tell us about yourself</Text>
-                  <Text style={styles.cardSubtitle}>Enter your details to sign in.</Text>
+                  <Text style={styles.cardTitle}>{ta('signup.aboutYouTitle')}</Text>
+                  <Text style={styles.cardSubtitle}>{ta('signup.aboutYouSubtitle')}</Text>
                 </View>
 
                 <View style={styles.fields}>
@@ -414,7 +403,7 @@ export default function SignUpScreen() {
                     <PersonalIcon size={20} color={Colors.primary} />
                     <TextInput
                       style={[styles.inputFieldInner, fullName ? styles.inputFieldBold : null]}
-                      placeholder="Full name"
+                      placeholder={tc('placeholder.fullName')}
                       placeholderTextColor={`${Colors.primary}50`}
                       selectionColor={Colors.primary}
                       autoCapitalize="words"
@@ -433,7 +422,7 @@ export default function SignUpScreen() {
                     <EmailIcon size={20} color={Colors.primary} />
                     <TextInput
                       style={[styles.inputFieldInner, email ? styles.inputFieldBold : null]}
-                      placeholder="Email address"
+                      placeholder={tc('placeholder.emailAddress')}
                       placeholderTextColor={`${Colors.primary}50`}
                       selectionColor={Colors.primary}
                       keyboardType="email-address"
@@ -454,7 +443,7 @@ export default function SignUpScreen() {
                     <Ionicons name="lock-closed-outline" size={20} color={Colors.primary} />
                     <TextInput
                       style={[styles.inputFieldInner, password ? styles.inputFieldBold : null]}
-                      placeholder="Password (min. 8 characters)"
+                      placeholder={ta('signup.placeholder.password')}
                       placeholderTextColor={`${Colors.primary}50`}
                       selectionColor={Colors.primary}
                       secureTextEntry
@@ -473,7 +462,7 @@ export default function SignUpScreen() {
                     <BirthdayIcon size={20} color={Colors.primary} />
                     <TextInput
                       style={[styles.inputFieldInner, age ? styles.inputFieldBold : null]}
-                      placeholder="Your age (optional)"
+                      placeholder={ta('signup.placeholder.age')}
                       placeholderTextColor={`${Colors.primary}50`}
                       selectionColor={Colors.primary}
                       keyboardType="number-pad"
@@ -492,9 +481,9 @@ export default function SignUpScreen() {
               </View>
 
               <View style={styles.signInRow}>
-                <Text style={styles.signInPrompt}>Already have an account? </Text>
+                <Text style={styles.signInPrompt}>{ta('signup.hasAccount')}</Text>
                 <TouchableOpacity onPress={() => router.replace('/(auth)/login')} activeOpacity={0.7}>
-                  <Text style={styles.signInLink}>Sign In</Text>
+                  <Text style={styles.signInLink}>{tc('link.signIn')}</Text>
                 </TouchableOpacity>
               </View>
             </>
@@ -504,13 +493,13 @@ export default function SignUpScreen() {
           {step === 2 && (
             <View style={styles.card}>
               {renderChipHeader(
-                'Do you have any health condition?',
+                to('question.healthCondition'),
                 healthConditions.length,
-                `condition${healthConditions.length !== 1 ? 's' : ''}`,
+                to('count.condition', { count: healthConditions.length }),
               )}
               {chipSearchActive && null /* spacer handled by card gap */}
-              {renderChips(HEALTH_CONDITIONS, healthConditions, item =>
-                setHealthConditions(prev => toggle(prev, item))
+              {renderChips(HEALTH_CONDITION_KEYS, 'healthConditions', healthConditions, key =>
+                setHealthConditions(prev => toggle(prev, key))
               )}
             </View>
           )}
@@ -519,12 +508,12 @@ export default function SignUpScreen() {
           {step === 3 && (
             <View style={styles.card}>
               {renderChipHeader(
-                'Do you have any allergies?',
+                to('question.allergies'),
                 allergies.length,
-                `allerg${allergies.length !== 1 ? 'ies' : 'y'}`,
+                to('count.allergy', { count: allergies.length }),
               )}
-              {renderChips(ALLERGIES, allergies, item =>
-                setAllergies(prev => toggle(prev, item))
+              {renderChips(ALLERGY_KEYS, 'allergies', allergies, key =>
+                setAllergies(prev => toggle(prev, key))
               )}
             </View>
           )}
@@ -533,12 +522,12 @@ export default function SignUpScreen() {
           {step === 4 && (
             <View style={styles.card}>
               {renderChipHeader(
-                'Do you have any dietary preferences?',
+                to('question.dietaryPreferences'),
                 dietaryPrefs.length,
-                `preference${dietaryPrefs.length !== 1 ? 's' : ''}`,
+                to('count.preference', { count: dietaryPrefs.length }),
               )}
-              {renderChips(DIETARY_PREFERENCES, dietaryPrefs, item =>
-                setDietaryPrefs(prev => toggle(prev, item))
+              {renderChips(DIETARY_PREFERENCE_KEYS, 'dietaryPreferences', dietaryPrefs, key =>
+                setDietaryPrefs(prev => toggle(prev, key))
               )}
             </View>
           )}
@@ -551,7 +540,7 @@ export default function SignUpScreen() {
               onPress={handleCreateAndSkip}
               activeOpacity={0.7}
             >
-              <Text style={styles.skipText}>Skip for now, I'll set this up later</Text>
+              <Text style={styles.skipText}>{tc('buttons.skip')}</Text>
             </TouchableOpacity>
           )}
 
@@ -567,7 +556,7 @@ export default function SignUpScreen() {
           />
           <View style={[styles.footerButtons, { paddingBottom: insets.bottom + 12 }]}>
             <TouchableOpacity style={styles.backBtn} onPress={handleBack} activeOpacity={0.8}>
-              <Text style={styles.backBtnText}>{step === 1 ? 'Cancel' : 'Back'}</Text>
+              <Text style={styles.backBtnText}>{step === 1 ? tc('buttons.cancel') : tc('buttons.back')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -580,7 +569,7 @@ export default function SignUpScreen() {
                 <ActivityIndicator color="#fff" />
               ) : (
                 <Text style={styles.nextBtnText} numberOfLines={1} adjustsFontSizeToFit>
-                  {step === 4 ? 'Finish' : `Next: ${stepInfo.nextLabel}`}
+                  {nextBtnLabel}
                 </Text>
               )}
             </TouchableOpacity>

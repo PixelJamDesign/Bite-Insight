@@ -1,0 +1,139 @@
+{
+  "main": {
+    "whereLabel": "Where would you like to go?",
+    "dashboard": "Dashboard",
+    "myIngredients": "My Ingredients",
+    "snackScanner": "Snack Scanner",
+    "scanHistory": "Scan History",
+    "recipes": "Recipes",
+    "myAccount": "My Account",
+    "settings": "Settings",
+    "logOut": "Log out"
+  },
+  "footer": {
+    "version": "ver. 1.0.0",
+    "reportProblem": "Report a problem"
+  },
+  "ingredients": {
+    "title": "My Ingredients",
+    "liked": "Liked Ingredients",
+    "disliked": "Disliked Ingredients",
+    "flagged": "Flagged Ingredients"
+  },
+  "account": {
+    "title": "My Account",
+    "editDetails": "Edit My Details",
+    "familyMembers": "Family Members",
+    "biteInsightPlus": "Bite Insight+",
+    "changePassword": "Change password"
+  },
+  "settings": {
+    "title": "Settings",
+    "security": "Security",
+    "notifications": "Notifications",
+    "helpSupport": "Help & Support",
+    "privacyPolicy": "Privacy Policy",
+    "cookiePolicy": "Cookie Policy",
+    "myData": "My Data",
+    "offlineDatabase": "Offline Database"
+  },
+  "security": {
+    "title": "Security",
+    "biometricLogin": "Biometric Login",
+    "enabledHint": "{{label}} is enabled. You can sign in without typing your password.",
+    "disabledHint": "Sign in with your email and password to enable {{label}}.",
+    "unavailableHint": "Biometric login is not available on this device. Please ensure you have Face ID, Touch ID, or fingerprint set up in your device settings."
+  },
+  "myData": {
+    "title": "Your Data",
+    "memberSince": "Member since: {{date}}",
+    "productsScanned": "Products scanned",
+    "familyMembers": "Family members",
+    "downloadMyData": "Download my data",
+    "downloadSubtext": "Export all your data as a JSON file.",
+    "exportDialogTitle": "Export your data",
+    "destructiveZone": "Destructive zone",
+    "clearMyData": "Clear my data",
+    "clearSubtext": "This will clear all current data on this account.",
+    "closeMyAccount": "Close my account",
+    "closeSubtext": "Permanently delete your account and all associated data. This cannot be undone.",
+    "confirm": {
+      "clearTitle": "Clear all your data?",
+      "clearDescription": "This will permanently delete your scan history and all family profiles. Your account and preferences will remain intact.",
+      "clearPhrase": "CLEAR",
+      "clearLabel": "Clear my data",
+      "closeTitle": "Close your account?",
+      "closeDescription": "This will permanently delete your profile, scan history, family members, preferences, and all associated data. This action cannot be undone.",
+      "deletePhrase": "DELETE",
+      "closeLabel": "Close my account"
+    },
+    "error": {
+      "clearFailed": "Failed to clear your data. Please try again.",
+      "exportFailedTitle": "Export failed",
+      "exportFailedMessage": "Something went wrong while exporting your data. Please try again.",
+      "closeFailed": "Failed to close your account. Please contact support."
+    }
+  },
+  "offlineDb": {
+    "title": "Offline Database",
+    "description": "Download regional food databases for offline barcode scanning. Once downloaded, scans work without an internet connection.",
+    "loadingRegions": "Loading regions...",
+    "products": "products",
+    "downloadButton": "Download",
+    "retryButton": "Retry",
+    "downloading": "Downloading... {{percentage}}%",
+    "downloaded": "Downloaded",
+    "storageHeading": "Storage",
+    "totalUsed": "Total used",
+    "regionCount_one": "{{count}} region",
+    "regionCount_other": "{{count}} regions",
+    "deleteAll": "Delete all databases",
+    "deleteAllSubtext": "Free up all offline storage.",
+    "confirm": {
+      "deleteAllTitle": "Delete all offline databases?",
+      "deleteOneTitle": "Delete {{label}} database?",
+      "deleteAllDescription": "This will remove all downloaded food databases from your device. You can download them again at any time. Your scan history will not be affected.",
+      "deleteOneDescription": "This will remove the {{label}} food database from your device. You can download it again at any time.",
+      "deletePhrase": "DELETE",
+      "deleteAllLabel": "Delete all",
+      "deleteOneLabel": "Delete database"
+    }
+  },
+  "password": {
+    "title": "Change Password",
+    "subtitle": "Enter your current password and choose a new one.",
+    "label": {
+      "current": "Current password",
+      "new": "New password",
+      "confirm": "Confirm new password"
+    },
+    "placeholder": {
+      "current": "Enter current password",
+      "new": "Enter new password",
+      "confirm": "Re-enter new password"
+    },
+    "rule": {
+      "minLength": "8 characters",
+      "uppercase": "uppercase letter",
+      "lowercase": "lowercase letter",
+      "number": "number"
+    },
+    "rulePrefix": {
+      "atLeast": "At least ",
+      "one": "One "
+    },
+    "button": {
+      "update": "Update password"
+    },
+    "error": {
+      "verifyFailed": "Unable to verify your identity. Please try again.",
+      "incorrectCurrent": "Current password is incorrect.",
+      "generic": "Something went wrong. Please try again.",
+      "mismatch": "Passwords do not match"
+    },
+    "success": {
+      "title": "Password updated",
+      "body": "Your password has been changed successfully."
+    }
+  }
+}

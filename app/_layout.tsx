@@ -1,3 +1,4 @@
+import '@/lib/i18n';
 import { useEffect, useRef } from 'react';
 import { Redirect, Stack, useRootNavigationState, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';

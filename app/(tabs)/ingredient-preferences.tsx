@@ -17,6 +17,7 @@ import type { GestureResponderEvent } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
 import { supabase, getIngredientImageUrl } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { useSubscription } from '@/lib/subscriptionContext';
@@ -43,45 +44,42 @@ type PreferenceItem = {
   };
 };
 
-const PAGE_TITLES: Record<PreferenceTab, string> = {
-  liked: 'Liked ingredients',
-  disliked: 'Disliked ingredients',
-  flagged: 'Flagged ingredients',
-};
-
-const COUNT_VERBS: Record<PreferenceTab, string> = {
-  liked: 'you like',
-  disliked: 'you dislike',
-  flagged: 'you have flagged',
-};
-
-const EMPTY_TITLES: Record<PreferenceTab, string> = {
-  liked: 'You currently have no liked ingredients',
-  disliked: 'You currently have no disliked ingredients',
-  flagged: 'You currently have no flagged ingredients',
-};
-
-const EMPTY_DESCRIPTIONS: Record<PreferenceTab, string> = {
-  liked:
-    "To make your meal planning easier, rate some of your favourite ingredients on the dashboard. When you use the Insight Scanner, we'll spotlight them and suggest tasty recipes you'll love!",
-  disliked:
-    "Rate ingredients on the dashboard to build your disliked list. We'll make sure to flag them whenever they appear in a product.",
-  flagged:
-    "Flag ingredients from the dashboard or scan results to highlight them in red whenever they appear in a product.",
-};
-
-const FLAGGED_PLACEHOLDERS = [
-  { name: 'Palm Oil' },
-  { name: 'High-Fructose Corn Syrup' },
-  { name: 'Sodium Benzoate' },
-];
+// PAGE_TITLES, COUNT_VERBS, EMPTY_TITLES, EMPTY_DESCRIPTIONS, FLAGGED_PLACEHOLDERS
+// are now computed inside the component using i18n translation functions.
 
 export default function IngredientPreferencesScreen() {
+  const { t } = useTranslation('ingredients');
+  const { t: tc } = useTranslation('common');
   const { session } = useAuth();
   const { isPlus } = useSubscription();
   const params = useLocalSearchParams<{ tab?: string }>();
 
   const activeTab = (params.tab as PreferenceTab) ?? 'liked';
+
+  const PAGE_TITLES: Record<PreferenceTab, string> = {
+    liked: t('preferences.pageTitle.liked'),
+    disliked: t('preferences.pageTitle.disliked'),
+    flagged: t('preferences.pageTitle.flagged'),
+  };
+
+  const COUNT_VERBS: Record<PreferenceTab, string> = {
+    liked: t('preferences.countVerb.liked'),
+    disliked: t('preferences.countVerb.disliked'),
+    flagged: t('preferences.countVerb.flagged'),
+  };
+
+  const EMPTY_TITLES: Record<PreferenceTab, string> = {
+    liked: t('preferences.empty.titleLiked'),
+    disliked: t('preferences.empty.titleDisliked'),
+    flagged: t('preferences.empty.titleFlagged'),
+  };
+
+  const EMPTY_DESCRIPTIONS: Record<PreferenceTab, string> = {
+    liked: t('preferences.empty.descriptionLiked'),
+    disliked: t('preferences.empty.descriptionDisliked'),
+    flagged: t('preferences.empty.descriptionFlagged'),
+  };
+
   const [items, setItems] = useState<PreferenceItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -307,27 +305,27 @@ export default function IngredientPreferencesScreen() {
     const actions: MenuAction[] = [];
     if (activeTab !== 'liked') {
       actions.push({
-        label: 'Like Ingredient',
+        label: t('preferences.menu.likeIngredient'),
         renderIcon: (color) => <MenuLikedIcon size={18} color={color} />,
         onPress: () => handleMove(item.ingredient_id, 'liked'),
       });
     }
     if (activeTab !== 'disliked') {
       actions.push({
-        label: 'Dislike Ingredient',
+        label: t('preferences.menu.dislikeIngredient'),
         renderIcon: (color) => <MenuDislikedIcon size={18} color={color} />,
         onPress: () => handleMove(item.ingredient_id, 'disliked'),
       });
     }
     if (activeTab !== 'flagged' && isPlus) {
       actions.push({
-        label: 'Flag Ingredient',
+        label: t('preferences.menu.flagIngredient'),
         renderIcon: (color) => <MenuFlaggedIcon size={18} color={color} />,
         onPress: () => { closeMenu(); setFlagReasonTarget(item); },
       });
     }
     actions.push({
-      label: 'Remove Ingredient',
+      label: t('preferences.menu.removeIngredient'),
       renderIcon: (color) => <Ionicons name="trash-outline" size={18} color={color} />,
       color: Colors.status.negative,
       onPress: () => { closeMenu(); handleRemove(item.ingredient_id); },
@@ -339,7 +337,7 @@ export default function IngredientPreferencesScreen() {
     const actions = getMenuActions(item);
 
     if (Platform.OS === 'ios') {
-      const labels = [...actions.map((a) => a.label), 'Cancel'];
+      const labels = [...actions.map((a) => a.label), tc('buttons.cancel')];
       ActionSheetIOS.showActionSheetWithOptions(
         {
           title: item.ingredients.name,
@@ -381,9 +379,9 @@ export default function IngredientPreferencesScreen() {
     <View style={styles.headerExt}>
       {/* Subtitle: "Currently you like 12 ingredients" */}
       <View style={styles.subtitleRow}>
-        <Text style={styles.subtitleLight}>Currently {COUNT_VERBS[activeTab]} </Text>
+        <Text style={styles.subtitleLight}>{t('preferences.subtitle.currently')}{COUNT_VERBS[activeTab]} </Text>
         <Text style={styles.subtitleBold}>
-          {count} {count === 1 ? 'ingredient' : 'ingredients'}
+          {t('preferences.subtitle.ingredient', { count })}
         </Text>
       </View>
 
@@ -392,7 +390,7 @@ export default function IngredientPreferencesScreen() {
         {editMode ? (
           <TouchableOpacity style={styles.actionBtn} onPress={exitEditMode} activeOpacity={0.7}>
             <Ionicons name="close" size={16} color={Colors.secondary} />
-            <Text style={styles.actionBtnText}>Cancel</Text>
+            <Text style={styles.actionBtnText}>{tc('buttons.cancel')}</Text>
           </TouchableOpacity>
         ) : searchActive ? (
           <>
@@ -402,11 +400,11 @@ export default function IngredientPreferencesScreen() {
               activeOpacity={0.7}
             >
               <ActionPenIcon size={16} color={Colors.secondary} />
-              <Text style={styles.actionBtnText}>Edit list</Text>
+              <Text style={styles.actionBtnText}>{tc('buttons.editList')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionBtn} onPress={closeSearch} activeOpacity={0.7}>
               <Ionicons name="close" size={16} color={Colors.secondary} />
-              <Text style={styles.actionBtnText}>Close</Text>
+              <Text style={styles.actionBtnText}>{tc('buttons.close')}</Text>
             </TouchableOpacity>
           </>
         ) : (
@@ -417,11 +415,11 @@ export default function IngredientPreferencesScreen() {
               activeOpacity={0.7}
             >
               <ActionPenIcon size={20} color={Colors.secondary} />
-              <Text style={styles.actionBtnText}>Edit list</Text>
+              <Text style={styles.actionBtnText}>{tc('buttons.editList')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionBtn} onPress={openSearch} activeOpacity={0.7}>
               <ActionSearchIcon size={20} color={Colors.secondary} />
-              <Text style={styles.actionBtnText}>Search</Text>
+              <Text style={styles.actionBtnText}>{tc('buttons.search')}</Text>
             </TouchableOpacity>
           </>
         )}
@@ -435,7 +433,7 @@ export default function IngredientPreferencesScreen() {
             <TextInput
               ref={searchInputRef}
               style={styles.searchInput}
-              placeholder="Search ingredients..."
+              placeholder={t('preferences.search.placeholder')}
               placeholderTextColor={Colors.secondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -475,7 +473,7 @@ export default function IngredientPreferencesScreen() {
                 activeOpacity={0.7}
               >
                 <Text style={[styles.categoryTabText, selectedCategory === cat && styles.categoryTabTextActive]}>
-                  {cat === 'all' ? 'All' : cat}
+                  {cat === 'all' ? tc('filters.all') : cat}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -506,11 +504,11 @@ export default function IngredientPreferencesScreen() {
         <View style={styles.center}>
           <Ionicons name="alert-circle-outline" size={42} color={Colors.status.negative} />
           <Text style={[styles.emptyTitle, { marginTop: 12, textAlign: 'center' }]}>
-            Could not load ingredients
+            {t('preferences.error.title')}
           </Text>
           <Text style={[styles.emptyDesc, { textAlign: 'center', paddingHorizontal: 32, marginTop: 4 }]}>
             {fetchError.includes('does not exist')
-              ? 'Database migration required. Please run the ALTER TABLE statements in your Supabase SQL Editor to add the ingredient preference columns.'
+              ? t('preferences.error.migrationRequired')
               : fetchError}
           </Text>
         </View>
@@ -609,14 +607,14 @@ export default function IngredientPreferencesScreen() {
                   activeOpacity={0.85}
                   disabled={selectedIds.size === 0}
                 >
-                  <Text style={styles.deleteBtnText}>Delete selected</Text>
+                  <Text style={styles.deleteBtnText}>{tc('buttons.deleteSelected')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.outlineBtn}
                   onPress={exitEditMode}
                   activeOpacity={0.85}
                 >
-                  <Text style={styles.outlineBtnText}>Cancel</Text>
+                  <Text style={styles.outlineBtnText}>{tc('buttons.cancel')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -714,11 +712,19 @@ export default function IngredientPreferencesScreen() {
 
 // ── Flagged upsell ─────────────────────────────────────────────────────────────
 function FlaggedUpsell() {
+  const { t } = useTranslation('ingredients');
+
+  const placeholders = [
+    { name: t('preferences.flaggedPlaceholder.palmOil') },
+    { name: t('preferences.flaggedPlaceholder.highFructoseCornSyrup') },
+    { name: t('preferences.flaggedPlaceholder.sodiumBenzoate') },
+  ];
+
   return (
     <View style={styles.flaggedOuter}>
       {/* Dimmed placeholder rows */}
       <View style={styles.flaggedRows}>
-        {FLAGGED_PLACEHOLDERS.map((p) => (
+        {placeholders.map((p) => (
           <View key={p.name} style={[styles.row, styles.rowDimmed]}>
             <Text style={styles.rowName}>{p.name}</Text>
             <View style={styles.rowMenuBtn}>
@@ -745,18 +751,18 @@ function FlaggedUpsell() {
               style={styles.upsellGradient}
             >
               <View style={styles.upsellLogoRow}>
-                <Text style={styles.upsellLogoBite}>bite</Text>
-                <Text style={styles.upsellLogoInsight}>insight</Text>
+                <Text style={styles.upsellLogoBite}>{t('upsell.bite')}</Text>
+                <Text style={styles.upsellLogoInsight}>{t('upsell.insight')}</Text>
                 <View style={styles.upsellPlusTag}>
-                  <Text style={styles.upsellPlusTagText}>plus</Text>
-                  <Text style={styles.upsellPlusTagSup}>+</Text>
+                  <Text style={styles.upsellPlusTagText}>{t('upsell.plus')}</Text>
+                  <Text style={styles.upsellPlusTagSup}>{t('upsell.plusSymbol')}</Text>
                 </View>
               </View>
               <Text style={styles.upsellTagline}>
-                Flag ingredients to highlight{'\n'}them in red on every scan
+                {t('upsell.tagline')}
               </Text>
               <TouchableOpacity style={styles.upsellBtn} activeOpacity={0.85}>
-                <Text style={styles.upsellBtnText}>Upgrade to Plus+</Text>
+                <Text style={styles.upsellBtnText}>{t('upsell.upgradeButton')}</Text>
               </TouchableOpacity>
             </LinearGradient>
           </View>

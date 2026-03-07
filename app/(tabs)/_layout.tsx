@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Tabs } from 'expo-router';
 import { Animated, View, Text, TouchableOpacity, Image, StyleSheet, Platform, useWindowDimensions } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
@@ -324,6 +325,7 @@ const styles = StyleSheet.create({
 });
 
 export default function TabLayout() {
+  const { t } = useTranslation('common');
   return (
     <TabBarSlideProvider>
       <MenuProvider>
@@ -332,10 +334,10 @@ export default function TabLayout() {
             tabBar={(props) => <CustomTabBar {...props} />}
             screenOptions={{ headerShown: false }}
           >
-            <Tabs.Screen name="index" options={{ title: 'Dashboard' }} />
-            <Tabs.Screen name="recipes" options={{ title: 'Recipes' }} />
-            <Tabs.Screen name="scanner" options={{ title: 'Scanner' }} />
-            <Tabs.Screen name="history" options={{ title: 'History' }} />
+            <Tabs.Screen name="index" options={{ title: t('tabs.dashboard') }} />
+            <Tabs.Screen name="recipes" options={{ title: t('tabs.recipes') }} />
+            <Tabs.Screen name="scanner" options={{ title: t('tabs.scanner') }} />
+            <Tabs.Screen name="history" options={{ title: t('tabs.history') }} />
             <Tabs.Screen name="ingredient-preferences" options={{ href: null }} />
           </Tabs>
           <MenuOverlay />

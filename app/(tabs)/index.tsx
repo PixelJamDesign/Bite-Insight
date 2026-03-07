@@ -12,6 +12,7 @@ import {
   Platform,
   UIManager,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 if (Platform.OS === 'android') {
   UIManager.setLayoutAnimationEnabledExperimental?.(true);
@@ -70,15 +71,15 @@ function getTodayInsight(insights: DailyInsight[]): DailyInsight | null {
   return insights[Math.abs(hash) % insights.length];
 }
 
-function getGreeting(): string {
+function getGreeting(tc: (key: string) => string): string {
   const hour = new Date().getHours();
-  if (hour < 12) return 'Good morning';
-  if (hour < 17) return 'Good afternoon';
-  return 'Good evening';
+  if (hour < 12) return tc('greeting.morning');
+  if (hour < 17) return tc('greeting.afternoon');
+  return tc('greeting.evening');
 }
 
-function getInitials(name: string | null | undefined): string {
-  if (!name) return '??';
+function getInitials(name: string | null | undefined, fallback: string = '??'): string {
+  if (!name) return fallback;
   return name
     .split(' ')
     .map((n) => n[0])
@@ -89,6 +90,8 @@ function getInitials(name: string | null | undefined): string {
 
 
 export default function HomeDashboard() {
+  const { t } = useTranslation('dashboard');
+  const { t: tc } = useTranslation('common');
   const { session, avatarUrl } = useAuth();
   const { isPlus } = useSubscription();
   const { menuOpen, menuVisible, openMenu, closeMenu, closeMenuInstant } = useMenu();
@@ -225,9 +228,9 @@ export default function HomeDashboard() {
     }
   }
 
-  const displayName = profile?.full_name ?? session?.user?.user_metadata?.full_name ?? 'there';
+  const displayName = profile?.full_name ?? session?.user?.user_metadata?.full_name ?? tc('greeting.fallbackName');
   const firstName = displayName.split(' ')[0];
-  const initials = getInitials(displayName);
+  const initials = getInitials(displayName, t('fallbackInitials'));
 
   if (loading) {
     return (
@@ -266,7 +269,7 @@ export default function HomeDashboard() {
           </View>
 
           <View style={styles.greetingText}>
-            <Text style={styles.greeting}>{getGreeting()}</Text>
+            <Text style={styles.greeting}>{getGreeting(tc)}</Text>
             <Text style={styles.name}>{firstName}</Text>
             {((profile?.dietary_preferences ?? []).length > 0 ||
               (profile?.health_conditions ?? []).length > 0 ||
@@ -312,17 +315,17 @@ export default function HomeDashboard() {
 
         {/* ── Week in numbers ── */}
         <View style={styles.statsSection}>
-          <Text style={styles.sectionSubtitle}>Your week in numbers…</Text>
+          <Text style={styles.sectionSubtitle}>{t('weekInNumbers')}</Text>
           <View style={styles.statsRow}>
             <StatPanel
               count={scanCount}
-              label="Food labels scanned"
+              label={t('scannedLabels')}
               imageSource={scannedLabelsImg}
               onPress={() => router.push('/(tabs)/history')}
             />
             <StatPanel
               count={flaggedCount}
-              label="Flagged ingredients"
+              label={t('flaggedIngredients')}
               isPlusFeature
               imageSource={flagImg}
               onPress={() => router.push({ pathname: '/ingredient-preferences', params: { tab: 'flagged' } } as any)}
@@ -346,17 +349,17 @@ export default function HomeDashboard() {
                       <Ionicons name="checkmark" size={24} color="#fff" />
                     </View>
                     <Text style={styles.completionTitle}>
-                      You've nailed your list of ingredients you like and dislike!
+                      {t('completionTitle')}
                     </Text>
                     <Text style={styles.completionSubtitle}>
-                      With your ingredient picks, we can make your app experience even better!
+                      {t('completionSubtitle')}
                     </Text>
                   </View>
                   <TouchableOpacity
                     style={styles.viewAllBtn}
                     onPress={() => router.push({ pathname: '/ingredient-preferences', params: { tab: 'liked' } } as any)}
                   >
-                    <Text style={styles.viewAllText}>View your liked ingredients</Text>
+                    <Text style={styles.viewAllText}>{t('viewLiked')}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -367,9 +370,9 @@ export default function HomeDashboard() {
             <View style={styles.ingredientSection}>
               <View style={styles.ingredientCard}>
                 <View style={styles.ingredientHeader}>
-                  <Text style={styles.ingredientTitle}>Do you like these ingredients?</Text>
+                  <Text style={styles.ingredientTitle}>{t('ingredientQuestion')}</Text>
                   <Text style={styles.ingredientSubtitle}>
-                    Tell us which ingredients work for you and which don't.
+                    {t('ingredientSubtitle')}
                   </Text>
                 </View>
 
@@ -392,7 +395,7 @@ export default function HomeDashboard() {
                   style={styles.viewAllBtn}
                   onPress={() => router.push({ pathname: '/ingredient-preferences', params: { tab: 'liked' } } as any)}
                 >
-                  <Text style={styles.viewAllText}>View your liked ingredients</Text>
+                  <Text style={styles.viewAllText}>{t('viewLiked')}</Text>
                 </TouchableOpacity>
               </View>
             </View>

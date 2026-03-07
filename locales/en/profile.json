@@ -1,0 +1,35 @@
+{
+  "editProfile": {
+    "aboutTitle": "Tell us about yourself",
+    "aboutSubtitle": "Update your profile information.",
+    "saveChanges": "Save Changes",
+    "alert": {
+      "nameRequiredTitle": "Name required",
+      "nameRequiredMessage": "Please enter your full name."
+    },
+    "avatar": {
+      "alertTitle": "Profile Photo",
+      "alertMessage": "Choose an option",
+      "takePhoto": "Take Photo",
+      "chooseFromLibrary": "Choose from Library",
+      "permissionTitle": "Permission needed",
+      "permissionMessage": "Camera access is required to take a photo."
+    },
+    "placeholder": {
+      "age": "Your age (optional)"
+    }
+  },
+  "familyMember": {
+    "aboutTitleAdd": "Tell us about them",
+    "aboutTitleEdit": "Update their details",
+    "aboutSubtitleAdd": "Add details for your family member.",
+    "aboutSubtitleEdit": "Edit the profile for your family member.",
+    "field": {
+      "relationship": "Relationship"
+    },
+    "alert": {
+      "nameRequiredTitle": "Name required",
+      "nameRequiredMessage": "Please enter a name for this family member."
+    }
+  }
+}

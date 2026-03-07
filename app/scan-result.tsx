@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   View,
@@ -389,12 +390,13 @@ function getActiveInsights(
   allergies: string[],
   preferences: string[],
   nutrientData: NutrientData,
+  defs: InsightDef[] = INSIGHT_DEFS,
 ): { def: InsightDef; result: ImpactResult }[] {
   const tags = [...conditions, ...allergies, ...preferences];
   const tagSet = new Set(tags);
   const results: { def: InsightDef; result: ImpactResult; weight: number }[] = [];
 
-  for (const def of INSIGHT_DEFS) {
+  for (const def of defs) {
     if (!def.relevantTo.some((t) => tagSet.has(t))) continue;
     const result = def.compute(nutrientData);
     if (!result) continue;
@@ -1588,6 +1590,7 @@ function FlaggedIngredientSheet({
   conditions: string[];
   allergies: string[];
 }) {
+  const { t } = useTranslation('scan');
   const insets = useSafeAreaInsets();
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
@@ -1633,13 +1636,20 @@ function FlaggedIngredientSheet({
 
   if (!mounted || !display) return null;
 
+  // Translated flag reason text
+  const FLAG_REASON_TEXT_LOCAL: Record<FlagReason, { title: string; body: string }> = {
+    vegan: { title: t('flagReason.veganTitle'), body: t('flagReason.veganBody') },
+    vegetarian: { title: t('flagReason.vegetarianTitle'), body: t('flagReason.vegetarianBody') },
+    user_flagged: { title: t('flagReason.userFlaggedTitle'), body: t('flagReason.userFlaggedBody') },
+  };
+
   // Show personal reason if available, otherwise fall back to generic text
   const reason = display.personalReason
     ? {
         title: display.personalReason.text,
-        body: `You flagged this because of your ${display.personalReason.category}.`,
+        body: t('flagReason.personalBody', { category: display.personalReason.category }),
       }
-    : FLAG_REASON_TEXT[display.flagReason as FlagReason];
+    : FLAG_REASON_TEXT_LOCAL[display.flagReason as FlagReason];
   const substitutes = getSubstitutes(display.text, display.flagReason as FlagReason, conditions, allergies);
 
   return (
@@ -1695,7 +1705,7 @@ function FlaggedIngredientSheet({
           {substitutes.length > 0 && (
             <View style={flaggedSheetStyles.substituteCard}>
               <Text style={flaggedSheetStyles.substituteTitle}>
-                Suitable replacements include:
+                {t('flaggedSheet.substitutesTitle')}
               </Text>
               <View style={flaggedSheetStyles.substituteList}>
                 {substitutes.map((sub) => (
@@ -1838,6 +1848,8 @@ const flaggedSheetStyles = StyleSheet.create({
 });
 
 // ── Common food additive / ingredient descriptions ──────────────────────────
+// TODO: i18n — These 50+ additive descriptions should be moved to a dedicated
+// translation file (e.g. locales/en/additives.json) in a future pass.
 // Covers E-numbers and hard-to-read ingredient names. Keyed by lowercase name
 // or OFF id (e.g. "en:e476"). Looked up by exact match, then by E-number
 // extraction, then by substring.
@@ -1926,6 +1938,7 @@ function IngredientInfoSheet({
   category: 'ok' | 'safe';
   onClose: () => void;
 }) {
+  const { t } = useTranslation('scan');
   const insets = useSafeAreaInsets();
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
@@ -1974,7 +1987,7 @@ function IngredientInfoSheet({
   const desc = getAdditiveDescription(display);
   const iconColor = category === 'ok' ? Extra.poorOrange : Extra.positiveGreen;
   const iconName = category === 'ok' ? 'alert-circle' : 'checkmark-circle';
-  const categoryLabel = category === 'ok' ? 'OK' : 'Safe';
+  const categoryLabel = category === 'ok' ? t('ingredientSheet.categoryOk') : t('ingredientSheet.categorySafe');
 
   return (
     <Modal
@@ -2023,7 +2036,7 @@ function IngredientInfoSheet({
           </Text>
           <View style={flaggedSheetStyles.descriptionBox}>
             <Text style={flaggedSheetStyles.reasonTitle}>
-              Classified as {categoryLabel}
+              {t('ingredientSheet.classifiedAs', { category: categoryLabel })}
             </Text>
             {desc ? (
               <>
@@ -2031,10 +2044,14 @@ function IngredientInfoSheet({
                 <Text style={flaggedSheetStyles.reasonBody}>{desc.why}</Text>
               </>
             ) : (
-              <Text style={flaggedSheetStyles.reasonBody}>
-                This is a food additive commonly used in processed foods.
-                It has been approved by food safety authorities for use in food products.
-              </Text>
+              <>
+                <Text style={flaggedSheetStyles.reasonBody}>
+                  {t('ingredientSheet.defaultAdditiveLine1')}
+                </Text>
+                <Text style={flaggedSheetStyles.reasonBody}>
+                  {t('ingredientSheet.defaultAdditiveLine2')}
+                </Text>
+              </>
             )}
           </View>
         </View>
@@ -2066,6 +2083,7 @@ function InsightDetailSheet({
   insight: { def: InsightDef; result: ImpactResult } | null;
   onClose: () => void;
 }) {
+  const { t } = useTranslation('scan');
   const insets = useSafeAreaInsets();
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
@@ -2113,7 +2131,7 @@ function InsightDetailSheet({
 
   const { def, result } = display;
   const Icon = def.icons[result.iconKey];
-  const explanation = INSIGHT_EXPLANATIONS[def.key] ?? '';
+  const explanation = t(`insightExplanation.${def.key}`, INSIGHT_EXPLANATIONS[def.key] ?? '');
 
   return (
     <Modal
@@ -2248,6 +2266,9 @@ const insightSheetStyles = StyleSheet.create({
 export default function ScanResultScreen() {
   const router = useRouter();
   const { session } = useAuth();
+  const { t } = useTranslation('scan');
+  const { t: tc } = useTranslation('common');
+  const { t: tpo } = useTranslation('profileOptions');
 
   const p = useLocalSearchParams<{
     scanId: string;
@@ -2281,6 +2302,77 @@ export default function ScanResultScreen() {
   }>();
 
   const { activeFamilyId } = useActiveFamily();
+
+  // ── Translated constants (derived from i18n) ──────────────────────────────
+  const NUTRISCORE_LABELS_T: Record<string, string> = useMemo(() => ({
+    a: tc('nutriscoreLabels.a'), b: tc('nutriscoreLabels.b'), c: tc('nutriscoreLabels.c'),
+    d: tc('nutriscoreLabels.d'), e: tc('nutriscoreLabels.e'),
+  }), [tc]);
+
+  const TABS_T: { key: Tab; label: string }[] = useMemo(() => [
+    { key: 'overview', label: t('tab.overview') },
+    { key: 'nutrition', label: t('tab.nutrition') },
+    { key: 'ingredients', label: t('tab.ingredients') },
+    { key: 'recommended', label: t('tab.recommended') },
+    { key: 'info', label: t('tab.info') },
+  ], [t]);
+
+  const DIETARY_LABELS_T: Record<string, string> = useMemo(() => ({
+    diabetic: tpo('dietaryTags.diabetic'),
+    keto: tpo('dietaryTags.keto'),
+    'gluten-free': tpo('dietaryTags.gluten-free'),
+    vegan: tpo('dietaryTags.vegan'),
+    vegetarian: tpo('dietaryTags.vegetarian'),
+    lactose: tpo('dietaryTags.lactose'),
+    pescatarian: tpo('dietaryTags.pescatarian'),
+    kosher: tpo('dietaryTags.kosher'),
+  }), [tpo]);
+
+  const NUTRIENT_LABELS_T: Record<NutrientKey, string> = useMemo(() => ({
+    energyKcal: t('nutrientLabels.energyKcal'),
+    fat: t('nutrientLabels.fat'),
+    saturatedFat: t('nutrientLabels.saturatedFat'),
+    carbs: t('nutrientLabels.carbs'),
+    sugars: t('nutrientLabels.sugars'),
+    fiber: t('nutrientLabels.fiber'),
+    proteins: t('nutrientLabels.proteins'),
+    netCarbs: t('nutrientLabels.netCarbs'),
+    salt: t('nutrientLabels.salt'),
+  }), [t]);
+
+  // Build translated INSIGHT_DEFS — only labels and compute return labels change
+  const INSIGHT_DEFS_T: InsightDef[] = useMemo(() => {
+    const tImpact = (d: NutrientData, compute: (d: NutrientData) => ImpactResult | null): ImpactResult | null => {
+      const result = compute(d);
+      if (!result) return null;
+      const labelMap: Record<string, string> = {
+        'Very High': t('impact.veryHigh'),
+        'High': t('impact.high'),
+        'Moderate': t('impact.moderate'),
+        'Low': t('impact.low'),
+      };
+      return { ...result, label: labelMap[result.label] ?? result.label };
+    };
+
+    return INSIGHT_DEFS.map((def) => ({
+      ...def,
+      label: t(`insight.${def.key}`, def.label),
+      compute: (d: NutrientData) => tImpact(d, def.compute),
+    }));
+  }, [t]);
+
+  // Translated wrapper for getRating — maps English labels to translated ones
+  const getRatingT = (key: NutrientKey, value: number, thresholds: Record<NutrientKey, Threshold>) => {
+    const result = getRating(key, value, thresholds);
+    const labelMap: Record<string, string> = {
+      'Low': t('nutrientRating.low'),
+      'Moderate': t('nutrientRating.moderate'),
+      'High': t('nutrientRating.high'),
+      'Good': t('nutrientRating.good'),
+    };
+    return { ...result, label: labelMap[result.label] ?? result.label };
+  };
+
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [tabScrollX, setTabScrollX] = useState(0);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -2707,8 +2799,8 @@ export default function ScanResultScreen() {
     ? activeFamilyProfile.allergies ?? []
     : profile?.allergies ?? [];
   const activeDietaryLabels = activeFamilyProfile
-    ? activeFamilyProfile.dietary_preferences?.map((d) => DIETARY_LABELS[d] ?? d) ?? []
-    : profile?.dietary_preferences?.map((d) => DIETARY_LABELS[d] ?? d) ?? [];
+    ? activeFamilyProfile.dietary_preferences?.map((d) => DIETARY_LABELS_T[d] ?? d) ?? []
+    : profile?.dietary_preferences?.map((d) => DIETARY_LABELS_T[d] ?? d) ?? [];
   const nutrientThresholds = buildThresholds(activeConditions, activeAllergies, activeDietaryLabels);
 
   // ── Nutrient watchlist alerts ───────────────────────────────────────────────
@@ -2738,6 +2830,7 @@ export default function ScanResultScreen() {
       proteins: rawProteins, energyKcal: rawEnergyKcal,
       additiveCount: structuredIngredients.filter((ing) => /^en:e\d+/i.test(ing.id ?? '')).length,
     },
+    INSIGHT_DEFS_T,
   );
 
   return (
@@ -2758,7 +2851,7 @@ export default function ScanResultScreen() {
         <View style={styles.productHeader}>
           <View style={styles.productInfo}>
             {!!p.brand && <Text style={styles.brandName}>{sentenceCase(p.brand)}</Text>}
-            <Text style={styles.productName}>{sentenceCase(p.productName) || 'Unknown Product'}</Text>
+            <Text style={styles.productName}>{sentenceCase(p.productName) || t('product.unknownName')}</Text>
             {!!quantity && <Text style={styles.quantity}>{quantity}</Text>}
           </View>
           {p.imageUrl ? (
@@ -2780,9 +2873,9 @@ export default function ScanResultScreen() {
         {!!nutriscoreGrade && !!NUTRISCORE_COLORS[nutriscoreGrade] && (
           <View style={styles.nutriscoreRow}>
             <View style={styles.nutriscoreLeft}>
-              <Text style={styles.nutriscoreLabel}>Nutri-score</Text>
+              <Text style={styles.nutriscoreLabel}>{t('nutriscoreLabel')}</Text>
               <View style={[styles.nutriscorebadge, { backgroundColor: NUTRISCORE_COLORS[nutriscoreGrade] }]}>
-                <Text style={styles.nutriscorebadgeText}>{NUTRISCORE_LABELS[nutriscoreGrade]}</Text>
+                <Text style={styles.nutriscorebadgeText}>{NUTRISCORE_LABELS_T[nutriscoreGrade]}</Text>
               </View>
             </View>
             <View style={styles.nutriscoreScale}>
@@ -2817,7 +2910,7 @@ export default function ScanResultScreen() {
             onScroll={(e) => setTabScrollX(e.nativeEvent.contentOffset.x)}
             scrollEventThrottle={16}
           >
-            {TABS.map((tab) => {
+            {TABS_T.map((tab) => {
               const isActive = tab.key === activeTab;
               return (
                 <TouchableOpacity
@@ -2859,7 +2952,7 @@ export default function ScanResultScreen() {
               const isFamily = !!activeFamilyProfile;
               const fullName = isFamily
                 ? activeFamilyProfile!.name
-                : profile.full_name || session.user.email?.split('@')[0] || 'My Profile';
+                : profile.full_name || session.user.email?.split('@')[0] || t('profile.myProfile');
               const displayName = fullName.trim().split(/\s+/)[0];
               const avatarUrl = isFamily
                 ? activeFamilyProfile!.avatar_url
@@ -2872,14 +2965,14 @@ export default function ScanResultScreen() {
                 if (activeFamilyProfile!.allergies?.length)
                   tags.push(...activeFamilyProfile!.allergies);
                 if (activeFamilyProfile!.dietary_preferences?.length)
-                  tags.push(...activeFamilyProfile!.dietary_preferences.map((d) => DIETARY_LABELS[d] ?? d));
+                  tags.push(...activeFamilyProfile!.dietary_preferences.map((d) => DIETARY_LABELS_T[d] ?? d));
               } else {
                 if (profile.health_conditions?.length)
                   tags.push(...profile.health_conditions);
                 if (profile.allergies?.length)
                   tags.push(...profile.allergies);
                 if (profile.dietary_preferences?.length)
-                  tags.push(...profile.dietary_preferences.map((d) => DIETARY_LABELS[d] ?? d));
+                  tags.push(...profile.dietary_preferences.map((d) => DIETARY_LABELS_T[d] ?? d));
               }
               return (
                 <View style={styles.familySection}>
@@ -2911,7 +3004,7 @@ export default function ScanResultScreen() {
                       onPress={() => setSwitcherVisible(true)}
                     >
                       <SwitchIcon width={16} height={16} />
-                      <Text style={styles.familySwitchText}>Switch</Text>
+                      <Text style={styles.familySwitchText}>{t('profile.switch')}</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -2922,13 +3015,13 @@ export default function ScanResultScreen() {
             {(hasProfileAllergenMatch || activeInsights.length > 0) && (
               <View style={styles.section}>
                 <View style={styles.sectionHeading}>
-                  <Text style={styles.sectionTitle}>Important for you</Text>
+                  <Text style={styles.sectionTitle}>{t('section.importantForYou')}</Text>
                   <Text style={styles.sectionSubtitle}>
                     {activeFamilyProfile
-                      ? `Based on ${activeFamilyProfile.name.trim().split(/\s+/)[0]}'s health profile.`
+                      ? t('section.importantSubtitle', { name: activeFamilyProfile.name.trim().split(/\s+/)[0] })
                       : profile?.full_name
-                        ? `Based on ${profile.full_name.trim().split(/\s+/)[0]}'s health profile.`
-                        : 'Based on your health profile.'}
+                        ? t('section.importantSubtitle', { name: profile.full_name.trim().split(/\s+/)[0] })
+                        : t('section.importantSubtitleGeneric')}
                   </Text>
                 </View>
 
@@ -2941,10 +3034,10 @@ export default function ScanResultScreen() {
                     <View style={styles.allergenCard}>
                       <View style={styles.allergenBadge}>
                         <Ionicons name="warning" size={11} color="#fff" />
-                        <Text style={styles.allergenBadgeText}>Warning</Text>
+                        <Text style={styles.allergenBadgeText}>{t('allergen.warningBadge')}</Text>
                       </View>
                       <Text style={styles.allergenText}>
-                        Contains: {matchedAllergens.join(', ')}. This may affect {firstName}'s health profile.
+                        {t('allergen.warningText', { allergens: matchedAllergens.join(', '), name: firstName })}
                       </Text>
                     </View>
                   );
@@ -2956,14 +3049,15 @@ export default function ScanResultScreen() {
                     {activeInsights.map(({ def, result }) => {
                       const Icon = def.icons[result.iconKey];
                       return (
-                        <View key={def.key} style={styles.impactPanel}>
-                          <TouchableOpacity
-                            style={styles.impactPanelInfo}
-                            onPress={() => setInsightSheetDef({ def, result })}
-                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                          >
+                        <TouchableOpacity
+                          key={def.key}
+                          style={styles.impactPanel}
+                          activeOpacity={0.7}
+                          onPress={() => setInsightSheetDef({ def, result })}
+                        >
+                          <View style={styles.impactPanelInfo}>
                             <InfoIcon width={16} height={16} />
-                          </TouchableOpacity>
+                          </View>
                           <Icon width={def.iconWidth} height={def.iconHeight} />
                           <View style={styles.impactLabelGroup}>
                             <Text style={styles.impactPanelLabel}>{def.label}</Text>
@@ -2971,7 +3065,7 @@ export default function ScanResultScreen() {
                               <Text style={styles.impactPillText}>{result.label}</Text>
                             </View>
                           </View>
-                        </View>
+                        </TouchableOpacity>
                       );
                     })}
                   </View>
@@ -2984,7 +3078,7 @@ export default function ScanResultScreen() {
             {watchlistAlerts.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeading}>
-                  <Text style={styles.sectionTitle}>Nutrient Watch</Text>
+                  <Text style={styles.sectionTitle}>{t('section.nutrientWatch')}</Text>
                 </View>
                 {watchlistAlerts.map((alert) => {
                   const sevColor = getNutrientSeverityColor(alert.offKey, alert.value, alert.direction);
@@ -2997,7 +3091,7 @@ export default function ScanResultScreen() {
                         </Text>
                       </View>
                       <Text style={[styles.nutrientAlertReason, { color: sevColor }]}>
-                        {alert.direction === 'limit' ? 'Limit' : 'Boost'} · {alert.source}
+                        {alert.direction === 'limit' ? tc('nutrientDirections.limit') : tc('nutrientDirections.boost')} · {alert.source}
                       </Text>
                     </View>
                   );
@@ -3011,7 +3105,7 @@ export default function ScanResultScreen() {
                 <View style={styles.noMicroDataCard}>
                   <Ionicons name="information-circle-outline" size={16} color={Colors.secondary} />
                   <Text style={styles.noMicroDataText}>
-                    Micronutrient data is not available for this product.
+                    {t('nutrientWatch.noMicroData')}
                   </Text>
                 </View>
               </View>
@@ -3021,22 +3115,21 @@ export default function ScanResultScreen() {
             {categorised.harmful.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeading}>
-                  <Text style={styles.sectionTitle}>Flagged ingredients</Text>
+                  <Text style={styles.sectionTitle}>{t('section.flaggedIngredients')}</Text>
                   <Text style={styles.sectionSubtitle}>
-                    This product contains flagged ingredients.
+                    {t('section.flaggedIngredientsSubtitle')}
                   </Text>
                 </View>
                 <View style={styles.ingCategoryCard}>
                   <Text style={styles.ingCategoryHeading}>
                     <Text style={styles.ingCount}>
-                      {categorised.harmful.length}{' '}
-                      {categorised.harmful.length === 1 ? 'ingredient' : 'ingredients'}
+                      {t('ingredients.ingredient', { count: categorised.harmful.length })}
                     </Text>
                     <Text style={styles.ingMiddle}>
                       {' '}
-                      {categorised.harmful.length === 1 ? 'is' : 'are'} considered{' '}
+                      {categorised.harmful.length === 1 ? t('ingredients.is') : t('ingredients.are')} {t('ingredients.considered')}{' '}
                     </Text>
-                    <Text style={[styles.ingWord, { color: Colors.status.negative }]}>harmful</Text>
+                    <Text style={[styles.ingWord, { color: Colors.status.negative }]}>{t('ingredients.harmful')}</Text>
                   </Text>
                   <View style={{ gap: 4 }}>
                     {categorised.harmful.map((ing, i) => (
@@ -3067,7 +3160,7 @@ export default function ScanResultScreen() {
             {fetchingOff && (
               <View style={styles.fetchingRow}>
                 <ActivityIndicator size="small" color={Colors.primary} />
-                <Text style={styles.fetchingText}>Loading nutritional data…</Text>
+                <Text style={styles.fetchingText}>{t('loading.nutritionalData')}</Text>
               </View>
             )}
 
@@ -3075,7 +3168,7 @@ export default function ScanResultScreen() {
             {hasNutrition && (
               <View style={styles.section}>
                 <View style={styles.sectionHeading}>
-                  <Text style={styles.sectionTitle}>Highlighted Nutritional Info</Text>
+                  <Text style={styles.sectionTitle}>{t('section.highlightedNutrition')}</Text>
                 </View>
 
                 {/* Toggle controls (Figma node 3164-4264) */}
@@ -3098,8 +3191,8 @@ export default function ScanResultScreen() {
                           ]}
                         >
                           {mode === 'serving'
-                            ? servingLabel || 'Per Serving'
-                            : 'Per 100g'}
+                            ? servingLabel || t('toggle.perServing')
+                            : t('toggle.per100g')}
                         </Text>
                       </TouchableOpacity>
                     ))}
@@ -3121,7 +3214,7 @@ export default function ScanResultScreen() {
                             driMode === mode && styles.overviewToggleTextActive,
                           ]}
                         >
-                          {mode === 'value' ? 'Value' : 'DRI (%)'}
+                          {mode === 'value' ? t('toggle.value') : t('toggle.dri')}
                         </Text>
                       </TouchableOpacity>
                     ))}
@@ -3133,7 +3226,7 @@ export default function ScanResultScreen() {
                     if (!raw) return null;
                     const num = parseFloat(raw);
                     if (isNaN(num) || num < 0) return null;
-                    const rating = getRating(key, num, nutrientThresholds);
+                    const rating = getRatingT(key, num, nutrientThresholds);
                     const unit = NUTRIENT_UNITS[key];
                     const displayVal =
                       driMode === 'dri' ? fmtDri(raw, key) : fmtVal(raw, unit);
@@ -3144,7 +3237,7 @@ export default function ScanResultScreen() {
                           <View style={styles.nutritionIconBox}>
                             <IconComp width={32} height={32} />
                           </View>
-                          <Text style={styles.nutritionName}>{NUTRIENT_LABELS[key]}</Text>
+                          <Text style={styles.nutritionName}>{NUTRIENT_LABELS_T[key]}</Text>
                         </View>
                         <View style={styles.nutritionRowRight}>
                           <Text style={styles.nutritionValue}>{displayVal}</Text>
@@ -3163,10 +3256,9 @@ export default function ScanResultScreen() {
             {!fetchingOff && !hasNutrition && allergenList.length === 0 && categorised.harmful.length === 0 && (
               <View style={styles.emptyState}>
                 <Ionicons name="information-circle-outline" size={40} color={Colors.secondary} />
-                <Text style={styles.emptyStateTitle}>Limited product data</Text>
+                <Text style={styles.emptyStateTitle}>{t('empty.limitedDataTitle')}</Text>
                 <Text style={styles.emptyStateText}>
-                  Nutritional information is not available for this product in the Open Food Facts
-                  database.
+                  {t('empty.limitedDataText')}
                 </Text>
               </View>
             )}
@@ -3180,7 +3272,7 @@ export default function ScanResultScreen() {
           <View style={styles.tabContent}>
             <View style={styles.section}>
               <View style={styles.sectionHeading}>
-                <Text style={styles.sectionTitle}>Nutritional Information</Text>
+                <Text style={styles.sectionTitle}>{t('section.nutritionalInfo')}</Text>
               </View>
 
               {/* Toggle controls — same compact style as overview */}
@@ -3226,7 +3318,7 @@ export default function ScanResultScreen() {
                           driMode === mode && styles.overviewToggleTextActive,
                         ]}
                       >
-                        {mode === 'value' ? 'Value' : 'DRI (%)'}
+                        {mode === 'value' ? t('toggle.value') : t('toggle.dri')}
                       </Text>
                     </TouchableOpacity>
                   ))}
@@ -3236,7 +3328,7 @@ export default function ScanResultScreen() {
               {fetchingOff ? (
                 <View style={styles.fetchingRow}>
                   <ActivityIndicator size="small" color={Colors.primary} />
-                  <Text style={styles.fetchingText}>Loading nutritional data…</Text>
+                  <Text style={styles.fetchingText}>{t('loading.nutritionalData')}</Text>
                 </View>
               ) : hasNutrition ? (
                 <View style={styles.nutritionRows}>
@@ -3245,7 +3337,7 @@ export default function ScanResultScreen() {
                     const num = parseFloat(raw);
                     if (isNaN(num) || num < 0) return null;
                     const unit = NUTRIENT_UNITS[key];
-                    const rating = getRating(key, num, nutrientThresholds);
+                    const rating = getRatingT(key, num, nutrientThresholds);
                     const displayVal =
                       driMode === 'dri' ? fmtDri(raw, key) : fmtVal(raw, unit);
                     const IconComp = FoodIcons[key];
@@ -3255,7 +3347,7 @@ export default function ScanResultScreen() {
                           <View style={styles.nutritionIconBox}>
                             <IconComp width={32} height={32} />
                           </View>
-                          <Text style={styles.nutritionName}>{NUTRIENT_LABELS[key]}</Text>
+                          <Text style={styles.nutritionName}>{NUTRIENT_LABELS_T[key]}</Text>
                         </View>
                         <View style={styles.nutritionRowRight}>
                           <Text style={styles.nutritionValue}>{displayVal}</Text>
@@ -3270,10 +3362,9 @@ export default function ScanResultScreen() {
               ) : (
                 <View style={styles.emptyState}>
                   <Ionicons name="bar-chart-outline" size={40} color={Colors.secondary} />
-                  <Text style={styles.emptyStateTitle}>No nutritional data</Text>
+                  <Text style={styles.emptyStateTitle}>{t('empty.noNutritionTitle')}</Text>
                   <Text style={styles.emptyStateText}>
-                    This product does not have nutritional information in the Open Food Facts
-                    database.
+                    {t('empty.noNutritionText')}
                   </Text>
                 </View>
               )}
@@ -3283,9 +3374,9 @@ export default function ScanResultScreen() {
             {watchlistAlerts.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeading}>
-                  <Text style={styles.sectionTitle}>Your Nutrient Watchlist</Text>
+                  <Text style={styles.sectionTitle}>{t('section.nutrientWatchlist')}</Text>
                   <Text style={styles.sectionSubtitle}>
-                    Nutrients you're monitoring based on your health profile.
+                    {t('section.nutrientWatchlistSubtitle')}
                   </Text>
                 </View>
                 <View style={styles.nutritionRows}>
@@ -3308,7 +3399,7 @@ export default function ScanResultScreen() {
                             ? Colors.status.negative
                             : Colors.status.positive,
                         }]}>
-                          {alert.direction === 'limit' ? 'Limit' : 'Boost'}
+                          {alert.direction === 'limit' ? tc('nutrientDirections.limit') : tc('nutrientDirections.boost')}
                         </Text>
                       </View>
                     </View>
@@ -3327,7 +3418,7 @@ export default function ScanResultScreen() {
             {fetchingOff ? (
               <View style={styles.fetchingRow}>
                 <ActivityIndicator size="small" color={Colors.primary} />
-                <Text style={styles.fetchingText}>Loading ingredients…</Text>
+                <Text style={styles.fetchingText}>{t('loading.ingredients')}</Text>
               </View>
             ) : structuredIngredients.length > 0 ? (
               <>
@@ -3340,10 +3431,10 @@ export default function ScanResultScreen() {
                     <View style={styles.allergenCard}>
                       <View style={styles.allergenBadge}>
                         <Ionicons name="warning" size={11} color="#fff" />
-                        <Text style={styles.allergenBadgeText}>Warning</Text>
+                        <Text style={styles.allergenBadgeText}>{t('allergen.warningBadge')}</Text>
                       </View>
                       <Text style={styles.allergenText}>
-                        Contains: {matchedAllergens.join(', ')}. This may affect {firstName}'s health profile.
+                        {t('allergen.warningText', { allergens: matchedAllergens.join(', '), name: firstName })}
                       </Text>
                     </View>
                   );
@@ -3355,12 +3446,12 @@ export default function ScanResultScreen() {
                     {/* "2 ingredients" bold + " are considered " light + "harmful" bold red */}
                     <Text style={styles.ingCategoryHeading}>
                       <Text style={styles.ingCount}>
-                        {categorised.harmful.length}{' '}{categorised.harmful.length === 1 ? 'ingredient' : 'ingredients'}
+                        {t('ingredients.ingredient', { count: categorised.harmful.length })}
                       </Text>
                       <Text style={styles.ingMiddle}>
-                        {' '}{categorised.harmful.length === 1 ? 'is' : 'are'} considered{' '}
+                        {' '}{categorised.harmful.length === 1 ? t('ingredients.is') : t('ingredients.are')} {t('ingredients.considered')}{' '}
                       </Text>
-                      <Text style={[styles.ingWord, { color: Colors.status.negative }]}>harmful</Text>
+                      <Text style={[styles.ingWord, { color: Colors.status.negative }]}>{t('ingredients.harmful')}</Text>
                     </Text>
                     {/* Harmful rows: gap-2 between rows, gap-8 within row, with ⓘ info icon */}
                     <View style={{ gap: 2 }}>
@@ -3386,12 +3477,12 @@ export default function ScanResultScreen() {
                   <View style={styles.ingCategoryCard}>
                     <Text style={styles.ingCategoryHeading}>
                       <Text style={styles.ingCount}>
-                        {categorised.ok.length}{' '}{categorised.ok.length === 1 ? 'ingredient' : 'ingredients'}
+                        {t('ingredients.ingredient', { count: categorised.ok.length })}
                       </Text>
                       <Text style={styles.ingMiddle}>
-                        {' '}{categorised.ok.length === 1 ? 'is' : 'are'} considered{' '}
+                        {' '}{categorised.ok.length === 1 ? t('ingredients.is') : t('ingredients.are')} {t('ingredients.considered')}{' '}
                       </Text>
-                      <Text style={[styles.ingWord, { color: Extra.poorOrange }]}>ok</Text>
+                      <Text style={[styles.ingWord, { color: Extra.poorOrange }]}>{t('ingredients.ok')}</Text>
                     </Text>
                     {/* Ok rows: gap-2 between rows, gap-4 within row, with ⓘ info icon */}
                     <View style={{ gap: 2 }}>
@@ -3417,12 +3508,12 @@ export default function ScanResultScreen() {
                   <View style={styles.ingCategoryCard}>
                     <Text style={styles.ingCategoryHeading}>
                       <Text style={styles.ingCount}>
-                        {categorised.safe.length}{' '}{categorised.safe.length === 1 ? 'ingredient' : 'ingredients'}
+                        {t('ingredients.ingredient', { count: categorised.safe.length })}
                       </Text>
                       <Text style={styles.ingMiddle}>
-                        {' '}{categorised.safe.length === 1 ? 'is' : 'are'} considered{' '}
+                        {' '}{categorised.safe.length === 1 ? t('ingredients.is') : t('ingredients.are')} {t('ingredients.considered')}{' '}
                       </Text>
-                      <Text style={[styles.ingWord, { color: Extra.positiveGreen }]}>safe</Text>
+                      <Text style={[styles.ingWord, { color: Extra.positiveGreen }]}>{t('ingredients.safe')}</Text>
                     </Text>
                     {/* Safe rows: gap-2 between rows, gap-4 within row, no ⓘ info icon */}
                     <View style={{ gap: 2 }}>
@@ -3441,9 +3532,9 @@ export default function ScanResultScreen() {
               <View style={styles.ingCategoryCard}>
                 <Text style={styles.ingCategoryHeading}>
                   <Text style={styles.ingCount}>
-                    {ingredientsList.length}{' '}{ingredientsList.length === 1 ? 'ingredient' : 'ingredients'}
+                    {t('ingredients.ingredient', { count: ingredientsList.length })}
                   </Text>
-                  <Text style={styles.ingMiddle}> listed</Text>
+                  <Text style={styles.ingMiddle}> {t('ingredients.listed')}</Text>
                 </Text>
                 <View style={{ gap: 2 }}>
                   {ingredientsList.map((name, i) => (
@@ -3457,9 +3548,9 @@ export default function ScanResultScreen() {
             ) : (
               <View style={styles.emptyState}>
                 <Ionicons name="list-outline" size={40} color={Colors.secondary} />
-                <Text style={styles.emptyStateTitle}>No ingredients listed</Text>
+                <Text style={styles.emptyStateTitle}>{t('empty.noIngredientsTitle')}</Text>
                 <Text style={styles.emptyStateText}>
-                  Ingredient information is not available for this product.
+                  {t('empty.noIngredientsText')}
                 </Text>
               </View>
             )}
@@ -3475,18 +3566,18 @@ export default function ScanResultScreen() {
             {allergenList.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeading}>
-                  <Text style={styles.sectionTitle}>Allergens</Text>
+                  <Text style={styles.sectionTitle}>{t('section.allergens')}</Text>
                   <Text style={styles.sectionSubtitle}>
-                    Allergens listed for this product.
+                    {t('section.allergensSubtitle')}
                   </Text>
                 </View>
                 <View style={styles.allergenCard}>
                   <View style={styles.allergenBadge}>
                     <Ionicons name="warning" size={11} color="#fff" />
-                    <Text style={styles.allergenBadgeText}>Allergens</Text>
+                    <Text style={styles.allergenBadgeText}>{t('allergen.allergensBadge')}</Text>
                   </View>
                   <Text style={styles.allergenText}>
-                    Contains: {allergenList.join(', ')}.
+                    {t('allergen.containsText', { allergens: allergenList.join(', ') })}
                   </Text>
                 </View>
               </View>
@@ -3495,9 +3586,9 @@ export default function ScanResultScreen() {
             {allergenList.length === 0 && (
               <View style={styles.emptyState}>
                 <Ionicons name="checkmark-circle-outline" size={40} color={Colors.secondary} />
-                <Text style={styles.emptyStateTitle}>No allergens listed</Text>
+                <Text style={styles.emptyStateTitle}>{t('empty.noAllergensTitle')}</Text>
                 <Text style={styles.emptyStateText}>
-                  No allergen information is available for this product.
+                  {t('empty.noAllergensText')}
                 </Text>
               </View>
             )}
@@ -3510,9 +3601,9 @@ export default function ScanResultScreen() {
         {activeTab === 'recommended' && (
           <View style={styles.comingSoon}>
             <Ionicons name="construct-outline" size={40} color={Colors.secondary} />
-            <Text style={styles.comingSoonTitle}>Coming soon</Text>
+            <Text style={styles.comingSoonTitle}>{t('comingSoon.title')}</Text>
             <Text style={styles.comingSoonText}>
-              This section is under construction and will be available in a future update.
+              {t('comingSoon.text')}
             </Text>
           </View>
         )}

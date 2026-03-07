@@ -1,0 +1,57 @@
+{
+  "detail": {
+    "doYouLike": "Do you like",
+    "didYouKnow": "Did you know?"
+  },
+  "preferences": {
+    "pageTitle": {
+      "liked": "Liked ingredients",
+      "disliked": "Disliked ingredients",
+      "flagged": "Flagged ingredients"
+    },
+    "countVerb": {
+      "liked": "you like",
+      "disliked": "you dislike",
+      "flagged": "you have flagged"
+    },
+    "empty": {
+      "titleLiked": "You currently have no liked ingredients",
+      "titleDisliked": "You currently have no disliked ingredients",
+      "titleFlagged": "You currently have no flagged ingredients",
+      "descriptionLiked": "To make your meal planning easier, rate some of your favourite ingredients on the dashboard. When you use the Insight Scanner, we'll spotlight them and suggest tasty recipes you'll love!",
+      "descriptionDisliked": "Rate ingredients on the dashboard to build your disliked list. We'll make sure to flag them whenever they appear in a product.",
+      "descriptionFlagged": "Flag ingredients from the dashboard or scan results to highlight them in red whenever they appear in a product."
+    },
+    "flaggedPlaceholder": {
+      "palmOil": "Palm Oil",
+      "highFructoseCornSyrup": "High-Fructose Corn Syrup",
+      "sodiumBenzoate": "Sodium Benzoate"
+    },
+    "subtitle": {
+      "currently": "Currently ",
+      "ingredient_one": "{{count}} ingredient",
+      "ingredient_other": "{{count}} ingredients"
+    },
+    "search": {
+      "placeholder": "Search ingredients..."
+    },
+    "menu": {
+      "likeIngredient": "Like Ingredient",
+      "dislikeIngredient": "Dislike Ingredient",
+      "flagIngredient": "Flag Ingredient",
+      "removeIngredient": "Remove Ingredient"
+    },
+    "error": {
+      "title": "Could not load ingredients",
+      "migrationRequired": "Database migration required. Please run the ALTER TABLE statements in your Supabase SQL Editor to add the ingredient preference columns."
+    }
+  },
+  "upsell": {
+    "bite": "bite",
+    "insight": "insight",
+    "plus": "plus",
+    "plusSymbol": "+",
+    "tagline": "Flag ingredients to highlight\nthem in red on every scan",
+    "upgradeButton": "Upgrade to Plus+"
+  }
+}

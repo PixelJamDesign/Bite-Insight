@@ -1,0 +1,244 @@
+{
+  "healthConditionReasons": {
+    "diabetes": [
+      "Spikes blood sugar",
+      "Causes energy crash",
+      "Affects insulin levels",
+      "Doctor advised to avoid",
+      "Monitoring carb intake"
+    ],
+    "hypertension": [
+      "Raises blood pressure",
+      "Too high in sodium",
+      "Doctor advised to avoid",
+      "Retaining water",
+      "Heart health concern"
+    ],
+    "ibs": [
+      "Causes bloating / gas",
+      "Triggers stomach cramps",
+      "Causes diarrhoea",
+      "FODMAP trigger",
+      "Makes symptoms worse"
+    ],
+    "highCholesterol": [
+      "Raises cholesterol",
+      "Too high in saturated fat",
+      "Doctor advised to avoid",
+      "Heart health concern",
+      "Trying to lower LDL"
+    ],
+    "eczema": [
+      "Triggers flare-up",
+      "Causes itching",
+      "Causes inflammation",
+      "Dermatologist advised",
+      "Skin reaction"
+    ],
+    "heartDisease": [
+      "Heart health concern",
+      "Too high in saturated fat",
+      "Doctor advised to avoid",
+      "Raises cholesterol",
+      "High sodium risk"
+    ],
+    "gerd": [
+      "Triggers acid reflux",
+      "Causes heartburn",
+      "Irritates stomach",
+      "Doctor advised to avoid",
+      "Makes symptoms worse"
+    ],
+    "pcos": [
+      "Spikes blood sugar",
+      "Causes hormonal imbalance",
+      "Doctor advised to avoid",
+      "Affects insulin levels",
+      "Worsens symptoms"
+    ],
+    "metabolicSyndrome": [
+      "Spikes blood sugar",
+      "Too high in saturated fat",
+      "Doctor advised to avoid",
+      "Weight management",
+      "Affects insulin levels"
+    ],
+    "migraine": [
+      "Triggers migraines",
+      "Contains trigger compounds",
+      "Doctor advised to avoid",
+      "Causes headaches",
+      "Makes symptoms worse"
+    ],
+    "crohns": [
+      "Causes flare-up",
+      "Irritates gut lining",
+      "Doctor advised to avoid",
+      "Causes diarrhoea",
+      "Makes symptoms worse"
+    ],
+    "uc": [
+      "Causes flare-up",
+      "Irritates colon",
+      "Doctor advised to avoid",
+      "Causes diarrhoea",
+      "Makes symptoms worse"
+    ],
+    "leakyGut": [
+      "Irritates gut lining",
+      "Increases permeability",
+      "Doctor advised to avoid",
+      "Causes inflammation",
+      "Makes symptoms worse"
+    ],
+    "sibo": [
+      "Feeds bacterial overgrowth",
+      "Causes bloating / gas",
+      "Doctor advised to avoid",
+      "FODMAP trigger",
+      "Makes symptoms worse"
+    ],
+    "me": [
+      "Causes energy crash",
+      "Worsens fatigue",
+      "Doctor advised to avoid",
+      "Causes brain fog",
+      "Makes symptoms worse"
+    ],
+    "ra": [
+      "Causes inflammation",
+      "Triggers joint pain",
+      "Doctor advised to avoid",
+      "Worsens symptoms",
+      "Increases stiffness"
+    ],
+    "lupus": [
+      "Causes inflammation",
+      "Triggers flare-up",
+      "Doctor advised to avoid",
+      "Worsens symptoms",
+      "Affects immune system"
+    ],
+    "ms": [
+      "Causes inflammation",
+      "Worsens symptoms",
+      "Doctor advised to avoid",
+      "Affects nerve health",
+      "Triggers flare-up"
+    ],
+    "osteoporosis": [
+      "Leaches calcium",
+      "Weakens bone density",
+      "Doctor advised to avoid",
+      "Affects mineral absorption",
+      "Not bone-friendly"
+    ],
+    "adhd": [
+      "Affects focus / attention",
+      "Contains artificial additives",
+      "Causes hyperactivity",
+      "Doctor advised to avoid",
+      "Makes symptoms worse"
+    ],
+    "autism": [
+      "Causes sensory reaction",
+      "Contains artificial additives",
+      "Affects behaviour",
+      "Doctor advised to avoid",
+      "Makes symptoms worse"
+    ]
+  },
+  "genericConditionReasons": [
+    "Makes symptoms worse",
+    "Doctor advised to avoid",
+    "Causes discomfort",
+    "Worsens my condition",
+    "Trying to eliminate"
+  ],
+  "allergyReasons": [
+    "Risk of allergic reaction",
+    "Causes hives / rash",
+    "Causes swelling",
+    "Doctor diagnosed",
+    "Causes breathing difficulty"
+  ],
+  "intoleranceReasons": [
+    "Causes bloating",
+    "Causes stomach pain",
+    "Causes nausea / diarrhoea",
+    "Can't digest it",
+    "Makes me feel unwell"
+  ],
+  "sensitivityReasons": [
+    "Causes headaches",
+    "Triggers reaction",
+    "Causes skin flushing",
+    "Doctor advised to avoid",
+    "Sensitivity confirmed"
+  ],
+  "dietaryPreferenceReasons": {
+    "vegan": [
+      "Against my diet",
+      "Ethical reasons",
+      "Environmental concerns",
+      "Animal welfare",
+      "Don't want to consume"
+    ],
+    "vegetarian": [
+      "Against my diet",
+      "Ethical reasons",
+      "Environmental concerns",
+      "Animal welfare",
+      "Don't want to consume"
+    ],
+    "plantBased": [
+      "Against my diet",
+      "Ethical reasons",
+      "Environmental concerns",
+      "Animal welfare",
+      "Don't want to consume"
+    ],
+    "keto": [
+      "Too many carbs",
+      "Knocks me out of ketosis",
+      "Too much sugar",
+      "Stalls weight loss",
+      "Not keto-friendly"
+    ],
+    "weightLoss": [
+      "Too many calories",
+      "Too high in sugar",
+      "Too high in fat",
+      "Stalls progress",
+      "Trying to cut out"
+    ],
+    "fodmap": [
+      "High FODMAP ingredient",
+      "Causes bloating",
+      "Triggers IBS symptoms",
+      "Dietitian advised to avoid",
+      "Elimination phase"
+    ],
+    "dairyFree": [
+      "Contains dairy",
+      "Avoiding all dairy",
+      "Causes digestive issues",
+      "Skin reaction",
+      "Personal choice"
+    ]
+  },
+  "genericDietaryReasons": [
+    "Doesn't fit my diet",
+    "Trying to avoid",
+    "Personal choice",
+    "Health reasons",
+    "Lifestyle choice"
+  ],
+  "sheet": {
+    "whyFlagging": "Why are you flagging",
+    "otherHeader": "Other",
+    "enterOwnReason": "Enter my own reason",
+    "otherPlaceholder": "e.g. Makes me feel bloated",
+    "flagIngredient": "Flag ingredient"
+  }
+}

@@ -69,7 +69,8 @@
         {
           "faceIDPermission": "BiteInsight uses Face ID to let you sign in quickly and securely."
         }
-      ]
+      ],
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true

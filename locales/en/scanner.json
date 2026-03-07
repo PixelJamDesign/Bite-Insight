@@ -1,0 +1,32 @@
+{
+  "topTitle": "Scan Food Label",
+  "hint": {
+    "processing": "Processing...",
+    "pointAtBarcode": "Point at a barcode to scan"
+  },
+  "bottomHint": "Supports EAN-13, EAN-8, UPC-A and QR codes",
+  "regions": {
+    "world": "World",
+    "unitedKingdom": "United Kingdom",
+    "unitedStates": "United States",
+    "france": "France",
+    "germany": "Germany",
+    "spain": "Spain",
+    "italy": "Italy",
+    "australia": "Australia",
+    "canada": "Canada",
+    "netherlands": "Netherlands"
+  },
+  "regionPicker": {
+    "title": "Select region"
+  },
+  "permission": {
+    "title": "Camera Access Required",
+    "description": "BiteInsight needs camera access to scan food labels and barcodes.",
+    "grantButton": "Grant Access"
+  },
+  "alert": {
+    "scanFailedTitle": "Scan failed",
+    "scanFailedMessage": "Could not process this barcode. Please try again."
+  }
+}

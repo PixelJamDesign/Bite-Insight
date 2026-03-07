@@ -19,46 +19,17 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import InfoIcon from '@/assets/icons/info.svg';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { Colors, Shadows } from '@/constants/theme';
 import { CONDITION_NUTRIENT_MAP } from '@/constants/conditionNutrientMap';
+import { HEALTH_CONDITION_KEYS, ALLERGY_KEYS, DIETARY_PREFERENCE_KEYS } from '@/constants/profileOptions';
 import type { NutrientWatchlistEntry } from '@/lib/types';
 import Logo from '../assets/images/logo.svg';
 
-// ── Selection lists ───────────────────────────────────────────────────────────
-const HEALTH_CONDITIONS = [
-  'ADHD', 'Autism', "Chron's Disease", 'Diabetes', 'Eczema / Psoriasis',
-  'GERD / Acid Reflux', 'Heart Disease', 'High Cholesterol', 'Hypertension', 'IBS',
-  'Leaky Gut Syndrome', 'Lupus', 'ME / Chronic Fatigue', 'Metabolic Syndrome',
-  'Migraine / Chronic Headaches', 'Multiple Sclerosis', 'PCOS', 'Rheumatoid Arthritis',
-  'SIBO', 'Ulcerative Colitis',
-];
-
-const ALLERGIES = [
-  'Celery Allergy', 'Egg Allergy', 'Fish Allergy', 'Fructose Intolerance',
-  'Gluten Intolerance', 'Histamine Intolerance', 'Lactose Intolerance',
-  'Lupin Allergy', 'MSG Sensitivity', 'Mustard Allergy', 'Peanut Allergy',
-  'Salicylate Sensitivity', 'Sesame Allergy', 'Shellfish Allergy',
-  'Soy Allergy', 'Sulphite Sensitivity', 'Tree Nut Allergy',
-];
-
-const DIETARY_PREFERENCES = [
-  'Child-Friendly / Additive-Free', 'Clean Eating', 'Dairy-Free', 'FODMAP Diet',
-  'Low-Carb / Keto', 'High-Protein / Fitness', 'Paleo', 'Plant-Based',
-  'Post-Bariatric Surgery', 'Pregnancy-safe Diet', 'Sustainable / Eco',
-  'Weight Loss', 'Whole30', 'Vegan', 'Vegetarian',
-];
-
 // ── Step types ────────────────────────────────────────────────────────────────
 type StepKey = 'health' | 'nutrients' | 'allergies' | 'dietary';
-
-const STEP_META: Record<StepKey, { title: string }> = {
-  health:    { title: 'Health Conditions' },
-  nutrients: { title: 'Nutrient Watchlist' },
-  allergies: { title: 'Allergies' },
-  dietary:   { title: 'Dietary Preferences' },
-};
 
 // ── Nutrient types ──────────────────────────────────────────────────────────
 type UniqueNutrient = {
@@ -114,6 +85,9 @@ function toggle(list: string[], item: string): string[] {
 export default function OnboardingScreen() {
   const { session } = useAuth();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation('onboarding');
+  const { t: tpo } = useTranslation('profileOptions');
+  const { t: tc } = useTranslation('common');
 
   // Onboarding position
   const [pos, setPos] = useState(0);
@@ -173,9 +147,9 @@ export default function OnboardingScreen() {
   const totalSteps = stepSequence.length + 1; // +1 for signup step (done)
   const overallStep = pos + 2; // step 1 is signup (done)
 
-  const stepTitle = STEP_META[currentStepKey].title;
+  const stepTitle = t(`step.${currentStepKey}`);
   const nextStepKey = pos < stepSequence.length - 1 ? stepSequence[pos + 1] : null;
-  const nextLabel = nextStepKey ? STEP_META[nextStepKey].title : null;
+  const nextLabel = nextStepKey ? t(`step.${nextStepKey}`) : null;
 
   // Chip search
   const [chipSearch, setChipSearch]           = useState('');
@@ -242,19 +216,19 @@ export default function OnboardingScreen() {
             return <View key={s} style={styles.stepUpcoming} />;
           })}
         </View>
-        {nextLabel && <Text style={styles.nextLabel}>Next: {nextLabel}</Text>}
+        {nextLabel && <Text style={styles.nextLabel}>{t('progress.next', { label: nextLabel })}</Text>}
       </View>
     );
   }
 
   // ── Chip card header ─────────────────────────────────────────────────────────
-  function renderChipHeader(question: string, count: number, word: string) {
+  function renderChipHeader(question: string, count: number, countText: string) {
     return (
       <View style={styles.chipCardInfo}>
         <Text style={styles.cardTitle}>{question}</Text>
         <View style={styles.countRow}>
-          <Text style={styles.countText}>You've selected </Text>
-          <Text style={styles.countBold}>{count} {word}</Text>
+          <Text style={styles.countText}>{t('chip.youveSelected')}</Text>
+          <Text style={styles.countBold}>{countText}</Text>
         </View>
         <TouchableOpacity
           style={styles.searchLink}
@@ -267,13 +241,13 @@ export default function OnboardingScreen() {
           activeOpacity={0.7}
         >
           <Ionicons name="search-outline" size={16} color={Colors.secondary} />
-          <Text style={styles.searchLinkText}>Search</Text>
+          <Text style={styles.searchLinkText}>{tc('buttons.search')}</Text>
         </TouchableOpacity>
         {chipSearchActive && (
           <TextInput
             ref={chipSearchRef}
             style={styles.chipSearchInput}
-            placeholder="Search..."
+            placeholder={tc('placeholder.search')}
             placeholderTextColor={`${Colors.primary}50`}
             selectionColor={Colors.primary}
             value={chipSearch}
@@ -288,28 +262,29 @@ export default function OnboardingScreen() {
 
   // ── Chip grid ─────────────────────────────────────────────────────────────────
   function renderChips(
-    items: string[],
+    keys: readonly string[],
+    labelPrefix: string,
     selected: string[],
-    onToggle: (item: string) => void,
+    onToggle: (key: string) => void,
   ) {
     const filtered = chipSearch.trim()
-      ? items.filter(i => i.toLowerCase().includes(chipSearch.toLowerCase()))
-      : items;
+      ? keys.filter(k => tpo(`${labelPrefix}.${k}`).toLowerCase().includes(chipSearch.toLowerCase()))
+      : keys;
     return (
       <View style={styles.chipWrap}>
-        {filtered.map(item => {
-          const active = selected.includes(item);
+        {filtered.map(key => {
+          const active = selected.includes(key);
           return (
             <TouchableOpacity
-              key={item}
+              key={key}
               style={[styles.chip, active && styles.chipActive]}
-              onPress={() => onToggle(item)}
+              onPress={() => onToggle(key)}
               activeOpacity={0.75}
             >
               <View style={[styles.chipCheck, active && styles.chipCheckActive]}>
                 {active && <Ionicons name="checkmark" size={12} color="#fff" />}
               </View>
-              <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>{item}</Text>
+              <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>{tpo(`${labelPrefix}.${key}`)}</Text>
             </TouchableOpacity>
           );
         })}
@@ -333,7 +308,7 @@ export default function OnboardingScreen() {
             activeOpacity={0.75}
           >
             <Text style={[styles.segmentText, styles.segmentTextLimit, choice === 'limit' && styles.segmentTextActive]}>
-              Limit
+              {tc('nutrientDirections.limit')}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -342,7 +317,7 @@ export default function OnboardingScreen() {
             activeOpacity={0.75}
           >
             <Text style={[styles.segmentText, styles.segmentTextBoost, choice === 'boost' && styles.segmentTextActive]}>
-              Boost
+              {tc('nutrientDirections.boost')}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -351,7 +326,7 @@ export default function OnboardingScreen() {
             activeOpacity={0.75}
           >
             <Text style={[styles.segmentText, styles.segmentTextNone, choice === 'none' && styles.segmentTextNoneActive]}>
-              No Change
+              {tc('nutrientDirections.noChange')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -364,16 +339,16 @@ export default function OnboardingScreen() {
       <>
         <View style={styles.chipCardInfo}>
           <Text style={styles.cardTitle}>
-            Based on your conditions, we suggest watching these nutrients
+            {t('nutrient.suggestion')}
           </Text>
           <View style={styles.countRow}>
-            <Text style={styles.countText}>Limiting </Text>
+            <Text style={styles.countText}>{t('nutrient.limiting')}</Text>
             <Text style={styles.countBold}>{limitNutrients.length}</Text>
-            <Text style={styles.countText}>, boosting </Text>
+            <Text style={styles.countText}>{t('nutrient.boosting')}</Text>
             <Text style={styles.countBold}>{boostNutrients.length}</Text>
           </View>
           <Text style={styles.nutrientSubtext}>
-            We'll alert you when scanned products contain these.
+            {t('nutrient.alertSubtext')}
           </Text>
         </View>
 
@@ -382,7 +357,7 @@ export default function OnboardingScreen() {
             <View style={styles.sectionHeaderRow}>
               <Ionicons name="arrow-down-circle" size={16} color={Colors.status.negative} />
               <Text style={[styles.sectionHeader, { color: Colors.status.negative }]}>
-                Nutrients to Limit
+                {t('nutrient.sectionLimit')}
               </Text>
             </View>
             {limitNutrients.map(renderNutrientRow)}
@@ -394,7 +369,7 @@ export default function OnboardingScreen() {
             <View style={styles.sectionHeaderRow}>
               <Ionicons name="arrow-up-circle" size={16} color={Colors.status.positive} />
               <Text style={[styles.sectionHeader, { color: Colors.status.positive }]}>
-                Nutrients to Boost
+                {t('nutrient.sectionBoost')}
               </Text>
             </View>
             {boostNutrients.map(renderNutrientRow)}
@@ -406,7 +381,7 @@ export default function OnboardingScreen() {
             <View style={styles.sectionHeaderRow}>
               <Ionicons name="remove-circle" size={16} color={`${Colors.primary}50`} />
               <Text style={[styles.sectionHeader, { color: `${Colors.primary}50` }]}>
-                No Change
+                {t('nutrient.sectionNoChange')}
               </Text>
             </View>
             {noChangeNutrients.map(renderNutrientRow)}
@@ -442,30 +417,30 @@ export default function OnboardingScreen() {
       >
         <View style={styles.card}>
           {currentStepKey === 'health' && renderChipHeader(
-            'Do you have any health condition?',
+            t('question.healthCondition'),
             healthConditions.length,
-            `condition${healthConditions.length !== 1 ? 's' : ''}`,
+            t('count.condition', { count: healthConditions.length }),
           )}
           {currentStepKey === 'allergies' && renderChipHeader(
-            'Do you have any allergies?',
+            t('question.allergies'),
             allergies.length,
-            `allerg${allergies.length !== 1 ? 'ies' : 'y'}`,
+            t('count.allergy', { count: allergies.length }),
           )}
           {currentStepKey === 'dietary' && renderChipHeader(
-            'Do you have any dietary preferences?',
+            t('question.dietaryPreferences'),
             dietaryPrefs.length,
-            `preference${dietaryPrefs.length !== 1 ? 's' : ''}`,
+            t('count.preference', { count: dietaryPrefs.length }),
           )}
 
-          {currentStepKey === 'health' && renderChips(HEALTH_CONDITIONS, healthConditions, item =>
-            setHealthConditions(prev => toggle(prev, item))
+          {currentStepKey === 'health' && renderChips(HEALTH_CONDITION_KEYS, 'healthConditions', healthConditions, key =>
+            setHealthConditions(prev => toggle(prev, key))
           )}
           {currentStepKey === 'nutrients' && renderNutrientStep()}
-          {currentStepKey === 'allergies' && renderChips(ALLERGIES, allergies, item =>
-            setAllergies(prev => toggle(prev, item))
+          {currentStepKey === 'allergies' && renderChips(ALLERGY_KEYS, 'allergies', allergies, key =>
+            setAllergies(prev => toggle(prev, key))
           )}
-          {currentStepKey === 'dietary' && renderChips(DIETARY_PREFERENCES, dietaryPrefs, item =>
-            setDietaryPrefs(prev => toggle(prev, item))
+          {currentStepKey === 'dietary' && renderChips(DIETARY_PREFERENCE_KEYS, 'dietaryPreferences', dietaryPrefs, key =>
+            setDietaryPrefs(prev => toggle(prev, key))
           )}
         </View>
 
@@ -475,7 +450,7 @@ export default function OnboardingScreen() {
           onPress={() => router.replace('/(tabs)/')}
           activeOpacity={0.7}
         >
-          <Text style={styles.skipText}>Skip for now, I'll set this up later</Text>
+          <Text style={styles.skipText}>{tc('buttons.skip')}</Text>
         </TouchableOpacity>
 
         <View style={{ height: 120 }} />
@@ -490,7 +465,7 @@ export default function OnboardingScreen() {
         />
         <View style={styles.footerButtons}>
           <TouchableOpacity style={styles.backBtn} onPress={handleBack} activeOpacity={0.8}>
-            <Text style={styles.backBtnText}>{pos === 0 ? 'Cancel' : 'Back'}</Text>
+            <Text style={styles.backBtnText}>{pos === 0 ? tc('buttons.cancel') : tc('buttons.back')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -503,7 +478,7 @@ export default function OnboardingScreen() {
               <ActivityIndicator color="#fff" />
             ) : (
               <Text style={styles.nextBtnText} numberOfLines={1} adjustsFontSizeToFit>
-                {isLastStep ? 'Finish' : `Next: ${nextLabel}`}
+                {isLastStep ? tc('buttons.finish') : t('progress.next', { label: nextLabel })}
               </Text>
             )}
           </TouchableOpacity>

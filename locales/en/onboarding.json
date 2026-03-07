@@ -1,0 +1,48 @@
+{
+  "step": {
+    "aboutYou": "About You",
+    "aboutThem": "About Them",
+    "health": "Health Conditions",
+    "nutrients": "Nutrient Watchlist",
+    "allergies": "Allergies",
+    "dietary": "Dietary Preferences"
+  },
+  "question": {
+    "healthCondition": "Do you have any health condition?",
+    "allergies": "Do you have any allergies?",
+    "dietaryPreferences": "Do you have any dietary preferences?",
+    "healthConditionFamily": "Do they have any health conditions?",
+    "allergiesFamily": "Do they have any allergies?",
+    "dietaryPreferencesFamily": "Do they have any dietary preferences?"
+  },
+  "count": {
+    "condition_one": "{{count}} condition",
+    "condition_other": "{{count}} conditions",
+    "allergy_one": "{{count}} allergy",
+    "allergy_other": "{{count}} allergies",
+    "preference_one": "{{count}} preference",
+    "preference_other": "{{count}} preferences"
+  },
+  "chip": {
+    "youveSelected": "You've selected "
+  },
+  "nutrient": {
+    "suggestion": "Based on your conditions, we suggest watching these nutrients",
+    "suggestionFamily": "Based on their conditions, we suggest watching these nutrients",
+    "limiting": "Limiting ",
+    "boosting": ", boosting ",
+    "tracking": "Tracking ",
+    "nutrientCount_one": "{{count}} nutrient",
+    "nutrientCount_other": "{{count}} nutrients",
+    "alertSubtext": "We'll alert you when scanned products contain these.",
+    "instructions": "Choose to limit, boost, or skip each nutrient.",
+    "sectionLimit": "Nutrients to Limit",
+    "sectionBoost": "Nutrients to Boost",
+    "sectionNoChange": "No Change",
+    "sectionLimiting": "Limiting",
+    "sectionBoosting": "Boosting"
+  },
+  "progress": {
+    "next": "Next: {{label}}"
+  }
+}

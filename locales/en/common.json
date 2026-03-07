@@ -1,0 +1,109 @@
+{
+  "greeting": {
+    "morning": "Good morning",
+    "afternoon": "Good afternoon",
+    "evening": "Good evening",
+    "fallbackName": "there"
+  },
+  "buttons": {
+    "back": "Back",
+    "cancel": "Cancel",
+    "close": "Close",
+    "done": "Done",
+    "finish": "Finish",
+    "save": "Save",
+    "search": "Search",
+    "apply": "Apply",
+    "clear": "Clear",
+    "ok": "OK",
+    "next": "Next: {{stepName}}",
+    "skip": "Skip for now, I'll set this up later",
+    "editList": "Edit list",
+    "deleteSelected": "Delete selected"
+  },
+  "placeholder": {
+    "fullName": "Full name",
+    "emailAddress": "Email address",
+    "password": "Password",
+    "search": "Search..."
+  },
+  "error": {
+    "badge": "Error",
+    "title": "Error"
+  },
+  "alert": {
+    "saveFailedTitle": "Save failed"
+  },
+  "link": {
+    "signIn": "Sign In"
+  },
+  "filters": {
+    "all": "All"
+  },
+  "nutrientDirections": {
+    "limit": "Limit",
+    "boost": "Boost",
+    "noChange": "No Change"
+  },
+  "ratings": {
+    "low": "Low",
+    "moderate": "Moderate",
+    "high": "High",
+    "veryHigh": "Very High",
+    "good": "Good"
+  },
+  "nutriscoreLabels": {
+    "a": "Amazing",
+    "b": "Good",
+    "c": "OK",
+    "d": "Poor",
+    "e": "Bad"
+  },
+  "months": {
+    "full": {
+      "january": "January",
+      "february": "February",
+      "march": "March",
+      "april": "April",
+      "may": "May",
+      "june": "June",
+      "july": "July",
+      "august": "August",
+      "september": "September",
+      "october": "October",
+      "november": "November",
+      "december": "December"
+    },
+    "short": {
+      "jan": "Jan",
+      "feb": "Feb",
+      "mar": "Mar",
+      "apr": "Apr",
+      "may": "May",
+      "jun": "Jun",
+      "jul": "Jul",
+      "aug": "Aug",
+      "sep": "Sep",
+      "oct": "Oct",
+      "nov": "Nov",
+      "dec": "Dec"
+    }
+  },
+  "days": {
+    "short": {
+      "monday": "Mon",
+      "tuesday": "Tue",
+      "wednesday": "Wed",
+      "thursday": "Thu",
+      "friday": "Fri",
+      "saturday": "Sat",
+      "sunday": "Sun"
+    }
+  },
+  "ordinal": {
+    "th": "th",
+    "st": "st",
+    "nd": "nd",
+    "rd": "rd"
+  }
+}

@@ -21,6 +21,7 @@ import {
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/theme';
 import LogoFull from '../../assets/images/logo-full.svg';
@@ -47,6 +48,8 @@ const EASE_TRANSITION = {
 const PLACEHOLDER = `${Colors.primary}80`;
 
 export default function LoginScreen() {
+  const { t } = useTranslation('auth');
+  const { t: tc } = useTranslation('common');
   const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>('login');
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
@@ -99,7 +102,7 @@ export default function LoginScreen() {
     });
     setLoading(false);
     if (error) {
-      setErrorMsg('Biometric sign-in failed. Please sign in with your password.');
+      setErrorMsg(t('login.error.biometricFailed'));
     }
   }
 
@@ -111,12 +114,12 @@ export default function LoginScreen() {
     if (alreadyEnabled) return;
     const label = await getBiometricLabel();
     Alert.alert(
-      `Enable ${label}?`,
-      `Sign in faster next time using ${label}.`,
+      t('login.alert.enableBiometricTitle', { label }),
+      t('login.alert.enableBiometricBody', { label }),
       [
-        { text: 'Not Now', style: 'cancel' },
+        { text: t('login.alert.enableBiometricCancel'), style: 'cancel' },
         {
-          text: 'Enable',
+          text: t('login.alert.enableBiometricConfirm'),
           onPress: async () => {
             await enableBiometric(loginEmail, loginPassword);
           },
@@ -218,7 +221,7 @@ export default function LoginScreen() {
     setShowSignInNudge(false);
 
     if (!email || !password) {
-      setErrorMsg('Please enter your email and password.');
+      setErrorMsg(t('login.error.emptyFields'));
       return;
     }
     setLoading(true);
@@ -226,7 +229,7 @@ export default function LoginScreen() {
     setLoading(false);
     if (error) {
       if (error.message === 'Invalid login credentials') {
-        setErrorMsg('Incorrect email or password. Please try again.');
+        setErrorMsg(t('login.error.invalidCredentials'));
         setShowSignUpNudge(true);
       } else {
         setErrorMsg(error.message);
@@ -242,11 +245,11 @@ export default function LoginScreen() {
     setShowSignInNudge(false);
 
     if (!fullName.trim() || !email.trim() || !password.trim()) {
-      setErrorMsg('Please fill in all fields.');
+      setErrorMsg(t('signup.error.emptyFields'));
       return;
     }
     if (!/[a-zA-Z]/.test(password) || !/[A-Z]/.test(password) || !/\d/.test(password) || password.length < 8) {
-      setErrorMsg('Please meet all password requirements.');
+      setErrorMsg(t('signup.error.passwordRequirements'));
       return;
     }
     setLoading(true);
@@ -259,7 +262,7 @@ export default function LoginScreen() {
 
     if (error) {
       if (error.message.toLowerCase().includes('already registered')) {
-        setErrorMsg('An account with this email already exists.');
+        setErrorMsg(t('signup.error.emailAlreadyExists'));
         setShowSignInNudge(true);
       } else {
         setErrorMsg(error.message);
@@ -268,7 +271,7 @@ export default function LoginScreen() {
     }
 
     if (data.session === null) {
-      Alert.alert('Check your email', 'We sent a confirmation link. Verify your email to continue.');
+      Alert.alert(t('signup.alert.checkEmailTitle'), t('signup.alert.checkEmailBody'));
       return;
     }
     router.push('/onboarding');
@@ -277,8 +280,8 @@ export default function LoginScreen() {
   async function handleForgotPassword() {
     setErrorMsg('');
     const trimmed = email.trim();
-    if (!trimmed) { setErrorMsg('Please enter your email address.'); return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) { setErrorMsg('Please enter a valid email address.'); return; }
+    if (!trimmed) { setErrorMsg(t('forgotPassword.error.emptyEmail')); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) { setErrorMsg(t('forgotPassword.error.invalidEmail')); return; }
 
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(trimmed, {
@@ -295,8 +298,8 @@ export default function LoginScreen() {
   const isForgot = mode === 'forgot';
 
   const actionLabel = isForgot
-    ? (resetSent ? 'Back to Sign In' : 'Send Reset Link')
-    : isSignUp ? 'Create Account' : 'Sign in';
+    ? (resetSent ? t('forgotPassword.backToSignIn') : t('forgotPassword.sendResetLink'))
+    : isSignUp ? t('signup.createAccountButton') : t('login.signInButton');
 
   const actionHandler = isForgot
     ? (resetSent ? switchToLogin : handleForgotPassword)
@@ -308,14 +311,14 @@ export default function LoginScreen() {
     <>
       <View style={styles.cardHeader}>
         <Text style={styles.cardTitle}>
-          {isForgot ? 'Reset Password' : isSignUp ? 'Create Account' : 'Hello there!'}
+          {isForgot ? t('forgotPassword.title') : isSignUp ? t('signup.title') : t('login.title')}
         </Text>
         <Text style={styles.cardSubtitle}>
           {isForgot
-            ? "Enter your email and we'll send you a reset link."
+            ? t('forgotPassword.subtitle')
             : isSignUp
-              ? 'Start your healthy journey today.'
-              : 'Enter your details to sign in.'}
+              ? t('signup.subtitle')
+              : t('login.subtitle')}
         </Text>
       </View>
 
@@ -323,12 +326,12 @@ export default function LoginScreen() {
         <View style={styles.successCard}>
           <View style={styles.successIconRow}>
             <Ionicons name="checkmark-circle" size={24} color={Colors.status.positive} />
-            <Text style={styles.successTitle}>Check your inbox</Text>
+            <Text style={styles.successTitle}>{t('forgotPassword.success.title')}</Text>
           </View>
           <Text style={styles.successBody}>
-            We've sent a password reset link to{' '}
+            {t('forgotPassword.success.bodyPrefix')}
             <Text style={styles.successEmail}>{email.trim()}</Text>.
-            {'\n'}Check your spam folder if you don't see it.
+            {'\n'}{t('forgotPassword.success.bodySpam')}
           </Text>
         </View>
       ) : (
@@ -341,7 +344,7 @@ export default function LoginScreen() {
                 </View>
                 <TextInput
                   style={styles.input}
-                  placeholder="Full name"
+                  placeholder={tc('placeholder.fullName')}
                   placeholderTextColor={PLACEHOLDER}
                   autoCapitalize="words"
                   value={fullName}
@@ -359,7 +362,7 @@ export default function LoginScreen() {
             </View>
             <TextInput
               style={styles.input}
-              placeholder="Email address"
+              placeholder={tc('placeholder.emailAddress')}
               placeholderTextColor={PLACEHOLDER}
               keyboardType="email-address"
               autoCapitalize="none"
@@ -385,7 +388,7 @@ export default function LoginScreen() {
                 <TextInput
                   ref={passwordRef}
                   style={styles.input}
-                  placeholder="Password"
+                  placeholder={tc('placeholder.password')}
                   placeholderTextColor={PLACEHOLDER}
                   secureTextEntry={!showPassword}
                   value={password}
@@ -401,14 +404,14 @@ export default function LoginScreen() {
               </View>
               {isSignUp && passwordFocused && (() => {
                 const rules = [
-                  { label: 'At least ', bold: 'one letter', met: /[a-zA-Z]/.test(password) },
-                  { label: 'At least ', bold: 'one capital letter', met: /[A-Z]/.test(password) },
-                  { label: 'At least ', bold: 'one number', met: /\d/.test(password) },
-                  { label: 'Be at least ', bold: '8 characters', met: password.length >= 8 },
+                  { label: t('signup.passwordRulePrefix.atLeast'), bold: t('signup.passwordRule.oneLetter'), met: /[a-zA-Z]/.test(password) },
+                  { label: t('signup.passwordRulePrefix.atLeast'), bold: t('signup.passwordRule.oneCapital'), met: /[A-Z]/.test(password) },
+                  { label: t('signup.passwordRulePrefix.atLeast'), bold: t('signup.passwordRule.oneNumber'), met: /\d/.test(password) },
+                  { label: t('signup.passwordRulePrefix.beAtLeast'), bold: t('signup.passwordRule.minLength'), met: password.length >= 8 },
                 ];
                 return (
                   <View style={styles.pwRules}>
-                    <Text style={styles.pwRulesTitle}>Password must meet the following requirements:</Text>
+                    <Text style={styles.pwRulesTitle}>{t('signup.passwordRulesTitle')}</Text>
                     {rules.map((r) => (
                       <View key={r.bold} style={styles.pwRuleRow}>
                         <Ionicons
@@ -426,7 +429,7 @@ export default function LoginScreen() {
               })()}
               {mode === 'login' && (
                 <TouchableOpacity style={styles.forgotWrapper} activeOpacity={0.7} onPress={switchToForgot}>
-                  <Text style={styles.forgotText}>Forgotten password?</Text>
+                  <Text style={styles.forgotText}>{t('login.forgotPasswordLink')}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -438,17 +441,17 @@ export default function LoginScreen() {
         <View style={styles.errorCard}>
           <View style={styles.errorBadge}>
             <Ionicons name="warning" size={11} color="#fff" />
-            <Text style={styles.errorBadgeText}>Error</Text>
+            <Text style={styles.errorBadgeText}>{tc('error.badge')}</Text>
           </View>
           <Text style={styles.errorText}>{errorMsg}</Text>
           {showSignUpNudge && (
             <TouchableOpacity activeOpacity={0.7} onPress={switchToSignUp}>
-              <Text style={styles.errorLink}>Don't have an account? Sign Up</Text>
+              <Text style={styles.errorLink}>{t('signUpNudge')}</Text>
             </TouchableOpacity>
           )}
           {showSignInNudge && (
             <TouchableOpacity activeOpacity={0.7} onPress={switchToLogin}>
-              <Text style={styles.errorLink}>Already have an account? Sign In</Text>
+              <Text style={styles.errorLink}>{t('signInNudge')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -478,7 +481,7 @@ export default function LoginScreen() {
             size={22}
             color={Colors.secondary}
           />
-          <Text style={styles.biometricText}>Sign in with {biometricLabel}</Text>
+          <Text style={styles.biometricText}>{t('login.biometricSignIn', { label: biometricLabel })}</Text>
         </TouchableOpacity>
       )}
     </>
@@ -488,18 +491,18 @@ export default function LoginScreen() {
     <View style={styles.signUpRow}>
       {mode === 'login' ? (
         <>
-          <Text style={styles.signUpPrompt}>Don't have an account? </Text>
+          <Text style={styles.signUpPrompt}>{t('login.noAccount')}</Text>
           <TouchableOpacity activeOpacity={0.7} onPress={switchToSignUp}>
-            <Text style={styles.signUpLink}>Sign Up for Free</Text>
+            <Text style={styles.signUpLink}>{t('login.signUpFree')}</Text>
           </TouchableOpacity>
         </>
       ) : (
         <>
           <Text style={styles.signUpPrompt}>
-            {isForgot ? 'Remember your password? ' : 'Already have an account? '}
+            {isForgot ? t('forgotPassword.rememberPassword') : t('signup.hasAccount')}
           </Text>
           <TouchableOpacity activeOpacity={0.7} onPress={switchToLogin}>
-            <Text style={styles.signUpLink}>Sign In</Text>
+            <Text style={styles.signUpLink}>{tc('link.signIn')}</Text>
           </TouchableOpacity>
         </>
       )}
@@ -526,17 +529,17 @@ export default function LoginScreen() {
 
           {/* Walkers product card */}
           <View style={[desktopStyles.floatingCard, desktopStyles.productCard]}>
-            <Text style={desktopStyles.dkBrand}>Walkers</Text>
+            <Text style={desktopStyles.dkBrand}>{t('demoCard.brand')}</Text>
             <View style={desktopStyles.dkProductRow}>
               <View style={{ flex: 1, gap: 2 }}>
-                <Text style={desktopStyles.dkProductName}>Prawn Cocktail Crisps{'\n'}(Grab Bag)</Text>
-                <Text style={desktopStyles.dkWeight}>45g</Text>
+                <Text style={desktopStyles.dkProductName}>{t('demoCard.productName')}</Text>
+                <Text style={desktopStyles.dkWeight}>{t('demoCard.weight')}</Text>
               </View>
             </View>
             <View style={desktopStyles.dkNutriRow}>
-              <Text style={desktopStyles.dkNutriLabel}>Nutri-score</Text>
+              <Text style={desktopStyles.dkNutriLabel}>{t('demoCard.nutriScoreLabel')}</Text>
               <View style={desktopStyles.dkNutriBadgePoor}>
-                <Text style={desktopStyles.dkNutriBadgeText}>Poor</Text>
+                <Text style={desktopStyles.dkNutriBadgeText}>{t('demoCard.nutriScoreBadge')}</Text>
               </View>
               <View style={desktopStyles.dkNutriCircles}>
                 {(['A', 'B', 'C', 'D', 'E'] as const).map((g) => (
@@ -558,22 +561,22 @@ export default function LoginScreen() {
           {/* Glycemic impact card */}
           <View style={[desktopStyles.floatingCard, desktopStyles.impactCard]}>
             <Ionicons name="happy-outline" size={26} color={Colors.secondary} style={{ alignSelf: 'center' }} />
-            <Text style={desktopStyles.dkImpactTitle}>Glycemic impact</Text>
+            <Text style={desktopStyles.dkImpactTitle}>{t('demoCard.glycemicImpactTitle')}</Text>
             <View style={desktopStyles.dkImpactBadge}>
-              <Text style={desktopStyles.dkImpactBadgeText}>Low</Text>
+              <Text style={desktopStyles.dkImpactBadgeText}>{t('demoCard.glycemicImpactBadge')}</Text>
             </View>
           </View>
 
           {/* Harmful ingredient card */}
           <View style={[desktopStyles.floatingCard, desktopStyles.ingredientCard]}>
             <View style={desktopStyles.dkIngredientHeader}>
-              <Text style={desktopStyles.dkIngredientCount}>1 ingredient</Text>
-              <Text style={desktopStyles.dkIngredientText}> is considered </Text>
-              <Text style={desktopStyles.dkIngredientHarmful}>harmful</Text>
+              <Text style={desktopStyles.dkIngredientCount}>{t('demoCard.ingredientCount')}</Text>
+              <Text style={desktopStyles.dkIngredientText}>{t('demoCard.isConsidered')}</Text>
+              <Text style={desktopStyles.dkIngredientHarmful}>{t('demoCard.harmful')}</Text>
             </View>
             <View style={desktopStyles.dkIngredientRow}>
               <Ionicons name="close-circle" size={13} color={Colors.status.negative} />
-              <Text style={desktopStyles.dkIngredientName}>Sugar</Text>
+              <Text style={desktopStyles.dkIngredientName}>{t('demoCard.ingredientName')}</Text>
               <Ionicons name="information-circle-outline" size={13} color={Colors.secondary} />
             </View>
           </View>

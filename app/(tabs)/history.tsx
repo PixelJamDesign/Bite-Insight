@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { Colors, Shadows, Spacing } from '@/constants/theme';
@@ -125,6 +126,8 @@ function CalendarPicker({
   onCancel: () => void;
   onApply: (start: Date, end: Date) => void;
 }) {
+  const { t } = useTranslation('history');
+  const { t: tc } = useTranslation('common');
   const { width: screenWidth } = useWindowDimensions();
   // Card inner width = screen - 48px outer margin - 40px card padding
   const cellWidth = Math.floor((screenWidth - 48 - 40) / 7);
@@ -188,9 +191,9 @@ function CalendarPicker({
   }
 
   const footerLabel = !pendingStart
-    ? 'Select start date'
+    ? t('calendar.selectStartDate')
     : !pendingEnd
-    ? 'Select end date'
+    ? t('calendar.selectEndDate')
     : `${formatDateShort(pendingStart)} – ${formatDateShort(pendingEnd)}`;
 
   const canApply = !!pendingStart && !!pendingEnd;
@@ -280,7 +283,7 @@ function CalendarPicker({
             onPress={onCancel}
             activeOpacity={0.7}
           >
-            <Text style={styles.calCancelActionText}>Cancel</Text>
+            <Text style={styles.calCancelActionText}>{tc('buttons.cancel')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.calApplyBtn, !canApply && styles.calApplyBtnDisabled]}
@@ -288,7 +291,7 @@ function CalendarPicker({
             activeOpacity={0.7}
             disabled={!canApply}
           >
-            <Text style={styles.calApplyBtnText}>Apply</Text>
+            <Text style={styles.calApplyBtnText}>{tc('buttons.apply')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -340,6 +343,8 @@ function ScanCard({ scan, onPress, onDelete }: { scan: Scan; onPress: () => void
 
 // ─── HistoryScreen ─────────────────────────────────────────────────────────────
 export default function HistoryScreen() {
+  const { t } = useTranslation('history');
+  const { t: tc } = useTranslation('common');
   const { session } = useAuth();
   const router = useRouter();
   const tabBarSlide = useTabBarSlide();
@@ -448,10 +453,10 @@ export default function HistoryScreen() {
     : `${MONTH_FULL[today.getMonth()]} ${today.getFullYear()}`;
 
   const emptyMessage =
-    dateRange ? 'No scans in this range' :
-    dateTabs.find(t => t.key === selectedKey)?.specialLabel === 'Today'
-      ? 'No scans today'
-      : 'No scans on this day';
+    dateRange ? t('empty.noScansRange') :
+    dateTabs.find(tab => tab.key === selectedKey)?.specialLabel === 'Today'
+      ? t('empty.noScansToday')
+      : t('empty.noScansDay');
 
   // ── Header extension ────────────────────────────────────────────────────────
   // headerFade: 1 when calendar closed, 0 when calendar open.
@@ -479,12 +484,12 @@ export default function HistoryScreen() {
             {dateRange ? (
               <TouchableOpacity style={styles.dateRangeBtn} onPress={clearDateRange} activeOpacity={0.7}>
                 <Ionicons name="close-circle-outline" size={16} color={Colors.secondary} />
-                <Text style={styles.dateRangeBtnText}>Clear</Text>
+                <Text style={styles.dateRangeBtnText}>{tc('buttons.clear')}</Text>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity style={styles.dateRangeBtn} onPress={openDateRange} activeOpacity={0.7}>
                 <Ionicons name="calendar-outline" size={16} color={Colors.secondary} />
-                <Text style={styles.dateRangeBtnText}>Date range</Text>
+                <Text style={styles.dateRangeBtnText}>{t('dateRange.label')}</Text>
               </TouchableOpacity>
             )}
           </Animated.View>
@@ -496,7 +501,7 @@ export default function HistoryScreen() {
           >
             <TouchableOpacity style={styles.dateRangeBtn} onPress={closeDateRange} activeOpacity={0.7}>
               <Ionicons name="close" size={14} color={Colors.secondary} />
-              <Text style={styles.dateRangeBtnText}>Cancel</Text>
+              <Text style={styles.dateRangeBtnText}>{tc('buttons.cancel')}</Text>
             </TouchableOpacity>
           </Animated.View>
         </View>
@@ -506,7 +511,7 @@ export default function HistoryScreen() {
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <ScreenLayout title="Scan History" headerExtension={headerExtension}>
+    <ScreenLayout title={t('screenTitle')} headerExtension={headerExtension}>
       <View style={styles.contentOuter}>
         {/* Date tabs live here so the calOverlay (absoluteFillObject) starts at
             the same Y, aligning the calendar card with the top of the tabs. */}
@@ -531,7 +536,7 @@ export default function HistoryScreen() {
                     >
                       {tab.specialLabel ? (
                         <Text style={[styles.tabSpecial, isActive && styles.tabTextActive]}>
-                          {tab.specialLabel}
+                          {tab.specialLabel === 'Today' ? t('dateTabs.today') : t('dateTabs.yesterday')}
                         </Text>
                       ) : (
                         <Text style={[styles.tabOrdinal, isActive && styles.tabTextActive]}>
@@ -558,7 +563,7 @@ export default function HistoryScreen() {
               <Ionicons name="barcode-outline" size={64} color={Colors.secondary} />
               <Text style={styles.emptyTitle}>{emptyMessage}</Text>
               <Text style={styles.emptyText}>
-                Tap the scanner button below to scan a food label.
+                {t('empty.description')}
               </Text>
             </View>
           ) : (

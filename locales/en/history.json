@@ -1,0 +1,20 @@
+{
+  "screenTitle": "Scan History",
+  "dateTabs": {
+    "today": "Today",
+    "yesterday": "Yesterday"
+  },
+  "calendar": {
+    "selectStartDate": "Select start date",
+    "selectEndDate": "Select end date"
+  },
+  "dateRange": {
+    "label": "Date range"
+  },
+  "empty": {
+    "noScansRange": "No scans in this range",
+    "noScansToday": "No scans today",
+    "noScansDay": "No scans on this day",
+    "description": "Tap the scanner button below to scan a food label."
+  }
+}

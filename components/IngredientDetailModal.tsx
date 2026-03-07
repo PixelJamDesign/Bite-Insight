@@ -9,6 +9,7 @@ import {
   Animated,
   Easing,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Shadows } from '@/constants/theme';
 import { MenuFlaggedIcon, TickIcon } from './MenuIcons';
@@ -34,6 +35,7 @@ export function IngredientDetailModal({
   onFlag,
   showFlag = false,
 }: Props) {
+  const { t } = useTranslation('ingredients');
   const translateY = useRef(new Animated.Value(-80)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const [mounted, setMounted] = useState(false);
@@ -131,7 +133,7 @@ export function IngredientDetailModal({
 
             {/* Name */}
             <View style={styles.nameSection}>
-              <Text style={styles.doYouLike}>Do you like</Text>
+              <Text style={styles.doYouLike}>{t('detail.doYouLike')}</Text>
               <Text style={styles.ingredientName}>{displayIngredient.name}?</Text>
             </View>
 
@@ -156,7 +158,7 @@ export function IngredientDetailModal({
             {/* Did you know? */}
             {displayIngredient.fact && (
               <View style={styles.factBox}>
-                <Text style={styles.factTitle}>Did you know?</Text>
+                <Text style={styles.factTitle}>{t('detail.didYouKnow')}</Text>
                 <Text style={styles.factText}>{displayIngredient.fact}</Text>
               </View>
             )}

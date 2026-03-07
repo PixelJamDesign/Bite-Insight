@@ -19,25 +19,22 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
+import { useTranslation } from 'react-i18next';
 import { supabase, uploadAvatar, getAvatarUrl } from '@/lib/supabase';
 import { useCachedAvatar } from '@/lib/useCachedAvatar';
 import { useAuth } from '@/lib/auth';
 import { Colors, Shadows } from '@/constants/theme';
 import { CONDITION_NUTRIENT_MAP } from '@/constants/conditionNutrientMap';
+import {
+  HEALTH_CONDITION_KEYS, ALLERGY_KEYS, DIETARY_PREFERENCE_KEYS, RELATIONSHIP_KEYS,
+  normalizeHealthCondition, normalizeAllergy, normalizeDietaryPreference,
+} from '@/constants/profileOptions';
 import type { NutrientWatchlistEntry } from '@/lib/types';
 import { CameraIcon, PersonalIcon, TickIcon } from '@/components/MenuIcons';
 import Logo from '../assets/images/logo.svg';
 
 // ── Step types ────────────────────────────────────────────────────────────────
 type StepKey = 'about' | 'health' | 'nutrients' | 'allergies' | 'dietary';
-
-const STEP_META: Record<StepKey, { title: string }> = {
-  about:     { title: 'About Them' },
-  health:    { title: 'Health Conditions' },
-  nutrients: { title: 'Nutrient Watchlist' },
-  allergies: { title: 'Allergies' },
-  dietary:   { title: 'Dietary Preferences' },
-};
 
 // ── Unique nutrient type (tri-state) ─────────────────────────────────────────
 type UniqueNutrient = {
@@ -87,35 +84,6 @@ function buildUniqueNutrients(conditions: string[]): UniqueNutrient[] {
   return Array.from(map.values());
 }
 
-// ── Selection lists ───────────────────────────────────────────────────────────
-const HEALTH_CONDITIONS = [
-  'ADHD', 'Autism', "Chron's Disease", 'Diabetes', 'Eczema / Psoriasis',
-  'GERD / Acid Reflux', 'Heart Disease', 'High Cholesterol', 'Hypertension', 'IBS',
-  'Leaky Gut Syndrome', 'Lupus', 'ME / Chronic Fatigue', 'Metabolic Syndrome',
-  'Migraine / Chronic Headaches', 'Multiple Sclerosis', 'PCOS', 'Rheumatoid Arthritis',
-  'SIBO', 'Ulcerative Colitis',
-];
-
-const ALLERGIES = [
-  'Celery Allergy', 'Egg Allergy', 'Fish Allergy', 'Fructose Intolerance',
-  'Gluten Intolerance', 'Histamine Intolerance', 'Lactose Intolerance',
-  'Lupin Allergy', 'MSG Sensitivity', 'Mustard Allergy', 'Peanut Allergy',
-  'Salicylate Sensitivity', 'Sesame Allergy', 'Shellfish Allergy',
-  'Soy Allergy', 'Sulphite Sensitivity', 'Tree Nut Allergy',
-];
-
-const DIETARY_PREFERENCES = [
-  'Child-Friendly / Additive-Free', 'Clean Eating', 'Dairy-Free', 'FODMAP Diet',
-  'Low-Carb / Keto', 'High-Protein / Fitness', 'Paleo', 'Plant-Based',
-  'Post-Bariatric Surgery', 'Pregnancy-safe Diet', 'Sustainable / Eco',
-  'Weight Loss', 'Whole30', 'Vegan', 'Vegetarian',
-];
-
-const RELATIONSHIP_OPTIONS = [
-  'Partner', 'Wife', 'Husband', 'Son', 'Daughter',
-  'Mother', 'Father', 'Sister', 'Brother', 'Other',
-];
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function getInitials(name: string): string {
   return name.trim().split(/\s+/).map(n => n[0] ?? '').join('').toUpperCase().slice(0, 2) || '?';
@@ -131,6 +99,10 @@ export default function AddFamilyMemberScreen() {
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ id?: string }>();
   const isEditing = !!params.id;
+  const { t: tp } = useTranslation('profile');
+  const { t: to } = useTranslation('onboarding');
+  const { t: tpo } = useTranslation('profileOptions');
+  const { t: tc } = useTranslation('common');
 
   const [step, setStep] = useState(1);
   const [fetched, setFetched] = useState(!isEditing);
@@ -168,8 +140,8 @@ export default function AddFamilyMemberScreen() {
   const currentStepKey = stepSequence[step - 1] ?? 'about';
   const isLastStep = step === totalSteps;
   const nextStepKey = step < totalSteps ? stepSequence[step] : null;
-  const nextLabel = nextStepKey ? STEP_META[nextStepKey].title : null;
-  const stepTitle = STEP_META[currentStepKey].title;
+  const nextLabel = nextStepKey ? to(`step.${nextStepKey}`) : null;
+  const stepTitle = to(`step.${currentStepKey}`);
 
   const uniqueNutrients = useMemo(
     () => buildUniqueNutrients(healthConditions),
@@ -225,9 +197,9 @@ export default function AddFamilyMemberScreen() {
           setFullName(data.name ?? '');
           setRelationship(data.relationship ?? '');
           setExistingAvatar(getAvatarUrl(data.avatar_url));
-          setHealthConditions((data.health_conditions as string[]) ?? []);
-          setAllergies((data.allergies as string[]) ?? []);
-          setDietaryPrefs((data.dietary_preferences as string[]) ?? []);
+          setHealthConditions(((data.health_conditions as string[]) ?? []).map(normalizeHealthCondition));
+          setAllergies(((data.allergies as string[]) ?? []).map(normalizeAllergy));
+          setDietaryPrefs(((data.dietary_preferences as string[]) ?? []).map(normalizeDietaryPreference));
 
           // Load existing nutrient watchlist choices
           const existing = (data.nutrient_watchlist as NutrientWatchlistEntry[] | null) ?? [];
@@ -305,13 +277,13 @@ export default function AddFamilyMemberScreen() {
 
   // ── Avatar picker ──────────────────────────────────────────────────────────
   function pickAvatar() {
-    Alert.alert('Profile Photo', 'Choose an option', [
+    Alert.alert(tp('editProfile.avatar.alertTitle'), tp('editProfile.avatar.alertMessage'), [
       {
-        text: 'Take Photo',
+        text: tp('editProfile.avatar.takePhoto'),
         onPress: async () => {
           const { status } = await ImagePicker.requestCameraPermissionsAsync();
           if (status !== 'granted') {
-            Alert.alert('Permission needed', 'Camera access is required to take a photo.');
+            Alert.alert(tp('editProfile.avatar.permissionTitle'), tp('editProfile.avatar.permissionMessage'));
             return;
           }
           const result = await ImagePicker.launchCameraAsync({
@@ -323,7 +295,7 @@ export default function AddFamilyMemberScreen() {
         },
       },
       {
-        text: 'Choose from Library',
+        text: tp('editProfile.avatar.chooseFromLibrary'),
         onPress: async () => {
           const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],
@@ -334,14 +306,14 @@ export default function AddFamilyMemberScreen() {
           if (!result.canceled) setAvatarUri(result.assets[0].uri);
         },
       },
-      { text: 'Cancel', style: 'cancel' },
+      { text: tc('buttons.cancel'), style: 'cancel' },
     ]);
   }
 
   // ── Navigation ────────────────────────────────────────────────────────────
   function handleNext() {
     if (currentStepKey === 'about' && !fullName.trim()) {
-      Alert.alert('Name required', 'Please enter a name for this family member.');
+      Alert.alert(tp('familyMember.alert.nameRequiredTitle'), tp('familyMember.alert.nameRequiredMessage'));
       return;
     }
     setStep(s => Math.min(s + 1, totalSteps));
@@ -380,7 +352,7 @@ export default function AddFamilyMemberScreen() {
       : await supabase.from('family_profiles').insert(payload);
 
     setSaving(false);
-    if (error) Alert.alert('Save failed', error.message);
+    if (error) Alert.alert(tc('alert.saveFailedTitle'), error.message);
     else safeBack();
   }
 
@@ -405,19 +377,19 @@ export default function AddFamilyMemberScreen() {
             );
           })}
         </View>
-        {nextLabel && <Text style={styles.nextLabel}>Next: {nextLabel}</Text>}
+        {nextLabel && <Text style={styles.nextLabel}>{to('progress.next', { label: nextLabel })}</Text>}
       </View>
     );
   }
 
   // ── Chip card header ──────────────────────────────────────────────────────
-  function renderChipHeader(question: string, count: number, word: string) {
+  function renderChipHeader(question: string, count: number, countText: string) {
     return (
       <View style={styles.chipCardInfo}>
         <Text style={styles.cardTitle}>{question}</Text>
         <View style={styles.countRow}>
-          <Text style={styles.countText}>You've selected </Text>
-          <Text style={styles.countBold}>{count} {word}</Text>
+          <Text style={styles.countText}>{to('chip.youveSelected')}</Text>
+          <Text style={styles.countBold}>{countText}</Text>
         </View>
         <TouchableOpacity
           style={styles.searchLink}
@@ -430,13 +402,13 @@ export default function AddFamilyMemberScreen() {
           activeOpacity={0.7}
         >
           <Ionicons name="search-outline" size={16} color={Colors.secondary} />
-          <Text style={styles.searchLinkText}>Search</Text>
+          <Text style={styles.searchLinkText}>{tc('buttons.search')}</Text>
         </TouchableOpacity>
         {chipSearchActive && (
           <TextInput
             ref={chipSearchRef}
             style={styles.chipSearchInput}
-            placeholder="Search..."
+            placeholder={tc('placeholder.search')}
             placeholderTextColor={`${Colors.primary}50`}
             selectionColor={Colors.primary}
             value={chipSearch}
@@ -451,28 +423,29 @@ export default function AddFamilyMemberScreen() {
 
   // ── Chip grid ─────────────────────────────────────────────────────────────
   function renderChips(
-    items: string[],
+    keys: readonly string[],
+    labelPrefix: string,
     selected: string[],
-    onToggle: (item: string) => void,
+    onToggle: (key: string) => void,
   ) {
     const filtered = chipSearch.trim()
-      ? items.filter(i => i.toLowerCase().includes(chipSearch.toLowerCase()))
-      : items;
+      ? keys.filter(k => tpo(`${labelPrefix}.${k}`).toLowerCase().includes(chipSearch.toLowerCase()))
+      : keys;
     return (
       <View style={styles.chipWrap}>
-        {filtered.map(item => {
-          const active = selected.includes(item);
+        {filtered.map(key => {
+          const active = selected.includes(key);
           return (
             <TouchableOpacity
-              key={item}
+              key={key}
               style={[styles.chip, active && styles.chipActive]}
-              onPress={() => onToggle(item)}
+              onPress={() => onToggle(key)}
               activeOpacity={0.75}
             >
               <View style={[styles.chipCheck, active && styles.chipCheckActive]}>
                 {active && <TickIcon size={14} color="#fff" />}
               </View>
-              <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>{item}</Text>
+              <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>{tpo(`${labelPrefix}.${key}`)}</Text>
             </TouchableOpacity>
           );
         })}
@@ -495,21 +468,21 @@ export default function AddFamilyMemberScreen() {
             onPress={() => setNutrientChoice(n.offKey, 'limit')}
             activeOpacity={0.75}
           >
-            <Text style={[styles.segmentText, styles.segmentTextLimit, choice === 'limit' && styles.segmentTextActive]}>Limit</Text>
+            <Text style={[styles.segmentText, styles.segmentTextLimit, choice === 'limit' && styles.segmentTextActive]}>{tc('nutrientDirections.limit')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.segmentBtn, choice === 'boost' && styles.segmentBtnBoostActive]}
             onPress={() => setNutrientChoice(n.offKey, 'boost')}
             activeOpacity={0.75}
           >
-            <Text style={[styles.segmentText, styles.segmentTextBoost, choice === 'boost' && styles.segmentTextActive]}>Boost</Text>
+            <Text style={[styles.segmentText, styles.segmentTextBoost, choice === 'boost' && styles.segmentTextActive]}>{tc('nutrientDirections.boost')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.segmentBtn, choice === 'none' && styles.segmentBtnNoneActive]}
             onPress={() => setNutrientChoice(n.offKey, 'none')}
             activeOpacity={0.75}
           >
-            <Text style={[styles.segmentText, styles.segmentTextNone, choice === 'none' && styles.segmentTextNoneActive]}>No Change</Text>
+            <Text style={[styles.segmentText, styles.segmentTextNone, choice === 'none' && styles.segmentTextNoneActive]}>{tc('nutrientDirections.noChange')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -522,16 +495,16 @@ export default function AddFamilyMemberScreen() {
       <View style={styles.card}>
         <View style={styles.chipCardInfo}>
           <Text style={styles.cardTitle}>
-            Based on their conditions, we suggest watching these nutrients
+            {to('nutrient.suggestionFamily')}
           </Text>
           <View style={styles.countRow}>
-            <Text style={styles.countText}>Tracking </Text>
+            <Text style={styles.countText}>{to('nutrient.tracking')}</Text>
             <Text style={styles.countBold}>
-              {activeCount} nutrient{activeCount !== 1 ? 's' : ''}
+              {to('nutrient.nutrientCount', { count: activeCount })}
             </Text>
           </View>
           <Text style={styles.nutrientSubtext}>
-            Choose to limit, boost, or skip each nutrient.
+            {to('nutrient.instructions')}
           </Text>
         </View>
 
@@ -540,7 +513,7 @@ export default function AddFamilyMemberScreen() {
             <View style={styles.sectionHeaderRow}>
               <Ionicons name="arrow-down-circle" size={16} color={Colors.status.negative} />
               <Text style={[styles.sectionHeader, { color: Colors.status.negative }]}>
-                Limiting
+                {to('nutrient.sectionLimiting')}
               </Text>
             </View>
             {limitNutrients.map(renderNutrientRow)}
@@ -552,7 +525,7 @@ export default function AddFamilyMemberScreen() {
             <View style={styles.sectionHeaderRow}>
               <Ionicons name="arrow-up-circle" size={16} color={Colors.status.positive} />
               <Text style={[styles.sectionHeader, { color: Colors.status.positive }]}>
-                Boosting
+                {to('nutrient.sectionBoosting')}
               </Text>
             </View>
             {boostNutrients.map(renderNutrientRow)}
@@ -564,7 +537,7 @@ export default function AddFamilyMemberScreen() {
             <View style={styles.sectionHeaderRow}>
               <Ionicons name="remove-circle" size={16} color={Colors.secondary} />
               <Text style={[styles.sectionHeader, { color: Colors.secondary }]}>
-                No Change
+                {to('nutrient.sectionNoChange')}
               </Text>
             </View>
             {noChangeNutrients.map(renderNutrientRow)}
@@ -632,12 +605,12 @@ export default function AddFamilyMemberScreen() {
               <View style={[styles.card, styles.cardWithAvatar]}>
                 <View style={styles.cardHeader}>
                   <Text style={styles.cardTitle}>
-                    {isEditing ? 'Update their details' : 'Tell us about them'}
+                    {isEditing ? tp('familyMember.aboutTitleEdit') : tp('familyMember.aboutTitleAdd')}
                   </Text>
                   <Text style={styles.cardSubtitle}>
                     {isEditing
-                      ? 'Edit the profile for your family member.'
-                      : 'Add details for your family member.'}
+                      ? tp('familyMember.aboutSubtitleEdit')
+                      : tp('familyMember.aboutSubtitleAdd')}
                   </Text>
                 </View>
 
@@ -646,7 +619,7 @@ export default function AddFamilyMemberScreen() {
                     <PersonalIcon size={16} color={Colors.primary} />
                     <TextInput
                       style={[styles.inputFieldInner, fullName ? styles.inputFieldBold : null]}
-                      placeholder="Full name"
+                      placeholder={tc('placeholder.fullName')}
                       placeholderTextColor={`${Colors.secondary}`}
                       selectionColor={Colors.primary}
                       autoCapitalize="words"
@@ -663,19 +636,19 @@ export default function AddFamilyMemberScreen() {
                   </View>
 
                   {/* Relationship chips */}
-                  <Text style={styles.fieldLabel}>Relationship</Text>
+                  <Text style={styles.fieldLabel}>{tp('familyMember.field.relationship')}</Text>
                   <View style={styles.relationshipWrap}>
-                    {RELATIONSHIP_OPTIONS.map(option => {
-                      const active = relationship === option;
+                    {RELATIONSHIP_KEYS.map(key => {
+                      const active = relationship === key;
                       return (
                         <TouchableOpacity
-                          key={option}
+                          key={key}
                           style={[styles.relationshipChip, active && styles.relationshipChipActive]}
-                          onPress={() => setRelationship(active ? '' : option)}
+                          onPress={() => setRelationship(active ? '' : key)}
                           activeOpacity={0.75}
                         >
                           <Text style={[styles.relationshipChipLabel, active && styles.relationshipChipLabelActive]}>
-                            {option}
+                            {tpo(`relationships.${key}`)}
                           </Text>
                         </TouchableOpacity>
                       );
@@ -690,12 +663,12 @@ export default function AddFamilyMemberScreen() {
           {currentStepKey === 'health' && (
             <View style={styles.card}>
               {renderChipHeader(
-                'Do they have any health conditions?',
+                to('question.healthConditionFamily'),
                 healthConditions.length,
-                `condition${healthConditions.length !== 1 ? 's' : ''}`,
+                to('count.condition', { count: healthConditions.length }),
               )}
-              {renderChips(HEALTH_CONDITIONS, healthConditions, item =>
-                setHealthConditions(prev => toggle(prev, item))
+              {renderChips(HEALTH_CONDITION_KEYS, 'healthConditions', healthConditions, key =>
+                setHealthConditions(prev => toggle(prev, key))
               )}
             </View>
           )}
@@ -707,12 +680,12 @@ export default function AddFamilyMemberScreen() {
           {currentStepKey === 'allergies' && (
             <View style={styles.card}>
               {renderChipHeader(
-                'Do they have any allergies?',
+                to('question.allergiesFamily'),
                 allergies.length,
-                `allerg${allergies.length !== 1 ? 'ies' : 'y'}`,
+                to('count.allergy', { count: allergies.length }),
               )}
-              {renderChips(ALLERGIES, allergies, item =>
-                setAllergies(prev => toggle(prev, item))
+              {renderChips(ALLERGY_KEYS, 'allergies', allergies, key =>
+                setAllergies(prev => toggle(prev, key))
               )}
             </View>
           )}
@@ -721,12 +694,12 @@ export default function AddFamilyMemberScreen() {
           {currentStepKey === 'dietary' && (
             <View style={styles.card}>
               {renderChipHeader(
-                'Do they have any dietary preferences?',
+                to('question.dietaryPreferencesFamily'),
                 dietaryPrefs.length,
-                `preference${dietaryPrefs.length !== 1 ? 's' : ''}`,
+                to('count.preference', { count: dietaryPrefs.length }),
               )}
-              {renderChips(DIETARY_PREFERENCES, dietaryPrefs, item =>
-                setDietaryPrefs(prev => toggle(prev, item))
+              {renderChips(DIETARY_PREFERENCE_KEYS, 'dietaryPreferences', dietaryPrefs, key =>
+                setDietaryPrefs(prev => toggle(prev, key))
               )}
             </View>
           )}
@@ -743,7 +716,7 @@ export default function AddFamilyMemberScreen() {
           />
           <View style={[styles.footerButtons, { paddingBottom: insets.bottom + 12 }]}>
             <TouchableOpacity style={styles.backBtn} onPress={handleBack} activeOpacity={0.8}>
-              <Text style={styles.backBtnText}>{step === 1 ? 'Cancel' : 'Back'}</Text>
+              <Text style={styles.backBtnText}>{step === 1 ? tc('buttons.cancel') : tc('buttons.back')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -757,8 +730,8 @@ export default function AddFamilyMemberScreen() {
               ) : (
                 <Text style={styles.nextBtnText} numberOfLines={1} adjustsFontSizeToFit>
                   {isLastStep
-                    ? (isEditing ? 'Save Changes' : 'Finish')
-                    : `Next: ${nextLabel}`}
+                    ? (isEditing ? tp('editProfile.saveChanges') : tc('buttons.finish'))
+                    : to('progress.next', { label: nextLabel })}
                 </Text>
               )}
             </TouchableOpacity>

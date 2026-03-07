@@ -19,25 +19,22 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
+import { useTranslation } from 'react-i18next';
 import { supabase, getAvatarUrl, uploadAvatar } from '@/lib/supabase';
 import { useCachedAvatar } from '@/lib/useCachedAvatar';
 import { useAuth } from '@/lib/auth';
 import { Colors, Shadows } from '@/constants/theme';
 import { CONDITION_NUTRIENT_MAP } from '@/constants/conditionNutrientMap';
+import {
+  HEALTH_CONDITION_KEYS, ALLERGY_KEYS, DIETARY_PREFERENCE_KEYS,
+  normalizeHealthCondition, normalizeAllergy, normalizeDietaryPreference,
+} from '@/constants/profileOptions';
 import type { NutrientWatchlistEntry } from '@/lib/types';
 import { CameraIcon, PersonalIcon, EmailIcon, BirthdayIcon, TickIcon } from '@/components/MenuIcons';
 import Logo from '../assets/images/logo.svg';
 
 // ── Step types ────────────────────────────────────────────────────────────────
 type StepKey = 'about' | 'health' | 'nutrients' | 'allergies' | 'dietary';
-
-const STEP_META: Record<StepKey, { title: string }> = {
-  about:     { title: 'About You' },
-  health:    { title: 'Health Conditions' },
-  nutrients: { title: 'Nutrient Watchlist' },
-  allergies: { title: 'Allergies' },
-  dietary:   { title: 'Dietary Preferences' },
-};
 
 // ── Nutrient types ──────────────────────────────────────────────────────────
 type UniqueNutrient = {
@@ -86,29 +83,6 @@ function buildUniqueNutrients(conditions: string[]): UniqueNutrient[] {
   return Array.from(map.values());
 }
 
-// ── Selection lists ───────────────────────────────────────────────────────────
-const HEALTH_CONDITIONS = [
-  'ADHD', 'Autism', "Chron's Disease", 'Diabetes', 'Eczema / Psoriasis',
-  'GERD / Acid Reflux', 'Heart Disease', 'High Cholesterol', 'Hypertension', 'IBS',
-  'Leaky Gut Syndrome', 'Lupus', 'ME / Chronic Fatigue', 'Metabolic Syndrome',
-  'Migraine / Chronic Headaches', 'Multiple Sclerosis', 'PCOS', 'Rheumatoid Arthritis',
-  'SIBO', 'Ulcerative Colitis',
-];
-
-const ALLERGIES = [
-  'Egg Allergy', 'Fructose Intolerance', 'Gluten Intolerance', 'Histamine Intolerance',
-  'Lactose Intolerance', 'MSG Sensitivity', 'Peanut Allergy', 'Salicylate Sensitivity',
-  'Sesame Allergy', 'Shellfish Allergy', 'Soy Allergy', 'Sulphite Sensitivity',
-  'Tree Nut Allergy',
-];
-
-const DIETARY_PREFERENCES = [
-  'Child-Friendly / Additive-Free', 'Clean Eating', 'Dairy-Free', 'FODMAP Diet',
-  'Low-Carb / Keto', 'High-Protein / Fitness', 'Paleo', 'Plant-Based',
-  'Post-Bariatric Surgery', 'Pregnancy-safe Diet', 'Sustainable / Eco',
-  'Weight Loss', 'Whole30', 'Vegan', 'Vegetarian',
-];
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function getInitials(name: string): string {
   return name.trim().split(/\s+/).map(n => n[0] ?? '').join('').toUpperCase().slice(0, 2) || '?';
@@ -122,6 +96,10 @@ function toggle(list: string[], item: string): string[] {
 export default function EditProfileScreen() {
   const { session, setAvatarUrl: setContextAvatarUrl } = useAuth();
   const insets = useSafeAreaInsets();
+  const { t: tp } = useTranslation('profile');
+  const { t: to } = useTranslation('onboarding');
+  const { t: tpo } = useTranslation('profileOptions');
+  const { t: tc } = useTranslation('common');
 
   const [step, setStep] = useState(1);
   const [fetched, setFetched] = useState(false);
@@ -159,8 +137,8 @@ export default function EditProfileScreen() {
   const currentStepKey = stepSequence[step - 1] ?? 'about';
   const isLastStep = step === totalSteps;
   const nextStepKey = step < totalSteps ? stepSequence[step] : null;
-  const nextLabel = nextStepKey ? STEP_META[nextStepKey].title : null;
-  const stepTitle = STEP_META[currentStepKey].title;
+  const nextLabel = nextStepKey ? to(`step.${nextStepKey}`) : null;
+  const stepTitle = to(`step.${currentStepKey}`);
 
   const uniqueNutrients = useMemo(
     () => buildUniqueNutrients(healthConditions),
@@ -209,9 +187,9 @@ export default function EditProfileScreen() {
         if (data) {
           setFullName(data.full_name ?? '');
           setExistingAvatar(getAvatarUrl(data.avatar_url));
-          setHealthConditions((data.health_conditions as string[]) ?? []);
-          setAllergies((data.allergies as string[]) ?? []);
-          setDietaryPrefs((data.dietary_preferences as string[]) ?? []);
+          setHealthConditions(((data.health_conditions as string[]) ?? []).map(normalizeHealthCondition));
+          setAllergies(((data.allergies as string[]) ?? []).map(normalizeAllergy));
+          setDietaryPrefs(((data.dietary_preferences as string[]) ?? []).map(normalizeDietaryPreference));
           setAge(data.age != null ? String(data.age) : '');
 
           // Pre-load existing nutrient watchlist choices
@@ -292,13 +270,13 @@ export default function EditProfileScreen() {
 
   // ── Avatar picker ────────────────────────────────────────────────────────────
   function pickAvatar() {
-    Alert.alert('Profile Photo', 'Choose an option', [
+    Alert.alert(tp('editProfile.avatar.alertTitle'), tp('editProfile.avatar.alertMessage'), [
       {
-        text: 'Take Photo',
+        text: tp('editProfile.avatar.takePhoto'),
         onPress: async () => {
           const { status } = await ImagePicker.requestCameraPermissionsAsync();
           if (status !== 'granted') {
-            Alert.alert('Permission needed', 'Camera access is required to take a photo.');
+            Alert.alert(tp('editProfile.avatar.permissionTitle'), tp('editProfile.avatar.permissionMessage'));
             return;
           }
           const result = await ImagePicker.launchCameraAsync({
@@ -310,7 +288,7 @@ export default function EditProfileScreen() {
         },
       },
       {
-        text: 'Choose from Library',
+        text: tp('editProfile.avatar.chooseFromLibrary'),
         onPress: async () => {
           const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],
@@ -321,14 +299,14 @@ export default function EditProfileScreen() {
           if (!result.canceled) setAvatarUri(result.assets[0].uri);
         },
       },
-      { text: 'Cancel', style: 'cancel' },
+      { text: tc('buttons.cancel'), style: 'cancel' },
     ]);
   }
 
   // ── Navigation ───────────────────────────────────────────────────────────────
   function handleNext() {
     if (currentStepKey === 'about' && !fullName.trim()) {
-      Alert.alert('Name required', 'Please enter your full name.');
+      Alert.alert(tp('editProfile.alert.nameRequiredTitle'), tp('editProfile.alert.nameRequiredMessage'));
       return;
     }
     setStep(s => Math.min(s + 1, totalSteps));
@@ -367,7 +345,7 @@ export default function EditProfileScreen() {
       .eq('id', session.user.id);
 
     setSaving(false);
-    if (error) Alert.alert('Save failed', error.message);
+    if (error) Alert.alert(tc('alert.saveFailedTitle'), error.message);
     else safeBack();
   }
 
@@ -392,19 +370,19 @@ export default function EditProfileScreen() {
             );
           })}
         </View>
-        {nextLabel && <Text style={styles.nextLabel}>Next: {nextLabel}</Text>}
+        {nextLabel && <Text style={styles.nextLabel}>{to('progress.next', { label: nextLabel })}</Text>}
       </View>
     );
   }
 
   // ── Chip card header ─────────────────────────────────────────────────────────
-  function renderChipHeader(question: string, count: number, word: string) {
+  function renderChipHeader(question: string, count: number, countText: string) {
     return (
       <View style={styles.chipCardInfo}>
         <Text style={styles.cardTitle}>{question}</Text>
         <View style={styles.countRow}>
-          <Text style={styles.countText}>You've selected </Text>
-          <Text style={styles.countBold}>{count} {word}</Text>
+          <Text style={styles.countText}>{to('chip.youveSelected')}</Text>
+          <Text style={styles.countBold}>{countText}</Text>
         </View>
         <TouchableOpacity
           style={styles.searchLink}
@@ -417,13 +395,13 @@ export default function EditProfileScreen() {
           activeOpacity={0.7}
         >
           <Ionicons name="search-outline" size={16} color={Colors.secondary} />
-          <Text style={styles.searchLinkText}>Search</Text>
+          <Text style={styles.searchLinkText}>{tc('buttons.search')}</Text>
         </TouchableOpacity>
         {chipSearchActive && (
           <TextInput
             ref={chipSearchRef}
             style={styles.chipSearchInput}
-            placeholder="Search..."
+            placeholder={tc('placeholder.search')}
             placeholderTextColor={`${Colors.primary}50`}
             selectionColor={Colors.primary}
             value={chipSearch}
@@ -438,28 +416,29 @@ export default function EditProfileScreen() {
 
   // ── Chip grid ────────────────────────────────────────────────────────────────
   function renderChips(
-    items: string[],
+    keys: readonly string[],
+    labelPrefix: string,
     selected: string[],
-    onToggle: (item: string) => void,
+    onToggle: (key: string) => void,
   ) {
     const filtered = chipSearch.trim()
-      ? items.filter(i => i.toLowerCase().includes(chipSearch.toLowerCase()))
-      : items;
+      ? keys.filter(k => tpo(`${labelPrefix}.${k}`).toLowerCase().includes(chipSearch.toLowerCase()))
+      : keys;
     return (
       <View style={styles.chipWrap}>
-        {filtered.map(item => {
-          const active = selected.includes(item);
+        {filtered.map(key => {
+          const active = selected.includes(key);
           return (
             <TouchableOpacity
-              key={item}
+              key={key}
               style={[styles.chip, active && styles.chipActive]}
-              onPress={() => onToggle(item)}
+              onPress={() => onToggle(key)}
               activeOpacity={0.75}
             >
               <View style={[styles.chipCheck, active && styles.chipCheckActive]}>
                 {active && <TickIcon size={14} color="#fff" />}
               </View>
-              <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>{item}</Text>
+              <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>{tpo(`${labelPrefix}.${key}`)}</Text>
             </TouchableOpacity>
           );
         })}
@@ -483,7 +462,7 @@ export default function EditProfileScreen() {
             activeOpacity={0.75}
           >
             <Text style={[styles.segmentText, styles.segmentTextLimit, choice === 'limit' && styles.segmentTextActive]}>
-              Limit
+              {tc('nutrientDirections.limit')}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -492,7 +471,7 @@ export default function EditProfileScreen() {
             activeOpacity={0.75}
           >
             <Text style={[styles.segmentText, styles.segmentTextBoost, choice === 'boost' && styles.segmentTextActive]}>
-              Boost
+              {tc('nutrientDirections.boost')}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -501,7 +480,7 @@ export default function EditProfileScreen() {
             activeOpacity={0.75}
           >
             <Text style={[styles.segmentText, styles.segmentTextNone, choice === 'none' && styles.segmentTextNoneActive]}>
-              No Change
+              {tc('nutrientDirections.noChange')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -514,16 +493,16 @@ export default function EditProfileScreen() {
       <View style={styles.card}>
         <View style={styles.chipCardInfo}>
           <Text style={styles.cardTitle}>
-            Based on your conditions, we suggest watching these nutrients
+            {to('nutrient.suggestion')}
           </Text>
           <View style={styles.countRow}>
-            <Text style={styles.countText}>Limiting </Text>
+            <Text style={styles.countText}>{to('nutrient.limiting')}</Text>
             <Text style={styles.countBold}>{limitNutrients.length}</Text>
-            <Text style={styles.countText}>, boosting </Text>
+            <Text style={styles.countText}>{to('nutrient.boosting')}</Text>
             <Text style={styles.countBold}>{boostNutrients.length}</Text>
           </View>
           <Text style={styles.nutrientSubtext}>
-            We'll alert you when scanned products contain these.
+            {to('nutrient.alertSubtext')}
           </Text>
         </View>
 
@@ -532,7 +511,7 @@ export default function EditProfileScreen() {
             <View style={styles.sectionHeaderRow}>
               <Ionicons name="arrow-down-circle" size={16} color={Colors.status.negative} />
               <Text style={[styles.sectionHeader, { color: Colors.status.negative }]}>
-                Nutrients to Limit
+                {to('nutrient.sectionLimit')}
               </Text>
             </View>
             {limitNutrients.map(renderNutrientRow)}
@@ -544,7 +523,7 @@ export default function EditProfileScreen() {
             <View style={styles.sectionHeaderRow}>
               <Ionicons name="arrow-up-circle" size={16} color={Colors.status.positive} />
               <Text style={[styles.sectionHeader, { color: Colors.status.positive }]}>
-                Nutrients to Boost
+                {to('nutrient.sectionBoost')}
               </Text>
             </View>
             {boostNutrients.map(renderNutrientRow)}
@@ -556,7 +535,7 @@ export default function EditProfileScreen() {
             <View style={styles.sectionHeaderRow}>
               <Ionicons name="remove-circle" size={16} color={`${Colors.primary}50`} />
               <Text style={[styles.sectionHeader, { color: `${Colors.primary}50` }]}>
-                No Change
+                {to('nutrient.sectionNoChange')}
               </Text>
             </View>
             {noChangeNutrients.map(renderNutrientRow)}
@@ -624,8 +603,8 @@ export default function EditProfileScreen() {
 
               <View style={[styles.card, styles.cardWithAvatar]}>
                 <View style={styles.cardHeader}>
-                  <Text style={styles.cardTitle}>Tell us about yourself</Text>
-                  <Text style={styles.cardSubtitle}>Update your profile information.</Text>
+                  <Text style={styles.cardTitle}>{tp('editProfile.aboutTitle')}</Text>
+                  <Text style={styles.cardSubtitle}>{tp('editProfile.aboutSubtitle')}</Text>
                 </View>
 
                 <View style={styles.fields}>
@@ -633,7 +612,7 @@ export default function EditProfileScreen() {
                     <PersonalIcon size={16} color={Colors.primary} />
                     <TextInput
                       style={[styles.inputFieldInner, fullName ? styles.inputFieldBold : null]}
-                      placeholder="Full name"
+                      placeholder={tc('placeholder.fullName')}
                       placeholderTextColor={`${Colors.secondary}`}
                       selectionColor={Colors.primary}
                       autoCapitalize="words"
@@ -661,7 +640,7 @@ export default function EditProfileScreen() {
                     <BirthdayIcon size={20} color={Colors.primary} />
                     <TextInput
                       style={[styles.inputFieldInner, age ? styles.inputFieldBold : null]}
-                      placeholder="Your age (optional)"
+                      placeholder={tp('editProfile.placeholder.age')}
                       placeholderTextColor={`${Colors.secondary}`}
                       selectionColor={Colors.primary}
                       keyboardType="number-pad"
@@ -685,12 +664,12 @@ export default function EditProfileScreen() {
           {currentStepKey === 'health' && (
             <View style={styles.card}>
               {renderChipHeader(
-                'Do you have any health condition?',
+                to('question.healthCondition'),
                 healthConditions.length,
-                `condition${healthConditions.length !== 1 ? 's' : ''}`,
+                to('count.condition', { count: healthConditions.length }),
               )}
-              {renderChips(HEALTH_CONDITIONS, healthConditions, item =>
-                setHealthConditions(prev => toggle(prev, item))
+              {renderChips(HEALTH_CONDITION_KEYS, 'healthConditions', healthConditions, key =>
+                setHealthConditions(prev => toggle(prev, key))
               )}
             </View>
           )}
@@ -702,12 +681,12 @@ export default function EditProfileScreen() {
           {currentStepKey === 'allergies' && (
             <View style={styles.card}>
               {renderChipHeader(
-                'Do you have any allergies?',
+                to('question.allergies'),
                 allergies.length,
-                `allerg${allergies.length !== 1 ? 'ies' : 'y'}`,
+                to('count.allergy', { count: allergies.length }),
               )}
-              {renderChips(ALLERGIES, allergies, item =>
-                setAllergies(prev => toggle(prev, item))
+              {renderChips(ALLERGY_KEYS, 'allergies', allergies, key =>
+                setAllergies(prev => toggle(prev, key))
               )}
             </View>
           )}
@@ -716,12 +695,12 @@ export default function EditProfileScreen() {
           {currentStepKey === 'dietary' && (
             <View style={styles.card}>
               {renderChipHeader(
-                'Do you have any dietary preferences?',
+                to('question.dietaryPreferences'),
                 dietaryPrefs.length,
-                `preference${dietaryPrefs.length !== 1 ? 's' : ''}`,
+                to('count.preference', { count: dietaryPrefs.length }),
               )}
-              {renderChips(DIETARY_PREFERENCES, dietaryPrefs, item =>
-                setDietaryPrefs(prev => toggle(prev, item))
+              {renderChips(DIETARY_PREFERENCE_KEYS, 'dietaryPreferences', dietaryPrefs, key =>
+                setDietaryPrefs(prev => toggle(prev, key))
               )}
             </View>
           )}
@@ -738,7 +717,7 @@ export default function EditProfileScreen() {
           />
           <View style={[styles.footerButtons, { paddingBottom: insets.bottom + 12 }]}>
             <TouchableOpacity style={styles.backBtn} onPress={handleBack} activeOpacity={0.8}>
-              <Text style={styles.backBtnText}>{step === 1 ? 'Cancel' : 'Back'}</Text>
+              <Text style={styles.backBtnText}>{step === 1 ? tc('buttons.cancel') : tc('buttons.back')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -751,7 +730,7 @@ export default function EditProfileScreen() {
                 <ActivityIndicator color="#fff" />
               ) : (
                 <Text style={styles.nextBtnText} numberOfLines={1} adjustsFontSizeToFit>
-                  {isLastStep ? 'Save Changes' : `Next: ${nextLabel}`}
+                  {isLastStep ? tp('editProfile.saveChanges') : to('progress.next', { label: nextLabel })}
                 </Text>
               )}
             </TouchableOpacity>

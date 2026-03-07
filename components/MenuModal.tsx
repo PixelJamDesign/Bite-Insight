@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -99,11 +100,12 @@ function NavItem({ icon, label, onPress, chevron = false, plus = false }: NavIte
 }
 
 function Footer() {
+  const { t } = useTranslation('menu');
   return (
     <View style={styles.footer}>
-      <Text style={styles.footerText}>ver. 1.0.0</Text>
+      <Text style={styles.footerText}>{t('footer.version')}</Text>
       <TouchableOpacity activeOpacity={0.7}>
-        <Text style={[styles.footerText, styles.footerLink]}>Report a problem</Text>
+        <Text style={[styles.footerText, styles.footerLink]}>{t('footer.reportProblem')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -113,6 +115,8 @@ function Footer() {
 // ─── Sub-screens ──────────────────────────────────────────────────────────────
 
 function IngredientsScreen({ goBack, onGo }: { goBack: () => void; onGo: (route: any) => void }) {
+  const { t } = useTranslation('menu');
+  const { t: tc } = useTranslation('common');
   const { showUpsell } = useUpsellSheet();
   const { isPlus } = useSubscription();
   function goTo(tab: string) {
@@ -123,20 +127,22 @@ function IngredientsScreen({ goBack, onGo }: { goBack: () => void; onGo: (route:
       <View style={styles.subHeader}>
         <TouchableOpacity style={styles.backBtn} onPress={goBack} activeOpacity={0.7}>
           <MenuArrowLeftIcon color={Colors.secondary} size={16} />
-          <Text style={styles.backText}>Back</Text>
+          <Text style={styles.backText}>{tc('buttons.back')}</Text>
         </TouchableOpacity>
-        <Text style={styles.subTitle}>My Ingredients</Text>
+        <Text style={styles.subTitle}>{t('ingredients.title')}</Text>
       </View>
       <View style={styles.navList}>
-        <NavItem icon={<MenuLikedIcon color={Colors.secondary} size={16} />} label="Liked Ingredients" onPress={() => goTo('liked')} chevron />
-        <NavItem icon={<MenuDislikedIcon color={Colors.secondary} size={16} />} label="Disliked Ingredients" onPress={() => goTo('disliked')} chevron />
-        <NavItem icon={<MenuFlaggedIcon color={Colors.secondary} size={18} />} label="Flagged Ingredients" onPress={isPlus ? () => goTo('flagged') : showUpsell} chevron plus={!isPlus} />
+        <NavItem icon={<MenuLikedIcon color={Colors.secondary} size={16} />} label={t('ingredients.liked')} onPress={() => goTo('liked')} chevron />
+        <NavItem icon={<MenuDislikedIcon color={Colors.secondary} size={16} />} label={t('ingredients.disliked')} onPress={() => goTo('disliked')} chevron />
+        <NavItem icon={<MenuFlaggedIcon color={Colors.secondary} size={18} />} label={t('ingredients.flagged')} onPress={isPlus ? () => goTo('flagged') : showUpsell} chevron plus={!isPlus} />
       </View>
     </>
   );
 }
 
 function AccountScreen({ goBack, onGo, onNavigate }: { goBack: () => void; onGo: (route: any) => void; onNavigate: (s: MenuScreen) => void }) {
+  const { t } = useTranslation('menu');
+  const { t: tc } = useTranslation('common');
   const { showUpsell } = useUpsellSheet();
   const { showMyPlan } = useMyPlanSheet();
   const { isPlus } = useSubscription();
@@ -145,25 +151,27 @@ function AccountScreen({ goBack, onGo, onNavigate }: { goBack: () => void; onGo:
       <View style={styles.subHeader}>
         <TouchableOpacity style={styles.backBtn} onPress={goBack} activeOpacity={0.7}>
           <MenuArrowLeftIcon color={Colors.secondary} size={16} />
-          <Text style={styles.backText}>Back</Text>
+          <Text style={styles.backText}>{tc('buttons.back')}</Text>
         </TouchableOpacity>
-        <Text style={styles.subTitle}>My Account</Text>
+        <Text style={styles.subTitle}>{t('account.title')}</Text>
       </View>
       <View style={styles.navList}>
-        <NavItem icon={<MenuPersonalIcon color={Colors.secondary} />} label="Edit My Details" onPress={() => onGo('/edit-profile')} />
-        <NavItem icon={<MenuFamilyIcon color={Colors.secondary} />} label="Family Members" onPress={isPlus ? () => onGo('/family-members') : showUpsell} chevron plus={!isPlus} />
+        <NavItem icon={<MenuPersonalIcon color={Colors.secondary} />} label={t('account.editDetails')} onPress={() => onGo('/edit-profile')} />
+        <NavItem icon={<MenuFamilyIcon color={Colors.secondary} />} label={t('account.familyMembers')} onPress={isPlus ? () => onGo('/family-members') : showUpsell} chevron plus={!isPlus} />
         <NavItem
           icon={<BiteInsightPlusIcon width={22} height={22} />}
-          label="Bite Insight+"
+          label={t('account.biteInsightPlus')}
           onPress={isPlus ? showMyPlan : showUpsell}
         />
-        <NavItem icon={<MenuLockIcon color={Colors.secondary} />} label="Change password" onPress={() => onNavigate('password')} chevron />
+        <NavItem icon={<MenuLockIcon color={Colors.secondary} />} label={t('account.changePassword')} onPress={() => onNavigate('password')} chevron />
       </View>
     </>
   );
 }
 
 function SettingsScreen({ goBack, onNavigate }: { goBack: () => void; onNavigate: (s: MenuScreen) => void }) {
+  const { t } = useTranslation('menu');
+  const { t: tc } = useTranslation('common');
   const { isPlus } = useSubscription();
   const { showUpsell } = useUpsellSheet();
   return (
@@ -171,21 +179,21 @@ function SettingsScreen({ goBack, onNavigate }: { goBack: () => void; onNavigate
       <View style={styles.subHeader}>
         <TouchableOpacity style={styles.backBtn} onPress={goBack} activeOpacity={0.7}>
           <MenuArrowLeftIcon color={Colors.secondary} size={16} />
-          <Text style={styles.backText}>Back</Text>
+          <Text style={styles.backText}>{tc('buttons.back')}</Text>
         </TouchableOpacity>
-        <Text style={styles.subTitle}>Settings</Text>
+        <Text style={styles.subTitle}>{t('settings.title')}</Text>
       </View>
       <View style={styles.navList}>
-        <NavItem icon={<MenuLockIcon color={Colors.secondary} />} label="Security" onPress={() => onNavigate('security')} chevron />
-        <NavItem icon={<MenuNotificationsIcon color={Colors.secondary} />} label="Notifications" onPress={() => {}} />
-        <NavItem icon={<MenuHelpIcon color={Colors.secondary} />} label="Help & Support" onPress={() => {}} />
-        <NavItem icon={<MenuPrivacyIcon color={Colors.secondary} />} label="Privacy Policy" onPress={() => {}} />
-        <NavItem icon={<MenuCookieIcon color={Colors.secondary} />} label="Cookie Policy" onPress={() => {}} />
-        <NavItem icon={<MenuDataIcon color={Colors.secondary} />} label="My Data" onPress={() => onNavigate('mydata')} chevron />
+        <NavItem icon={<MenuLockIcon color={Colors.secondary} />} label={t('settings.security')} onPress={() => onNavigate('security')} chevron />
+        <NavItem icon={<MenuNotificationsIcon color={Colors.secondary} />} label={t('settings.notifications')} onPress={() => {}} />
+        <NavItem icon={<MenuHelpIcon color={Colors.secondary} />} label={t('settings.helpSupport')} onPress={() => {}} />
+        <NavItem icon={<MenuPrivacyIcon color={Colors.secondary} />} label={t('settings.privacyPolicy')} onPress={() => {}} />
+        <NavItem icon={<MenuCookieIcon color={Colors.secondary} />} label={t('settings.cookiePolicy')} onPress={() => {}} />
+        <NavItem icon={<MenuDataIcon color={Colors.secondary} />} label={t('settings.myData')} onPress={() => onNavigate('mydata')} chevron />
         {Platform.OS !== 'web' && (
           <NavItem
             icon={<Ionicons name="cloud-download-outline" size={22} color={Colors.secondary} />}
-            label="Offline Database"
+            label={t('settings.offlineDatabase')}
             onPress={isPlus ? () => onNavigate('offlinedb') : showUpsell}
             chevron
             plus={!isPlus}
@@ -197,9 +205,11 @@ function SettingsScreen({ goBack, onNavigate }: { goBack: () => void; onNavigate
 }
 
 function SecurityScreen({ goBack }: { goBack: () => void }) {
+  const { t } = useTranslation('menu');
+  const { t: tc } = useTranslation('common');
   const [available, setAvailable] = useState(false);
   const [enabled, setEnabled] = useState(false);
-  const [label, setLabel] = useState('Biometric Login');
+  const [label, setLabel] = useState(t('security.biometricLogin'));
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -231,9 +241,9 @@ function SecurityScreen({ goBack }: { goBack: () => void }) {
       <View style={styles.subHeader}>
         <TouchableOpacity style={styles.backBtn} onPress={goBack} activeOpacity={0.7}>
           <MenuArrowLeftIcon color={Colors.secondary} size={16} />
-          <Text style={styles.backText}>Back</Text>
+          <Text style={styles.backText}>{tc('buttons.back')}</Text>
         </TouchableOpacity>
-        <Text style={styles.subTitle}>Security</Text>
+        <Text style={styles.subTitle}>{t('security.title')}</Text>
       </View>
       <View style={styles.navList}>
         {loading ? (
@@ -259,13 +269,13 @@ function SecurityScreen({ goBack }: { goBack: () => void }) {
             </View>
             <Text style={styles.securityHint}>
               {enabled
-                ? `${label} is enabled. You can sign in without typing your password.`
-                : `Sign in with your email and password to enable ${label}.`}
+                ? t('security.enabledHint', { label })
+                : t('security.disabledHint', { label })}
             </Text>
           </>
         ) : (
           <Text style={styles.securityHint}>
-            Biometric login is not available on this device. Please ensure you have Face ID, Touch ID, or fingerprint set up in your device settings.
+            {t('security.unavailableHint')}
           </Text>
         )}
       </View>
@@ -276,6 +286,8 @@ function SecurityScreen({ goBack }: { goBack: () => void }) {
 // ─── My Data screen ──────────────────────────────────────────────────────────
 
 function MyDataScreen({ goBack }: { goBack: () => void }) {
+  const { t } = useTranslation('menu');
+  const { t: tc } = useTranslation('common');
   const { session } = useAuth();
   const userId = session?.user.id;
 
@@ -323,7 +335,7 @@ function MyDataScreen({ goBack }: { goBack: () => void }) {
       setStats((prev) => ({ ...prev, scanCount: 0, familyCount: 0 }));
       setClearSheetVisible(false);
     } catch {
-      Alert.alert('Error', 'Failed to clear your data. Please try again.');
+      Alert.alert(tc('error.title'), t('myData.error.clearFailed'));
     } finally {
       setClearing(false);
     }
@@ -359,10 +371,10 @@ function MyDataScreen({ goBack }: { goBack: () => void }) {
       } else {
         const path = `${FileSystem.cacheDirectory}bite-insight-data.json`;
         await FileSystem.writeAsStringAsync(path, json, { encoding: FileSystem.EncodingType.UTF8 });
-        await Sharing.shareAsync(path, { mimeType: 'application/json', dialogTitle: 'Export your data' });
+        await Sharing.shareAsync(path, { mimeType: 'application/json', dialogTitle: t('myData.exportDialogTitle') });
       }
     } catch {
-      Alert.alert('Export failed', 'Something went wrong while exporting your data. Please try again.');
+      Alert.alert(t('myData.error.exportFailedTitle'), t('myData.error.exportFailedMessage'));
     } finally {
       setExporting(false);
     }
@@ -374,7 +386,7 @@ function MyDataScreen({ goBack }: { goBack: () => void }) {
       await supabase.from('profiles').delete().eq('id', userId!);
       await supabase.auth.signOut();
     } catch {
-      Alert.alert('Error', 'Failed to close your account. Please contact support.');
+      Alert.alert(tc('error.title'), t('myData.error.closeFailed'));
       setDeleting(false);
       setCloseSheetVisible(false);
     }
@@ -385,12 +397,12 @@ function MyDataScreen({ goBack }: { goBack: () => void }) {
       <View style={styles.subHeader}>
         <TouchableOpacity style={styles.backBtn} onPress={goBack} activeOpacity={0.7}>
           <MenuArrowLeftIcon color={Colors.secondary} size={16} />
-          <Text style={styles.backText}>Back</Text>
+          <Text style={styles.backText}>{tc('buttons.back')}</Text>
         </TouchableOpacity>
         <View style={myDataStyles.titleRow}>
-          <Text style={styles.subTitle}>Your Data</Text>
+          <Text style={styles.subTitle}>{t('myData.title')}</Text>
           {stats.joinedAt ? (
-            <Text style={myDataStyles.memberSince}>Member since: {stats.joinedAt}</Text>
+            <Text style={myDataStyles.memberSince}>{t('myData.memberSince', { date: stats.joinedAt })}</Text>
           ) : null}
         </View>
       </View>
@@ -408,7 +420,7 @@ function MyDataScreen({ goBack }: { goBack: () => void }) {
               <View style={styles.navIcon}>
                 <MenuScannerIcon color={Colors.secondary} />
               </View>
-              <Text style={styles.navLabel}>Products scanned</Text>
+              <Text style={styles.navLabel}>{t('myData.productsScanned')}</Text>
               <Text style={myDataStyles.statValue}>{stats.scanCount}</Text>
             </View>
 
@@ -417,7 +429,7 @@ function MyDataScreen({ goBack }: { goBack: () => void }) {
               <View style={styles.navIcon}>
                 <MenuFamilyIcon color={Colors.secondary} />
               </View>
-              <Text style={styles.navLabel}>Family members</Text>
+              <Text style={styles.navLabel}>{t('myData.familyMembers')}</Text>
               <Text style={myDataStyles.statValue}>{stats.familyCount}</Text>
             </View>
 
@@ -435,8 +447,8 @@ function MyDataScreen({ goBack }: { goBack: () => void }) {
                 <ActivityIndicator size="small" color={Colors.secondary} />
               ) : (
                 <View style={myDataStyles.itemTextGroup}>
-                  <Text style={styles.navLabel}>Download my data</Text>
-                  <Text style={myDataStyles.itemSubtext}>Export all your data as a JSON file.</Text>
+                  <Text style={styles.navLabel}>{t('myData.downloadMyData')}</Text>
+                  <Text style={myDataStyles.itemSubtext}>{t('myData.downloadSubtext')}</Text>
                 </View>
               )}
             </TouchableOpacity>
@@ -444,7 +456,7 @@ function MyDataScreen({ goBack }: { goBack: () => void }) {
 
           {/* ── Destructive zone ── */}
           <View style={styles.navList}>
-            <Text style={myDataStyles.sectionHeading}>Destructive zone</Text>
+            <Text style={myDataStyles.sectionHeading}>{t('myData.destructiveZone')}</Text>
 
             {/* Clear my data */}
             <TouchableOpacity
@@ -456,8 +468,8 @@ function MyDataScreen({ goBack }: { goBack: () => void }) {
                 <Ionicons name="close-circle-outline" size={22} color={Colors.status.negative} />
               </View>
               <View style={myDataStyles.itemTextGroup}>
-                <Text style={[styles.navLabel, myDataStyles.dangerLabel]}>Clear my data</Text>
-                <Text style={myDataStyles.dangerSubtext}>This will clear all current data on this account.</Text>
+                <Text style={[styles.navLabel, myDataStyles.dangerLabel]}>{t('myData.clearMyData')}</Text>
+                <Text style={myDataStyles.dangerSubtext}>{t('myData.clearSubtext')}</Text>
               </View>
             </TouchableOpacity>
 
@@ -475,9 +487,9 @@ function MyDataScreen({ goBack }: { goBack: () => void }) {
                 <ActivityIndicator size="small" color={Colors.status.negative} />
               ) : (
                 <View style={myDataStyles.itemTextGroup}>
-                  <Text style={[styles.navLabel, myDataStyles.dangerLabel]}>Close my account</Text>
+                  <Text style={[styles.navLabel, myDataStyles.dangerLabel]}>{t('myData.closeMyAccount')}</Text>
                   <Text style={myDataStyles.dangerSubtext}>
-                    Permanently delete your account and all associated data. This cannot be undone.
+                    {t('myData.closeSubtext')}
                   </Text>
                 </View>
               )}
@@ -491,20 +503,20 @@ function MyDataScreen({ goBack }: { goBack: () => void }) {
         visible={clearSheetVisible}
         onClose={() => setClearSheetVisible(false)}
         onConfirm={confirmClearData}
-        title="Clear all your data?"
-        description="This will permanently delete your scan history and all family profiles. Your account and preferences will remain intact."
-        confirmPhrase="CLEAR"
-        confirmLabel="Clear my data"
+        title={t('myData.confirm.clearTitle')}
+        description={t('myData.confirm.clearDescription')}
+        confirmPhrase={t('myData.confirm.clearPhrase')}
+        confirmLabel={t('myData.confirm.clearLabel')}
         loading={clearing}
       />
       <ConfirmSheet
         visible={closeSheetVisible}
         onClose={() => setCloseSheetVisible(false)}
         onConfirm={confirmCloseAccount}
-        title="Close your account?"
-        description="This will permanently delete your profile, scan history, family members, preferences, and all associated data. This action cannot be undone."
-        confirmPhrase="DELETE"
-        confirmLabel="Close my account"
+        title={t('myData.confirm.closeTitle')}
+        description={t('myData.confirm.closeDescription')}
+        confirmPhrase={t('myData.confirm.deletePhrase')}
+        confirmLabel={t('myData.confirm.closeLabel')}
         loading={deleting}
       />
     </>
@@ -598,6 +610,8 @@ type RegionState = {
 };
 
 function OfflineDatabaseScreen({ goBack }: { goBack: () => void }) {
+  const { t } = useTranslation('menu');
+  const { t: tc } = useTranslation('common');
   const [regions, setRegions] = useState<Record<RegionCode, RegionState>>(() => {
     const init = {} as Record<RegionCode, RegionState>;
     for (const code of ALL_REGIONS) {
@@ -726,20 +740,20 @@ function OfflineDatabaseScreen({ goBack }: { goBack: () => void }) {
       <View style={styles.subHeader}>
         <TouchableOpacity style={styles.backBtn} onPress={goBack} activeOpacity={0.7}>
           <MenuArrowLeftIcon color={Colors.secondary} size={16} />
-          <Text style={styles.backText}>Back</Text>
+          <Text style={styles.backText}>{tc('buttons.back')}</Text>
         </TouchableOpacity>
-        <Text style={styles.subTitle}>Offline Database</Text>
+        <Text style={styles.subTitle}>{t('offlineDb.title')}</Text>
       </View>
 
       <View style={offlineDbStyles.sections}>
         <Text style={offlineDbStyles.description}>
-          Download regional food databases for offline barcode scanning. Once downloaded, scans work without an internet connection.
+          {t('offlineDb.description')}
         </Text>
 
         {loading ? (
           <View style={offlineDbStyles.checkingRow}>
             <ActivityIndicator size="small" color={Colors.secondary} />
-            <Text style={offlineDbStyles.checkingText}>Loading regions...</Text>
+            <Text style={offlineDbStyles.checkingText}>{t('offlineDb.loadingRegions')}</Text>
           </View>
         ) : (
           <>
@@ -759,9 +773,9 @@ function OfflineDatabaseScreen({ goBack }: { goBack: () => void }) {
                         <Text style={offlineDbStyles.regionLabel}>{label}</Text>
                         <Text style={offlineDbStyles.regionMeta}>
                           {status === 'ready'
-                            ? `${(productCount ?? 0).toLocaleString()} products  ·  ${fileSizeBytes ? formatBytes(fileSizeBytes) : '-'}`
+                            ? `${(productCount ?? 0).toLocaleString()} ${t('offlineDb.products')}  ·  ${fileSizeBytes ? formatBytes(fileSizeBytes) : '-'}`
                             : r.remoteProductCount
-                              ? `${(r.remoteProductCount).toLocaleString()} products  ·  ${r.remoteSize ? formatBytes(r.remoteSize) : '-'}`
+                              ? `${(r.remoteProductCount).toLocaleString()} ${t('offlineDb.products')}  ·  ${r.remoteSize ? formatBytes(r.remoteSize) : '-'}`
                               : r.remoteSize
                                 ? formatBytes(r.remoteSize)
                                 : ''
@@ -778,7 +792,7 @@ function OfflineDatabaseScreen({ goBack }: { goBack: () => void }) {
                         activeOpacity={0.7}
                       >
                         <Ionicons name="cloud-download-outline" size={18} color="#fff" />
-                        <Text style={offlineDbStyles.downloadBtnText}>Download</Text>
+                        <Text style={offlineDbStyles.downloadBtnText}>{t('offlineDb.downloadButton')}</Text>
                       </TouchableOpacity>
                     )}
 
@@ -791,7 +805,7 @@ function OfflineDatabaseScreen({ goBack }: { goBack: () => void }) {
                           activeOpacity={0.7}
                         >
                           <Ionicons name="refresh-outline" size={18} color="#fff" />
-                          <Text style={offlineDbStyles.downloadBtnText}>Retry</Text>
+                          <Text style={offlineDbStyles.downloadBtnText}>{t('offlineDb.retryButton')}</Text>
                         </TouchableOpacity>
                       </>
                     )}
@@ -800,7 +814,7 @@ function OfflineDatabaseScreen({ goBack }: { goBack: () => void }) {
                       <View style={{ gap: 8 }}>
                         <View style={offlineDbStyles.progressCard}>
                           <Text style={offlineDbStyles.progressLabel}>
-                            Downloading... {Math.round(downloadProgress * 100)}%
+                            {t('offlineDb.downloading', { percentage: Math.round(downloadProgress * 100) })}
                           </Text>
                           <View style={offlineDbStyles.progressTrack}>
                             <View
@@ -812,7 +826,7 @@ function OfflineDatabaseScreen({ goBack }: { goBack: () => void }) {
                           </View>
                         </View>
                         <TouchableOpacity onPress={() => handleCancel(code)} activeOpacity={0.7}>
-                          <Text style={offlineDbStyles.cancelBtnText}>Cancel</Text>
+                          <Text style={offlineDbStyles.cancelBtnText}>{tc('buttons.cancel')}</Text>
                         </TouchableOpacity>
                       </View>
                     )}
@@ -821,7 +835,7 @@ function OfflineDatabaseScreen({ goBack }: { goBack: () => void }) {
                       <View style={offlineDbStyles.readyRow}>
                         <View style={offlineDbStyles.readyBadge}>
                           <Ionicons name="checkmark-circle" size={16} color={Colors.status.positive} />
-                          <Text style={offlineDbStyles.readyText}>Downloaded</Text>
+                          <Text style={offlineDbStyles.readyText}>{t('offlineDb.downloaded')}</Text>
                         </View>
                         <TouchableOpacity
                           onPress={() => setDeleteTarget(code)}
@@ -840,14 +854,14 @@ function OfflineDatabaseScreen({ goBack }: { goBack: () => void }) {
             {/* ── Storage summary ── */}
             {downloadedRegions.length > 0 && (
               <View style={styles.navList}>
-                <Text style={myDataStyles.sectionHeading}>Storage</Text>
+                <Text style={myDataStyles.sectionHeading}>{t('offlineDb.storageHeading')}</Text>
                 <View style={styles.navItem}>
                   <View style={styles.navIcon}>
                     <MenuDataIcon color={Colors.secondary} />
                   </View>
-                  <Text style={styles.navLabel}>Total used</Text>
+                  <Text style={styles.navLabel}>{t('offlineDb.totalUsed')}</Text>
                   <Text style={myDataStyles.statValue}>
-                    {formatBytes(totalBytes)} ({downloadedRegions.length} {downloadedRegions.length === 1 ? 'region' : 'regions'})
+                    {formatBytes(totalBytes)} ({t('offlineDb.regionCount', { count: downloadedRegions.length })})
                   </Text>
                 </View>
                 {downloadedRegions.length > 1 && (
@@ -860,8 +874,8 @@ function OfflineDatabaseScreen({ goBack }: { goBack: () => void }) {
                       <Ionicons name="trash-outline" size={22} color={Colors.status.negative} />
                     </View>
                     <View style={myDataStyles.itemTextGroup}>
-                      <Text style={[styles.navLabel, myDataStyles.dangerLabel]}>Delete all databases</Text>
-                      <Text style={myDataStyles.dangerSubtext}>Free up all offline storage.</Text>
+                      <Text style={[styles.navLabel, myDataStyles.dangerLabel]}>{t('offlineDb.deleteAll')}</Text>
+                      <Text style={myDataStyles.dangerSubtext}>{t('offlineDb.deleteAllSubtext')}</Text>
                     </View>
                   </TouchableOpacity>
                 )}
@@ -875,14 +889,14 @@ function OfflineDatabaseScreen({ goBack }: { goBack: () => void }) {
         visible={deleteTarget !== null}
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
-        title={deleteTarget === 'all' ? 'Delete all offline databases?' : `Delete ${deleteTarget ? REGION_INFO[deleteTarget as RegionCode]?.label : ''} database?`}
+        title={deleteTarget === 'all' ? t('offlineDb.confirm.deleteAllTitle') : t('offlineDb.confirm.deleteOneTitle', { label: deleteTarget ? REGION_INFO[deleteTarget as RegionCode]?.label : '' })}
         description={
           deleteTarget === 'all'
-            ? 'This will remove all downloaded food databases from your device. You can download them again at any time. Your scan history will not be affected.'
-            : `This will remove the ${deleteTarget ? REGION_INFO[deleteTarget as RegionCode]?.label : ''} food database from your device. You can download it again at any time.`
+            ? t('offlineDb.confirm.deleteAllDescription')
+            : t('offlineDb.confirm.deleteOneDescription', { label: deleteTarget ? REGION_INFO[deleteTarget as RegionCode]?.label : '' })
         }
-        confirmPhrase="DELETE"
-        confirmLabel={deleteTarget === 'all' ? 'Delete all' : 'Delete database'}
+        confirmPhrase={t('offlineDb.confirm.deletePhrase')}
+        confirmLabel={deleteTarget === 'all' ? t('offlineDb.confirm.deleteAllLabel') : t('offlineDb.confirm.deleteOneLabel')}
       />
     </>
   );
@@ -1025,13 +1039,15 @@ const offlineDbStyles = StyleSheet.create({
 const PLACEHOLDER = `${Colors.primary}80`;
 
 const PW_RULES = [
-  { key: 'length', label: 'At least ', bold: '8 characters', test: (pw: string) => pw.length >= 8 },
-  { key: 'upper', label: 'One ', bold: 'uppercase letter', test: (pw: string) => /[A-Z]/.test(pw) },
-  { key: 'lower', label: 'One ', bold: 'lowercase letter', test: (pw: string) => /[a-z]/.test(pw) },
-  { key: 'number', label: 'One ', bold: 'number', test: (pw: string) => /\d/.test(pw) },
+  { key: 'length', prefixKey: 'password.rulePrefix.atLeast' as const, boldKey: 'password.rule.minLength' as const, test: (pw: string) => pw.length >= 8 },
+  { key: 'upper', prefixKey: 'password.rulePrefix.one' as const, boldKey: 'password.rule.uppercase' as const, test: (pw: string) => /[A-Z]/.test(pw) },
+  { key: 'lower', prefixKey: 'password.rulePrefix.one' as const, boldKey: 'password.rule.lowercase' as const, test: (pw: string) => /[a-z]/.test(pw) },
+  { key: 'number', prefixKey: 'password.rulePrefix.one' as const, boldKey: 'password.rule.number' as const, test: (pw: string) => /\d/.test(pw) },
 ];
 
 function ChangePasswordScreen({ goBack }: { goBack: () => void }) {
+  const { t } = useTranslation('menu');
+  const { t: tc } = useTranslation('common');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -1063,7 +1079,7 @@ function ChangePasswordScreen({ goBack }: { goBack: () => void }) {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.email) {
-        setError('Unable to verify your identity. Please try again.');
+        setError(t('password.error.verifyFailed'));
         setSaving(false);
         return;
       }
@@ -1072,7 +1088,7 @@ function ChangePasswordScreen({ goBack }: { goBack: () => void }) {
         password: currentPassword,
       });
       if (signInError) {
-        setError('Current password is incorrect.');
+        setError(t('password.error.incorrectCurrent'));
         setSaving(false);
         return;
       }
@@ -1084,7 +1100,7 @@ function ChangePasswordScreen({ goBack }: { goBack: () => void }) {
       }
       setSuccess(true);
     } catch {
-      setError('Something went wrong. Please try again.');
+      setError(t('password.error.generic'));
     } finally {
       setSaving(false);
     }
@@ -1095,12 +1111,12 @@ function ChangePasswordScreen({ goBack }: { goBack: () => void }) {
       <>
         <View style={pwStyles.successWrap}>
           <Ionicons name="checkmark-circle" size={56} color={Colors.status.positive} />
-          <Text style={pwStyles.successTitle}>Password updated</Text>
+          <Text style={pwStyles.successTitle}>{t('password.success.title')}</Text>
           <Text style={pwStyles.successBody}>
-            Your password has been changed successfully.
+            {t('password.success.body')}
           </Text>
           <TouchableOpacity style={pwStyles.doneBtn} onPress={goBack} activeOpacity={0.85}>
-            <Text style={pwStyles.doneBtnText}>Done</Text>
+            <Text style={pwStyles.doneBtnText}>{tc('buttons.done')}</Text>
           </TouchableOpacity>
         </View>
       </>
@@ -1112,26 +1128,26 @@ function ChangePasswordScreen({ goBack }: { goBack: () => void }) {
       <View style={styles.subHeader}>
         <TouchableOpacity style={styles.backBtn} onPress={goBack} activeOpacity={0.7}>
           <MenuArrowLeftIcon color={Colors.secondary} size={16} />
-          <Text style={styles.backText}>Back</Text>
+          <Text style={styles.backText}>{tc('buttons.back')}</Text>
         </TouchableOpacity>
-        <Text style={styles.subTitle}>Change Password</Text>
+        <Text style={styles.subTitle}>{t('password.title')}</Text>
       </View>
 
       <View style={pwStyles.form}>
         <Text style={pwStyles.subtitle}>
-          Enter your current password and choose a new one.
+          {t('password.subtitle')}
         </Text>
 
         {/* Current password */}
         <View style={pwStyles.fieldGroup}>
-          <Text style={pwStyles.label}>Current password</Text>
+          <Text style={pwStyles.label}>{t('password.label.current')}</Text>
           <View style={[pwStyles.inputWrapper, currentFocused && pwStyles.inputFocused]}>
             <View style={styles.navIcon}>
               <Ionicons name="lock-closed-outline" size={20} color={Colors.primary} />
             </View>
             <TextInput
               style={pwStyles.input}
-              placeholder="Enter current password"
+              placeholder={t('password.placeholder.current')}
               placeholderTextColor={PLACEHOLDER}
               secureTextEntry={!showCurrent}
               value={currentPassword}
@@ -1149,14 +1165,14 @@ function ChangePasswordScreen({ goBack }: { goBack: () => void }) {
 
         {/* New password */}
         <View style={pwStyles.fieldGroup}>
-          <Text style={pwStyles.label}>New password</Text>
+          <Text style={pwStyles.label}>{t('password.label.new')}</Text>
           <View style={[pwStyles.inputWrapper, newFocused && pwStyles.inputFocused]}>
             <View style={styles.navIcon}>
               <Ionicons name="lock-closed-outline" size={20} color={Colors.primary} />
             </View>
             <TextInput
               style={pwStyles.input}
-              placeholder="Enter new password"
+              placeholder={t('password.placeholder.new')}
               placeholderTextColor={PLACEHOLDER}
               secureTextEntry={!showNew}
               value={newPassword}
@@ -1182,7 +1198,7 @@ function ChangePasswordScreen({ goBack }: { goBack: () => void }) {
                       color={pass ? Colors.status.positive : `${Colors.primary}40`}
                     />
                     <Text style={[pwStyles.ruleText, { color: pass ? Colors.status.positive : Colors.primary }]}>
-                      {r.label}<Text style={pwStyles.ruleBold}>{r.bold}</Text>
+                      {t(r.prefixKey)}<Text style={pwStyles.ruleBold}>{t(r.boldKey)}</Text>
                     </Text>
                   </View>
                 );
@@ -1193,7 +1209,7 @@ function ChangePasswordScreen({ goBack }: { goBack: () => void }) {
 
         {/* Confirm password */}
         <View style={pwStyles.fieldGroup}>
-          <Text style={pwStyles.label}>Confirm new password</Text>
+          <Text style={pwStyles.label}>{t('password.label.confirm')}</Text>
           <View style={[
             pwStyles.inputWrapper,
             confirmFocused && pwStyles.inputFocused,
@@ -1204,7 +1220,7 @@ function ChangePasswordScreen({ goBack }: { goBack: () => void }) {
             </View>
             <TextInput
               style={pwStyles.input}
-              placeholder="Re-enter new password"
+              placeholder={t('password.placeholder.confirm')}
               placeholderTextColor={PLACEHOLDER}
               secureTextEntry={!showConfirm}
               value={confirmPassword}
@@ -1219,7 +1235,7 @@ function ChangePasswordScreen({ goBack }: { goBack: () => void }) {
             </TouchableOpacity>
           </View>
           {confirmPassword.length > 0 && !passwordsMatch && (
-            <Text style={pwStyles.mismatch}>Passwords do not match</Text>
+            <Text style={pwStyles.mismatch}>{t('password.error.mismatch')}</Text>
           )}
         </View>
 
@@ -1241,7 +1257,7 @@ function ChangePasswordScreen({ goBack }: { goBack: () => void }) {
           {saving ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Text style={pwStyles.doneBtnText}>Update password</Text>
+            <Text style={pwStyles.doneBtnText}>{t('password.button.update')}</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -1394,6 +1410,7 @@ function MainScreen({
   onLogout: () => void;
   onGo: (route: any) => void;
 }) {
+  const { t } = useTranslation('menu');
   const { showUpsell } = useUpsellSheet();
   const { isPlus } = useSubscription();
   function go(route: string) {
@@ -1403,21 +1420,21 @@ function MainScreen({
   return (
     <>
       <View style={styles.sectionGap}>
-        <Text style={styles.whereLabel}>Where would you like to go?</Text>
+        <Text style={styles.whereLabel}>{t('main.whereLabel')}</Text>
         <View style={styles.navList}>
-          <NavItem icon={<MenuDashboardIcon color={Colors.secondary} />} label="Dashboard" onPress={() => go('/(tabs)/')} />
-          <NavItem icon={<MenuIngredientsIcon color={Colors.secondary} />} label="My Ingredients" onPress={() => onNavigate('ingredients')} chevron />
-          <NavItem icon={<MenuScannerIcon color={Colors.secondary} />} label="Snack Scanner" onPress={() => go('/(tabs)/scanner')} />
-          <NavItem icon={<MenuHistoryIcon color={Colors.secondary} />} label="Scan History" onPress={() => go('/(tabs)/history')} />
-          <NavItem icon={<MenuRecipesIcon color={Colors.secondary} />} label="Recipes" onPress={() => go('/(tabs)/recipes')} />
+          <NavItem icon={<MenuDashboardIcon color={Colors.secondary} />} label={t('main.dashboard')} onPress={() => go('/(tabs)/')} />
+          <NavItem icon={<MenuIngredientsIcon color={Colors.secondary} />} label={t('main.myIngredients')} onPress={() => onNavigate('ingredients')} chevron />
+          <NavItem icon={<MenuScannerIcon color={Colors.secondary} />} label={t('main.snackScanner')} onPress={() => go('/(tabs)/scanner')} />
+          <NavItem icon={<MenuHistoryIcon color={Colors.secondary} />} label={t('main.scanHistory')} onPress={() => go('/(tabs)/history')} />
+          <NavItem icon={<MenuRecipesIcon color={Colors.secondary} />} label={t('main.recipes')} onPress={() => go('/(tabs)/recipes')} />
         </View>
       </View>
 
       <View style={styles.sectionGap}>
         <View style={styles.navList}>
-          <NavItem icon={<MenuAccountIcon color={Colors.secondary} />} label="My Account" onPress={() => onNavigate('account')} chevron />
-          <NavItem icon={<MenuSettingsIcon color={Colors.secondary} />} label="Settings" onPress={() => onNavigate('settings')} chevron />
-          <NavItem icon={<MenuLogoutIcon color={Colors.secondary} />} label="Log out" onPress={onLogout} />
+          <NavItem icon={<MenuAccountIcon color={Colors.secondary} />} label={t('main.myAccount')} onPress={() => onNavigate('account')} chevron />
+          <NavItem icon={<MenuSettingsIcon color={Colors.secondary} />} label={t('main.settings')} onPress={() => onNavigate('settings')} chevron />
+          <NavItem icon={<MenuLogoutIcon color={Colors.secondary} />} label={t('main.logOut')} onPress={onLogout} />
         </View>
         <UpsellBanner />
       </View>

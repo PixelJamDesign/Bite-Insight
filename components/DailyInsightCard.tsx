@@ -1,4 +1,5 @@
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Shadows } from '@/constants/theme';
 
@@ -21,6 +22,7 @@ export function DailyInsightCard({
   healthConditions = [],
   allergies = [],
 }: DailyInsightCardProps) {
+  const { t } = useTranslation('dashboard');
   const hasChips =
     dietaryPreferences.length > 0 ||
     healthConditions.length > 0 ||
@@ -37,7 +39,7 @@ export function DailyInsightCard({
       <Image source={lightbulbImg} style={styles.bulbIcon} />
 
       {/* Title */}
-      <Text style={styles.title}>Daily Insight!</Text>
+      <Text style={styles.title}>{t('dailyInsight')}</Text>
 
       {/* Content */}
       <Text style={styles.content}>{insight.content}</Text>
@@ -45,7 +47,7 @@ export function DailyInsightCard({
       {/* Suitable for — user's dietary prefs, conditions & allergies */}
       {hasChips && (
         <View style={styles.suitableRow}>
-          <Text style={styles.suitableLabel}>Suitable for:</Text>
+          <Text style={styles.suitableLabel}>{t('suitableFor')}</Text>
           <View style={styles.tagsRow}>
             {dietaryPreferences.map((tag) => (
               <DietaryTag key={tag} tag={tag} />

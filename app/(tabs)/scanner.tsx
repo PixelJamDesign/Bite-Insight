@@ -4,6 +4,7 @@ import { CameraView, useCameraPermissions, BarcodeScanningResult } from 'expo-ca
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { safeBack } from '@/lib/safeBack';
 import { useAuth } from '@/lib/auth';
@@ -48,6 +49,9 @@ function getOFFBaseUrl(region: Region): string {
 }
 
 export default function ScannerScreen() {
+  const { t } = useTranslation('scanner');
+  const { t: tc } = useTranslation('common');
+  const { t: tScan } = useTranslation('scan');
   const [permission, requestPermission] = useCameraPermissions();
   const [scanning, setScanning] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -80,7 +84,7 @@ export default function ScannerScreen() {
         .from('profiles')
         .upsert({ id: session?.user.id }, { onConflict: 'id', ignoreDuplicates: true });
 
-      let productName = 'Unknown Product';
+      let productName = tScan('product.unknownName');
       let brand: string | null = null;
       let imageUrl: string | null = null;
       let quantity: string | null = null;
@@ -185,7 +189,7 @@ export default function ScannerScreen() {
                 op.product_name_en ||
                 op.abbreviated_product_name ||
                 op.generic_name ||
-                'Unknown Product';
+                tScan('product.unknownName');
               brand           = op.brands || null;
               imageUrl        = op.image_front_url || op.image_url || null;
               quantity        = op.quantity || op.product_quantity || null;
@@ -331,9 +335,9 @@ export default function ScannerScreen() {
       console.error('Scan error:', err);
       setProcessing(false);
       Alert.alert(
-        'Scan failed',
-        'Could not process this barcode. Please try again.',
-        [{ text: 'OK', onPress: () => { setScanning(true); lastScan.current = null; } }],
+        t('alert.scanFailedTitle'),
+        t('alert.scanFailedMessage'),
+        [{ text: tc('buttons.ok'), onPress: () => { setScanning(true); lastScan.current = null; } }],
       );
     }
   }
@@ -381,7 +385,7 @@ export default function ScannerScreen() {
               <View style={[styles.corner, styles.bottomRight]} />
             </View>
             <Text style={styles.frameHint}>
-              {processing ? 'Processing...' : 'Point at a barcode to scan'}
+              {processing ? t('hint.processing') : t('hint.pointAtBarcode')}
             </Text>
             {processing && (
               <ActivityIndicator size="large" color="#fff" style={{ marginTop: 16 }} />
@@ -405,7 +409,7 @@ export default function ScannerScreen() {
             onPress={() => setRegionPickerVisible(false)}
           >
             <View style={styles.switcherDropdown}>
-              <Text style={styles.switcherDropdownTitle}>Select region</Text>
+              <Text style={styles.switcherDropdownTitle}>{t('regionPicker.title')}</Text>
               <FlatList
                 data={REGIONS}
                 keyExtractor={(item) => item.code}
@@ -446,12 +450,12 @@ export default function ScannerScreen() {
     return (
       <SafeAreaView style={styles.permissionContainer}>
         <Ionicons name="camera-outline" size={64} color={Colors.secondary} />
-        <Text style={styles.permissionTitle}>Camera Access Required</Text>
+        <Text style={styles.permissionTitle}>{t('permission.title')}</Text>
         <Text style={styles.permissionText}>
-          BiteInsight needs camera access to scan food labels and barcodes.
+          {t('permission.description')}
         </Text>
         <TouchableOpacity style={styles.permissionBtn} onPress={requestPermission}>
-          <Text style={styles.permissionBtnText}>Grant Access</Text>
+          <Text style={styles.permissionBtnText}>{t('permission.grantButton')}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -476,7 +480,7 @@ export default function ScannerScreen() {
             <TouchableOpacity style={styles.backBtn} onPress={safeBack}>
               <Ionicons name="arrow-back" size={24} color="#fff" />
             </TouchableOpacity>
-            <Text style={styles.topTitle}>Scan Food Label</Text>
+            <Text style={styles.topTitle}>{t('topTitle')}</Text>
             <View style={{ width: 44 }} />
           </View>
         </SafeAreaView>
@@ -505,7 +509,7 @@ export default function ScannerScreen() {
             <View style={[styles.corner, styles.bottomRight]} />
           </View>
           <Text style={styles.frameHint}>
-            {processing ? 'Processing...' : 'Point at a barcode to scan'}
+            {processing ? t('hint.processing') : t('hint.pointAtBarcode')}
           </Text>
           {processing && (
             <ActivityIndicator size="large" color="#fff" style={{ marginTop: 16 }} />
@@ -516,7 +520,7 @@ export default function ScannerScreen() {
         <SafeAreaView edges={['bottom']}>
           <View style={styles.bottomBar}>
             <Text style={styles.bottomHint}>
-              Supports EAN-13, EAN-8, UPC-A and QR codes
+              {t('bottomHint')}
             </Text>
           </View>
         </SafeAreaView>
@@ -535,7 +539,7 @@ export default function ScannerScreen() {
           onPress={() => setRegionPickerVisible(false)}
         >
           <View style={styles.switcherDropdown}>
-            <Text style={styles.switcherDropdownTitle}>Select region</Text>
+            <Text style={styles.switcherDropdownTitle}>{t('regionPicker.title')}</Text>
             <FlatList
               data={REGIONS}
               keyExtractor={(item) => item.code}

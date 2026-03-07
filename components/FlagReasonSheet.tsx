@@ -16,6 +16,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
 import { Colors, Spacing, Radius, Shadows } from '@/constants/theme';
 import { MenuFlaggedIcon } from './MenuIcons';
 import { buildFlagReasonGroups } from '@/constants/flagReasons';
@@ -41,6 +42,8 @@ export function FlagReasonSheet({
   allergies,
   dietaryPreferences,
 }: FlagReasonSheetProps) {
+  const { t } = useTranslation('flagReasons');
+  const { t: tc } = useTranslation('common');
   const insets = useSafeAreaInsets();
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
@@ -178,7 +181,7 @@ export function FlagReasonSheet({
           </View>
 
           {/* Two-line header */}
-          <Text style={styles.subtitleLabel}>Why are you flagging</Text>
+          <Text style={styles.subtitleLabel}>{t('sheet.whyFlagging')}</Text>
           <Text style={styles.ingredientTitle}>{ingredientName}?</Text>
 
           {/* Scrollable reason list with gradient fade */}
@@ -215,7 +218,7 @@ export function FlagReasonSheet({
 
               {/* "Other" option — always shown */}
               <View style={styles.group}>
-                <Text style={styles.groupHeader}>Other</Text>
+                <Text style={styles.groupHeader}>{t('sheet.otherHeader')}</Text>
                 <TouchableOpacity
                   style={[styles.reasonRow, isOther && styles.reasonRowActive]}
                   onPress={toggleOther}
@@ -224,7 +227,7 @@ export function FlagReasonSheet({
                   <View style={[styles.checkbox, isOther && styles.checkboxActive]}>
                     {isOther && <Ionicons name="checkmark" size={16} color="#fff" />}
                   </View>
-                  <Text style={styles.reasonText}>Enter my own reason</Text>
+                  <Text style={styles.reasonText}>{t('sheet.enterOwnReason')}</Text>
                 </TouchableOpacity>
 
                 {isOther && (
@@ -232,7 +235,7 @@ export function FlagReasonSheet({
                     style={styles.otherInput}
                     value={otherText}
                     onChangeText={setOtherText}
-                    placeholder="e.g. Makes me feel bloated"
+                    placeholder={t('sheet.otherPlaceholder')}
                     placeholderTextColor="#aaa"
                     multiline
                     maxLength={200}
@@ -258,12 +261,12 @@ export function FlagReasonSheet({
               activeOpacity={0.85}
               disabled={!canConfirm}
             >
-              <Text style={styles.confirmBtnText}>Flag ingredient</Text>
+              <Text style={styles.confirmBtnText}>{t('sheet.flagIngredient')}</Text>
             </TouchableOpacity>
 
             <View style={styles.cancelBtnWrap}>
               <TouchableOpacity onPress={onClose} activeOpacity={0.7} style={styles.cancelBtn}>
-                <Text style={styles.cancelBtnText}>Cancel</Text>
+                <Text style={styles.cancelBtnText}>{tc('buttons.cancel')}</Text>
               </TouchableOpacity>
             </View>
           </View>

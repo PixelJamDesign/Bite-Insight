@@ -1,0 +1,138 @@
+{
+  "product": {
+    "unknownName": "Unknown Product"
+  },
+  "tab": {
+    "overview": "Overview",
+    "nutrition": "Nutrition",
+    "ingredients": "Ingredients",
+    "recommended": "Recommended",
+    "info": "Product Info"
+  },
+  "nutriscoreLabel": "Nutri-score",
+  "nutrientLabels": {
+    "energyKcal": "Calories",
+    "fat": "Fat",
+    "saturatedFat": "Saturated Fat",
+    "carbs": "Carbohydrates",
+    "sugars": "Sugars",
+    "fiber": "Fibre",
+    "proteins": "Protein",
+    "netCarbs": "Net Carbs",
+    "salt": "Salt"
+  },
+  "nutrientRating": {
+    "low": "Low",
+    "moderate": "Moderate",
+    "high": "High",
+    "good": "Good"
+  },
+  "insight": {
+    "glycemic": "Glycemic impact",
+    "sodium": "Sodium",
+    "calorie": "Calorie density",
+    "digestiveLoad": "Digestive load",
+    "carbLoad": "Carb load",
+    "additives": "Additives"
+  },
+  "impact": {
+    "veryHigh": "Very High",
+    "high": "High",
+    "moderate": "Moderate",
+    "low": "Low"
+  },
+  "insightExplanation": {
+    "glycemic": "Glycemic impact estimates how quickly this product may raise blood sugar levels, based on its carbohydrate and fibre content.",
+    "sodium": "Sodium levels indicate the salt content per serving. High sodium intake is linked to elevated blood pressure and cardiovascular strain.",
+    "saturatedFat": "Saturated fat content is associated with increased LDL cholesterol when consumed in excess.",
+    "sugar": "Sugar load reflects the total sugar content, which affects blood sugar, energy levels, and dental health.",
+    "fiber": "Fibre content matters for digestive conditions like IBS and Crohn's. High fibre can be beneficial or problematic depending on the condition.",
+    "protein": "Protein content is important for muscle repair, satiety, and metabolic conditions like PCOS or post-bariatric recovery.",
+    "calorie": "Calorie density measures the energy content per gram of food. Higher density foods provide more energy in smaller portions.",
+    "inflammatoryFat": "Inflammatory fat is a proxy based on saturated fat and trans-fat content, relevant for autoimmune and inflammatory conditions.",
+    "digestiveLoad": "Digestive load combines fat and fibre content to estimate how much work your digestive system needs to process this food.",
+    "carbLoad": "Carb load reflects the total carbohydrate content minus fibre, relevant for keto, diabetic, and metabolic conditions.",
+    "additives": "Additive count tracks the number of food additives (E-numbers and similar) present in this product."
+  },
+  "section": {
+    "importantForYou": "Important for you",
+    "importantSubtitle": "Based on {{name}}'s health profile.",
+    "importantSubtitleGeneric": "Based on your health profile.",
+    "nutrientWatch": "Nutrient Watch",
+    "flaggedIngredients": "Flagged ingredients",
+    "flaggedIngredientsSubtitle": "This product contains flagged ingredients.",
+    "highlightedNutrition": "Highlighted Nutritional Info",
+    "nutritionalInfo": "Nutritional Information",
+    "nutrientWatchlist": "Your Nutrient Watchlist",
+    "nutrientWatchlistSubtitle": "Nutrients you're monitoring based on your health profile.",
+    "allergens": "Allergens",
+    "allergensSubtitle": "Allergens listed for this product."
+  },
+  "allergen": {
+    "warningBadge": "Warning",
+    "warningText": "Contains: {{allergens}}. This may affect {{name}}'s health profile.",
+    "allergensBadge": "Allergens",
+    "containsText": "Contains: {{allergens}}."
+  },
+  "nutrientWatch": {
+    "noMicroData": "Micronutrient data is not available for this product."
+  },
+  "ingredients": {
+    "ingredient_one": "{{count}} ingredient",
+    "ingredient_other": "{{count}} ingredients",
+    "is": "is",
+    "are": "are",
+    "considered": "considered",
+    "harmful": "harmful",
+    "ok": "ok",
+    "safe": "safe",
+    "listed": "listed"
+  },
+  "toggle": {
+    "perServing": "Per Serving",
+    "per100g": "Per 100g",
+    "value": "Value",
+    "dri": "DRI (%)"
+  },
+  "loading": {
+    "nutritionalData": "Loading nutritional data\u2026",
+    "ingredients": "Loading ingredients\u2026"
+  },
+  "empty": {
+    "limitedDataTitle": "Limited product data",
+    "limitedDataText": "Nutritional information is not available for this product in the Open Food Facts database.",
+    "noNutritionTitle": "No nutritional data",
+    "noNutritionText": "This product does not have nutritional information in the Open Food Facts database.",
+    "noIngredientsTitle": "No ingredients listed",
+    "noIngredientsText": "Ingredient information is not available for this product.",
+    "noAllergensTitle": "No allergens listed",
+    "noAllergensText": "No allergen information is available for this product."
+  },
+  "comingSoon": {
+    "title": "Coming soon",
+    "text": "This section is under construction and will be available in a future update."
+  },
+  "profile": {
+    "myProfile": "My Profile",
+    "switch": "Switch"
+  },
+  "flagReason": {
+    "veganTitle": "Not vegan",
+    "veganBody": "This ingredient is not vegan, which conflicts with your dietary preferences.",
+    "vegetarianTitle": "Not vegetarian",
+    "vegetarianBody": "This ingredient is not vegetarian, which conflicts with your dietary preferences.",
+    "userFlaggedTitle": "Personally flagged",
+    "userFlaggedBody": "You've flagged this ingredient. It will be highlighted whenever it appears in products you scan.",
+    "personalBody": "You flagged this because of your {{category}}."
+  },
+  "flaggedSheet": {
+    "substitutesTitle": "Suitable replacements include:"
+  },
+  "ingredientSheet": {
+    "categoryOk": "OK",
+    "categorySafe": "Safe",
+    "classifiedAs": "Classified as {{category}}",
+    "defaultAdditiveLine1": "This is a food additive commonly used in processed foods.",
+    "defaultAdditiveLine2": "It has been approved by food safety authorities for use in food products."
+  }
+}

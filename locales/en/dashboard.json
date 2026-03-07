@@ -1,0 +1,15 @@
+{
+  "weekInNumbers": "Your week in numbers\u2026",
+  "scannedLabels": "Food labels scanned",
+  "flaggedIngredients": "Flagged ingredients",
+  "ingredientQuestion": "Do you like these ingredients?",
+  "ingredientSubtitle": "Tell us which ingredients work for you and which don't.",
+  "completionTitle": "You've nailed your list of ingredients you like and dislike!",
+  "completionSubtitle": "With your ingredient picks, we can make your app experience even better!",
+  "viewLiked": "View your liked ingredients",
+  "dailyInsight": "Daily Insight!",
+  "suitableFor": "Suitable for:",
+  "setupRequired": "Setup Required",
+  "setupMessage": "Add your Supabase URL and anon key to the .env file, then restart the app.\n\nSettings \u2192 API in your Supabase dashboard.",
+  "fallbackInitials": "??"
+}
