@@ -1,0 +1,35 @@
+{
+  "editProfile": {
+    "aboutTitle": "أخبرنا عن نفسك",
+    "aboutSubtitle": "قم بتحديث معلومات ملفك الشخصي.",
+    "saveChanges": "حفظ التغييرات",
+    "alert": {
+      "nameRequiredTitle": "الاسم مطلوب",
+      "nameRequiredMessage": "الرجاء إدخال اسمك الكامل."
+    },
+    "avatar": {
+      "alertTitle": "صورة الملف الشخصي",
+      "alertMessage": "اختر خيارًا",
+      "takePhoto": "التقط صورة",
+      "chooseFromLibrary": "اختر من المكتبة",
+      "permissionTitle": "الإذن مطلوب",
+      "permissionMessage": "مطلوب الوصول إلى الكاميرا لالتقاط صورة."
+    },
+    "placeholder": {
+      "age": "عمرك (اختياري)"
+    }
+  },
+  "familyMember": {
+    "aboutTitleAdd": "أخبرنا عنهم",
+    "aboutTitleEdit": "تحديث التفاصيل الخاصة بهم",
+    "aboutSubtitleAdd": "أضف التفاصيل الخاصة بأحد أفراد عائلتك.",
+    "aboutSubtitleEdit": "تحرير الملف الشخصي لأحد أفراد عائلتك.",
+    "field": {
+      "relationship": "علاقة"
+    },
+    "alert": {
+      "nameRequiredTitle": "الاسم مطلوب",
+      "nameRequiredMessage": "الرجاء إدخال اسم لهذا الفرد من العائلة."
+    }
+  }
+}

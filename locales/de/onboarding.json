@@ -1,0 +1,48 @@
+{
+  "step": {
+    "aboutYou": "Über Dich",
+    "aboutThem": "Über sie",
+    "health": "Gesundheitszustand",
+    "nutrients": "Nährstoff-Beobachtungsliste",
+    "allergies": "Allergien",
+    "dietary": "Ernährungspräferenzen"
+  },
+  "question": {
+    "healthCondition": "Haben Sie gesundheitliche Probleme?",
+    "allergies": "Haben Sie Allergien?",
+    "dietaryPreferences": "Haben Sie irgendwelche Ernährungsvorlieben?",
+    "healthConditionFamily": "Haben sie gesundheitliche Probleme?",
+    "allergiesFamily": "Haben sie Allergien?",
+    "dietaryPreferencesFamily": "Haben sie irgendwelche Ernährungspräferenzen?"
+  },
+  "count": {
+    "condition_one": "{{count}} Bedingung",
+    "condition_other": "{{count}} Bedingungen",
+    "allergy_one": "{{count}} Allergie",
+    "allergy_other": "{{count}} Allergien",
+    "preference_one": "{{count}} Präferenz",
+    "preference_other": "{{count}} Präferenzen"
+  },
+  "chip": {
+    "youveSelected": "Sie haben ausgewählt"
+  },
+  "nutrient": {
+    "suggestion": "Basierend auf Ihren Bedingungen empfehlen wir, auf diese Nährstoffe zu achten",
+    "suggestionFamily": "Aufgrund ihres Zustands empfehlen wir, auf diese Nährstoffe zu achten",
+    "limiting": "Begrenzend",
+    "boosting": ", steigernd",
+    "tracking": "Verfolgung",
+    "nutrientCount_one": "{{count}} Nährstoff",
+    "nutrientCount_other": "{{count}} Nährstoffe",
+    "alertSubtext": "Wir benachrichtigen Sie, wenn gescannte Produkte diese enthalten.",
+    "instructions": "Wählen Sie, ob Sie jeden Nährstoff einschränken, steigern oder weglassen möchten.",
+    "sectionLimit": "Zu begrenzende Nährstoffe",
+    "sectionBoost": "Nährstoffe zur Steigerung",
+    "sectionNoChange": "Keine Änderung",
+    "sectionLimiting": "Begrenzend",
+    "sectionBoosting": "Boosten"
+  },
+  "progress": {
+    "next": "Weiter: {{label}}"
+  }
+}

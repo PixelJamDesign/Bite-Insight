@@ -1,0 +1,57 @@
+{
+  "detail": {
+    "doYouLike": "Você gosta",
+    "didYouKnow": "Você sabia?"
+  },
+  "preferences": {
+    "pageTitle": {
+      "liked": "Ingredientes preferidos",
+      "disliked": "Ingredientes não gostados",
+      "flagged": "Ingredientes sinalizados"
+    },
+    "countVerb": {
+      "liked": "você gosta",
+      "disliked": "você não gosta",
+      "flagged": "você sinalizou"
+    },
+    "empty": {
+      "titleLiked": "No momento você não tem ingredientes favoritos",
+      "titleDisliked": "Atualmente você não tem ingredientes desagradáveis",
+      "titleFlagged": "No momento você não tem ingredientes sinalizados",
+      "descriptionLiked": "Para facilitar o planejamento de suas refeições, avalie alguns de seus ingredientes favoritos no painel. Quando você usa o Insight Scanner, nós os destacaremos e sugeriremos receitas saborosas que você vai adorar!",
+      "descriptionDisliked": "Avalie os ingredientes no painel para criar sua lista de não gostados. Faremos questão de sinalizá-los sempre que aparecerem em um produto.",
+      "descriptionFlagged": "Sinalize ingredientes no painel ou verifique os resultados para destacá-los em vermelho sempre que aparecerem em um produto."
+    },
+    "flaggedPlaceholder": {
+      "palmOil": "Óleo de palma",
+      "highFructoseCornSyrup": "Xarope de milho rico em frutose",
+      "sodiumBenzoate": "Benzoato de Sódio"
+    },
+    "subtitle": {
+      "currently": "Atualmente",
+      "ingredient_one": "{{count}} ingrediente",
+      "ingredient_other": "{{count}} ingredientes"
+    },
+    "search": {
+      "placeholder": "Pesquisar ingredientes..."
+    },
+    "menu": {
+      "likeIngredient": "Como ingrediente",
+      "dislikeIngredient": "Não gosto de ingrediente",
+      "flagIngredient": "Ingrediente de bandeira",
+      "removeIngredient": "Remover ingrediente"
+    },
+    "error": {
+      "title": "Não foi possível carregar os ingredientes",
+      "migrationRequired": "É necessária migração de banco de dados. Execute as instruções ALTER TABLE em seu Editor SQL Supabase para adicionar as colunas de preferência de ingredientes."
+    }
+  },
+  "upsell": {
+    "bite": "morder",
+    "insight": "entendimento",
+    "plus": "mais",
+    "plusSymbol": "+",
+    "tagline": "Sinalize ingredientes para destacar\neles em vermelho em cada varredura",
+    "upgradeButton": "Atualize para Plus+"
+  }
+}

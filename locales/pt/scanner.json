@@ -1,0 +1,32 @@
+{
+  "topTitle": "Digitalizar rótulo de alimentos",
+  "hint": {
+    "processing": "Processamento...",
+    "pointAtBarcode": "Aponte para um código de barras para digitalizar"
+  },
+  "bottomHint": "Suporta códigos EAN-13, EAN-8, UPC-A e QR",
+  "regions": {
+    "world": "Mundo",
+    "unitedKingdom": "Reino Unido",
+    "unitedStates": "Estados Unidos",
+    "france": "França",
+    "germany": "Alemanha",
+    "spain": "Espanha",
+    "italy": "Itália",
+    "australia": "Austrália",
+    "canada": "Canadá",
+    "netherlands": "Holanda"
+  },
+  "regionPicker": {
+    "title": "Selecione a região"
+  },
+  "permission": {
+    "title": "Acesso à câmera necessário",
+    "description": "O BiteInsight precisa de acesso à câmera para escanear rótulos e códigos de barras de alimentos.",
+    "grantButton": "Conceder acesso"
+  },
+  "alert": {
+    "scanFailedTitle": "Falha na verificação",
+    "scanFailedMessage": "Não foi possível processar este código de barras. Por favor, tente novamente."
+  }
+}

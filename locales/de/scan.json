@@ -1,0 +1,140 @@
+{
+  "product": {
+    "unknownName": "Unbekanntes Produkt"
+  },
+  "tab": {
+    "overview": "Überblick",
+    "nutrition": "Ernährung",
+    "ingredients": "Zutaten",
+    "recommended": "Empfohlen",
+    "info": "Produktinformationen"
+  },
+  "nutriscoreLabel": "Nutri-Score",
+  "nutrientLabels": {
+    "energyKcal": "Kalorien",
+    "fat": "Fett",
+    "saturatedFat": "Gesättigtes Fett",
+    "carbs": "Kohlenhydrate",
+    "sugars": "Zucker",
+    "fiber": "Faser",
+    "proteins": "Protein",
+    "netCarbs": "Netto-Kohlenhydrate",
+    "salt": "Salz"
+  },
+  "nutrientRating": {
+    "low": "Niedrig",
+    "moderate": "Mäßig",
+    "high": "Hoch",
+    "good": "Gut"
+  },
+  "insight": {
+    "glycemic": "Glykämische Wirkung",
+    "sodium": "Natrium",
+    "calorie": "Kaloriendichte",
+    "digestiveLoad": "Verdauungsbelastung",
+    "carbLoad": "Kohlenhydratladung",
+    "additives": "Zusatzstoffe"
+  },
+  "impact": {
+    "veryHigh": "Sehr hoch",
+    "high": "Hoch",
+    "moderate": "Mäßig",
+    "low": "Niedrig"
+  },
+  "insightExplanation": {
+    "glycemic": "Der glykämische Einfluss schätzt anhand seines Kohlenhydrat- und Ballaststoffgehalts, wie schnell dieses Produkt den Blutzuckerspiegel erhöhen kann.",
+    "sodium": "Der Natriumgehalt gibt den Salzgehalt pro Portion an. Eine hohe Natriumaufnahme ist mit erhöhtem Blutdruck und Herz-Kreislauf-Belastung verbunden.",
+    "saturatedFat": "Der Gehalt an gesättigten Fettsäuren ist bei übermäßigem Verzehr mit einem Anstieg des LDL-Cholesterins verbunden.",
+    "sugar": "Die Zuckerbelastung spiegelt den Gesamtzuckergehalt wider, der sich auf den Blutzucker, das Energieniveau und die Zahngesundheit auswirkt.",
+    "fiber": "Der Ballaststoffgehalt ist bei Verdauungsbeschwerden wie Reizdarmsyndrom und Morbus Crohn wichtig. Ein hoher Ballaststoffgehalt kann je nach Erkrankung vorteilhaft oder problematisch sein.",
+    "protein": "Der Proteingehalt ist wichtig für die Muskelreparatur, das Sättigungsgefühl und Stoffwechselerkrankungen wie PCOS oder die postbariatrische Erholung.",
+    "calorie": "Die Kaloriendichte misst den Energiegehalt pro Gramm Lebensmittel. Lebensmittel mit höherer Dichte liefern mehr Energie in kleineren Portionen.",
+    "inflammatoryFat": "Entzündungsfett ist ein Proxy, der auf dem Gehalt an gesättigten Fettsäuren und Transfetten basiert und für Autoimmun- und Entzündungserkrankungen relevant ist.",
+    "digestiveLoad": "Die Verdauungsbelastung kombiniert den Fett- und Ballaststoffgehalt, um abzuschätzen, wie viel Arbeit Ihr Verdauungssystem benötigt, um diese Nahrung zu verarbeiten.",
+    "carbLoad": "Die Kohlenhydratbelastung spiegelt den gesamten Kohlenhydratgehalt abzüglich Ballaststoffen wider, der für Keto-, Diabetiker- und Stoffwechselerkrankungen relevant ist.",
+    "additives": "Die Zusatzstoffzählung erfasst die Anzahl der in diesem Produkt enthaltenen Lebensmittelzusatzstoffe (E-Nummern und Ähnliches)."
+  },
+  "section": {
+    "importantForYou": "Wichtig für Sie",
+    "importantSubtitle": "Basierend auf dem Gesundheitsprofil von {{name}}.",
+    "importantSubtitleGeneric": "Basierend auf Ihrem Gesundheitsprofil.",
+    "nutrientWatch": "Nährstoffüberwachung",
+    "flaggedIngredients": "Gekennzeichnete Zutaten",
+    "flaggedIngredientsSubtitle": "Dieses Produkt enthält gekennzeichnete Inhaltsstoffe.",
+    "highlightedNutrition": "Hervorgehobene Nährwertangaben",
+    "nutritionalInfo": "Nährwertangaben",
+    "nutrientWatchlist": "Ihre Nährstoff-Beobachtungsliste",
+    "nutrientWatchlistSubtitle": "Nährstoffe, die Sie basierend auf Ihrem Gesundheitsprofil überwachen.",
+    "allergens": "Allergene",
+    "allergensSubtitle": "Für dieses Produkt aufgeführte Allergene."
+  },
+  "allergen": {
+    "warningBadge": "Warnung",
+    "warningText": "Enthält: {{allergens}}. Dies kann Auswirkungen auf das Gesundheitsprofil von {{name}} haben.",
+    "allergensBadge": "Allergene",
+    "containsText": "Enthält: {{allergens}}."
+  },
+  "nutrientWatch": {
+    "noMicroData": "Für dieses Produkt sind keine Mikronährstoffdaten verfügbar."
+  },
+  "ingredients": {
+    "ingredient_one": "{{count}} Zutat",
+    "ingredient_other": "{{count}} Zutaten",
+    "is": "Ist",
+    "are": "Sind",
+    "considered": "berücksichtigt",
+    "harmful": "schädlich",
+    "ok": "OK",
+    "safe": "sicher",
+    "listed": "aufgeführt",
+    "matchProductName": "Entspricht dem Produktnamen",
+    "matchCategory": "Entspricht der Produktkategorie"
+  },
+  "toggle": {
+    "perServing": "Pro Portion",
+    "per100g": "Pro 100g",
+    "value": "Wert",
+    "dri": "DRI (%)"
+  },
+  "loading": {
+    "nutritionalData": "Nährwertdaten werden geladen…",
+    "ingredients": "Zutaten werden geladen…"
+  },
+  "empty": {
+    "limitedDataTitle": "Begrenzte Produktdaten",
+    "limitedDataText": "Für dieses Produkt sind in der Open Food Facts-Datenbank keine Nährwertangaben verfügbar.",
+    "noNutritionTitle": "Keine Nährwertangaben",
+    "noNutritionText": "Für dieses Produkt sind keine Nährwertangaben in der Open Food Facts-Datenbank enthalten.",
+    "noIngredientsTitle": "Keine Zutaten aufgeführt",
+    "noIngredientsText": "Für dieses Produkt sind keine Informationen zu den Inhaltsstoffen verfügbar.",
+    "noAllergensTitle": "Keine Allergene aufgeführt",
+    "noAllergensText": "Für dieses Produkt sind keine Allergeninformationen verfügbar."
+  },
+  "comingSoon": {
+    "title": "Kommt bald",
+    "text": "Dieser Abschnitt befindet sich im Aufbau und wird in einem zukünftigen Update verfügbar sein."
+  },
+  "profile": {
+    "myProfile": "Mein Profil",
+    "switch": "Schalten"
+  },
+  "flagReason": {
+    "veganTitle": "Nicht vegan",
+    "veganBody": "Diese Zutat ist nicht vegan, was im Widerspruch zu Ihren Ernährungspräferenzen steht.",
+    "vegetarianTitle": "Nicht vegetarisch",
+    "vegetarianBody": "Diese Zutat ist nicht vegetarisch, was im Widerspruch zu Ihren Ernährungspräferenzen steht.",
+    "userFlaggedTitle": "Persönlich gemeldet",
+    "userFlaggedBody": "Sie haben diese Zutat markiert. Es wird hervorgehoben, wenn es in den von Ihnen gescannten Produkten erscheint.",
+    "personalBody": "Sie haben dies aufgrund Ihres {{category}} gemeldet."
+  },
+  "flaggedSheet": {
+    "substitutesTitle": "Geeignete Ersatzprodukte sind:"
+  },
+  "ingredientSheet": {
+    "categoryOk": "OK",
+    "categorySafe": "Sicher",
+    "classifiedAs": "Klassifiziert als {{category}}",
+    "defaultAdditiveLine1": "Dies ist ein Lebensmittelzusatzstoff, der häufig in verarbeiteten Lebensmitteln verwendet wird.",
+    "defaultAdditiveLine2": "Es wurde von den Lebensmittelsicherheitsbehörden für die Verwendung in Lebensmitteln zugelassen."
+  }
+}

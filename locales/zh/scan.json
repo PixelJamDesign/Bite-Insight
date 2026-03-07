@@ -1,0 +1,140 @@
+{
+  "product": {
+    "unknownName": "未知产品"
+  },
+  "tab": {
+    "overview": "概述",
+    "nutrition": "营养",
+    "ingredients": "原料",
+    "recommended": "受到推崇的",
+    "info": "产品信息"
+  },
+  "nutriscoreLabel": "营养评分",
+  "nutrientLabels": {
+    "energyKcal": "卡路里",
+    "fat": "胖的",
+    "saturatedFat": "饱和脂肪",
+    "carbs": "碳水化合物",
+    "sugars": "糖类",
+    "fiber": "纤维",
+    "proteins": "蛋白质",
+    "netCarbs": "净碳水化合物",
+    "salt": "盐"
+  },
+  "nutrientRating": {
+    "low": "低的",
+    "moderate": "缓和",
+    "high": "高的",
+    "good": "好的"
+  },
+  "insight": {
+    "glycemic": "血糖影响",
+    "sodium": "钠",
+    "calorie": "卡路里密度",
+    "digestiveLoad": "消化负荷",
+    "carbLoad": "碳水化合物负荷",
+    "additives": "添加剂"
+  },
+  "impact": {
+    "veryHigh": "非常高",
+    "high": "高的",
+    "moderate": "缓和",
+    "low": "低的"
+  },
+  "insightExplanation": {
+    "glycemic": "血糖影响根据其碳水化合物和纤维含量估算该产品升高血糖水平的速度。",
+    "sodium": "钠含量表示每份的盐含量。高钠摄入量与血压升高和心血管紧张有关。",
+    "saturatedFat": "过量食用饱和脂肪含量与低密度脂蛋白胆固醇升高有关。",
+    "sugar": "糖负荷反映了总糖含量，它影响血糖、能量水平和牙齿健康。",
+    "fiber": "纤维含量对于肠易激综合症和克罗恩病等消化系统疾病很重要。根据具体情况，高纤维可能是有益的，也可能是有问题的。",
+    "protein": "蛋白质含量对于肌肉修复、饱腹感和多囊卵巢综合症或减肥后恢复等代谢状况很重要。",
+    "calorie": "卡路里密度衡量每克食物的能量含量。较高密度的食物以较小的份量提供更多的能量。",
+    "inflammatoryFat": "炎症脂肪是基于饱和脂肪和反式脂肪含量的指标，与自身免疫和炎症状况相关。",
+    "digestiveLoad": "消化负荷结合脂肪和纤维含量来估计消化系统处理这种食物需要多少工作。",
+    "carbLoad": "碳水化合物负荷反映了总碳水化合物含量减去纤维，与酮症、糖尿病和代谢状况相关。",
+    "additives": "添加剂计数跟踪该产品中存在的食品添加剂（E 编号和类似添加剂）的数量。"
+  },
+  "section": {
+    "importantForYou": "对您来说很重要",
+    "importantSubtitle": "基于 {{name}} 的健康状况。",
+    "importantSubtitleGeneric": "根据您的健康状况。",
+    "nutrientWatch": "营养观察",
+    "flaggedIngredients": "标记成分",
+    "flaggedIngredientsSubtitle": "该产品含有标记成分。",
+    "highlightedNutrition": "突出的营养信息",
+    "nutritionalInfo": "营养信息",
+    "nutrientWatchlist": "您的营养观察清单",
+    "nutrientWatchlistSubtitle": "您根据您的健康状况监测的营养素。",
+    "allergens": "过敏原",
+    "allergensSubtitle": "本产品列出了过敏原。"
+  },
+  "allergen": {
+    "warningBadge": "警告",
+    "warningText": "包含：{{allergens}}。这可能会影响 {{name}} 的健康状况。",
+    "allergensBadge": "过敏原",
+    "containsText": "包含：{{allergens}}。"
+  },
+  "nutrientWatch": {
+    "noMicroData": "该产品没有微量营养素数据。"
+  },
+  "ingredients": {
+    "ingredient_one": "{{count}} 成分",
+    "ingredient_other": "{{count}} 成分",
+    "is": "是",
+    "are": "是",
+    "considered": "经过考虑的",
+    "harmful": "有害",
+    "ok": "好的",
+    "safe": "安全的",
+    "listed": "列出",
+    "matchProductName": "匹配产品名称",
+    "matchCategory": "匹配产品类别"
+  },
+  "toggle": {
+    "perServing": "每份",
+    "per100g": "每100克",
+    "value": "价值",
+    "dri": "DRI (%)"
+  },
+  "loading": {
+    "nutritionalData": "正在加载营养数据...",
+    "ingredients": "正在加载配料..."
+  },
+  "empty": {
+    "limitedDataTitle": "产品数据有限",
+    "limitedDataText": "Open Food Facts 数据库中没有该产品的营养信息。",
+    "noNutritionTitle": "无营养数据",
+    "noNutritionText": "该产品在 Open Food Facts 数据库中没有营养信息。",
+    "noIngredientsTitle": "未列出成分",
+    "noIngredientsText": "该产品没有成分信息。",
+    "noAllergensTitle": "未列出过敏原",
+    "noAllergensText": "该产品没有可用的过敏原信息。"
+  },
+  "comingSoon": {
+    "title": "即将推出",
+    "text": "此部分正在建设中，将在未来的更新中提供。"
+  },
+  "profile": {
+    "myProfile": "我的个人资料",
+    "switch": "转变"
+  },
+  "flagReason": {
+    "veganTitle": "不是素食主义者",
+    "veganBody": "这种成分不是素食主义者，这与您的饮食偏好相冲突。",
+    "vegetarianTitle": "不是素食主义者",
+    "vegetarianBody": "这种成分不是素食，这与您的饮食偏好相冲突。",
+    "userFlaggedTitle": "个人标记",
+    "userFlaggedBody": "您已标记此成分。只要它出现在您扫描的产品中，它就会突出显示。",
+    "personalBody": "您因 {{category}} 而标记了此内容。"
+  },
+  "flaggedSheet": {
+    "substitutesTitle": "合适的替代品包括："
+  },
+  "ingredientSheet": {
+    "categoryOk": "好的",
+    "categorySafe": "安全的",
+    "classifiedAs": "分类为 {{category}}",
+    "defaultAdditiveLine1": "这是加工食品中常用的食品添加剂。",
+    "defaultAdditiveLine2": "它已被食品安全当局批准用于食品。"
+  }
+}

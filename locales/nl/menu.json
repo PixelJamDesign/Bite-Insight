@@ -1,0 +1,139 @@
+{
+  "main": {
+    "whereLabel": "Waar zou je heen willen?",
+    "dashboard": "Dashboard",
+    "myIngredients": "Mijn ingrediënten",
+    "snackScanner": "Snackscanner",
+    "scanHistory": "Geschiedenis scannen",
+    "recipes": "Recepten",
+    "myAccount": "Mijn account",
+    "settings": "Instellingen",
+    "logOut": "Uitloggen"
+  },
+  "footer": {
+    "version": "ver. 1.0.0",
+    "reportProblem": "Meld een probleem"
+  },
+  "ingredients": {
+    "title": "Mijn ingrediënten",
+    "liked": "Vond ingrediënten leuk",
+    "disliked": "Ik hield niet van ingrediënten",
+    "flagged": "Gemarkeerde ingrediënten"
+  },
+  "account": {
+    "title": "Mijn account",
+    "editDetails": "Bewerk mijn gegevens",
+    "familyMembers": "Familieleden",
+    "biteInsightPlus": "Bijtinzicht+",
+    "changePassword": "Wachtwoord wijzigen"
+  },
+  "settings": {
+    "title": "Instellingen",
+    "security": "Beveiliging",
+    "notifications": "Meldingen",
+    "helpSupport": "Hulp en ondersteuning",
+    "privacyPolicy": "Privacybeleid",
+    "cookiePolicy": "Cookiebeleid",
+    "myData": "Mijn gegevens",
+    "offlineDatabase": "Offlinedatabase"
+  },
+  "security": {
+    "title": "Beveiliging",
+    "biometricLogin": "Biometrische login",
+    "enabledHint": "{{label}} is ingeschakeld. U kunt inloggen zonder uw wachtwoord te typen.",
+    "disabledHint": "Meld u aan met uw e-mailadres en wachtwoord om {{label}} in te schakelen.",
+    "unavailableHint": "Biometrische login is niet beschikbaar op dit apparaat. Zorg ervoor dat Face ID, Touch ID of vingerafdruk is ingesteld in de apparaatinstellingen."
+  },
+  "myData": {
+    "title": "Uw gegevens",
+    "memberSince": "Lid sinds: {{date}}",
+    "productsScanned": "Producten gescand",
+    "familyMembers": "Familieleden",
+    "downloadMyData": "Mijn gegevens downloaden",
+    "downloadSubtext": "Exporteer al uw gegevens als JSON-bestand.",
+    "exportDialogTitle": "Exporteer uw gegevens",
+    "destructiveZone": "Destructieve zone",
+    "clearMyData": "Wis mijn gegevens",
+    "clearSubtext": "Hiermee worden alle huidige gegevens op dit account gewist.",
+    "closeMyAccount": "Sluit mijn account",
+    "closeSubtext": "Verwijder uw account en alle bijbehorende gegevens definitief. Dit kan niet ongedaan worden gemaakt.",
+    "confirm": {
+      "clearTitle": "Al uw gegevens wissen?",
+      "clearDescription": "Hiermee worden uw scangeschiedenis en alle gezinsprofielen definitief verwijderd. Uw account en voorkeuren blijven intact.",
+      "clearPhrase": "DUIDELIJK",
+      "clearLabel": "Wis mijn gegevens",
+      "closeTitle": "Uw account sluiten?",
+      "closeDescription": "Hiermee worden uw profiel, scangeschiedenis, familieleden, voorkeuren en alle bijbehorende gegevens permanent verwijderd. Deze actie kan niet ongedaan worden gemaakt.",
+      "deletePhrase": "VERWIJDEREN",
+      "closeLabel": "Sluit mijn account"
+    },
+    "error": {
+      "clearFailed": "Het wissen van uw gegevens is niet gelukt. Probeer het opnieuw.",
+      "exportFailedTitle": "Exporteren is mislukt",
+      "exportFailedMessage": "Er is iets misgegaan tijdens het exporteren van uw gegevens. Probeer het opnieuw.",
+      "closeFailed": "Het is niet gelukt uw account te sluiten. Neem contact op met de ondersteuning."
+    }
+  },
+  "offlineDb": {
+    "title": "Offlinedatabase",
+    "description": "Download regionale voedseldatabases voor offline scannen van streepjescodes. Eenmaal gedownload, werken scans zonder internetverbinding.",
+    "loadingRegions": "Regio's laden...",
+    "products": "producten",
+    "downloadButton": "Downloaden",
+    "retryButton": "Opnieuw proberen",
+    "downloading": "Bezig met downloaden... {{percentage}}%",
+    "downloaded": "Gedownload",
+    "storageHeading": "Opslag",
+    "totalUsed": "Totaal gebruikt",
+    "regionCount_one": "{{count}} regio",
+    "regionCount_other": "{{count}} regio's",
+    "deleteAll": "Verwijder alle databases",
+    "deleteAllSubtext": "Maak alle offline opslagruimte vrij.",
+    "confirm": {
+      "deleteAllTitle": "Alle offline databases verwijderen?",
+      "deleteOneTitle": "{{label}}-database verwijderen?",
+      "deleteAllDescription": "Hiermee worden alle gedownloade voedseldatabases van uw apparaat verwijderd. U kunt ze op elk gewenst moment opnieuw downloaden. Uw scangeschiedenis wordt niet beïnvloed.",
+      "deleteOneDescription": "Hiermee wordt de voedseldatabase {{label}} van uw apparaat verwijderd. U kunt het op elk gewenst moment opnieuw downloaden.",
+      "deletePhrase": "VERWIJDEREN",
+      "deleteAllLabel": "Alles verwijderen",
+      "deleteOneLabel": "Database verwijderen"
+    }
+  },
+  "password": {
+    "title": "Wachtwoord wijzigen",
+    "subtitle": "Voer uw huidige wachtwoord in en kies een nieuw wachtwoord.",
+    "label": {
+      "current": "Huidig ​​wachtwoord",
+      "new": "Nieuw wachtwoord",
+      "confirm": "Bevestig nieuw wachtwoord"
+    },
+    "placeholder": {
+      "current": "Voer het huidige wachtwoord in",
+      "new": "Voer een nieuw wachtwoord in",
+      "confirm": "Voer het nieuwe wachtwoord opnieuw in"
+    },
+    "rule": {
+      "minLength": "8 karakters",
+      "uppercase": "hoofdletter",
+      "lowercase": "kleine letter",
+      "number": "nummer"
+    },
+    "rulePrefix": {
+      "atLeast": "Ten minste",
+      "one": "Een"
+    },
+    "button": {
+      "update": "Wachtwoord bijwerken"
+    },
+    "error": {
+      "verifyFailed": "Kan uw identiteit niet verifiëren. Probeer het opnieuw.",
+      "incorrectCurrent": "Het huidige wachtwoord is onjuist.",
+      "generic": "Er is iets misgegaan. Probeer het opnieuw.",
+      "mismatch": "Wachtwoorden komen niet overeen"
+    },
+    "success": {
+      "title": "Wachtwoord bijgewerkt",
+      "body": "Uw wachtwoord is succesvol gewijzigd."
+    }
+  }
+}

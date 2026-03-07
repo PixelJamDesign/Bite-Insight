@@ -1,0 +1,20 @@
+{
+  "screenTitle": "Histórico de verificação",
+  "dateTabs": {
+    "today": "Hoje",
+    "yesterday": "Ontem"
+  },
+  "calendar": {
+    "selectStartDate": "Selecione a data de início",
+    "selectEndDate": "Selecione a data de término"
+  },
+  "dateRange": {
+    "label": "Período"
+  },
+  "empty": {
+    "noScansRange": "Nenhuma varredura neste intervalo",
+    "noScansToday": "Nenhuma varredura hoje",
+    "noScansDay": "Nenhuma varredura neste dia",
+    "description": "Toque no botão do scanner abaixo para digitalizar o rótulo de um alimento."
+  }
+}

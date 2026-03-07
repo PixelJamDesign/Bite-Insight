@@ -1,0 +1,139 @@
+{
+  "main": {
+    "whereLabel": "Où aimerais-tu aller ?",
+    "dashboard": "Tableau de bord",
+    "myIngredients": "Mes ingrédients",
+    "snackScanner": "Scanner de collations",
+    "scanHistory": "Historique des analyses",
+    "recipes": "Recettes",
+    "myAccount": "Mon compte",
+    "settings": "Paramètres",
+    "logOut": "Se déconnecter"
+  },
+  "footer": {
+    "version": "ver. 1.0.0",
+    "reportProblem": "Signaler un problème"
+  },
+  "ingredients": {
+    "title": "Mes ingrédients",
+    "liked": "Ingrédients appréciés",
+    "disliked": "Ingrédients détestés",
+    "flagged": "Ingrédients signalés"
+  },
+  "account": {
+    "title": "Mon compte",
+    "editDetails": "Modifier mes détails",
+    "familyMembers": "Membres de la famille",
+    "biteInsightPlus": "Aperçu de la morsure+",
+    "changePassword": "Changer le mot de passe"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "security": "Sécurité",
+    "notifications": "Notifications",
+    "helpSupport": "Aide et assistance",
+    "privacyPolicy": "politique de confidentialité",
+    "cookiePolicy": "Politique en matière de cookies",
+    "myData": "Mes données",
+    "offlineDatabase": "Base de données hors ligne"
+  },
+  "security": {
+    "title": "Sécurité",
+    "biometricLogin": "Connexion biométrique",
+    "enabledHint": "{{label}} est activé. Vous pouvez vous connecter sans saisir votre mot de passe.",
+    "disabledHint": "Connectez-vous avec votre e-mail et votre mot de passe pour activer {{label}}.",
+    "unavailableHint": "La connexion biométrique n'est pas disponible sur cet appareil. Veuillez vous assurer que Face ID, Touch ID ou empreinte digitale sont configurés dans les paramètres de votre appareil."
+  },
+  "myData": {
+    "title": "Vos données",
+    "memberSince": "Membre depuis : {{date}}",
+    "productsScanned": "Produits scannés",
+    "familyMembers": "Membres de la famille",
+    "downloadMyData": "Télécharger mes données",
+    "downloadSubtext": "Exportez toutes vos données sous forme de fichier JSON.",
+    "exportDialogTitle": "Exportez vos données",
+    "destructiveZone": "Zone destructrice",
+    "clearMyData": "Effacer mes données",
+    "clearSubtext": "Cela effacera toutes les données actuelles sur ce compte.",
+    "closeMyAccount": "Fermer mon compte",
+    "closeSubtext": "Supprimez définitivement votre compte et toutes les données associées. Cela ne peut pas être annulé.",
+    "confirm": {
+      "clearTitle": "Effacer toutes vos données ?",
+      "clearDescription": "Cela supprimera définitivement votre historique d’analyse et tous les profils familiaux. Votre compte et vos préférences resteront intacts.",
+      "clearPhrase": "CLAIR",
+      "clearLabel": "Effacer mes données",
+      "closeTitle": "Fermer votre compte ?",
+      "closeDescription": "Cela supprimera définitivement votre profil, votre historique d'analyse, les membres de votre famille, vos préférences et toutes les données associées. Cette action ne peut pas être annulée.",
+      "deletePhrase": "SUPPRIMER",
+      "closeLabel": "Fermer mon compte"
+    },
+    "error": {
+      "clearFailed": "Échec de la suppression de vos données. Veuillez réessayer.",
+      "exportFailedTitle": "Échec de l'exportation",
+      "exportFailedMessage": "Une erreur s'est produite lors de l'exportation de vos données. Veuillez réessayer.",
+      "closeFailed": "Échec de la fermeture de votre compte. Veuillez contacter l'assistance."
+    }
+  },
+  "offlineDb": {
+    "title": "Base de données hors ligne",
+    "description": "Téléchargez des bases de données alimentaires régionales pour scanner les codes-barres hors ligne. Une fois téléchargées, les analyses fonctionnent sans connexion Internet.",
+    "loadingRegions": "Chargement des régions...",
+    "products": "produits",
+    "downloadButton": "Télécharger",
+    "retryButton": "Réessayer",
+    "downloading": "Téléchargement... {{percentage}}%",
+    "downloaded": "Téléchargé",
+    "storageHeading": "Stockage",
+    "totalUsed": "Total utilisé",
+    "regionCount_one": "Région {{count}}",
+    "regionCount_other": "{{count}} régions",
+    "deleteAll": "Supprimer toutes les bases de données",
+    "deleteAllSubtext": "Libérez tout le stockage hors ligne.",
+    "confirm": {
+      "deleteAllTitle": "Supprimer toutes les bases de données hors ligne ?",
+      "deleteOneTitle": "Supprimer la base de données {{label}} ?",
+      "deleteAllDescription": "Cela supprimera toutes les bases de données alimentaires téléchargées de votre appareil. Vous pouvez les télécharger à nouveau à tout moment. Votre historique d’analyse ne sera pas affecté.",
+      "deleteOneDescription": "Cela supprimera la base de données alimentaire {{label}} de votre appareil. Vous pouvez le télécharger à nouveau à tout moment.",
+      "deletePhrase": "SUPPRIMER",
+      "deleteAllLabel": "Supprimer tout",
+      "deleteOneLabel": "Supprimer la base de données"
+    }
+  },
+  "password": {
+    "title": "Changer le mot de passe",
+    "subtitle": "Entrez votre mot de passe actuel et choisissez-en un nouveau.",
+    "label": {
+      "current": "Mot de passe actuel",
+      "new": "Nouveau mot de passe",
+      "confirm": "Confirmer le nouveau mot de passe"
+    },
+    "placeholder": {
+      "current": "Entrez le mot de passe actuel",
+      "new": "Entrez le nouveau mot de passe",
+      "confirm": "Ressaisissez le nouveau mot de passe"
+    },
+    "rule": {
+      "minLength": "8 caractères",
+      "uppercase": "lettre majuscule",
+      "lowercase": "lettre minuscule",
+      "number": "nombre"
+    },
+    "rulePrefix": {
+      "atLeast": "Au moins",
+      "one": "Un"
+    },
+    "button": {
+      "update": "Mettre à jour le mot de passe"
+    },
+    "error": {
+      "verifyFailed": "Impossible de vérifier votre identité. Veuillez réessayer.",
+      "incorrectCurrent": "Le mot de passe actuel est incorrect.",
+      "generic": "Quelque chose s'est mal passé. Veuillez réessayer.",
+      "mismatch": "Les mots de passe ne correspondent pas"
+    },
+    "success": {
+      "title": "Mot de passe mis à jour",
+      "body": "Votre mot de passe a été modifié avec succès."
+    }
+  }
+}

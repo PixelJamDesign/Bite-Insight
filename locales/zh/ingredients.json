@@ -1,0 +1,57 @@
+{
+  "detail": {
+    "doYouLike": "你喜欢吗",
+    "didYouKnow": "你可知道？"
+  },
+  "preferences": {
+    "pageTitle": {
+      "liked": "喜欢的成分",
+      "disliked": "不喜欢的成分",
+      "flagged": "标记成分"
+    },
+    "countVerb": {
+      "liked": "你喜欢",
+      "disliked": "你不喜欢",
+      "flagged": "你已举报"
+    },
+    "empty": {
+      "titleLiked": "您目前没有喜欢的食材",
+      "titleDisliked": "您目前没有不喜欢的成分",
+      "titleFlagged": "您目前没有标记的成分",
+      "descriptionLiked": "为了让您的膳食计划更容易，请在仪表板上对您最喜欢的一些食材进行评分。当您使用 Insight Scanner 时，我们会重点关注它们并推荐您会喜欢的美味食谱！",
+      "descriptionDisliked": "在仪表板上对成分进行评分以建立您不喜欢的列表。每当它们出现在产品中时，我们都会确保对其进行标记。",
+      "descriptionFlagged": "从仪表板或扫描结果中标记成分，以便在产品中出现时以红色突出显示它们。"
+    },
+    "flaggedPlaceholder": {
+      "palmOil": "棕榈油",
+      "highFructoseCornSyrup": "高果糖玉米糖浆",
+      "sodiumBenzoate": "苯甲酸钠"
+    },
+    "subtitle": {
+      "currently": "现在",
+      "ingredient_one": "{{count}} 成分",
+      "ingredient_other": "{{count}} 成分"
+    },
+    "search": {
+      "placeholder": "搜索成分..."
+    },
+    "menu": {
+      "likeIngredient": "喜欢成分",
+      "dislikeIngredient": "不喜欢的成分",
+      "flagIngredient": "标记成分",
+      "removeIngredient": "去除成分"
+    },
+    "error": {
+      "title": "无法加载成分",
+      "migrationRequired": "需要数据库迁移。请在 Supabase SQL 编辑器中运行 ALTER TABLE 语句以添加成分首选项列。"
+    }
+  },
+  "upsell": {
+    "bite": "咬",
+    "insight": "洞察力",
+    "plus": "加",
+    "plusSymbol": "+",
+    "tagline": "标记要突出显示的成分\n每次扫描时它们都是红色的",
+    "upgradeButton": "升级至Plus+"
+  }
+}

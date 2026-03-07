@@ -1,0 +1,15 @@
+{
+  "weekInNumbers": "Jouw week in cijfers...",
+  "scannedLabels": "Voedseletiketten gescand",
+  "flaggedIngredients": "Gemarkeerde ingrediënten",
+  "ingredientQuestion": "Vind jij deze ingrediënten lekker?",
+  "ingredientSubtitle": "Vertel ons welke ingrediënten voor u werken en welke niet.",
+  "completionTitle": "Je hebt je lijst met ingrediënten die je wel en niet lekker vindt, helemaal gehaald!",
+  "completionSubtitle": "Met uw ingrediëntenkeuze kunnen we uw app-ervaring nog beter maken!",
+  "viewLiked": "Bekijk uw favoriete ingrediënten",
+  "dailyInsight": "Dagelijks inzicht!",
+  "suitableFor": "Geschikt voor:",
+  "setupRequired": "Installatie vereist",
+  "setupMessage": "Voeg uw Supabase-URL en anon-sleutel toe aan het .env-bestand en start de app opnieuw.\n\nInstellingen → API in uw Supabase dashboard.",
+  "fallbackInitials": "??"
+}

@@ -1,0 +1,109 @@
+{
+  "greeting": {
+    "morning": "Goedemorgen",
+    "afternoon": "Goedemiddag",
+    "evening": "Goedeavond",
+    "fallbackName": "daar"
+  },
+  "buttons": {
+    "back": "Rug",
+    "cancel": "Annuleren",
+    "close": "Dichtbij",
+    "done": "Klaar",
+    "finish": "Finish",
+    "save": "Redden",
+    "search": "Zoekopdracht",
+    "apply": "Toepassen",
+    "clear": "Duidelijk",
+    "ok": "OK",
+    "next": "Volgende: {{stepName}}",
+    "skip": "Sla dit voorlopig over, ik zal dit later instellen",
+    "editList": "Lijst bewerken",
+    "deleteSelected": "Geselecteerde verwijderen"
+  },
+  "placeholder": {
+    "fullName": "Volledige naam",
+    "emailAddress": "E-mailadres",
+    "password": "Wachtwoord",
+    "search": "Zoekopdracht..."
+  },
+  "error": {
+    "badge": "Fout",
+    "title": "Fout"
+  },
+  "alert": {
+    "saveFailedTitle": "Opslaan mislukt"
+  },
+  "link": {
+    "signIn": "Inloggen"
+  },
+  "filters": {
+    "all": "Alle"
+  },
+  "nutrientDirections": {
+    "limit": "Beperken",
+    "boost": "Boost",
+    "noChange": "Geen verandering"
+  },
+  "ratings": {
+    "low": "Laag",
+    "moderate": "Gematigd",
+    "high": "Hoog",
+    "veryHigh": "Zeer hoog",
+    "good": "Goed"
+  },
+  "nutriscoreLabels": {
+    "a": "Verbazingwekkend",
+    "b": "Goed",
+    "c": "OK",
+    "d": "Arm",
+    "e": "Slecht"
+  },
+  "months": {
+    "full": {
+      "january": "Januari",
+      "february": "Februari",
+      "march": "Maart",
+      "april": "april",
+      "may": "Kunnen",
+      "june": "juni",
+      "july": "juli",
+      "august": "augustus",
+      "september": "september",
+      "october": "oktober",
+      "november": "November",
+      "december": "December"
+    },
+    "short": {
+      "jan": "jan",
+      "feb": "februari",
+      "mar": "Maart",
+      "apr": "april",
+      "may": "Kunnen",
+      "jun": "jun",
+      "jul": "juli",
+      "aug": "augustus",
+      "sep": "september",
+      "oct": "okt",
+      "nov": "nov",
+      "dec": "dec"
+    }
+  },
+  "days": {
+    "short": {
+      "monday": "ma",
+      "tuesday": "di",
+      "wednesday": "wo",
+      "thursday": "Do",
+      "friday": "Vr",
+      "saturday": "Zat",
+      "sunday": "Zon"
+    }
+  },
+  "ordinal": {
+    "th": "e",
+    "st": "st",
+    "nd": "nl",
+    "rd": "rd"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "step": {
+    "aboutYou": "عنك",
+    "aboutThem": "عنهم",
+    "health": "الظروف الصحية",
+    "nutrients": "قائمة مراقبة المغذيات",
+    "allergies": "الحساسية",
+    "dietary": "التفضيلات الغذائية"
+  },
+  "question": {
+    "healthCondition": "هل لديك أي حالة صحية؟",
+    "allergies": "هل لديك أي حساسية؟",
+    "dietaryPreferences": "هل لديك أي تفضيلات غذائية؟",
+    "healthConditionFamily": "هل لديهم أي ظروف صحية؟",
+    "allergiesFamily": "هل لديهم أي حساسية؟",
+    "dietaryPreferencesFamily": "هل لديهم أي تفضيلات غذائية؟"
+  },
+  "count": {
+    "condition_one": "{{count}} الشرط",
+    "condition_other": "{{count}} الشروط",
+    "allergy_one": "{{count}} حساسية",
+    "allergy_other": "{{count}} الحساسية",
+    "preference_one": "{{count}} التفضيل",
+    "preference_other": "{{count}} التفضيلات"
+  },
+  "chip": {
+    "youveSelected": "لقد حددت"
+  },
+  "nutrient": {
+    "suggestion": "بناءً على حالتك، نقترح مراقبة هذه العناصر الغذائية",
+    "suggestionFamily": "وبناء على ظروفهم نقترح مراقبة هذه العناصر الغذائية",
+    "limiting": "الحد",
+    "boosting": "، تعزيز",
+    "tracking": "تتبع",
+    "nutrientCount_one": "{{count}} مادة مغذية",
+    "nutrientCount_other": "{{count}} العناصر الغذائية",
+    "alertSubtext": "سننبهك عندما تحتوي المنتجات الممسوحة ضوئيًا على هذه العناصر.",
+    "instructions": "اختر الحد من كل عنصر غذائي أو تعزيزه أو تخطيه.",
+    "sectionLimit": "العناصر الغذائية للحد",
+    "sectionBoost": "العناصر الغذائية لتعزيز",
+    "sectionNoChange": "لا تغيير",
+    "sectionLimiting": "الحد",
+    "sectionBoosting": "التعزيز"
+  },
+  "progress": {
+    "next": "التالي: {{label}}"
+  }
+}

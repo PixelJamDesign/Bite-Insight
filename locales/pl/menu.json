@@ -1,0 +1,139 @@
+{
+  "main": {
+    "whereLabel": "Gdzie chciałbyś pojechać?",
+    "dashboard": "Panel",
+    "myIngredients": "Moje składniki",
+    "snackScanner": "Skaner przekąsek",
+    "scanHistory": "Historia skanowania",
+    "recipes": "Przepisy",
+    "myAccount": "Moje konto",
+    "settings": "Ustawienia",
+    "logOut": "Wyloguj się"
+  },
+  "footer": {
+    "version": "wer. 1.0.0",
+    "reportProblem": "Zgłoś problem"
+  },
+  "ingredients": {
+    "title": "Moje składniki",
+    "liked": "Lubiane składniki",
+    "disliked": "Nielubiane składniki",
+    "flagged": "Oznaczone składniki"
+  },
+  "account": {
+    "title": "Moje konto",
+    "editDetails": "Edytuj moje dane",
+    "familyMembers": "Członkowie rodziny",
+    "biteInsightPlus": "Zgryz Insight+",
+    "changePassword": "Zmień hasło"
+  },
+  "settings": {
+    "title": "Ustawienia",
+    "security": "Bezpieczeństwo",
+    "notifications": "Powiadomienia",
+    "helpSupport": "Pomoc i wsparcie",
+    "privacyPolicy": "Polityka prywatności",
+    "cookiePolicy": "Polityka plików cookie",
+    "myData": "Moje dane",
+    "offlineDatabase": "Baza danych offline"
+  },
+  "security": {
+    "title": "Bezpieczeństwo",
+    "biometricLogin": "Logowanie biometryczne",
+    "enabledHint": "{{label}} jest włączony. Możesz zalogować się bez wpisywania hasła.",
+    "disabledHint": "Zaloguj się przy użyciu swojego adresu e-mail i hasła, aby włączyć {{label}}.",
+    "unavailableHint": "Logowanie biometryczne nie jest dostępne na tym urządzeniu. Upewnij się, że w ustawieniach urządzenia masz skonfigurowaną funkcję Face ID, Touch ID lub odcisk palca."
+  },
+  "myData": {
+    "title": "Twoje dane",
+    "memberSince": "Członek od: {{date}}",
+    "productsScanned": "Produkty zeskanowane",
+    "familyMembers": "Członkowie rodziny",
+    "downloadMyData": "Pobierz moje dane",
+    "downloadSubtext": "Eksportuj wszystkie dane jako plik JSON.",
+    "exportDialogTitle": "Eksportuj swoje dane",
+    "destructiveZone": "Strefa zniszczenia",
+    "clearMyData": "Wyczyść moje dane",
+    "clearSubtext": "Spowoduje to wyczyszczenie wszystkich bieżących danych na tym koncie.",
+    "closeMyAccount": "Zamknij moje konto",
+    "closeSubtext": "Usuń trwale swoje konto i wszystkie powiązane dane. Tego nie można cofnąć.",
+    "confirm": {
+      "clearTitle": "Wyczyścić wszystkie dane?",
+      "clearDescription": "Spowoduje to trwałe usunięcie historii skanowania i wszystkich profili rodzinnych. Twoje konto i preferencje pozostaną nienaruszone.",
+      "clearPhrase": "JASNE",
+      "clearLabel": "Wyczyść moje dane",
+      "closeTitle": "Zamknąć konto?",
+      "closeDescription": "Spowoduje to trwałe usunięcie Twojego profilu, historii skanowania, członków rodziny, preferencji i wszystkich powiązanych danych. Tej akcji nie można cofnąć.",
+      "deletePhrase": "USUWAĆ",
+      "closeLabel": "Zamknij moje konto"
+    },
+    "error": {
+      "clearFailed": "Nie udało się wyczyścić Twoich danych. Spróbuj ponownie.",
+      "exportFailedTitle": "Eksport nie powiódł się",
+      "exportFailedMessage": "Coś poszło nie tak podczas eksportowania danych. Spróbuj ponownie.",
+      "closeFailed": "Nie udało się zamknąć Twojego konta. Skontaktuj się z pomocą techniczną."
+    }
+  },
+  "offlineDb": {
+    "title": "Baza danych offline",
+    "description": "Pobierz regionalne bazy danych żywności do skanowania kodów kreskowych offline. Po pobraniu skanowanie działa bez połączenia z Internetem.",
+    "loadingRegions": "Ładowanie regionów...",
+    "products": "produkty",
+    "downloadButton": "Pobierać",
+    "retryButton": "Spróbować ponownie",
+    "downloading": "Pobieram... {{percentage}}%",
+    "downloaded": "Pobrano",
+    "storageHeading": "Składowanie",
+    "totalUsed": "Łącznie wykorzystano",
+    "regionCount_one": "Region {{count}}",
+    "regionCount_other": "{{count}} regiony",
+    "deleteAll": "Usuń wszystkie bazy danych",
+    "deleteAllSubtext": "Zwolnij całą pamięć offline.",
+    "confirm": {
+      "deleteAllTitle": "Usunąć wszystkie bazy danych offline?",
+      "deleteOneTitle": "Usunąć bazę danych {{label}}?",
+      "deleteAllDescription": "Spowoduje to usunięcie wszystkich pobranych baz danych żywności z Twojego urządzenia. Możesz je pobrać ponownie w dowolnym momencie. Nie będzie to miało wpływu na historię skanowania.",
+      "deleteOneDescription": "Spowoduje to usunięcie bazy danych żywności {{label}} z Twojego urządzenia. Możesz pobrać go ponownie w dowolnym momencie.",
+      "deletePhrase": "USUWAĆ",
+      "deleteAllLabel": "Usuń wszystko",
+      "deleteOneLabel": "Usuń bazę danych"
+    }
+  },
+  "password": {
+    "title": "Zmień hasło",
+    "subtitle": "Wpisz swoje obecne hasło i wybierz nowe.",
+    "label": {
+      "current": "Aktualne hasło",
+      "new": "Nowe hasło",
+      "confirm": "Potwierdź nowe hasło"
+    },
+    "placeholder": {
+      "current": "Wprowadź aktualne hasło",
+      "new": "Wprowadź nowe hasło",
+      "confirm": "Wprowadź ponownie nowe hasło"
+    },
+    "rule": {
+      "minLength": "8 znaków",
+      "uppercase": "wielka litera",
+      "lowercase": "mała litera",
+      "number": "numer"
+    },
+    "rulePrefix": {
+      "atLeast": "Co najmniej",
+      "one": "Jeden"
+    },
+    "button": {
+      "update": "Zaktualizuj hasło"
+    },
+    "error": {
+      "verifyFailed": "Nie można zweryfikować Twojej tożsamości. Spróbuj ponownie.",
+      "incorrectCurrent": "Obecne hasło jest nieprawidłowe.",
+      "generic": "Coś poszło nie tak. Spróbuj ponownie.",
+      "mismatch": "Hasła nie pasują"
+    },
+    "success": {
+      "title": "Hasło zaktualizowane",
+      "body": "Twoje hasło zostało pomyślnie zmienione."
+    }
+  }
+}

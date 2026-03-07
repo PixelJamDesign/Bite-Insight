@@ -1,0 +1,48 @@
+{
+  "step": {
+    "aboutYou": "关于你",
+    "aboutThem": "关于他们",
+    "health": "健康状况",
+    "nutrients": "营养素观察清单",
+    "allergies": "过敏",
+    "dietary": "饮食偏好"
+  },
+  "question": {
+    "healthCondition": "您有健康状况吗？",
+    "allergies": "你有过敏吗？",
+    "dietaryPreferences": "您有什么饮食偏好吗？",
+    "healthConditionFamily": "他们有任何健康状况吗？",
+    "allergiesFamily": "他们有过敏症吗？",
+    "dietaryPreferencesFamily": "他们有什么饮食偏好吗？"
+  },
+  "count": {
+    "condition_one": "{{count}} 条件",
+    "condition_other": "{{count}} 条件",
+    "allergy_one": "{{count}} 过敏",
+    "allergy_other": "{{count}} 过敏",
+    "preference_one": "{{count}} 偏好",
+    "preference_other": "{{count}} 首选项"
+  },
+  "chip": {
+    "youveSelected": "您已选择"
+  },
+  "nutrient": {
+    "suggestion": "根据您的情况，我们建议关注这些营养素",
+    "suggestionFamily": "根据他们的情况，我们建议关注这些营养素",
+    "limiting": "限制",
+    "boosting": ", 提升",
+    "tracking": "追踪",
+    "nutrientCount_one": "{{count}} 营养素",
+    "nutrientCount_other": "{{count}} 营养素",
+    "alertSubtext": "当扫描的产品包含这些内容时，我们会提醒您。",
+    "instructions": "选择限制、增加或跳过每种营养素。",
+    "sectionLimit": "限制营养素",
+    "sectionBoost": "增强营养",
+    "sectionNoChange": "没有变化",
+    "sectionLimiting": "限制",
+    "sectionBoosting": "提升"
+  },
+  "progress": {
+    "next": "下一页：{{label}}"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "step": {
+    "aboutYou": "당신에 대해",
+    "aboutThem": "그들에 대하여",
+    "health": "건강 상태",
+    "nutrients": "영양소 관심 목록",
+    "allergies": "알레르기",
+    "dietary": "선호하는 식단"
+  },
+  "question": {
+    "healthCondition": "건강상의 문제가 있나요?",
+    "allergies": "알레르기가 있나요?",
+    "dietaryPreferences": "선호하는 식단이 있나요?",
+    "healthConditionFamily": "건강상의 문제가 있나요?",
+    "allergiesFamily": "알레르기가 있나요?",
+    "dietaryPreferencesFamily": "선호하는 식단이 있나요?"
+  },
+  "count": {
+    "condition_one": "{{count}} 조건",
+    "condition_other": "{{count}} 조건",
+    "allergy_one": "__자리 표시자_0__ 알레르기",
+    "allergy_other": "{{count}} 알레르기",
+    "preference_one": "{{count}} 환경설정",
+    "preference_other": "{{count}} 환경설정"
+  },
+  "chip": {
+    "youveSelected": "당신이 선택했습니다"
+  },
+  "nutrient": {
+    "suggestion": "귀하의 상태에 따라 다음 영양소를 살펴보는 것이 좋습니다.",
+    "suggestionFamily": "상태에 따라 다음 영양소를 살펴보는 것이 좋습니다.",
+    "limiting": "제한",
+    "boosting": ", 부스팅",
+    "tracking": "추적",
+    "nutrientCount_one": "{{count}} 영양소",
+    "nutrientCount_other": "__자리표시자_0__ 영양소",
+    "alertSubtext": "스캔한 제품에 이러한 내용이 포함되어 있으면 알려드리겠습니다.",
+    "instructions": "각 영양소를 제한하거나 강화하거나 생략하도록 선택하세요.",
+    "sectionLimit": "제한해야 할 영양소",
+    "sectionBoost": "부스트할 영양소",
+    "sectionNoChange": "변화 없음",
+    "sectionLimiting": "제한",
+    "sectionBoosting": "부스팅"
+  },
+  "progress": {
+    "next": "다음: {{label}}"
+  }
+}

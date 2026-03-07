@@ -1,0 +1,140 @@
+{
+  "product": {
+    "unknownName": "Produto desconhecido"
+  },
+  "tab": {
+    "overview": "Visão geral",
+    "nutrition": "Nutrição",
+    "ingredients": "Ingredientes",
+    "recommended": "Recomendado",
+    "info": "Informações do produto"
+  },
+  "nutriscoreLabel": "Pontuação nutricional",
+  "nutrientLabels": {
+    "energyKcal": "Calorias",
+    "fat": "Gordo",
+    "saturatedFat": "Gordura saturada",
+    "carbs": "Carboidratos",
+    "sugars": "Açúcares",
+    "fiber": "Fibra",
+    "proteins": "Proteína",
+    "netCarbs": "Carboidratos Líquidos",
+    "salt": "Sal"
+  },
+  "nutrientRating": {
+    "low": "Baixo",
+    "moderate": "Moderado",
+    "high": "Alto",
+    "good": "Bom"
+  },
+  "insight": {
+    "glycemic": "Impacto glicêmico",
+    "sodium": "Sódio",
+    "calorie": "Densidade calórica",
+    "digestiveLoad": "Carga digestiva",
+    "carbLoad": "Carga de carboidratos",
+    "additives": "Aditivos"
+  },
+  "impact": {
+    "veryHigh": "Muito alto",
+    "high": "Alto",
+    "moderate": "Moderado",
+    "low": "Baixo"
+  },
+  "insightExplanation": {
+    "glycemic": "O impacto glicêmico estima a rapidez com que este produto pode aumentar os níveis de açúcar no sangue, com base no seu conteúdo de carboidratos e fibras.",
+    "sodium": "Os níveis de sódio indicam o teor de sal por porção. A alta ingestão de sódio está associada à pressão arterial elevada e tensão cardiovascular.",
+    "saturatedFat": "O teor de gordura saturada está associado ao aumento do colesterol LDL quando consumido em excesso.",
+    "sugar": "A carga de açúcar reflete o teor total de açúcar, que afeta o açúcar no sangue, os níveis de energia e a saúde bucal.",
+    "fiber": "O conteúdo de fibra é importante para problemas digestivos como IBS e Crohn. O alto teor de fibras pode ser benéfico ou problemático dependendo da condição.",
+    "protein": "O conteúdo de proteína é importante para a reparação muscular, saciedade e condições metabólicas como SOP ou recuperação pós-bariátrica.",
+    "calorie": "A densidade calórica mede o conteúdo energético por grama de alimento. Alimentos de maior densidade fornecem mais energia em porções menores.",
+    "inflammatoryFat": "A gordura inflamatória é um proxy baseado no conteúdo de gordura saturada e gordura trans, relevante para condições autoimunes e inflamatórias.",
+    "digestiveLoad": "A carga digestiva combina o conteúdo de gordura e fibra para estimar quanto trabalho seu sistema digestivo precisa para processar esse alimento.",
+    "carbLoad": "A carga de carboidratos reflete o conteúdo total de carboidratos menos fibras, relevante para condições cetônicas, diabéticas e metabólicas.",
+    "additives": "A contagem de aditivos rastreia o número de aditivos alimentares (números E e similares) presentes neste produto."
+  },
+  "section": {
+    "importantForYou": "Importante para você",
+    "importantSubtitle": "Com base no perfil de saúde de {{name}}.",
+    "importantSubtitleGeneric": "Com base no seu perfil de saúde.",
+    "nutrientWatch": "Observação de Nutrientes",
+    "flaggedIngredients": "Ingredientes sinalizados",
+    "flaggedIngredientsSubtitle": "Este produto contém ingredientes sinalizados.",
+    "highlightedNutrition": "Informações nutricionais destacadas",
+    "nutritionalInfo": "Informação Nutricional",
+    "nutrientWatchlist": "Sua lista de nutrientes",
+    "nutrientWatchlistSubtitle": "Nutrientes que você está monitorando com base no seu perfil de saúde.",
+    "allergens": "Alérgenos",
+    "allergensSubtitle": "Alérgenos listados para este produto."
+  },
+  "allergen": {
+    "warningBadge": "Aviso",
+    "warningText": "Contém: {{allergens}}. Isso pode afetar o perfil de saúde de {{name}}.",
+    "allergensBadge": "Alérgenos",
+    "containsText": "Contém: {{allergens}}."
+  },
+  "nutrientWatch": {
+    "noMicroData": "Os dados de micronutrientes não estão disponíveis para este produto."
+  },
+  "ingredients": {
+    "ingredient_one": "{{count}} ingrediente",
+    "ingredient_other": "{{count}} ingredientes",
+    "is": "é",
+    "are": "são",
+    "considered": "considerado",
+    "harmful": "prejudicial",
+    "ok": "OK",
+    "safe": "seguro",
+    "listed": "listado",
+    "matchProductName": "Corresponde ao nome do produto",
+    "matchCategory": "Corresponde à categoria do produto"
+  },
+  "toggle": {
+    "perServing": "Por porção",
+    "per100g": "Por 100g",
+    "value": "Valor",
+    "dri": "DRI (%)"
+  },
+  "loading": {
+    "nutritionalData": "Carregando dados nutricionais…",
+    "ingredients": "Carregando ingredientes…"
+  },
+  "empty": {
+    "limitedDataTitle": "Dados limitados do produto",
+    "limitedDataText": "As informações nutricionais não estão disponíveis para este produto no banco de dados Open Food Facts.",
+    "noNutritionTitle": "Sem dados nutricionais",
+    "noNutritionText": "Este produto não possui informações nutricionais no banco de dados Open Food Facts.",
+    "noIngredientsTitle": "Nenhum ingrediente listado",
+    "noIngredientsText": "Informações sobre ingredientes não estão disponíveis para este produto.",
+    "noAllergensTitle": "Nenhum alérgeno listado",
+    "noAllergensText": "Nenhuma informação sobre alérgenos está disponível para este produto."
+  },
+  "comingSoon": {
+    "title": "Em breve",
+    "text": "Esta seção está em construção e estará disponível em uma atualização futura."
+  },
+  "profile": {
+    "myProfile": "Meu perfil",
+    "switch": "Trocar"
+  },
+  "flagReason": {
+    "veganTitle": "Não é vegano",
+    "veganBody": "Este ingrediente não é vegano, o que entra em conflito com as suas preferências alimentares.",
+    "vegetarianTitle": "Não vegetariano",
+    "vegetarianBody": "Este ingrediente não é vegetariano, o que entra em conflito com as suas preferências alimentares.",
+    "userFlaggedTitle": "Sinalizado pessoalmente",
+    "userFlaggedBody": "Você sinalizou este ingrediente. Ele será destacado sempre que aparecer nos produtos que você digitalizar.",
+    "personalBody": "Você sinalizou isso por causa do seu {{category}}."
+  },
+  "flaggedSheet": {
+    "substitutesTitle": "As substituições adequadas incluem:"
+  },
+  "ingredientSheet": {
+    "categoryOk": "OK",
+    "categorySafe": "Seguro",
+    "classifiedAs": "Classificado como {{category}}",
+    "defaultAdditiveLine1": "Este é um aditivo alimentar comumente usado em alimentos processados.",
+    "defaultAdditiveLine2": "Foi aprovado pelas autoridades de segurança alimentar para uso em produtos alimentícios."
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "detail": {
+    "doYouLike": "Czy lubisz",
+    "didYouKnow": "Czy wiedziałeś?"
+  },
+  "preferences": {
+    "pageTitle": {
+      "liked": "Podobały mi się składniki",
+      "disliked": "Nielubiane składniki",
+      "flagged": "Oznaczone składniki"
+    },
+    "countVerb": {
+      "liked": "lubisz",
+      "disliked": "nie lubisz",
+      "flagged": "oznaczyłeś"
+    },
+    "empty": {
+      "titleLiked": "Obecnie nie masz ulubionych składników",
+      "titleDisliked": "Obecnie nie masz żadnych nielubianych składników",
+      "titleFlagged": "Obecnie nie masz oznaczonych składników",
+      "descriptionLiked": "Aby ułatwić planowanie posiłków, oceń niektóre swoje ulubione składniki na pulpicie nawigacyjnym. Gdy skorzystasz ze skanera Insight, wyróżnimy je i zaproponujemy smaczne przepisy, które pokochasz!",
+      "descriptionDisliked": "Oceniaj składniki na pulpicie nawigacyjnym, aby zbudować swoją listę nielubianych składników. Zadbamy o to, aby je zgłosić za każdym razem, gdy pojawią się w produkcie.",
+      "descriptionFlagged": "Oznacz składniki na pulpicie nawigacyjnym lub zeskanuj wyniki, aby podświetlić je na czerwono, gdy pojawią się w produkcie."
+    },
+    "flaggedPlaceholder": {
+      "palmOil": "Olej Palmowy",
+      "highFructoseCornSyrup": "Syrop kukurydziany o wysokiej zawartości fruktozy",
+      "sodiumBenzoate": "Benzoesan sodu"
+    },
+    "subtitle": {
+      "currently": "Obecnie",
+      "ingredient_one": "{{count}} składnik",
+      "ingredient_other": "{{count}} składniki"
+    },
+    "search": {
+      "placeholder": "Szukaj składników..."
+    },
+    "menu": {
+      "likeIngredient": "Podobnie jak składnik",
+      "dislikeIngredient": "Nie lubię składnika",
+      "flagIngredient": "Składnik flagi",
+      "removeIngredient": "Usuń składnik"
+    },
+    "error": {
+      "title": "Nie udało się załadować składników",
+      "migrationRequired": "Wymagana migracja bazy danych. Uruchom instrukcję ALTER TABLE w edytorze SQL Supabase, aby dodać kolumny preferencji składników."
+    }
+  },
+  "upsell": {
+    "bite": "ugryzienie",
+    "insight": "wgląd",
+    "plus": "plus",
+    "plusSymbol": "+",
+    "tagline": "Oznacz składniki do wyróżnienia\nzaznaczone na czerwono przy każdym skanie",
+    "upgradeButton": "Zmień na Plus+"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "step": {
+    "aboutYou": "O Tobie",
+    "aboutThem": "O nich",
+    "health": "Warunki zdrowotne",
+    "nutrients": "Lista obserwowanych składników odżywczych",
+    "allergies": "Alergie",
+    "dietary": "Preferencje dietetyczne"
+  },
+  "question": {
+    "healthCondition": "Czy masz jakieś problemy zdrowotne?",
+    "allergies": "Czy masz jakieś alergie?",
+    "dietaryPreferences": "Czy masz jakieś preferencje dietetyczne?",
+    "healthConditionFamily": "Czy mają jakieś problemy zdrowotne?",
+    "allergiesFamily": "Czy mają jakieś alergie?",
+    "dietaryPreferencesFamily": "Czy mają jakieś preferencje żywieniowe?"
+  },
+  "count": {
+    "condition_one": "Warunek {{count}}",
+    "condition_other": "{{count}} warunki",
+    "allergy_one": "{{count}} alergia",
+    "allergy_other": "{{count}} alergie",
+    "preference_one": "Preferencje {{count}}",
+    "preference_other": "Preferencje {{count}}"
+  },
+  "chip": {
+    "youveSelected": "Wybrałeś"
+  },
+  "nutrient": {
+    "suggestion": "W zależności od Twojego stanu zdrowia sugerujemy obserwowanie tych składników odżywczych",
+    "suggestionFamily": "Biorąc pod uwagę ich stan, sugerujemy obserwowanie tych składników odżywczych",
+    "limiting": "Ograniczające",
+    "boosting": ", wzmacnianie",
+    "tracking": "Śledzenie",
+    "nutrientCount_one": "{{count}} składnik odżywczy",
+    "nutrientCount_other": "{{count}} składniki odżywcze",
+    "alertSubtext": "Powiadomimy Cię, gdy zeskanowane produkty będą je zawierały.",
+    "instructions": "Wybierz ograniczenie, wzmocnienie lub pominięcie każdego składnika odżywczego.",
+    "sectionLimit": "Składniki odżywcze, które należy ograniczyć",
+    "sectionBoost": "Składniki odżywcze do wzmocnienia",
+    "sectionNoChange": "Bez zmian",
+    "sectionLimiting": "Ograniczające",
+    "sectionBoosting": "Wzmocnienie"
+  },
+  "progress": {
+    "next": "Następny: {{label}}"
+  }
+}

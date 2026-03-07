@@ -1,0 +1,139 @@
+{
+  "main": {
+    "whereLabel": "어디로 가고 싶나요?",
+    "dashboard": "계기반",
+    "myIngredients": "나의 재료",
+    "snackScanner": "스낵 스캐너",
+    "scanHistory": "스캔 기록",
+    "recipes": "조리법",
+    "myAccount": "내 계정",
+    "settings": "설정",
+    "logOut": "로그아웃"
+  },
+  "footer": {
+    "version": "버전 1.0.0",
+    "reportProblem": "문제 신고"
+  },
+  "ingredients": {
+    "title": "나의 재료",
+    "liked": "좋아하는 성분",
+    "disliked": "싫어하는 성분",
+    "flagged": "표시된 성분"
+  },
+  "account": {
+    "title": "내 계정",
+    "editDetails": "내 세부 정보 편집",
+    "familyMembers": "가족 구성원",
+    "biteInsightPlus": "바이트 인사이트+",
+    "changePassword": "비밀번호 변경"
+  },
+  "settings": {
+    "title": "설정",
+    "security": "보안",
+    "notifications": "알림",
+    "helpSupport": "도움말 및 지원",
+    "privacyPolicy": "개인 정보 보호 정책",
+    "cookiePolicy": "쿠키 정책",
+    "myData": "내 데이터",
+    "offlineDatabase": "오프라인 데이터베이스"
+  },
+  "security": {
+    "title": "보안",
+    "biometricLogin": "생체인식 로그인",
+    "enabledHint": "{{label}}이(가) 활성화되었습니다. 비밀번호를 입력하지 않고도 로그인할 수 있습니다.",
+    "disabledHint": "{{label}}을(를) 활성화하려면 이메일과 비밀번호로 로그인하세요.",
+    "unavailableHint": "이 장치에서는 생체 인식 로그인을 사용할 수 없습니다. 기기 설정에 Face ID, Touch ID 또는 지문이 설정되어 있는지 확인하세요."
+  },
+  "myData": {
+    "title": "귀하의 데이터",
+    "memberSince": "회원 가입 날짜: {{date}}",
+    "productsScanned": "스캔한 제품",
+    "familyMembers": "가족",
+    "downloadMyData": "내 데이터 다운로드",
+    "downloadSubtext": "모든 데이터를 JSON 파일로 내보냅니다.",
+    "exportDialogTitle": "데이터 내보내기",
+    "destructiveZone": "파괴적인 영역",
+    "clearMyData": "내 데이터 지우기",
+    "clearSubtext": "이 계정의 현재 데이터가 모두 삭제됩니다.",
+    "closeMyAccount": "내 계정을 폐쇄하세요",
+    "closeSubtext": "귀하의 계정 및 모든 관련 데이터를 영구적으로 삭제하십시오. 이 작업은 취소할 수 없습니다.",
+    "confirm": {
+      "clearTitle": "모든 데이터를 삭제하시겠습니까?",
+      "clearDescription": "이렇게 하면 스캔 기록과 모든 가족 프로필이 영구적으로 삭제됩니다. 귀하의 계정과 기본 설정은 그대로 유지됩니다.",
+      "clearPhrase": "분명한",
+      "clearLabel": "내 데이터 지우기",
+      "closeTitle": "계정을 폐쇄하시겠습니까?",
+      "closeDescription": "이렇게 하면 귀하의 프로필, 스캔 기록, 가족 구성원, 기본 설정 및 모든 관련 데이터가 영구적으로 삭제됩니다. 이 작업은 취소할 수 없습니다.",
+      "deletePhrase": "삭제",
+      "closeLabel": "내 계정을 폐쇄하세요"
+    },
+    "error": {
+      "clearFailed": "데이터를 지우지 못했습니다. 다시 시도해 주세요.",
+      "exportFailedTitle": "내보내기 실패",
+      "exportFailedMessage": "데이터를 내보내는 중에 문제가 발생했습니다. 다시 시도해 주세요.",
+      "closeFailed": "계정을 폐쇄하지 못했습니다. 지원팀에 문의하세요."
+    }
+  },
+  "offlineDb": {
+    "title": "오프라인 데이터베이스",
+    "description": "오프라인 바코드 스캔을 위해 지역 음식 데이터베이스를 다운로드하세요. 다운로드한 후에는 인터넷 연결 없이도 스캔이 작동합니다.",
+    "loadingRegions": "지역 로드 중...",
+    "products": "제품",
+    "downloadButton": "다운로드",
+    "retryButton": "다시 해 보다",
+    "downloading": "다운로드 중... {{percentage}}%",
+    "downloaded": "다운로드됨",
+    "storageHeading": "저장",
+    "totalUsed": "총 사용",
+    "regionCount_one": "{{count}} 지역",
+    "regionCount_other": "{{count}} 지역",
+    "deleteAll": "모든 데이터베이스 삭제",
+    "deleteAllSubtext": "모든 오프라인 저장 공간을 확보하세요.",
+    "confirm": {
+      "deleteAllTitle": "모든 오프라인 데이터베이스를 삭제하시겠습니까?",
+      "deleteOneTitle": "{{label}} 데이터베이스를 삭제하시겠습니까?",
+      "deleteAllDescription": "이렇게 하면 다운로드한 모든 음식 데이터베이스가 장치에서 제거됩니다. 언제든지 다시 다운로드할 수 있습니다. 스캔 기록은 영향을 받지 않습니다.",
+      "deleteOneDescription": "이렇게 하면 기기에서 {{label}} 음식 데이터베이스가 삭제됩니다. 언제든지 다시 다운로드할 수 있습니다.",
+      "deletePhrase": "삭제",
+      "deleteAllLabel": "모두 삭제",
+      "deleteOneLabel": "데이터베이스 삭제"
+    }
+  },
+  "password": {
+    "title": "비밀번호 변경",
+    "subtitle": "현재 비밀번호를 입력하고 새 비밀번호를 선택하세요.",
+    "label": {
+      "current": "현재 비밀번호",
+      "new": "새 비밀번호",
+      "confirm": "새 비밀번호 확인"
+    },
+    "placeholder": {
+      "current": "현재 비밀번호를 입력하세요",
+      "new": "새 비밀번호를 입력하세요",
+      "confirm": "새 비밀번호를 다시 입력하세요."
+    },
+    "rule": {
+      "minLength": "8자",
+      "uppercase": "대문자",
+      "lowercase": "소문자",
+      "number": "숫자"
+    },
+    "rulePrefix": {
+      "atLeast": "적어도",
+      "one": "하나"
+    },
+    "button": {
+      "update": "비밀번호 업데이트"
+    },
+    "error": {
+      "verifyFailed": "귀하의 신원을 확인할 수 없습니다. 다시 시도해 주세요.",
+      "incorrectCurrent": "현재 비밀번호가 올바르지 않습니다.",
+      "generic": "문제가 발생했습니다. 다시 시도해 주세요.",
+      "mismatch": "비밀번호가 일치하지 않습니다."
+    },
+    "success": {
+      "title": "비밀번호가 업데이트되었습니다.",
+      "body": "귀하의 비밀번호가 성공적으로 변경되었습니다."
+    }
+  }
+}

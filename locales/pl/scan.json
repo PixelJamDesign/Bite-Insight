@@ -1,0 +1,140 @@
+{
+  "product": {
+    "unknownName": "Nieznany produkt"
+  },
+  "tab": {
+    "overview": "Przegląd",
+    "nutrition": "Odżywianie",
+    "ingredients": "Składniki",
+    "recommended": "Zalecony",
+    "info": "Informacje o produkcie"
+  },
+  "nutriscoreLabel": "Wartość odżywcza",
+  "nutrientLabels": {
+    "energyKcal": "Kalorie",
+    "fat": "Tłuszcz",
+    "saturatedFat": "Tłuszcz nasycony",
+    "carbs": "Węglowodany",
+    "sugars": "Cukry",
+    "fiber": "Błonnik",
+    "proteins": "Białko",
+    "netCarbs": "Węglowodany netto",
+    "salt": "Sól"
+  },
+  "nutrientRating": {
+    "low": "Niski",
+    "moderate": "Umiarkowany",
+    "high": "Wysoki",
+    "good": "Dobry"
+  },
+  "insight": {
+    "glycemic": "Wpływ glikemiczny",
+    "sodium": "Sód",
+    "calorie": "Gęstość kalorii",
+    "digestiveLoad": "Obciążenie trawienne",
+    "carbLoad": "Ładunek węglowodanów",
+    "additives": "Dodatki"
+  },
+  "impact": {
+    "veryHigh": "Bardzo wysoki",
+    "high": "Wysoki",
+    "moderate": "Umiarkowany",
+    "low": "Niski"
+  },
+  "insightExplanation": {
+    "glycemic": "Wpływ glikemiczny szacuje, jak szybko ten produkt może podnieść poziom cukru we krwi, na podstawie zawartości węglowodanów i błonnika.",
+    "sodium": "Poziom sodu wskazuje zawartość soli w porcji. Wysokie spożycie sodu wiąże się z podwyższonym ciśnieniem krwi i obciążeniem układu sercowo-naczyniowego.",
+    "saturatedFat": "Zawartość tłuszczów nasyconych wiąże się ze zwiększonym poziomem cholesterolu LDL, jeśli są spożywane w nadmiarze.",
+    "sugar": "Obciążenie cukrem odzwierciedla całkowitą zawartość cukru, która wpływa na poziom cukru we krwi, poziom energii i zdrowie zębów.",
+    "fiber": "Zawartość błonnika ma znaczenie w przypadku schorzeń trawiennych, takich jak IBS i choroba Leśniowskiego-Crohna. Wysoka zawartość błonnika może być korzystna lub problematyczna, w zależności od stanu.",
+    "protein": "Zawartość białka jest ważna dla naprawy mięśni, uczucia sytości i schorzeń metabolicznych, takich jak PCOS lub rekonwalescencja po bariatryczna.",
+    "calorie": "Gęstość kalorii mierzy zawartość energii na gram żywności. Pokarmy o większej gęstości dostarczają więcej energii w mniejszych porcjach.",
+    "inflammatoryFat": "Tłuszcz zapalny jest wskaźnikiem zastępczym opartym na zawartości tłuszczów nasyconych i tłuszczów trans, istotnym w przypadku chorób autoimmunologicznych i zapalnych.",
+    "digestiveLoad": "Obciążenie trawienne łączy zawartość tłuszczu i błonnika, aby oszacować, ile pracy potrzebuje Twój układ trawienny, aby przetworzyć dany pokarm.",
+    "carbLoad": "Ładunek węglowodanów odzwierciedla całkowitą zawartość węglowodanów pomniejszoną o błonnik i jest istotny dla osób cierpiących na dietę ketonową, cukrzycę i metabolizm.",
+    "additives": "Liczba dodatków śledzi liczbę dodatków do żywności (numery E i podobne) obecnych w tym produkcie."
+  },
+  "section": {
+    "importantForYou": "Ważne dla Ciebie",
+    "importantSubtitle": "Na podstawie profilu zdrowia {{name}}.",
+    "importantSubtitleGeneric": "Na podstawie Twojego profilu zdrowotnego.",
+    "nutrientWatch": "Zegarek składników odżywczych",
+    "flaggedIngredients": "Oznaczone składniki",
+    "flaggedIngredientsSubtitle": "Ten produkt zawiera oznaczone składniki.",
+    "highlightedNutrition": "Wyróżnione informacje o wartościach odżywczych",
+    "nutritionalInfo": "Informacje o wartościach odżywczych",
+    "nutrientWatchlist": "Twoja lista składników odżywczych",
+    "nutrientWatchlistSubtitle": "Składniki odżywcze, które monitorujesz na podstawie swojego profilu zdrowotnego.",
+    "allergens": "Alergeny",
+    "allergensSubtitle": "Alergeny wymienione dla tego produktu."
+  },
+  "allergen": {
+    "warningBadge": "Ostrzeżenie",
+    "warningText": "Zawiera: {{allergens}}. Może to mieć wpływ na profil zdrowia {{name}}.",
+    "allergensBadge": "Alergeny",
+    "containsText": "Zawiera: {{allergens}}."
+  },
+  "nutrientWatch": {
+    "noMicroData": "Dane dotyczące mikroelementów nie są dostępne dla tego produktu."
+  },
+  "ingredients": {
+    "ingredient_one": "{{count}} składnik",
+    "ingredient_other": "{{count}} składniki",
+    "is": "Jest",
+    "are": "Czy",
+    "considered": "uważany za",
+    "harmful": "szkodliwy",
+    "ok": "OK",
+    "safe": "bezpieczna",
+    "listed": "katalogowany",
+    "matchProductName": "Pasuje do nazwy produktu",
+    "matchCategory": "Pasuje do kategorii produktu"
+  },
+  "toggle": {
+    "perServing": "Na porcję",
+    "per100g": "Na 100g",
+    "value": "Wartość",
+    "dri": "DRI (%)"
+  },
+  "loading": {
+    "nutritionalData": "Ładowanie danych o wartościach odżywczych…",
+    "ingredients": "Ładowanie składników…"
+  },
+  "empty": {
+    "limitedDataTitle": "Ograniczone dane produktu",
+    "limitedDataText": "Informacje o wartości odżywczej tego produktu nie są dostępne w bazie danych Open Food Facts.",
+    "noNutritionTitle": "Brak danych o wartości odżywczej",
+    "noNutritionText": "Ten produkt nie posiada informacji o wartości odżywczej w bazie danych Open Food Facts.",
+    "noIngredientsTitle": "Brak wymienionych składników",
+    "noIngredientsText": "Informacje o składnikach nie są dostępne dla tego produktu.",
+    "noAllergensTitle": "Brak alergenów na liście",
+    "noAllergensText": "Dla tego produktu nie są dostępne informacje o alergenach."
+  },
+  "comingSoon": {
+    "title": "Już wkrótce",
+    "text": "Ta sekcja jest w budowie i będzie dostępna w przyszłej aktualizacji."
+  },
+  "profile": {
+    "myProfile": "Mój profil",
+    "switch": "Przełącznik"
+  },
+  "flagReason": {
+    "veganTitle": "Nie wegańskie",
+    "veganBody": "Składnik ten nie jest wegański, co kłóci się z Twoimi preferencjami żywieniowymi.",
+    "vegetarianTitle": "Nie wegetariańskie",
+    "vegetarianBody": "Składnik ten nie jest wegetariański, co kłóci się z Twoimi preferencjami żywieniowymi.",
+    "userFlaggedTitle": "Osobiście oznaczony",
+    "userFlaggedBody": "Oznaczyłeś ten składnik. Zostanie on podświetlony za każdym razem, gdy pojawi się w skanowanych produktach.",
+    "personalBody": "Oflagowałeś to ze względu na Twój {{category}}."
+  },
+  "flaggedSheet": {
+    "substitutesTitle": "Odpowiednie zamienniki obejmują:"
+  },
+  "ingredientSheet": {
+    "categoryOk": "OK",
+    "categorySafe": "Bezpieczna",
+    "classifiedAs": "Sklasyfikowany jako {{category}}",
+    "defaultAdditiveLine1": "Jest to dodatek do żywności powszechnie stosowany w żywności przetworzonej.",
+    "defaultAdditiveLine2": "Został zatwierdzony przez władze ds. bezpieczeństwa żywności do stosowania w produktach spożywczych."
+  }
+}

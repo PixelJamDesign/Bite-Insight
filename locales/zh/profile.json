@@ -1,0 +1,35 @@
+{
+  "editProfile": {
+    "aboutTitle": "告诉我们你自己",
+    "aboutSubtitle": "更新您的个人资料信息。",
+    "saveChanges": "保存更改",
+    "alert": {
+      "nameRequiredTitle": "姓名必填",
+      "nameRequiredMessage": "请输入您的全名。"
+    },
+    "avatar": {
+      "alertTitle": "个人资料照片",
+      "alertMessage": "选择一个选项",
+      "takePhoto": "拍照",
+      "chooseFromLibrary": "从库中选择",
+      "permissionTitle": "需要许可",
+      "permissionMessage": "需要使用相机才能拍照。"
+    },
+    "placeholder": {
+      "age": "您的年龄（可选）"
+    }
+  },
+  "familyMember": {
+    "aboutTitleAdd": "告诉我们关于他们的事",
+    "aboutTitleEdit": "更新他们的详细信息",
+    "aboutSubtitleAdd": "添加您家庭成员的详细信息。",
+    "aboutSubtitleEdit": "编辑您家庭成员的个人资料。",
+    "field": {
+      "relationship": "关系"
+    },
+    "alert": {
+      "nameRequiredTitle": "姓名必填",
+      "nameRequiredMessage": "请输入该家庭成员的姓名。"
+    }
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "greeting": {
+    "morning": "Buen día",
+    "afternoon": "Buenas tardes",
+    "evening": "Buenas noches",
+    "fallbackName": "allá"
+  },
+  "buttons": {
+    "back": "Atrás",
+    "cancel": "Cancelar",
+    "close": "Cerca",
+    "done": "Hecho",
+    "finish": "Finalizar",
+    "save": "Ahorrar",
+    "search": "Buscar",
+    "apply": "Aplicar",
+    "clear": "Claro",
+    "ok": "DE ACUERDO",
+    "next": "Siguiente: {{stepName}}",
+    "skip": "Saltar por ahora, lo configuraré más tarde.",
+    "editList": "Editar lista",
+    "deleteSelected": "Eliminar seleccionado"
+  },
+  "placeholder": {
+    "fullName": "nombre completo",
+    "emailAddress": "Dirección de correo electrónico",
+    "password": "Contraseña",
+    "search": "Buscar..."
+  },
+  "error": {
+    "badge": "Error",
+    "title": "Error"
+  },
+  "alert": {
+    "saveFailedTitle": "Error al guardar"
+  },
+  "link": {
+    "signIn": "Iniciar sesión"
+  },
+  "filters": {
+    "all": "Todo"
+  },
+  "nutrientDirections": {
+    "limit": "Límite",
+    "boost": "Aumentar",
+    "noChange": "Sin cambios"
+  },
+  "ratings": {
+    "low": "Bajo",
+    "moderate": "Moderado",
+    "high": "Alto",
+    "veryHigh": "muy alto",
+    "good": "Bien"
+  },
+  "nutriscoreLabels": {
+    "a": "Asombroso",
+    "b": "Bien",
+    "c": "DE ACUERDO",
+    "d": "Pobre",
+    "e": "Malo"
+  },
+  "months": {
+    "full": {
+      "january": "Enero",
+      "february": "Febrero",
+      "march": "Marzo",
+      "april": "Abril",
+      "may": "Puede",
+      "june": "Junio",
+      "july": "Julio",
+      "august": "Agosto",
+      "september": "Septiembre",
+      "october": "Octubre",
+      "november": "Noviembre",
+      "december": "Diciembre"
+    },
+    "short": {
+      "jan": "Ene",
+      "feb": "Feb",
+      "mar": "Mar",
+      "apr": "Abr",
+      "may": "Puede",
+      "jun": "Jun",
+      "jul": "Jul",
+      "aug": "Ago",
+      "sep": "Sep",
+      "oct": "Oct",
+      "nov": "Nov",
+      "dec": "Dic"
+    }
+  },
+  "days": {
+    "short": {
+      "monday": "Lun",
+      "tuesday": "Mar",
+      "wednesday": "Casarse",
+      "thursday": "Jue",
+      "friday": "Vie",
+      "saturday": "Se sentó",
+      "sunday": "Sol"
+    }
+  },
+  "ordinal": {
+    "th": "th",
+    "st": "calle",
+    "nd": "Dakota del Norte",
+    "rd": "tercero"
+  }
+}

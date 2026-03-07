@@ -1,0 +1,109 @@
+{
+  "greeting": {
+    "morning": "Guten Morgen",
+    "afternoon": "Guten Tag",
+    "evening": "Guten Abend",
+    "fallbackName": "Dort"
+  },
+  "buttons": {
+    "back": "Zurück",
+    "cancel": "Stornieren",
+    "close": "Schließen",
+    "done": "Erledigt",
+    "finish": "Beenden",
+    "save": "Speichern",
+    "search": "Suchen",
+    "apply": "Anwenden",
+    "clear": "Klar",
+    "ok": "OK",
+    "next": "Weiter: {{stepName}}",
+    "skip": "Überspringen Sie es vorerst, ich werde das später einrichten",
+    "editList": "Liste bearbeiten",
+    "deleteSelected": "Ausgewählte löschen"
+  },
+  "placeholder": {
+    "fullName": "Vollständiger Name",
+    "emailAddress": "E-Mail-Adresse",
+    "password": "Passwort",
+    "search": "Suchen..."
+  },
+  "error": {
+    "badge": "Fehler",
+    "title": "Fehler"
+  },
+  "alert": {
+    "saveFailedTitle": "Speichern fehlgeschlagen"
+  },
+  "link": {
+    "signIn": "Anmelden"
+  },
+  "filters": {
+    "all": "Alle"
+  },
+  "nutrientDirections": {
+    "limit": "Limit",
+    "boost": "Schub",
+    "noChange": "Keine Änderung"
+  },
+  "ratings": {
+    "low": "Niedrig",
+    "moderate": "Mäßig",
+    "high": "Hoch",
+    "veryHigh": "Sehr hoch",
+    "good": "Gut"
+  },
+  "nutriscoreLabels": {
+    "a": "Toll",
+    "b": "Gut",
+    "c": "OK",
+    "d": "Arm",
+    "e": "Schlecht"
+  },
+  "months": {
+    "full": {
+      "january": "Januar",
+      "february": "Februar",
+      "march": "Marsch",
+      "april": "April",
+      "may": "Mai",
+      "june": "Juni",
+      "july": "Juli",
+      "august": "August",
+      "september": "September",
+      "october": "Oktober",
+      "november": "November",
+      "december": "Dezember"
+    },
+    "short": {
+      "jan": "Jan",
+      "feb": "Febr",
+      "mar": "Beschädigen",
+      "apr": "Apr",
+      "may": "Mai",
+      "jun": "Jun",
+      "jul": "Juli",
+      "aug": "Aug",
+      "sep": "Sept",
+      "oct": "Okt",
+      "nov": "Nov",
+      "dec": "Dez"
+    }
+  },
+  "days": {
+    "short": {
+      "monday": "Mo",
+      "tuesday": "Di",
+      "wednesday": "Heiraten",
+      "thursday": "Do",
+      "friday": "Fr",
+      "saturday": "Sa",
+      "sunday": "Sonne"
+    }
+  },
+  "ordinal": {
+    "th": "Th",
+    "st": "st",
+    "nd": "nd",
+    "rd": "rd"
+  }
+}

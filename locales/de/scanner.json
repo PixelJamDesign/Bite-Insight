@@ -1,0 +1,32 @@
+{
+  "topTitle": "Lebensmitteletikett scannen",
+  "hint": {
+    "processing": "Verarbeitung...",
+    "pointAtBarcode": "Zeigen Sie auf einen zu scannenden Barcode"
+  },
+  "bottomHint": "Unterstützt EAN-13-, EAN-8-, UPC-A- und QR-Codes",
+  "regions": {
+    "world": "Welt",
+    "unitedKingdom": "Vereinigtes Königreich",
+    "unitedStates": "Vereinigte Staaten",
+    "france": "Frankreich",
+    "germany": "Deutschland",
+    "spain": "Spanien",
+    "italy": "Italien",
+    "australia": "Australien",
+    "canada": "Kanada",
+    "netherlands": "Niederlande"
+  },
+  "regionPicker": {
+    "title": "Region auswählen"
+  },
+  "permission": {
+    "title": "Kamerazugriff erforderlich",
+    "description": "BiteInsight benötigt Kamerazugriff, um Lebensmitteletiketten und Barcodes zu scannen.",
+    "grantButton": "Zugriff gewähren"
+  },
+  "alert": {
+    "scanFailedTitle": "Der Scan ist fehlgeschlagen",
+    "scanFailedMessage": "Dieser Barcode konnte nicht verarbeitet werden. Bitte versuchen Sie es erneut."
+  }
+}

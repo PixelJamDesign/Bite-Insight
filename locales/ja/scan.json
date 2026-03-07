@@ -1,0 +1,140 @@
+{
+  "product": {
+    "unknownName": "不明な製品"
+  },
+  "tab": {
+    "overview": "概要",
+    "nutrition": "栄養",
+    "ingredients": "材料",
+    "recommended": "推奨",
+    "info": "製品情報"
+  },
+  "nutriscoreLabel": "栄養スコア",
+  "nutrientLabels": {
+    "energyKcal": "カロリー",
+    "fat": "脂肪",
+    "saturatedFat": "飽和脂肪",
+    "carbs": "炭水化物",
+    "sugars": "砂糖",
+    "fiber": "ファイバ",
+    "proteins": "タンパク質",
+    "netCarbs": "正味炭水化物",
+    "salt": "塩"
+  },
+  "nutrientRating": {
+    "low": "低い",
+    "moderate": "適度",
+    "high": "高い",
+    "good": "良い"
+  },
+  "insight": {
+    "glycemic": "血糖への影響",
+    "sodium": "ナトリウム",
+    "calorie": "カロリー密度",
+    "digestiveLoad": "消化負荷",
+    "carbLoad": "炭水化物負荷",
+    "additives": "添加剤"
+  },
+  "impact": {
+    "veryHigh": "非常に高い",
+    "high": "高い",
+    "moderate": "適度",
+    "low": "低い"
+  },
+  "insightExplanation": {
+    "glycemic": "血糖影響は、炭水化物と繊維の含有量に基づいて、この製品が血糖値を上昇させる速度を推定します。",
+    "sodium": "ナトリウムレベルは、1食分あたりの塩分含有量を示します。ナトリウムの過剰摂取は血圧の上昇と心臓血管の緊張に関連しています。",
+    "saturatedFat": "飽和脂肪含有量は、過剰に摂取するとLDLコレステロールの増加に関連します。",
+    "sugar": "糖負荷は総糖分を反映しており、血糖、エネルギーレベル、歯の健康に影響を与えます。",
+    "fiber": "繊維含有量は、過敏性腸症候群やクローン病などの消化器疾患にとって重要です。食物繊維を多く摂取することは、症状に応じて有益な場合もあれば、問題となる場合もあります。",
+    "protein": "タンパク質含有量は、筋肉の修復、満腹感、PCOS や肥満後の回復などの代謝状態にとって重要です。",
+    "calorie": "カロリー密度は、食品1グラムあたりのエネルギー含有量を測定します。密度の高い食品は、より少ない量でより多くのエネルギーを提供します。",
+    "inflammatoryFat": "炎症性脂肪は、飽和脂肪およびトランス脂肪含有量に基づく代用値であり、自己免疫および炎症状態に関連します。",
+    "digestiveLoad": "消化負荷は脂肪と繊維の含有量を組み合わせて、この食物を処理するために消化器系がどれだけの仕事を必要とするかを推定します。",
+    "carbLoad": "炭水化物負荷は、ケト、糖尿病、代謝状態に関連する繊維を除いた炭水化物の総含有量を反映します。",
+    "additives": "添加物カウントは、この製品に含まれる食品添加物 (E ナンバーなど) の数を追跡します。"
+  },
+  "section": {
+    "importantForYou": "あなたにとって重要な",
+    "importantSubtitle": "{{name}} の健康プロフィールに基づく。",
+    "importantSubtitleGeneric": "あなたの健康プロフィールに基づいて。",
+    "nutrientWatch": "栄養ウォッチ",
+    "flaggedIngredients": "フラグのある成分",
+    "flaggedIngredientsSubtitle": "この製品にはフラグが設定された成分が含まれています。",
+    "highlightedNutrition": "注目の栄養成分情報",
+    "nutritionalInfo": "栄養成分表示",
+    "nutrientWatchlist": "あなたの栄養素ウォッチリスト",
+    "nutrientWatchlistSubtitle": "あなたの健康プロフィールに基づいて監視している栄養素。",
+    "allergens": "アレルゲン",
+    "allergensSubtitle": "この商品に記載されているアレルギー物質。"
+  },
+  "allergen": {
+    "warningBadge": "警告",
+    "warningText": "含まれるもの: {{allergens}}。これは、{{name}} の健康プロファイルに影響を与える可能性があります。",
+    "allergensBadge": "アレルゲン",
+    "containsText": "含まれるもの: {{allergens}}。"
+  },
+  "nutrientWatch": {
+    "noMicroData": "この製品には微量栄養素のデータはありません。"
+  },
+  "ingredients": {
+    "ingredient_one": "{{count}} 成分",
+    "ingredient_other": "{{count}} の材料",
+    "is": "は",
+    "are": "は",
+    "considered": "考慮された",
+    "harmful": "有害",
+    "ok": "わかりました",
+    "safe": "安全",
+    "listed": "リスト化された",
+    "matchProductName": "製品名と一致します",
+    "matchCategory": "製品カテゴリと一致する"
+  },
+  "toggle": {
+    "perServing": "1食分あたり",
+    "per100g": "100gあたり",
+    "value": "価値",
+    "dri": "DRI (%)"
+  },
+  "loading": {
+    "nutritionalData": "栄養データをロード中…",
+    "ingredients": "材料を読み込み中…"
+  },
+  "empty": {
+    "limitedDataTitle": "限定商品データ",
+    "limitedDataText": "Open Food Facts データベースでは、この製品の栄養情報は入手できません。",
+    "noNutritionTitle": "栄養データなし",
+    "noNutritionText": "この製品には、Open Food Facts データベースに栄養情報がありません。",
+    "noIngredientsTitle": "成分は記載されていません",
+    "noIngredientsText": "この製品の成分情報は入手できません。",
+    "noAllergensTitle": "アレルゲンは記載されていません",
+    "noAllergensText": "この製品に関するアレルギー情報はありません。"
+  },
+  "comingSoon": {
+    "title": "近日公開",
+    "text": "このセクションは現在作成中であり、将来のアップデートで利用可能になる予定です。"
+  },
+  "profile": {
+    "myProfile": "私のプロフィール",
+    "switch": "スイッチ"
+  },
+  "flagReason": {
+    "veganTitle": "ビーガンではありません",
+    "veganBody": "この成分はビーガンではないため、あなたの食事の好みに反します。",
+    "vegetarianTitle": "ベジタリアンではありません",
+    "vegetarianBody": "この成分はベジタリアンではないため、あなたの食事の好みに反します。",
+    "userFlaggedTitle": "個人的にフラグが立てられました",
+    "userFlaggedBody": "この成分にフラグを立てました。スキャンした製品に表示されるたびに強調表示されます。",
+    "personalBody": "{{category}} のため、これにフラグを立てました。"
+  },
+  "flaggedSheet": {
+    "substitutesTitle": "適切な代替品には次のものがあります。"
+  },
+  "ingredientSheet": {
+    "categoryOk": "わかりました",
+    "categorySafe": "安全",
+    "classifiedAs": "{{category}} として分類されました",
+    "defaultAdditiveLine1": "加工食品によく使われる食品添加物です。",
+    "defaultAdditiveLine2": "食品への使用が食品安全当局によって承認されています。"
+  }
+}

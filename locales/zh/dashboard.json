@@ -1,0 +1,15 @@
+{
+  "weekInNumbers": "你的一周的数字......",
+  "scannedLabels": "食品标签扫描",
+  "flaggedIngredients": "标记成分",
+  "ingredientQuestion": "你喜欢这些成分吗？",
+  "ingredientSubtitle": "告诉我们哪些成分适合您，哪些成分不适合您。",
+  "completionTitle": "您已经列出了您喜欢和不喜欢的成分清单！",
+  "completionSubtitle": "通过您选择的成分，我们可以让您的应用体验变得更好！",
+  "viewLiked": "查看您喜欢的食材",
+  "dailyInsight": "每日洞察！",
+  "suitableFor": "适合：",
+  "setupRequired": "需要设置",
+  "setupMessage": "将您的 Supabase URL 和匿名密钥添加到 .env 文件中，然后重新启动应用程序。\n\nSupabase 仪表板中的设置 → API。",
+  "fallbackInitials": "??"
+}

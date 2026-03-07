@@ -1,0 +1,244 @@
+{
+  "healthConditionReasons": {
+    "diabetes": {
+      "0": "Stijgt de bloedsuikerspiegel",
+      "1": "Veroorzaakt een energiecrash",
+      "2": "Beïnvloedt het insulineniveau",
+      "3": "Arts geadviseerd om te vermijden",
+      "4": "Het monitoren van de koolhydraatinname"
+    },
+    "hypertension": {
+      "0": "Verhoogt de bloeddruk",
+      "1": "Te hoog natriumgehalte",
+      "2": "Arts geadviseerd om te vermijden",
+      "3": "Water vasthouden",
+      "4": "Zorg voor de gezondheid van het hart"
+    },
+    "ibs": {
+      "0": "Veroorzaakt een opgeblazen gevoel/gas",
+      "1": "Veroorzaakt maagkrampen",
+      "2": "Veroorzaakt diarree",
+      "3": "FODMAP-trigger",
+      "4": "Maakt de symptomen erger"
+    },
+    "highCholesterol": {
+      "0": "Verhoogt cholesterol",
+      "1": "Te hoog in verzadigd vet",
+      "2": "Arts geadviseerd om te vermijden",
+      "3": "Zorg voor de gezondheid van het hart",
+      "4": "Proberen om LDL te verlagen"
+    },
+    "eczema": {
+      "0": "Veroorzaakt een opflakkering",
+      "1": "Veroorzaakt jeuk",
+      "2": "Veroorzaakt ontstekingen",
+      "3": "Dermatoloog geadviseerd",
+      "4": "Huidreactie"
+    },
+    "heartDisease": {
+      "0": "Zorg voor de gezondheid van het hart",
+      "1": "Te hoog in verzadigd vet",
+      "2": "Arts geadviseerd om te vermijden",
+      "3": "Verhoogt cholesterol",
+      "4": "Hoog natriumrisico"
+    },
+    "gerd": {
+      "0": "Veroorzaakt zure reflux",
+      "1": "Veroorzaakt brandend maagzuur",
+      "2": "Irriteert de maag",
+      "3": "Arts geadviseerd om te vermijden",
+      "4": "Maakt de symptomen erger"
+    },
+    "pcos": {
+      "0": "Stijgt de bloedsuikerspiegel",
+      "1": "Veroorzaakt hormonale onbalans",
+      "2": "Arts geadviseerd om te vermijden",
+      "3": "Beïnvloedt het insulineniveau",
+      "4": "Verergert de symptomen"
+    },
+    "metabolicSyndrome": {
+      "0": "Stijgt de bloedsuikerspiegel",
+      "1": "Te hoog in verzadigd vet",
+      "2": "Arts geadviseerd om te vermijden",
+      "3": "Gewichtsbeheersing",
+      "4": "Beïnvloedt het insulineniveau"
+    },
+    "migraine": {
+      "0": "Triggert migraine",
+      "1": "Bevat triggerverbindingen",
+      "2": "Arts geadviseerd om te vermijden",
+      "3": "Veroorzaakt hoofdpijn",
+      "4": "Maakt de symptomen erger"
+    },
+    "crohns": {
+      "0": "Veroorzaakt opflakkeringen",
+      "1": "Irriteert de darmwand",
+      "2": "Arts geadviseerd om te vermijden",
+      "3": "Veroorzaakt diarree",
+      "4": "Maakt de symptomen erger"
+    },
+    "uc": {
+      "0": "Veroorzaakt opflakkeringen",
+      "1": "Irriteert de dikke darm",
+      "2": "Arts geadviseerd om te vermijden",
+      "3": "Veroorzaakt diarree",
+      "4": "Maakt de symptomen erger"
+    },
+    "leakyGut": {
+      "0": "Irriteert de darmwand",
+      "1": "Verhoogt de doorlaatbaarheid",
+      "2": "Arts geadviseerd om te vermijden",
+      "3": "Veroorzaakt ontstekingen",
+      "4": "Maakt de symptomen erger"
+    },
+    "sibo": {
+      "0": "Voedt bacteriële overgroei",
+      "1": "Veroorzaakt een opgeblazen gevoel/gas",
+      "2": "Arts geadviseerd om te vermijden",
+      "3": "FODMAP-trigger",
+      "4": "Maakt de symptomen erger"
+    },
+    "me": {
+      "0": "Veroorzaakt een energiecrash",
+      "1": "Verergert vermoeidheid",
+      "2": "Arts geadviseerd om te vermijden",
+      "3": "Veroorzaakt hersenmist",
+      "4": "Maakt de symptomen erger"
+    },
+    "ra": {
+      "0": "Veroorzaakt ontstekingen",
+      "1": "Veroorzaakt gewrichtspijn",
+      "2": "Arts geadviseerd om te vermijden",
+      "3": "Verergert de symptomen",
+      "4": "Verhoogt de stijfheid"
+    },
+    "lupus": {
+      "0": "Veroorzaakt ontstekingen",
+      "1": "Veroorzaakt een opflakkering",
+      "2": "Arts geadviseerd om te vermijden",
+      "3": "Verergert de symptomen",
+      "4": "Beïnvloedt het immuunsysteem"
+    },
+    "ms": {
+      "0": "Veroorzaakt ontstekingen",
+      "1": "Verergert de symptomen",
+      "2": "Arts geadviseerd om te vermijden",
+      "3": "Beïnvloedt de gezondheid van de zenuwen",
+      "4": "Veroorzaakt een opflakkering"
+    },
+    "osteoporosis": {
+      "0": "Het loogt calcium uit",
+      "1": "Verzwakt de botdichtheid",
+      "2": "Arts geadviseerd om te vermijden",
+      "3": "Beïnvloedt de opname van mineralen",
+      "4": "Niet botvriendelijk"
+    },
+    "adhd": {
+      "0": "Beïnvloedt de focus/aandacht",
+      "1": "Bevat kunstmatige toevoegingen",
+      "2": "Veroorzaakt hyperactiviteit",
+      "3": "Arts geadviseerd om te vermijden",
+      "4": "Maakt de symptomen erger"
+    },
+    "autism": {
+      "0": "Veroorzaakt een sensorische reactie",
+      "1": "Bevat kunstmatige toevoegingen",
+      "2": "Beïnvloedt gedrag",
+      "3": "Arts geadviseerd om te vermijden",
+      "4": "Maakt de symptomen erger"
+    }
+  },
+  "genericConditionReasons": {
+    "0": "Maakt de symptomen erger",
+    "1": "Arts geadviseerd om te vermijden",
+    "2": "Veroorzaakt ongemak",
+    "3": "Verergert mijn toestand",
+    "4": "Proberen te elimineren"
+  },
+  "allergyReasons": {
+    "0": "Risico op allergische reactie",
+    "1": "Veroorzaakt netelroos/uitslag",
+    "2": "Veroorzaakt zwelling",
+    "3": "Dokter gediagnosticeerd",
+    "4": "Veroorzaakt ademhalingsmoeilijkheden"
+  },
+  "intoleranceReasons": {
+    "0": "Veroorzaakt een opgeblazen gevoel",
+    "1": "Veroorzaakt maagpijn",
+    "2": "Veroorzaakt misselijkheid/diarree",
+    "3": "Kan het niet verteren",
+    "4": "Het geeft mij een onwel gevoel"
+  },
+  "sensitivityReasons": {
+    "0": "Veroorzaakt hoofdpijn",
+    "1": "Triggert reactie",
+    "2": "Veroorzaakt roodheid van de huid",
+    "3": "Arts geadviseerd om te vermijden",
+    "4": "Gevoeligheid bevestigd"
+  },
+  "dietaryPreferenceReasons": {
+    "vegan": {
+      "0": "Tegen mijn dieet",
+      "1": "Ethische redenen",
+      "2": "Milieuproblemen",
+      "3": "Dierenwelzijn",
+      "4": "Wil niet consumeren"
+    },
+    "vegetarian": {
+      "0": "Tegen mijn dieet",
+      "1": "Ethische redenen",
+      "2": "Milieuproblemen",
+      "3": "Dierenwelzijn",
+      "4": "Wil niet consumeren"
+    },
+    "plantBased": {
+      "0": "Tegen mijn dieet",
+      "1": "Ethische redenen",
+      "2": "Milieuproblemen",
+      "3": "Dierenwelzijn",
+      "4": "Wil niet consumeren"
+    },
+    "keto": {
+      "0": "Te veel koolhydraten",
+      "1": "Het haalt mij uit ketose",
+      "2": "Te veel suiker",
+      "3": "Verhindert gewichtsverlies",
+      "4": "Niet keto-vriendelijk"
+    },
+    "weightLoss": {
+      "0": "Te veel calorieën",
+      "1": "Te veel suiker",
+      "2": "Te veel vet",
+      "3": "Stallen vorderen",
+      "4": "Proberen uit te snijden"
+    },
+    "fodmap": {
+      "0": "Hoog FODMAP ingrediënt",
+      "1": "Veroorzaakt een opgeblazen gevoel",
+      "2": "Triggert PDS-symptomen",
+      "3": "Diëtist geadviseerd om te vermijden",
+      "4": "Eliminatie fase"
+    },
+    "dairyFree": {
+      "0": "Bevat zuivel",
+      "1": "Het vermijden van alle zuivelproducten",
+      "2": "Veroorzaakt spijsverteringsproblemen",
+      "3": "Huidreactie",
+      "4": "Persoonlijke keuze"
+    }
+  },
+  "genericDietaryReasons": {
+    "0": "Past niet in mijn dieet",
+    "1": "Proberen te vermijden",
+    "2": "Persoonlijke keuze",
+    "3": "Gezondheidsredenen",
+    "4": "Levensstijl keuze"
+  },
+  "sheet": {
+    "whyFlagging": "Waarom markeer je",
+    "otherHeader": "Ander",
+    "enterOwnReason": "Voer mijn eigen reden in",
+    "otherPlaceholder": "bijv. Geeft mij een opgeblazen gevoel",
+    "flagIngredient": "Markeer ingrediënt"
+  }
+}

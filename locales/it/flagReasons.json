@@ -1,0 +1,244 @@
+{
+  "healthConditionReasons": {
+    "diabetes": {
+      "0": "Aumenta lo zucchero nel sangue",
+      "1": "Provoca un crollo energetico",
+      "2": "Influisce sui livelli di insulina",
+      "3": "Il medico consiglia di evitare",
+      "4": "Monitoraggio dell'assunzione di carboidrati"
+    },
+    "hypertension": {
+      "0": "Aumenta la pressione sanguigna",
+      "1": "Troppo alto contenuto di sodio",
+      "2": "Il medico consiglia di evitare",
+      "3": "Trattenere l'acqua",
+      "4": "Preoccupazione per la salute del cuore"
+    },
+    "ibs": {
+      "0": "Provoca gonfiore/gas",
+      "1": "Provoca crampi allo stomaco",
+      "2": "Provoca diarrea",
+      "3": "Innesco FODMAP",
+      "4": "Peggiora i sintomi"
+    },
+    "highCholesterol": {
+      "0": "Aumenta il colesterolo",
+      "1": "Troppo ricco di grassi saturi",
+      "2": "Il medico consiglia di evitare",
+      "3": "Preoccupazione per la salute del cuore",
+      "4": "Cercando di abbassare l'LDL"
+    },
+    "eczema": {
+      "0": "Innesca la riacutizzazione",
+      "1": "Provoca prurito",
+      "2": "Provoca infiammazione",
+      "3": "Consigliato dal dermatologo",
+      "4": "Reazione cutanea"
+    },
+    "heartDisease": {
+      "0": "Preoccupazione per la salute del cuore",
+      "1": "Troppo ricco di grassi saturi",
+      "2": "Il medico consiglia di evitare",
+      "3": "Aumenta il colesterolo",
+      "4": "Alto rischio sodio"
+    },
+    "gerd": {
+      "0": "Innesca il reflusso acido",
+      "1": "Provoca bruciore di stomaco",
+      "2": "Irrita lo stomaco",
+      "3": "Il medico consiglia di evitare",
+      "4": "Peggiora i sintomi"
+    },
+    "pcos": {
+      "0": "Aumenta lo zucchero nel sangue",
+      "1": "Provoca uno squilibrio ormonale",
+      "2": "Il medico consiglia di evitare",
+      "3": "Influisce sui livelli di insulina",
+      "4": "Peggiora i sintomi"
+    },
+    "metabolicSyndrome": {
+      "0": "Aumenta lo zucchero nel sangue",
+      "1": "Troppo ricco di grassi saturi",
+      "2": "Il medico consiglia di evitare",
+      "3": "Gestione del peso",
+      "4": "Influisce sui livelli di insulina"
+    },
+    "migraine": {
+      "0": "Scatena l'emicrania",
+      "1": "Contiene composti trigger",
+      "2": "Il medico consiglia di evitare",
+      "3": "Provoca mal di testa",
+      "4": "Peggiora i sintomi"
+    },
+    "crohns": {
+      "0": "Causa riacutizzazione",
+      "1": "Irrita il rivestimento dell'intestino",
+      "2": "Il medico consiglia di evitare",
+      "3": "Provoca diarrea",
+      "4": "Peggiora i sintomi"
+    },
+    "uc": {
+      "0": "Causa riacutizzazione",
+      "1": "Irrita il colon",
+      "2": "Il medico consiglia di evitare",
+      "3": "Provoca diarrea",
+      "4": "Peggiora i sintomi"
+    },
+    "leakyGut": {
+      "0": "Irrita il rivestimento dell'intestino",
+      "1": "Aumenta la permeabilità",
+      "2": "Il medico consiglia di evitare",
+      "3": "Provoca infiammazione",
+      "4": "Peggiora i sintomi"
+    },
+    "sibo": {
+      "0": "Nutre la proliferazione batterica",
+      "1": "Provoca gonfiore/gas",
+      "2": "Il medico consiglia di evitare",
+      "3": "Innesco FODMAP",
+      "4": "Peggiora i sintomi"
+    },
+    "me": {
+      "0": "Provoca un crollo energetico",
+      "1": "Peggiora la fatica",
+      "2": "Il medico consiglia di evitare",
+      "3": "Provoca la nebbia del cervello",
+      "4": "Peggiora i sintomi"
+    },
+    "ra": {
+      "0": "Provoca infiammazione",
+      "1": "Provoca dolori articolari",
+      "2": "Il medico consiglia di evitare",
+      "3": "Peggiora i sintomi",
+      "4": "Aumenta la rigidità"
+    },
+    "lupus": {
+      "0": "Provoca infiammazione",
+      "1": "Innesca la riacutizzazione",
+      "2": "Il medico consiglia di evitare",
+      "3": "Peggiora i sintomi",
+      "4": "Colpisce il sistema immunitario"
+    },
+    "ms": {
+      "0": "Provoca infiammazione",
+      "1": "Peggiora i sintomi",
+      "2": "Il medico consiglia di evitare",
+      "3": "Influisce sulla salute dei nervi",
+      "4": "Innesca la riacutizzazione"
+    },
+    "osteoporosis": {
+      "0": "Liscivia il calcio",
+      "1": "Indebolisce la densità ossea",
+      "2": "Il medico consiglia di evitare",
+      "3": "Influisce sull'assorbimento dei minerali",
+      "4": "Non amico delle ossa"
+    },
+    "adhd": {
+      "0": "Influisce sulla concentrazione/attenzione",
+      "1": "Contiene additivi artificiali",
+      "2": "Provoca iperattività",
+      "3": "Il medico consiglia di evitare",
+      "4": "Peggiora i sintomi"
+    },
+    "autism": {
+      "0": "Provoca una reazione sensoriale",
+      "1": "Contiene additivi artificiali",
+      "2": "Influisce sul comportamento",
+      "3": "Il medico consiglia di evitare",
+      "4": "Peggiora i sintomi"
+    }
+  },
+  "genericConditionReasons": {
+    "0": "Peggiora i sintomi",
+    "1": "Il medico consiglia di evitare",
+    "2": "Provoca disagio",
+    "3": "Peggiora la mia condizione",
+    "4": "Cercando di eliminare"
+  },
+  "allergyReasons": {
+    "0": "Rischio di reazione allergica",
+    "1": "Provoca orticaria/eruzione cutanea",
+    "2": "Provoca gonfiore",
+    "3": "Il medico ha diagnosticato",
+    "4": "Provoca difficoltà respiratorie"
+  },
+  "intoleranceReasons": {
+    "0": "Provoca gonfiore",
+    "1": "Provoca mal di stomaco",
+    "2": "Provoca nausea/diarrea",
+    "3": "Non riesco a digerirlo",
+    "4": "Mi fa sentire male"
+  },
+  "sensitivityReasons": {
+    "0": "Provoca mal di testa",
+    "1": "Scatena la reazione",
+    "2": "Provoca arrossamento della pelle",
+    "3": "Il medico consiglia di evitare",
+    "4": "Confermata la sensibilità"
+  },
+  "dietaryPreferenceReasons": {
+    "vegan": {
+      "0": "Contro la mia dieta",
+      "1": "Ragioni etiche",
+      "2": "Preoccupazioni ambientali",
+      "3": "Benessere degli animali",
+      "4": "Non voglio consumare"
+    },
+    "vegetarian": {
+      "0": "Contro la mia dieta",
+      "1": "Ragioni etiche",
+      "2": "Preoccupazioni ambientali",
+      "3": "Benessere degli animali",
+      "4": "Non voglio consumare"
+    },
+    "plantBased": {
+      "0": "Contro la mia dieta",
+      "1": "Ragioni etiche",
+      "2": "Preoccupazioni ambientali",
+      "3": "Benessere degli animali",
+      "4": "Non voglio consumare"
+    },
+    "keto": {
+      "0": "Troppi carboidrati",
+      "1": "Mi fa uscire dalla chetosi",
+      "2": "Troppo zucchero",
+      "3": "Blocca la perdita di peso",
+      "4": "Non adatto ai keto"
+    },
+    "weightLoss": {
+      "0": "Troppe calorie",
+      "1": "Troppo ricco di zuccheri",
+      "2": "Troppo ricco di grassi",
+      "3": "Le bancarelle avanzano",
+      "4": "Cercando di tagliare"
+    },
+    "fodmap": {
+      "0": "Ingrediente FODMAP elevato",
+      "1": "Provoca gonfiore",
+      "2": "Innesca i sintomi dell'IBS",
+      "3": "Il dietista consiglia di evitare",
+      "4": "Fase di eliminazione"
+    },
+    "dairyFree": {
+      "0": "Contiene latticini",
+      "1": "Evitare tutti i latticini",
+      "2": "Causa problemi digestivi",
+      "3": "Reazione cutanea",
+      "4": "Scelta personale"
+    }
+  },
+  "genericDietaryReasons": {
+    "0": "Non si adatta alla mia dieta",
+    "1": "Cercando di evitare",
+    "2": "Scelta personale",
+    "3": "Motivi di salute",
+    "4": "Scelta dello stile di vita"
+  },
+  "sheet": {
+    "whyFlagging": "Perché stai segnalando?",
+    "otherHeader": "Altro",
+    "enterOwnReason": "Inserisci la mia ragione",
+    "otherPlaceholder": "per esempio. Mi fa sentire gonfio",
+    "flagIngredient": "Ingrediente di segnalazione"
+  }
+}

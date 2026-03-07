@@ -1,0 +1,57 @@
+{
+  "detail": {
+    "doYouLike": "당신은 좋아합니까?",
+    "didYouKnow": "알고 계셨나요?"
+  },
+  "preferences": {
+    "pageTitle": {
+      "liked": "좋아하는 재료",
+      "disliked": "싫어하는 재료",
+      "flagged": "표시된 성분"
+    },
+    "countVerb": {
+      "liked": "당신은 좋아한다",
+      "disliked": "당신은 싫어",
+      "flagged": "당신은 신고했습니다"
+    },
+    "empty": {
+      "titleLiked": "현재 마음에 드는 재료가 없습니다.",
+      "titleDisliked": "현재 싫어하는 재료가 없습니다.",
+      "titleFlagged": "현재 표시된 재료가 없습니다.",
+      "descriptionLiked": "식사 계획을 더 쉽게 만들려면 대시보드에서 좋아하는 재료를 평가해 보세요. Insight Scanner를 사용하면 우리는 그들을 조명하고 당신이 좋아할 맛있는 요리법을 제안할 것입니다!",
+      "descriptionDisliked": "대시보드에서 재료를 평가하여 싫어하는 목록을 만드세요. 제품에 이러한 내용이 나타날 때마다 이를 신고하도록 하겠습니다.",
+      "descriptionFlagged": "대시보드에서 성분에 플래그를 지정하거나 결과를 스캔하여 제품에 나타날 때마다 빨간색으로 강조 표시합니다."
+    },
+    "flaggedPlaceholder": {
+      "palmOil": "팜유",
+      "highFructoseCornSyrup": "고과당 옥수수 시럽",
+      "sodiumBenzoate": "안식향산나트륨"
+    },
+    "subtitle": {
+      "currently": "현재",
+      "ingredient_one": "{{count}} 성분",
+      "ingredient_other": "{{count}} 재료"
+    },
+    "search": {
+      "placeholder": "성분 검색..."
+    },
+    "menu": {
+      "likeIngredient": "성분처럼",
+      "dislikeIngredient": "싫어하는 성분",
+      "flagIngredient": "플래그 성분",
+      "removeIngredient": "성분 제거"
+    },
+    "error": {
+      "title": "재료를 로드할 수 없습니다.",
+      "migrationRequired": "데이터베이스 마이그레이션이 필요합니다. 성분 기본 설정 열을 추가하려면 Supabase SQL 편집기에서 ALTER TABLE 문을 실행하세요."
+    }
+  },
+  "upsell": {
+    "bite": "깨물다",
+    "insight": "통찰력",
+    "plus": "...을 더한",
+    "plusSymbol": "+",
+    "tagline": "강조 표시할 성분 표시\n스캔할 때마다 빨간색으로 표시됨",
+    "upgradeButton": "플러스+로 업그레이드"
+  }
+}

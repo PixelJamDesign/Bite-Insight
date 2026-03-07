@@ -1,0 +1,57 @@
+{
+  "detail": {
+    "doYouLike": "好きですか",
+    "didYouKnow": "知っていましたか？"
+  },
+  "preferences": {
+    "pageTitle": {
+      "liked": "好きな食材",
+      "disliked": "嫌いな食材",
+      "flagged": "フラグのある成分"
+    },
+    "countVerb": {
+      "liked": "あなたが好きです",
+      "disliked": "あなたは嫌いです",
+      "flagged": "あなたはフラグを立てました"
+    },
+    "empty": {
+      "titleLiked": "現在、気に入った食材はありません",
+      "titleDisliked": "現在、嫌いな成分はありません",
+      "titleFlagged": "現在フラグが立てられた材料はありません",
+      "descriptionLiked": "食事の計画を立てやすくするために、ダッシュボードでお気に入りの食材をいくつか評価してください。 Insight Scanner を使用すると、それらにスポットライトを当て、きっと気に入っていただけるおいしいレシピを提案します。",
+      "descriptionDisliked": "ダッシュボードで食材を評価して、嫌いなリストを作成します。製品に出現する場合は必ずフラグを立てるようにします。",
+      "descriptionFlagged": "ダッシュボードまたはスキャン結果から成分にフラグを立てて、製品に表示されるたびに赤で強調表示します。"
+    },
+    "flaggedPlaceholder": {
+      "palmOil": "パーム油",
+      "highFructoseCornSyrup": "高果糖コーンシロップ",
+      "sodiumBenzoate": "安息香酸ナトリウム"
+    },
+    "subtitle": {
+      "currently": "現在",
+      "ingredient_one": "{{count}} 成分",
+      "ingredient_other": "{{count}} の材料"
+    },
+    "search": {
+      "placeholder": "食材を検索..."
+    },
+    "menu": {
+      "likeIngredient": "好きな成分",
+      "dislikeIngredient": "嫌いな成分",
+      "flagIngredient": "旗の成分",
+      "removeIngredient": "成分を除去する"
+    },
+    "error": {
+      "title": "材料を読み込めませんでした",
+      "migrationRequired": "データベースの移行が必要です。 Supabase SQL エディターで ALTER TABLE ステートメントを実行して、材料設定列を追加してください。"
+    }
+  },
+  "upsell": {
+    "bite": "噛む",
+    "insight": "洞察力",
+    "plus": "プラス",
+    "plusSymbol": "+",
+    "tagline": "ハイライトする成分にフラグを付ける\nスキャンするたびに赤で表示されます",
+    "upgradeButton": "Plus+ にアップグレードする"
+  }
+}

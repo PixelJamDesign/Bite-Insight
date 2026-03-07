@@ -1,0 +1,35 @@
+{
+  "editProfile": {
+    "aboutTitle": "Opowiedz nam o sobie",
+    "aboutSubtitle": "Zaktualizuj informacje w swoim profilu.",
+    "saveChanges": "Zapisz zmiany",
+    "alert": {
+      "nameRequiredTitle": "Wymagane imię i nazwisko",
+      "nameRequiredMessage": "Proszę wpisać swoje pełne imię i nazwisko."
+    },
+    "avatar": {
+      "alertTitle": "Zdjęcie profilowe",
+      "alertMessage": "Wybierz opcję",
+      "takePhoto": "Zrób zdjęcie",
+      "chooseFromLibrary": "Wybierz z Biblioteki",
+      "permissionTitle": "Potrzebne pozwolenie",
+      "permissionMessage": "Aby zrobić zdjęcie, wymagany jest dostęp do aparatu."
+    },
+    "placeholder": {
+      "age": "Twój wiek (opcjonalnie)"
+    }
+  },
+  "familyMember": {
+    "aboutTitleAdd": "Opowiedz nam o nich",
+    "aboutTitleEdit": "Zaktualizuj ich dane",
+    "aboutSubtitleAdd": "Dodaj szczegółowe informacje o członku rodziny.",
+    "aboutSubtitleEdit": "Edytuj profil członka rodziny.",
+    "field": {
+      "relationship": "Relacja"
+    },
+    "alert": {
+      "nameRequiredTitle": "Wymagane imię i nazwisko",
+      "nameRequiredMessage": "Wprowadź imię i nazwisko tego członka rodziny."
+    }
+  }
+}

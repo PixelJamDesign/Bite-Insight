@@ -1,0 +1,35 @@
+{
+  "editProfile": {
+    "aboutTitle": "자신에 대해 알려주세요",
+    "aboutSubtitle": "프로필 정보를 업데이트하세요.",
+    "saveChanges": "변경 사항 저장",
+    "alert": {
+      "nameRequiredTitle": "이름이 필요합니다",
+      "nameRequiredMessage": "성명을 입력해 주세요."
+    },
+    "avatar": {
+      "alertTitle": "프로필 사진",
+      "alertMessage": "옵션을 선택하세요",
+      "takePhoto": "사진 찍기",
+      "chooseFromLibrary": "라이브러리에서 선택",
+      "permissionTitle": "권한이 필요합니다",
+      "permissionMessage": "사진을 촬영하려면 카메라 접근 권한이 필요합니다."
+    },
+    "placeholder": {
+      "age": "귀하의 나이 (선택 사항)"
+    }
+  },
+  "familyMember": {
+    "aboutTitleAdd": "그들에 대해 알려주십시오",
+    "aboutTitleEdit": "세부정보 업데이트",
+    "aboutSubtitleAdd": "가족 구성원에 대한 세부 정보를 추가하세요.",
+    "aboutSubtitleEdit": "가족 구성원의 프로필을 편집하세요.",
+    "field": {
+      "relationship": "관계"
+    },
+    "alert": {
+      "nameRequiredTitle": "이름이 필요합니다",
+      "nameRequiredMessage": "이 가족 구성원의 이름을 입력하세요."
+    }
+  }
+}

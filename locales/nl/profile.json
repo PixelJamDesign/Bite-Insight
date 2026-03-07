@@ -1,0 +1,35 @@
+{
+  "editProfile": {
+    "aboutTitle": "Vertel ons over jezelf",
+    "aboutSubtitle": "Update uw profielgegevens.",
+    "saveChanges": "Wijzigingen opslaan",
+    "alert": {
+      "nameRequiredTitle": "Naam vereist",
+      "nameRequiredMessage": "Voer uw volledige naam in."
+    },
+    "avatar": {
+      "alertTitle": "Profielfoto",
+      "alertMessage": "Kies een optie",
+      "takePhoto": "Maak een foto",
+      "chooseFromLibrary": "Kies uit Bibliotheek",
+      "permissionTitle": "Toestemming nodig",
+      "permissionMessage": "Om een ​​foto te maken is cameratoegang vereist."
+    },
+    "placeholder": {
+      "age": "Je leeftijd (optioneel)"
+    }
+  },
+  "familyMember": {
+    "aboutTitleAdd": "Vertel ons over hen",
+    "aboutTitleEdit": "Update hun gegevens",
+    "aboutSubtitleAdd": "Voeg gegevens van uw familielid toe.",
+    "aboutSubtitleEdit": "Bewerk het profiel van uw gezinslid.",
+    "field": {
+      "relationship": "Relatie"
+    },
+    "alert": {
+      "nameRequiredTitle": "Naam vereist",
+      "nameRequiredMessage": "Vul een naam in voor dit familielid."
+    }
+  }
+}

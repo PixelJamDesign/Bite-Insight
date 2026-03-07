@@ -1,0 +1,32 @@
+{
+  "topTitle": "食品ラベルをスキャンする",
+  "hint": {
+    "processing": "処理...",
+    "pointAtBarcode": "バーコードをポイントしてスキャンします"
+  },
+  "bottomHint": "EAN-13、EAN-8、UPC-A、QR コードをサポート",
+  "regions": {
+    "world": "世界",
+    "unitedKingdom": "イギリス",
+    "unitedStates": "米国",
+    "france": "フランス",
+    "germany": "ドイツ",
+    "spain": "スペイン",
+    "italy": "イタリア",
+    "australia": "オーストラリア",
+    "canada": "カナダ",
+    "netherlands": "オランダ"
+  },
+  "regionPicker": {
+    "title": "地域を選択してください"
+  },
+  "permission": {
+    "title": "カメラへのアクセスが必要です",
+    "description": "BiteInsight では、食品ラベルとバーコードをスキャンするためにカメラにアクセスする必要があります。",
+    "grantButton": "アクセスを許可する"
+  },
+  "alert": {
+    "scanFailedTitle": "スキャンに失敗しました",
+    "scanFailedMessage": "このバーコードを処理できませんでした。もう一度試してください。"
+  }
+}

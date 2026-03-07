@@ -1,0 +1,20 @@
+{
+  "screenTitle": "스캔 기록",
+  "dateTabs": {
+    "today": "오늘",
+    "yesterday": "어제"
+  },
+  "calendar": {
+    "selectStartDate": "시작일 선택",
+    "selectEndDate": "종료일 선택"
+  },
+  "dateRange": {
+    "label": "기간"
+  },
+  "empty": {
+    "noScansRange": "이 범위에는 스캔이 없습니다.",
+    "noScansToday": "오늘은 스캔이 없습니다",
+    "noScansDay": "이 날에는 스캔이 없습니다.",
+    "description": "아래 스캐너 버튼을 탭하여 식품 라벨을 스캔하세요."
+  }
+}

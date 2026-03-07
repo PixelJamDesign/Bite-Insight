@@ -1,0 +1,109 @@
+{
+  "greeting": {
+    "morning": "صباح الخير",
+    "afternoon": "مساء الخير",
+    "evening": "مساء الخير",
+    "fallbackName": "هناك"
+  },
+  "buttons": {
+    "back": "خلف",
+    "cancel": "يلغي",
+    "close": "يغلق",
+    "done": "منتهي",
+    "finish": "ينهي",
+    "save": "يحفظ",
+    "search": "يبحث",
+    "apply": "يتقدم",
+    "clear": "واضح",
+    "ok": "نعم",
+    "next": "التالي: {{stepName}}",
+    "skip": "تخطي الآن، سأقوم بإعداد هذا لاحقًا",
+    "editList": "تحرير القائمة",
+    "deleteSelected": "حذف المحدد"
+  },
+  "placeholder": {
+    "fullName": "الاسم الكامل",
+    "emailAddress": "عنوان البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "search": "يبحث..."
+  },
+  "error": {
+    "badge": "خطأ",
+    "title": "خطأ"
+  },
+  "alert": {
+    "saveFailedTitle": "فشل الحفظ"
+  },
+  "link": {
+    "signIn": "تسجيل الدخول"
+  },
+  "filters": {
+    "all": "الجميع"
+  },
+  "nutrientDirections": {
+    "limit": "حد",
+    "boost": "يعزز",
+    "noChange": "لا تغيير"
+  },
+  "ratings": {
+    "low": "قليل",
+    "moderate": "معتدل",
+    "high": "عالي",
+    "veryHigh": "عالية جدًا",
+    "good": "جيد"
+  },
+  "nutriscoreLabels": {
+    "a": "مدهش",
+    "b": "جيد",
+    "c": "نعم",
+    "d": "فقير",
+    "e": "سيء"
+  },
+  "months": {
+    "full": {
+      "january": "يناير",
+      "february": "فبراير",
+      "march": "يمشي",
+      "april": "أبريل",
+      "may": "يمكن",
+      "june": "يونيو",
+      "july": "يوليو",
+      "august": "أغسطس",
+      "september": "سبتمبر",
+      "october": "أكتوبر",
+      "november": "نوفمبر",
+      "december": "ديسمبر"
+    },
+    "short": {
+      "jan": "يناير",
+      "feb": "فبراير",
+      "mar": "مارس",
+      "apr": "أبريل",
+      "may": "يمكن",
+      "jun": "يونيو",
+      "jul": "يوليو",
+      "aug": "أغسطس",
+      "sep": "سبتمبر",
+      "oct": "أكتوبر",
+      "nov": "نوفمبر",
+      "dec": "ديسمبر"
+    }
+  },
+  "days": {
+    "short": {
+      "monday": "الاثنين",
+      "tuesday": "الثلاثاء",
+      "wednesday": "تزوج",
+      "thursday": "الخميس",
+      "friday": "الجمعة",
+      "saturday": "قعد",
+      "sunday": "شمس"
+    }
+  },
+  "ordinal": {
+    "th": "ذ",
+    "st": "شارع",
+    "nd": "اختصار الثاني",
+    "rd": "ثالثا"
+  }
+}

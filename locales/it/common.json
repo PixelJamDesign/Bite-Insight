@@ -1,0 +1,109 @@
+{
+  "greeting": {
+    "morning": "Buongiorno",
+    "afternoon": "Buon pomeriggio",
+    "evening": "Buonasera",
+    "fallbackName": "Là"
+  },
+  "buttons": {
+    "back": "Indietro",
+    "cancel": "Cancellare",
+    "close": "Vicino",
+    "done": "Fatto",
+    "finish": "Fine",
+    "save": "Salva",
+    "search": "Ricerca",
+    "apply": "Fare domanda a",
+    "clear": "Chiaro",
+    "ok": "OK",
+    "next": "Successivo: {{stepName}}",
+    "skip": "Salta per ora, lo configurerò più tardi",
+    "editList": "Modifica elenco",
+    "deleteSelected": "Elimina selezionato"
+  },
+  "placeholder": {
+    "fullName": "Nome e cognome",
+    "emailAddress": "Indirizzo e-mail",
+    "password": "Password",
+    "search": "Ricerca..."
+  },
+  "error": {
+    "badge": "Errore",
+    "title": "Errore"
+  },
+  "alert": {
+    "saveFailedTitle": "Salvataggio non riuscito"
+  },
+  "link": {
+    "signIn": "Registrazione"
+  },
+  "filters": {
+    "all": "Tutto"
+  },
+  "nutrientDirections": {
+    "limit": "Limite",
+    "boost": "Aumento",
+    "noChange": "Nessun cambiamento"
+  },
+  "ratings": {
+    "low": "Basso",
+    "moderate": "Moderare",
+    "high": "Alto",
+    "veryHigh": "Molto alto",
+    "good": "Bene"
+  },
+  "nutriscoreLabels": {
+    "a": "Sorprendente",
+    "b": "Bene",
+    "c": "OK",
+    "d": "Povero",
+    "e": "Cattivo"
+  },
+  "months": {
+    "full": {
+      "january": "Gennaio",
+      "february": "Febbraio",
+      "march": "Marzo",
+      "april": "aprile",
+      "may": "Maggio",
+      "june": "Giugno",
+      "july": "Luglio",
+      "august": "agosto",
+      "september": "settembre",
+      "october": "ottobre",
+      "november": "novembre",
+      "december": "Dicembre"
+    },
+    "short": {
+      "jan": "Gen",
+      "feb": "Febbraio",
+      "mar": "Mar",
+      "apr": "aprile",
+      "may": "Maggio",
+      "jun": "giugno",
+      "jul": "Lug",
+      "aug": "Agosto",
+      "sep": "Settembre",
+      "oct": "ottobre",
+      "nov": "novembre",
+      "dec": "dicembre"
+    }
+  },
+  "days": {
+    "short": {
+      "monday": "Lun",
+      "tuesday": "Mar",
+      "wednesday": "Mercoledì",
+      "thursday": "Gio",
+      "friday": "Ven",
+      "saturday": "Sab",
+      "sunday": "Sole"
+    }
+  },
+  "ordinal": {
+    "th": "th",
+    "st": "st",
+    "nd": "nd",
+    "rd": "rd"
+  }
+}

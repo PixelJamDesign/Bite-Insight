@@ -1,0 +1,57 @@
+{
+  "detail": {
+    "doYouLike": "Vind je het leuk",
+    "didYouKnow": "Wist je dat?"
+  },
+  "preferences": {
+    "pageTitle": {
+      "liked": "Vond ingrediënten leuk",
+      "disliked": "Ik hield niet van ingrediënten",
+      "flagged": "Gemarkeerde ingrediënten"
+    },
+    "countVerb": {
+      "liked": "jij houdt ervan",
+      "disliked": "jij houdt niet van",
+      "flagged": "je hebt gemarkeerd"
+    },
+    "empty": {
+      "titleLiked": "Je hebt momenteel geen geliefde ingrediënten",
+      "titleDisliked": "Je hebt momenteel geen ingrediënten die je niet leuk vindt",
+      "titleFlagged": "Je hebt momenteel geen gemarkeerde ingrediënten",
+      "descriptionLiked": "Om uw maaltijdplanning eenvoudiger te maken, kunt u enkele van uw favoriete ingrediënten op het dashboard beoordelen. Wanneer u de Insight Scanner gebruikt, zetten wij deze onder de aandacht en stellen u smakelijke recepten voor waar u dol op zult zijn!",
+      "descriptionDisliked": "Beoordeel ingrediënten op het dashboard om uw lijst met niet-leuke producten samen te stellen. We zorgen ervoor dat we ze markeren wanneer ze in een product voorkomen.",
+      "descriptionFlagged": "Markeer ingrediënten vanaf het dashboard of scan de resultaten om ze rood te markeren wanneer ze in een product voorkomen."
+    },
+    "flaggedPlaceholder": {
+      "palmOil": "Palmolie",
+      "highFructoseCornSyrup": "Fructose-glucosestroop",
+      "sodiumBenzoate": "Natriumbenzoaat"
+    },
+    "subtitle": {
+      "currently": "Momenteel",
+      "ingredient_one": "{{count}} ingrediënt",
+      "ingredient_other": "{{count}} ingrediënten"
+    },
+    "search": {
+      "placeholder": "Ingrediënten zoeken..."
+    },
+    "menu": {
+      "likeIngredient": "Zoals ingrediënt",
+      "dislikeIngredient": "Houd niet van ingrediënt",
+      "flagIngredient": "Vlag Ingrediënt",
+      "removeIngredient": "Ingrediënt verwijderen"
+    },
+    "error": {
+      "title": "Kan ingrediënten niet laden",
+      "migrationRequired": "Databasemigratie vereist. Voer de ALTER TABLE-instructies uit in uw Supabase SQL-editor om de kolommen met ingrediëntenvoorkeuren toe te voegen."
+    }
+  },
+  "upsell": {
+    "bite": "beet",
+    "insight": "inzicht",
+    "plus": "plus",
+    "plusSymbol": "+",
+    "tagline": "Markeer ingrediënten om te markeren\nze in het rood op elke scan",
+    "upgradeButton": "Upgrade naar Plus+"
+  }
+}

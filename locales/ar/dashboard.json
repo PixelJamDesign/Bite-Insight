@@ -1,0 +1,15 @@
+{
+  "weekInNumbers": "أسبوعك بالأرقام..",
+  "scannedLabels": "الملصقات الغذائية الممسوحة ضوئيا",
+  "flaggedIngredients": "المكونات التي تم وضع علامة عليها",
+  "ingredientQuestion": "هل تحب هذه المكونات؟",
+  "ingredientSubtitle": "أخبرنا ما هي المكونات التي تناسبك والتي لا تناسبك.",
+  "completionTitle": "لقد قمت بإعداد قائمة المكونات التي تحبها والتي لا تحبها!",
+  "completionSubtitle": "من خلال اختياراتك للمكونات، يمكننا أن نجعل تجربة تطبيقك أفضل!",
+  "viewLiked": "عرض المكونات المفضلة لديك",
+  "dailyInsight": "البصيرة اليومية!",
+  "suitableFor": "مناسبة ل:",
+  "setupRequired": "الإعداد مطلوب",
+  "setupMessage": "أضف عنوان URL الخاص بـ Supabase ومفتاح Anon إلى ملف .env، ثم أعد تشغيل التطبيق.\n\nالإعدادات → API في لوحة تحكم Supabase.",
+  "fallbackInitials": "؟؟"
+}

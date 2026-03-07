@@ -1,0 +1,48 @@
+{
+  "step": {
+    "aboutYou": "あなたについて",
+    "aboutThem": "彼らについて",
+    "health": "健康状態",
+    "nutrients": "栄養素ウォッチリスト",
+    "allergies": "アレルギー",
+    "dietary": "食事の好み"
+  },
+  "question": {
+    "healthCondition": "健康状態はありますか？",
+    "allergies": "アレルギーはありますか？",
+    "dietaryPreferences": "食事の好みはありますか？",
+    "healthConditionFamily": "彼らには健康上の問題はありますか?",
+    "allergiesFamily": "彼らにはアレルギーはありますか？",
+    "dietaryPreferencesFamily": "彼らには食事の好みはありますか?"
+  },
+  "count": {
+    "condition_one": "{{count}} 条件",
+    "condition_other": "{{count}} 条件",
+    "allergy_one": "{{count}} アレルギー",
+    "allergy_other": "{{count}} アレルギー",
+    "preference_one": "{{count}} の設定",
+    "preference_other": "{{count}} の設定"
+  },
+  "chip": {
+    "youveSelected": "あなたが選択しました"
+  },
+  "nutrient": {
+    "suggestion": "あなたの状態に基づいて、これらの栄養素に注意することをお勧めします",
+    "suggestionFamily": "状態に応じて、これらの栄養素に注意することをお勧めします",
+    "limiting": "制限する",
+    "boosting": "、ブースト",
+    "tracking": "トラッキング",
+    "nutrientCount_one": "{{count}} 栄養素",
+    "nutrientCount_other": "{{count}} の栄養素",
+    "alertSubtext": "スキャンされた製品にこれらが含まれている場合は、警告が送信されます。",
+    "instructions": "各栄養素を制限するか、増やすか、スキップするかを選択します。",
+    "sectionLimit": "制限すべき栄養素",
+    "sectionBoost": "強化する栄養素",
+    "sectionNoChange": "変化なし",
+    "sectionLimiting": "制限する",
+    "sectionBoosting": "ブースト"
+  },
+  "progress": {
+    "next": "次へ: {{label}}"
+  }
+}

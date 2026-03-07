@@ -1,0 +1,20 @@
+{
+  "screenTitle": "Historique des analyses",
+  "dateTabs": {
+    "today": "Aujourd'hui",
+    "yesterday": "Hier"
+  },
+  "calendar": {
+    "selectStartDate": "Sélectionnez la date de début",
+    "selectEndDate": "Sélectionnez la date de fin"
+  },
+  "dateRange": {
+    "label": "Plage de dates"
+  },
+  "empty": {
+    "noScansRange": "Aucune analyse dans cette plage",
+    "noScansToday": "Pas d'analyse aujourd'hui",
+    "noScansDay": "Aucun scan ce jour",
+    "description": "Appuyez sur le bouton du scanner ci-dessous pour numériser une étiquette alimentaire."
+  }
+}

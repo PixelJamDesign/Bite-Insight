@@ -1,0 +1,20 @@
+{
+  "screenTitle": "Cronologia scansioni",
+  "dateTabs": {
+    "today": "Oggi",
+    "yesterday": "Ieri"
+  },
+  "calendar": {
+    "selectStartDate": "Seleziona la data di inizio",
+    "selectEndDate": "Seleziona la data di fine"
+  },
+  "dateRange": {
+    "label": "Intervallo di date"
+  },
+  "empty": {
+    "noScansRange": "Nessuna scansione in questo intervallo",
+    "noScansToday": "Nessuna scansione oggi",
+    "noScansDay": "Nessuna scansione in questo giorno",
+    "description": "Tocca il pulsante dello scanner qui sotto per scansionare un'etichetta alimentare."
+  }
+}

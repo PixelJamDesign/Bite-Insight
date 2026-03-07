@@ -1,0 +1,244 @@
+{
+  "healthConditionReasons": {
+    "diabetes": {
+      "0": "Podnosi poziom cukru we krwi",
+      "1": "Powoduje załamanie energetyczne",
+      "2": "Wpływa na poziom insuliny",
+      "3": "Lekarz zalecił unikać",
+      "4": "Monitorowanie spożycia węglowodanów"
+    },
+    "hypertension": {
+      "0": "Podnosi ciśnienie krwi",
+      "1": "Za dużo sodu",
+      "2": "Lekarz zalecił unikać",
+      "3": "Zatrzymywanie wody",
+      "4": "Problem zdrowia serca"
+    },
+    "ibs": {
+      "0": "Powoduje wzdęcia/gazy",
+      "1": "Wywołuje skurcze żołądka",
+      "2": "Powoduje biegunkę",
+      "3": "Wyzwalacz FODMAP",
+      "4": "Pogarsza objawy"
+    },
+    "highCholesterol": {
+      "0": "Podnosi cholesterol",
+      "1": "Zbyt wysoka zawartość tłuszczów nasyconych",
+      "2": "Lekarz zalecił unikać",
+      "3": "Problem zdrowia serca",
+      "4": "Próbuję obniżyć LDL"
+    },
+    "eczema": {
+      "0": "Wywołuje zaostrzenie",
+      "1": "Powoduje swędzenie",
+      "2": "Powoduje zapalenie",
+      "3": "Dermatolog doradził",
+      "4": "Reakcja skórna"
+    },
+    "heartDisease": {
+      "0": "Problem zdrowia serca",
+      "1": "Zbyt wysoka zawartość tłuszczów nasyconych",
+      "2": "Lekarz zalecił unikać",
+      "3": "Podnosi cholesterol",
+      "4": "Wysokie ryzyko sodu"
+    },
+    "gerd": {
+      "0": "Wywołuje refluks żołądkowy",
+      "1": "Powoduje zgagę",
+      "2": "Podrażnia żołądek",
+      "3": "Lekarz zalecił unikać",
+      "4": "Pogarsza objawy"
+    },
+    "pcos": {
+      "0": "Podnosi poziom cukru we krwi",
+      "1": "Powoduje brak równowagi hormonalnej",
+      "2": "Lekarz zalecił unikać",
+      "3": "Wpływa na poziom insuliny",
+      "4": "Pogarsza objawy"
+    },
+    "metabolicSyndrome": {
+      "0": "Podnosi poziom cukru we krwi",
+      "1": "Zbyt wysoka zawartość tłuszczów nasyconych",
+      "2": "Lekarz zalecił unikać",
+      "3": "Zarządzanie wagą",
+      "4": "Wpływa na poziom insuliny"
+    },
+    "migraine": {
+      "0": "Wywołuje migreny",
+      "1": "Zawiera związki wyzwalające",
+      "2": "Lekarz zalecił unikać",
+      "3": "Powoduje bóle głowy",
+      "4": "Pogarsza objawy"
+    },
+    "crohns": {
+      "0": "Powoduje zaostrzenie",
+      "1": "Podrażnia błonę śluzową jelit",
+      "2": "Lekarz zalecił unikać",
+      "3": "Powoduje biegunkę",
+      "4": "Pogarsza objawy"
+    },
+    "uc": {
+      "0": "Powoduje zaostrzenie",
+      "1": "Podrażnia okrężnicę",
+      "2": "Lekarz zalecił unikać",
+      "3": "Powoduje biegunkę",
+      "4": "Pogarsza objawy"
+    },
+    "leakyGut": {
+      "0": "Podrażnia błonę śluzową jelit",
+      "1": "Zwiększa przepuszczalność",
+      "2": "Lekarz zalecił unikać",
+      "3": "Powoduje zapalenie",
+      "4": "Pogarsza objawy"
+    },
+    "sibo": {
+      "0": "Żywi przerost bakterii",
+      "1": "Powoduje wzdęcia/gazy",
+      "2": "Lekarz zalecił unikać",
+      "3": "Wyzwalacz FODMAP",
+      "4": "Pogarsza objawy"
+    },
+    "me": {
+      "0": "Powoduje załamanie energetyczne",
+      "1": "Nasila zmęczenie",
+      "2": "Lekarz zalecił unikać",
+      "3": "Powoduje mgłę mózgową",
+      "4": "Pogarsza objawy"
+    },
+    "ra": {
+      "0": "Powoduje zapalenie",
+      "1": "Wywołuje bóle stawów",
+      "2": "Lekarz zalecił unikać",
+      "3": "Pogarsza objawy",
+      "4": "Zwiększa sztywność"
+    },
+    "lupus": {
+      "0": "Powoduje zapalenie",
+      "1": "Wywołuje zaostrzenie",
+      "2": "Lekarz zalecił unikać",
+      "3": "Pogarsza objawy",
+      "4": "Wpływa na układ odpornościowy"
+    },
+    "ms": {
+      "0": "Powoduje zapalenie",
+      "1": "Pogarsza objawy",
+      "2": "Lekarz zalecił unikać",
+      "3": "Wpływa na zdrowie nerwów",
+      "4": "Wywołuje zaostrzenie"
+    },
+    "osteoporosis": {
+      "0": "Wypłukuje wapń",
+      "1": "Osłabia gęstość kości",
+      "2": "Lekarz zalecił unikać",
+      "3": "Wpływa na wchłanianie minerałów",
+      "4": "Nie jest przyjazny dla kości"
+    },
+    "adhd": {
+      "0": "Wpływa na skupienie/uwagę",
+      "1": "Zawiera sztuczne dodatki",
+      "2": "Powoduje nadpobudliwość",
+      "3": "Lekarz zalecił unikać",
+      "4": "Pogarsza objawy"
+    },
+    "autism": {
+      "0": "Powoduje reakcję sensoryczną",
+      "1": "Zawiera sztuczne dodatki",
+      "2": "Wpływa na zachowanie",
+      "3": "Lekarz zalecił unikać",
+      "4": "Pogarsza objawy"
+    }
+  },
+  "genericConditionReasons": {
+    "0": "Pogarsza objawy",
+    "1": "Lekarz zalecił unikać",
+    "2": "Powoduje dyskomfort",
+    "3": "Pogarsza mój stan",
+    "4": "Próbuję wyeliminować"
+  },
+  "allergyReasons": {
+    "0": "Ryzyko reakcji alergicznej",
+    "1": "Powoduje pokrzywkę/wysypkę",
+    "2": "Powoduje obrzęk",
+    "3": "Lekarz zdiagnozował",
+    "4": "Powoduje trudności w oddychaniu"
+  },
+  "intoleranceReasons": {
+    "0": "Powoduje wzdęcia",
+    "1": "Powoduje ból brzucha",
+    "2": "Powoduje nudności/biegunkę",
+    "3": "Nie mogę tego strawić",
+    "4": "Źle się czuję"
+  },
+  "sensitivityReasons": {
+    "0": "Powoduje bóle głowy",
+    "1": "Wyzwala reakcję",
+    "2": "Powoduje zaczerwienienie skóry",
+    "3": "Lekarz zalecił unikać",
+    "4": "Wrażliwość potwierdzona"
+  },
+  "dietaryPreferenceReasons": {
+    "vegan": {
+      "0": "Przeciwko mojej diecie",
+      "1": "Względy etyczne",
+      "2": "Obawy środowiskowe",
+      "3": "Dobrostan zwierząt",
+      "4": "Nie chcę konsumować"
+    },
+    "vegetarian": {
+      "0": "Przeciwko mojej diecie",
+      "1": "Względy etyczne",
+      "2": "Obawy środowiskowe",
+      "3": "Dobrostan zwierząt",
+      "4": "Nie chcę konsumować"
+    },
+    "plantBased": {
+      "0": "Przeciwko mojej diecie",
+      "1": "Względy etyczne",
+      "2": "Obawy środowiskowe",
+      "3": "Dobrostan zwierząt",
+      "4": "Nie chcę konsumować"
+    },
+    "keto": {
+      "0": "Za dużo węglowodanów",
+      "1": "Wybija mnie z ketozy",
+      "2": "Za dużo cukru",
+      "3": "Hamuje utratę wagi",
+      "4": "Nie przyjazny dla ketonów"
+    },
+    "weightLoss": {
+      "0": "Za dużo kalorii",
+      "1": "Za dużo cukru",
+      "2": "Za dużo tłuszczu",
+      "3": "Zatrzymuje postęp",
+      "4": "Próbuję wyciąć"
+    },
+    "fodmap": {
+      "0": "Składnik o wysokiej zawartości FODMAP",
+      "1": "Powoduje wzdęcia",
+      "2": "Wywołuje objawy IBS",
+      "3": "Dietetyk radzi unikać",
+      "4": "Faza eliminacji"
+    },
+    "dairyFree": {
+      "0": "Zawiera nabiał",
+      "1": "Unikanie wszelkiego nabiału",
+      "2": "Powoduje problemy trawienne",
+      "3": "Reakcja skórna",
+      "4": "Osobisty wybór"
+    }
+  },
+  "genericDietaryReasons": {
+    "0": "Nie pasuje do mojej diety",
+    "1": "Próbuję uniknąć",
+    "2": "Osobisty wybór",
+    "3": "Powody zdrowotne",
+    "4": "Wybór stylu życia"
+  },
+  "sheet": {
+    "whyFlagging": "Dlaczego flagujesz",
+    "otherHeader": "Inny",
+    "enterOwnReason": "Podaj mój własny powód",
+    "otherPlaceholder": "np. Sprawia, że ​​czuję się wzdęty",
+    "flagIngredient": "Składnik flagowy"
+  }
+}

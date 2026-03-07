@@ -1,0 +1,244 @@
+{
+  "healthConditionReasons": {
+    "diabetes": {
+      "0": "Pics de glycémie",
+      "1": "Provoque un crash énergétique",
+      "2": "Affecte les niveaux d’insuline",
+      "3": "Le médecin a conseillé d'éviter",
+      "4": "Surveillance de l'apport en glucides"
+    },
+    "hypertension": {
+      "0": "Augmente la tension artérielle",
+      "1": "Trop riche en sodium",
+      "2": "Le médecin a conseillé d'éviter",
+      "3": "Retenir l'eau",
+      "4": "Problème de santé cardiaque"
+    },
+    "ibs": {
+      "0": "Provoque des ballonnements/gaz",
+      "1": "Déclenche des crampes d'estomac",
+      "2": "Provoque la diarrhée",
+      "3": "Déclencheur FODMAP",
+      "4": "Aggrave les symptômes"
+    },
+    "highCholesterol": {
+      "0": "Augmente le cholestérol",
+      "1": "Trop riche en graisses saturées",
+      "2": "Le médecin a conseillé d'éviter",
+      "3": "Problème de santé cardiaque",
+      "4": "Essayer de réduire le LDL"
+    },
+    "eczema": {
+      "0": "Déclenche une poussée",
+      "1": "Provoque des démangeaisons",
+      "2": "Provoque une inflammation",
+      "3": "Conseillé par un dermatologue",
+      "4": "Réaction cutanée"
+    },
+    "heartDisease": {
+      "0": "Problème de santé cardiaque",
+      "1": "Trop riche en graisses saturées",
+      "2": "Le médecin a conseillé d'éviter",
+      "3": "Augmente le cholestérol",
+      "4": "Risque élevé de sodium"
+    },
+    "gerd": {
+      "0": "Déclenche le reflux acide",
+      "1": "Provoque des brûlures d'estomac",
+      "2": "Irrite l'estomac",
+      "3": "Le médecin a conseillé d'éviter",
+      "4": "Aggrave les symptômes"
+    },
+    "pcos": {
+      "0": "Pics de glycémie",
+      "1": "Provoque un déséquilibre hormonal",
+      "2": "Le médecin a conseillé d'éviter",
+      "3": "Affecte les niveaux d’insuline",
+      "4": "Aggrave les symptômes"
+    },
+    "metabolicSyndrome": {
+      "0": "Pics de glycémie",
+      "1": "Trop riche en graisses saturées",
+      "2": "Le médecin a conseillé d'éviter",
+      "3": "Gestion du poids",
+      "4": "Affecte les niveaux d’insuline"
+    },
+    "migraine": {
+      "0": "Déclenche des migraines",
+      "1": "Contient des composés déclencheurs",
+      "2": "Le médecin a conseillé d'éviter",
+      "3": "Provoque des maux de tête",
+      "4": "Aggrave les symptômes"
+    },
+    "crohns": {
+      "0": "Provoque une poussée",
+      "1": "Irrite la muqueuse intestinale",
+      "2": "Le médecin a conseillé d'éviter",
+      "3": "Provoque la diarrhée",
+      "4": "Aggrave les symptômes"
+    },
+    "uc": {
+      "0": "Provoque une poussée",
+      "1": "Irrite le côlon",
+      "2": "Le médecin a conseillé d'éviter",
+      "3": "Provoque la diarrhée",
+      "4": "Aggrave les symptômes"
+    },
+    "leakyGut": {
+      "0": "Irrite la muqueuse intestinale",
+      "1": "Augmente la perméabilité",
+      "2": "Le médecin a conseillé d'éviter",
+      "3": "Provoque une inflammation",
+      "4": "Aggrave les symptômes"
+    },
+    "sibo": {
+      "0": "Nourrit la prolifération bactérienne",
+      "1": "Provoque des ballonnements/gaz",
+      "2": "Le médecin a conseillé d'éviter",
+      "3": "Déclencheur FODMAP",
+      "4": "Aggrave les symptômes"
+    },
+    "me": {
+      "0": "Provoque un crash énergétique",
+      "1": "Aggrave la fatigue",
+      "2": "Le médecin a conseillé d'éviter",
+      "3": "Provoque un brouillard cérébral",
+      "4": "Aggrave les symptômes"
+    },
+    "ra": {
+      "0": "Provoque une inflammation",
+      "1": "Déclenche des douleurs articulaires",
+      "2": "Le médecin a conseillé d'éviter",
+      "3": "Aggrave les symptômes",
+      "4": "Augmente la rigidité"
+    },
+    "lupus": {
+      "0": "Provoque une inflammation",
+      "1": "Déclenche une poussée",
+      "2": "Le médecin a conseillé d'éviter",
+      "3": "Aggrave les symptômes",
+      "4": "Affecte le système immunitaire"
+    },
+    "ms": {
+      "0": "Provoque une inflammation",
+      "1": "Aggrave les symptômes",
+      "2": "Le médecin a conseillé d'éviter",
+      "3": "Affecte la santé nerveuse",
+      "4": "Déclenche une poussée"
+    },
+    "osteoporosis": {
+      "0": "Lessive le calcium",
+      "1": "Affaiblit la densité osseuse",
+      "2": "Le médecin a conseillé d'éviter",
+      "3": "Affecte l’absorption des minéraux",
+      "4": "Pas respectueux des os"
+    },
+    "adhd": {
+      "0": "Affecte la concentration/l'attention",
+      "1": "Contient des additifs artificiels",
+      "2": "Provoque une hyperactivité",
+      "3": "Le médecin a conseillé d'éviter",
+      "4": "Aggrave les symptômes"
+    },
+    "autism": {
+      "0": "Provoque une réaction sensorielle",
+      "1": "Contient des additifs artificiels",
+      "2": "Affecte le comportement",
+      "3": "Le médecin a conseillé d'éviter",
+      "4": "Aggrave les symptômes"
+    }
+  },
+  "genericConditionReasons": {
+    "0": "Aggrave les symptômes",
+    "1": "Le médecin a conseillé d'éviter",
+    "2": "Provoque un inconfort",
+    "3": "Aggrave mon état",
+    "4": "Essayer d'éliminer"
+  },
+  "allergyReasons": {
+    "0": "Risque de réaction allergique",
+    "1": "Provoque de l'urticaire/éruption cutanée",
+    "2": "Provoque un gonflement",
+    "3": "Médecin diagnostiqué",
+    "4": "Provoque des difficultés respiratoires"
+  },
+  "intoleranceReasons": {
+    "0": "Provoque des ballonnements",
+    "1": "Provoque des douleurs à l'estomac",
+    "2": "Provoque des nausées/diarrhée",
+    "3": "Je ne peux pas le digérer",
+    "4": "Je me sens mal"
+  },
+  "sensitivityReasons": {
+    "0": "Provoque des maux de tête",
+    "1": "Déclenche une réaction",
+    "2": "Provoque des rougeurs cutanées",
+    "3": "Le médecin a conseillé d'éviter",
+    "4": "Sensibilité confirmée"
+  },
+  "dietaryPreferenceReasons": {
+    "vegan": {
+      "0": "Contre mon régime",
+      "1": "Raisons éthiques",
+      "2": "Préoccupations environnementales",
+      "3": "Bien-être animal",
+      "4": "Je ne veux pas consommer"
+    },
+    "vegetarian": {
+      "0": "Contre mon régime",
+      "1": "Raisons éthiques",
+      "2": "Préoccupations environnementales",
+      "3": "Bien-être animal",
+      "4": "Je ne veux pas consommer"
+    },
+    "plantBased": {
+      "0": "Contre mon régime",
+      "1": "Raisons éthiques",
+      "2": "Préoccupations environnementales",
+      "3": "Bien-être animal",
+      "4": "Je ne veux pas consommer"
+    },
+    "keto": {
+      "0": "Trop de glucides",
+      "1": "Me fait sortir de la cétose",
+      "2": "Trop de sucre",
+      "3": "Cale la perte de poids",
+      "4": "Pas compatible avec le céto"
+    },
+    "weightLoss": {
+      "0": "Trop de calories",
+      "1": "Trop riche en sucre",
+      "2": "Trop riche en graisse",
+      "3": "Progression des stands",
+      "4": "Essayer de couper"
+    },
+    "fodmap": {
+      "0": "Ingrédient riche en FODMAP",
+      "1": "Provoque des ballonnements",
+      "2": "Déclenche les symptômes du SCI",
+      "3": "Un diététiste conseille d'éviter",
+      "4": "Phase d'élimination"
+    },
+    "dairyFree": {
+      "0": "Contient des produits laitiers",
+      "1": "Éviter tous les produits laitiers",
+      "2": "Provoque des problèmes digestifs",
+      "3": "Réaction cutanée",
+      "4": "Choix personnel"
+    }
+  },
+  "genericDietaryReasons": {
+    "0": "Ne correspond pas à mon alimentation",
+    "1": "Essayer d'éviter",
+    "2": "Choix personnel",
+    "3": "Raisons de santé",
+    "4": "Choix de style de vie"
+  },
+  "sheet": {
+    "whyFlagging": "Pourquoi signalez-vous",
+    "otherHeader": "Autre",
+    "enterOwnReason": "Entrez ma propre raison",
+    "otherPlaceholder": "par ex. Je me sens ballonné",
+    "flagIngredient": "Ingrédient du drapeau"
+  }
+}

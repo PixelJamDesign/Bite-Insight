@@ -1,0 +1,35 @@
+{
+  "editProfile": {
+    "aboutTitle": "あなた自身について教えてください",
+    "aboutSubtitle": "プロフィール情報を更新します。",
+    "saveChanges": "変更を保存",
+    "alert": {
+      "nameRequiredTitle": "名前は必須です",
+      "nameRequiredMessage": "フルネームを入力してください。"
+    },
+    "avatar": {
+      "alertTitle": "プロフィール写真",
+      "alertMessage": "オプションを選択してください",
+      "takePhoto": "写真を撮る",
+      "chooseFromLibrary": "ライブラリから選ぶ",
+      "permissionTitle": "許可が必要です",
+      "permissionMessage": "写真を撮るにはカメラへのアクセスが必要です。"
+    },
+    "placeholder": {
+      "age": "あなたの年齢 (オプション)"
+    }
+  },
+  "familyMember": {
+    "aboutTitleAdd": "彼らについて教えてください",
+    "aboutTitleEdit": "詳細を更新する",
+    "aboutSubtitleAdd": "家族の詳細を追加します。",
+    "aboutSubtitleEdit": "家族のプロフィールを編集します。",
+    "field": {
+      "relationship": "関係"
+    },
+    "alert": {
+      "nameRequiredTitle": "名前は必須です",
+      "nameRequiredMessage": "この家族の名前を入力してください。"
+    }
+  }
+}

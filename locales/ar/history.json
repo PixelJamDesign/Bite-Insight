@@ -1,0 +1,20 @@
+{
+  "screenTitle": "مسح التاريخ",
+  "dateTabs": {
+    "today": "اليوم",
+    "yesterday": "أمس"
+  },
+  "calendar": {
+    "selectStartDate": "حدد تاريخ البدء",
+    "selectEndDate": "حدد تاريخ الانتهاء"
+  },
+  "dateRange": {
+    "label": "النطاق الزمني"
+  },
+  "empty": {
+    "noScansRange": "لا توجد عمليات مسح في هذا النطاق",
+    "noScansToday": "لا يوجد عمليات مسح اليوم",
+    "noScansDay": "لا يوجد مسح في هذا اليوم",
+    "description": "اضغط على زر الماسح الضوئي أدناه لمسح ملصق الطعام."
+  }
+}

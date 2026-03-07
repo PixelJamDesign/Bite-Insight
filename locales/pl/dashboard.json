@@ -1,0 +1,15 @@
+{
+  "weekInNumbers": "Twój tydzień w liczbach…",
+  "scannedLabels": "Zeskanowane etykiety żywności",
+  "flaggedIngredients": "Oznaczone składniki",
+  "ingredientQuestion": "Czy podobają Ci się te składniki?",
+  "ingredientSubtitle": "Powiedz nam, które składniki działają na Ciebie, a które nie.",
+  "completionTitle": "Udało Ci się stworzyć listę składników, które lubisz i których nie lubisz!",
+  "completionSubtitle": "Dzięki wybranym przez Ciebie składnikom możemy sprawić, że Twoja aplikacja będzie jeszcze lepsza!",
+  "viewLiked": "Wyświetl ulubione składniki",
+  "dailyInsight": "Codzienny wgląd!",
+  "suitableFor": "Nadaje się do:",
+  "setupRequired": "Wymagana konfiguracja",
+  "setupMessage": "Dodaj adres URL Supabase i klucz anon do pliku .env, a następnie uruchom ponownie aplikację.\n\nUstawienia → API w panelu kontrolnym Supabase.",
+  "fallbackInitials": "??"
+}

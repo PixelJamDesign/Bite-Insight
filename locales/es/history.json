@@ -1,0 +1,20 @@
+{
+  "screenTitle": "Historial de escaneo",
+  "dateTabs": {
+    "today": "Hoy",
+    "yesterday": "Ayer"
+  },
+  "calendar": {
+    "selectStartDate": "Seleccione fecha de inicio",
+    "selectEndDate": "Seleccionar fecha de finalización"
+  },
+  "dateRange": {
+    "label": "Rango de fechas"
+  },
+  "empty": {
+    "noScansRange": "No hay escaneos en este rango",
+    "noScansToday": "No hay escaneos hoy",
+    "noScansDay": "No hay escaneos en este día",
+    "description": "Toque el botón del escáner a continuación para escanear una etiqueta de alimento."
+  }
+}

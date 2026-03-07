@@ -1,0 +1,20 @@
+{
+  "screenTitle": "スキャン履歴",
+  "dateTabs": {
+    "today": "今日",
+    "yesterday": "昨日"
+  },
+  "calendar": {
+    "selectStartDate": "開始日を選択してください",
+    "selectEndDate": "終了日を選択してください"
+  },
+  "dateRange": {
+    "label": "日付範囲"
+  },
+  "empty": {
+    "noScansRange": "この範囲ではスキャンはありません",
+    "noScansToday": "今日はスキャンがありません",
+    "noScansDay": "この日はスキャンはありません",
+    "description": "下のスキャナー ボタンをタップして、食品ラベルをスキャンします。"
+  }
+}

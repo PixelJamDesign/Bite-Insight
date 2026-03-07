@@ -1,0 +1,15 @@
+{
+  "weekInNumbers": "숫자로 보는 일주일…",
+  "scannedLabels": "스캔한 식품 라벨",
+  "flaggedIngredients": "표시된 성분",
+  "ingredientQuestion": "이 재료가 마음에 드시나요?",
+  "ingredientSubtitle": "어떤 성분이 당신에게 효과가 있고 어떤 성분이 효과가 없는지 알려주세요.",
+  "completionTitle": "좋아하는 재료와 싫어하는 재료의 목록을 작성했습니다!",
+  "completionSubtitle": "귀하가 선택한 재료를 통해 귀하의 앱 경험을 더욱 향상시킬 수 있습니다!",
+  "viewLiked": "마음에 드는 재료 보기",
+  "dailyInsight": "일일 인사이트!",
+  "suitableFor": "적합 대상:",
+  "setupRequired": "설정 필요",
+  "setupMessage": "Supabase URL과 익명 키를 .env 파일에 추가한 다음 앱을 다시 시작하세요.\n\n설정 → Supabase 대시보드의 API.",
+  "fallbackInitials": "??"
+}

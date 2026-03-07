@@ -1,0 +1,32 @@
+{
+  "topTitle": "扫描食品标签",
+  "hint": {
+    "processing": "加工...",
+    "pointAtBarcode": "指向条形码进行扫描"
+  },
+  "bottomHint": "支持EAN-13、EAN-8、UPC-A和QR码",
+  "regions": {
+    "world": "世界",
+    "unitedKingdom": "英国",
+    "unitedStates": "美国",
+    "france": "法国",
+    "germany": "德国",
+    "spain": "西班牙",
+    "italy": "意大利",
+    "australia": "澳大利亚",
+    "canada": "加拿大",
+    "netherlands": "荷兰"
+  },
+  "regionPicker": {
+    "title": "选择地区"
+  },
+  "permission": {
+    "title": "需要访问相机",
+    "description": "BiteInsight 需要摄像头访问才能扫描食品标签和条形码。",
+    "grantButton": "授予访问权限"
+  },
+  "alert": {
+    "scanFailedTitle": "扫描失败",
+    "scanFailedMessage": "无法处理该条形码。请再试一次。"
+  }
+}

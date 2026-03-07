@@ -1,0 +1,244 @@
+{
+  "healthConditionReasons": {
+    "diabetes": {
+      "0": "Erhöht den Blutzuckerspiegel",
+      "1": "Verursacht Energieabsturz",
+      "2": "Beeinflusst den Insulinspiegel",
+      "3": "Der Arzt riet, dies zu vermeiden",
+      "4": "Überwachung der Kohlenhydrataufnahme"
+    },
+    "hypertension": {
+      "0": "Erhöht den Blutdruck",
+      "1": "Zu viel Natrium",
+      "2": "Der Arzt riet, dies zu vermeiden",
+      "3": "Wasser zurückhalten",
+      "4": "Bedenken hinsichtlich der Herzgesundheit"
+    },
+    "ibs": {
+      "0": "Verursacht Blähungen/Blähungen",
+      "1": "Löst Magenkrämpfe aus",
+      "2": "Verursacht Durchfall",
+      "3": "FODMAP-Trigger",
+      "4": "Verschlimmert die Symptome"
+    },
+    "highCholesterol": {
+      "0": "Erhöht den Cholesterinspiegel",
+      "1": "Zu viel gesättigtes Fett",
+      "2": "Der Arzt riet, dies zu vermeiden",
+      "3": "Bedenken hinsichtlich der Herzgesundheit",
+      "4": "Ich versuche, den LDL-Wert zu senken"
+    },
+    "eczema": {
+      "0": "Löst ein Aufflackern aus",
+      "1": "Verursacht Juckreiz",
+      "2": "Verursacht Entzündungen",
+      "3": "Hautarzt beraten",
+      "4": "Hautreaktion"
+    },
+    "heartDisease": {
+      "0": "Bedenken hinsichtlich der Herzgesundheit",
+      "1": "Zu viel gesättigtes Fett",
+      "2": "Der Arzt riet, dies zu vermeiden",
+      "3": "Erhöht den Cholesterinspiegel",
+      "4": "Hohes Natriumrisiko"
+    },
+    "gerd": {
+      "0": "Löst sauren Reflux aus",
+      "1": "Verursacht Sodbrennen",
+      "2": "Reizt den Magen",
+      "3": "Der Arzt riet, dies zu vermeiden",
+      "4": "Verschlimmert die Symptome"
+    },
+    "pcos": {
+      "0": "Erhöht den Blutzuckerspiegel",
+      "1": "Verursacht hormonelles Ungleichgewicht",
+      "2": "Der Arzt riet, dies zu vermeiden",
+      "3": "Beeinflusst den Insulinspiegel",
+      "4": "Verschlimmert die Symptome"
+    },
+    "metabolicSyndrome": {
+      "0": "Erhöht den Blutzuckerspiegel",
+      "1": "Zu viel gesättigtes Fett",
+      "2": "Der Arzt riet, dies zu vermeiden",
+      "3": "Gewichtsmanagement",
+      "4": "Beeinflusst den Insulinspiegel"
+    },
+    "migraine": {
+      "0": "Löst Migräne aus",
+      "1": "Enthält auslösende Verbindungen",
+      "2": "Der Arzt riet, dies zu vermeiden",
+      "3": "Verursacht Kopfschmerzen",
+      "4": "Verschlimmert die Symptome"
+    },
+    "crohns": {
+      "0": "Verursacht Aufflammen",
+      "1": "Reizt die Darmschleimhaut",
+      "2": "Der Arzt riet, dies zu vermeiden",
+      "3": "Verursacht Durchfall",
+      "4": "Verschlimmert die Symptome"
+    },
+    "uc": {
+      "0": "Verursacht Aufflammen",
+      "1": "Reizt den Dickdarm",
+      "2": "Der Arzt riet, dies zu vermeiden",
+      "3": "Verursacht Durchfall",
+      "4": "Verschlimmert die Symptome"
+    },
+    "leakyGut": {
+      "0": "Reizt die Darmschleimhaut",
+      "1": "Erhöht die Durchlässigkeit",
+      "2": "Der Arzt riet, dies zu vermeiden",
+      "3": "Verursacht Entzündungen",
+      "4": "Verschlimmert die Symptome"
+    },
+    "sibo": {
+      "0": "Fördert das Überwachsen von Bakterien",
+      "1": "Verursacht Blähungen/Blähungen",
+      "2": "Der Arzt riet, dies zu vermeiden",
+      "3": "FODMAP-Trigger",
+      "4": "Verschlimmert die Symptome"
+    },
+    "me": {
+      "0": "Verursacht Energieabsturz",
+      "1": "Verschlimmert die Müdigkeit",
+      "2": "Der Arzt riet, dies zu vermeiden",
+      "3": "Verursacht Gehirnnebel",
+      "4": "Verschlimmert die Symptome"
+    },
+    "ra": {
+      "0": "Verursacht Entzündungen",
+      "1": "Löst Gelenkschmerzen aus",
+      "2": "Der Arzt riet, dies zu vermeiden",
+      "3": "Verschlimmert die Symptome",
+      "4": "Erhöht die Steifigkeit"
+    },
+    "lupus": {
+      "0": "Verursacht Entzündungen",
+      "1": "Löst ein Aufflackern aus",
+      "2": "Der Arzt riet, dies zu vermeiden",
+      "3": "Verschlimmert die Symptome",
+      "4": "Beeinflusst das Immunsystem"
+    },
+    "ms": {
+      "0": "Verursacht Entzündungen",
+      "1": "Verschlimmert die Symptome",
+      "2": "Der Arzt riet, dies zu vermeiden",
+      "3": "Beeinflusst die Nervengesundheit",
+      "4": "Löst ein Aufflackern aus"
+    },
+    "osteoporosis": {
+      "0": "Löst Kalzium aus",
+      "1": "Schwächt die Knochendichte",
+      "2": "Der Arzt riet, dies zu vermeiden",
+      "3": "Beeinflusst die Mineralstoffaufnahme",
+      "4": "Nicht knochenfreundlich"
+    },
+    "adhd": {
+      "0": "Beeinflusst Fokus/Aufmerksamkeit",
+      "1": "Enthält künstliche Zusatzstoffe",
+      "2": "Verursacht Hyperaktivität",
+      "3": "Der Arzt riet, dies zu vermeiden",
+      "4": "Verschlimmert die Symptome"
+    },
+    "autism": {
+      "0": "Verursacht sensorische Reaktionen",
+      "1": "Enthält künstliche Zusatzstoffe",
+      "2": "Beeinflusst das Verhalten",
+      "3": "Der Arzt riet, dies zu vermeiden",
+      "4": "Verschlimmert die Symptome"
+    }
+  },
+  "genericConditionReasons": {
+    "0": "Verschlimmert die Symptome",
+    "1": "Der Arzt riet, dies zu vermeiden",
+    "2": "Verursacht Unbehagen",
+    "3": "Verschlechtert meinen Zustand",
+    "4": "Versuche zu beseitigen"
+  },
+  "allergyReasons": {
+    "0": "Gefahr einer allergischen Reaktion",
+    "1": "Verursacht Nesselsucht/Ausschlag",
+    "2": "Verursacht Schwellungen",
+    "3": "Arzt diagnostiziert",
+    "4": "Verursacht Atembeschwerden"
+  },
+  "intoleranceReasons": {
+    "0": "Verursacht Blähungen",
+    "1": "Verursacht Magenschmerzen",
+    "2": "Verursacht Übelkeit/Durchfall",
+    "3": "Kann es nicht verdauen",
+    "4": "Ich fühle mich unwohl"
+  },
+  "sensitivityReasons": {
+    "0": "Verursacht Kopfschmerzen",
+    "1": "Löst Reaktion aus",
+    "2": "Verursacht Hautrötungen",
+    "3": "Der Arzt riet, dies zu vermeiden",
+    "4": "Empfindlichkeit bestätigt"
+  },
+  "dietaryPreferenceReasons": {
+    "vegan": {
+      "0": "Gegen meine Diät",
+      "1": "Ethische Gründe",
+      "2": "Umweltbedenken",
+      "3": "Tierschutz",
+      "4": "Möchte nicht konsumieren"
+    },
+    "vegetarian": {
+      "0": "Gegen meine Diät",
+      "1": "Ethische Gründe",
+      "2": "Umweltbedenken",
+      "3": "Tierschutz",
+      "4": "Möchte nicht konsumieren"
+    },
+    "plantBased": {
+      "0": "Gegen meine Diät",
+      "1": "Ethische Gründe",
+      "2": "Umweltbedenken",
+      "3": "Tierschutz",
+      "4": "Möchte nicht konsumieren"
+    },
+    "keto": {
+      "0": "Zu viele Kohlenhydrate",
+      "1": "Bringt mich aus der Ketose",
+      "2": "Zu viel Zucker",
+      "3": "Hemmt den Gewichtsverlust",
+      "4": "Nicht ketofreundlich"
+    },
+    "weightLoss": {
+      "0": "Zu viele Kalorien",
+      "1": "Zu viel Zucker",
+      "2": "Zu viel Fett",
+      "3": "Blockiert den Fortschritt",
+      "4": "Versuche auszuschneiden"
+    },
+    "fodmap": {
+      "0": "Inhaltsstoff mit hohem FODMAP-Gehalt",
+      "1": "Verursacht Blähungen",
+      "2": "Löst IBS-Symptome aus",
+      "3": "Der Ernährungsberater hat davon abgeraten",
+      "4": "Eliminierungsphase"
+    },
+    "dairyFree": {
+      "0": "Enthält Milchprodukte",
+      "1": "Vermeiden Sie jegliche Milchprodukte",
+      "2": "Verursacht Verdauungsprobleme",
+      "3": "Hautreaktion",
+      "4": "Persönliche Wahl"
+    }
+  },
+  "genericDietaryReasons": {
+    "0": "Passt nicht zu meiner Ernährung",
+    "1": "Versuche es zu vermeiden",
+    "2": "Persönliche Wahl",
+    "3": "Gesundheitliche Gründe",
+    "4": "Wahl des Lebensstils"
+  },
+  "sheet": {
+    "whyFlagging": "Warum schwächelst du?",
+    "otherHeader": "Andere",
+    "enterOwnReason": "Geben Sie meinen eigenen Grund ein",
+    "otherPlaceholder": "z.B. Ich fühle mich aufgebläht",
+    "flagIngredient": "Zutat kennzeichnen"
+  }
+}

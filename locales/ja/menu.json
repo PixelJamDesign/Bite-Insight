@@ -1,0 +1,139 @@
+{
+  "main": {
+    "whereLabel": "どこに行きたいですか？",
+    "dashboard": "ダッシュボード",
+    "myIngredients": "私の材料",
+    "snackScanner": "スナックスキャナー",
+    "scanHistory": "スキャン履歴",
+    "recipes": "レシピ",
+    "myAccount": "私のアカウント",
+    "settings": "設定",
+    "logOut": "ログアウト"
+  },
+  "footer": {
+    "version": "バージョン1.0.0",
+    "reportProblem": "問題を報告する"
+  },
+  "ingredients": {
+    "title": "私の材料",
+    "liked": "好きな食材",
+    "disliked": "嫌いな食材",
+    "flagged": "フラグのある原材料"
+  },
+  "account": {
+    "title": "私のアカウント",
+    "editDetails": "私の詳細を編集する",
+    "familyMembers": "家族",
+    "biteInsightPlus": "バイトインサイト+",
+    "changePassword": "パスワードを変更する"
+  },
+  "settings": {
+    "title": "設定",
+    "security": "安全",
+    "notifications": "通知",
+    "helpSupport": "ヘルプとサポート",
+    "privacyPolicy": "プライバシーポリシー",
+    "cookiePolicy": "クッキーポリシー",
+    "myData": "私のデータ",
+    "offlineDatabase": "オフラインデータベース"
+  },
+  "security": {
+    "title": "安全",
+    "biometricLogin": "生体認証ログイン",
+    "enabledHint": "{{label}} が有効になっています。パスワードを入力せずにサインインできます。",
+    "disabledHint": "{{label}} を有効にするには、電子メールとパスワードを使用してサインインします。",
+    "unavailableHint": "このデバイスでは生体認証ログインは利用できません。デバイスの設定でFace ID、Touch ID、または指紋が設定されていることを確認してください。"
+  },
+  "myData": {
+    "title": "あなたのデータ",
+    "memberSince": "以降のメンバー: {{date}}",
+    "productsScanned": "スキャンされた製品",
+    "familyMembers": "家族",
+    "downloadMyData": "データをダウンロードする",
+    "downloadSubtext": "すべてのデータを JSON ファイルとしてエクスポートします。",
+    "exportDialogTitle": "データをエクスポートする",
+    "destructiveZone": "デストラクションゾーン",
+    "clearMyData": "データをクリアする",
+    "clearSubtext": "これにより、このアカウントの現在のデータがすべて消去されます。",
+    "closeMyAccount": "アカウントを閉じる",
+    "closeSubtext": "アカウントと関連するすべてのデータを完全に削除します。これを元に戻すことはできません。",
+    "confirm": {
+      "clearTitle": "すべてのデータを消去しますか?",
+      "clearDescription": "これにより、スキャン履歴とすべての家族のプロフィールが完全に削除されます。アカウントと設定はそのまま残ります。",
+      "clearPhrase": "クリア",
+      "clearLabel": "データをクリアする",
+      "closeTitle": "アカウントを閉じますか?",
+      "closeDescription": "これにより、プロフィール、スキャン履歴、家族メンバー、設定、および関連するすべてのデータが完全に削除されます。この操作は元に戻すことができません。",
+      "deletePhrase": "消去",
+      "closeLabel": "アカウントを閉じる"
+    },
+    "error": {
+      "clearFailed": "データの消去に失敗しました。もう一度試してください。",
+      "exportFailedTitle": "エクスポートに失敗しました",
+      "exportFailedMessage": "データのエクスポート中に問題が発生しました。もう一度試してください。",
+      "closeFailed": "アカウントを閉鎖できませんでした。サポートにお問い合わせください。"
+    }
+  },
+  "offlineDb": {
+    "title": "オフラインデータベース",
+    "description": "オフライン バーコード スキャン用に地域の食品データベースをダウンロードします。ダウンロードが完了すると、スキャンはインターネットに接続していなくても機能します。",
+    "loadingRegions": "リージョンをロード中...",
+    "products": "製品",
+    "downloadButton": "ダウンロード",
+    "retryButton": "リトライ",
+    "downloading": "ダウンロード中... {{percentage}}%",
+    "downloaded": "ダウンロード済み",
+    "storageHeading": "ストレージ",
+    "totalUsed": "使用合計",
+    "regionCount_one": "{{count}} 地域",
+    "regionCount_other": "{{count}} 地域",
+    "deleteAll": "すべてのデータベースを削除する",
+    "deleteAllSubtext": "すべてのオフライン ストレージを解放します。",
+    "confirm": {
+      "deleteAllTitle": "すべてのオフライン データベースを削除しますか?",
+      "deleteOneTitle": "{{label}} データベースを削除しますか?",
+      "deleteAllDescription": "これにより、ダウンロードしたすべての食品データベースがデバイスから削除されます。いつでも再度ダウンロードできます。スキャン履歴は影響を受けません。",
+      "deleteOneDescription": "これにより、{{label}} 食品データベースがデバイスから削除されます。いつでも再ダウンロードできます。",
+      "deletePhrase": "消去",
+      "deleteAllLabel": "すべて削除",
+      "deleteOneLabel": "データベースの削除"
+    }
+  },
+  "password": {
+    "title": "パスワードを変更する",
+    "subtitle": "現在のパスワードを入力し、新しいパスワードを選択します。",
+    "label": {
+      "current": "現在のパスワード",
+      "new": "新しいパスワード",
+      "confirm": "新しいパスワードを確認します"
+    },
+    "placeholder": {
+      "current": "現在のパスワードを入力してください",
+      "new": "新しいパスワードを入力してください",
+      "confirm": "新しいパスワードを再入力してください"
+    },
+    "rule": {
+      "minLength": "8文字",
+      "uppercase": "大文字",
+      "lowercase": "小文字",
+      "number": "番号"
+    },
+    "rulePrefix": {
+      "atLeast": "少なくとも",
+      "one": "1つ"
+    },
+    "button": {
+      "update": "パスワードを更新する"
+    },
+    "error": {
+      "verifyFailed": "本人確認ができません。もう一度試してください。",
+      "incorrectCurrent": "現在のパスワードが間違っています。",
+      "generic": "何か問題が発生しました。もう一度試してください。",
+      "mismatch": "パスワードが一致しません"
+    },
+    "success": {
+      "title": "パスワードが更新されました",
+      "body": "パスワードは正常に変更されました。"
+    }
+  }
+}

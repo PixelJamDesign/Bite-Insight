@@ -1,0 +1,15 @@
+{
+  "weekInNumbers": "Sua semana em números…",
+  "scannedLabels": "Rótulos de alimentos digitalizados",
+  "flaggedIngredients": "Ingredientes sinalizados",
+  "ingredientQuestion": "Você gosta desses ingredientes?",
+  "ingredientSubtitle": "Diga-nos quais ingredientes funcionam para você e quais não.",
+  "completionTitle": "Você acertou em cheio sua lista de ingredientes que você gosta e não gosta!",
+  "completionSubtitle": "Com suas escolhas de ingredientes, podemos tornar a experiência do seu aplicativo ainda melhor!",
+  "viewLiked": "Veja seus ingredientes favoritos",
+  "dailyInsight": "Visão diária!",
+  "suitableFor": "Adequado para:",
+  "setupRequired": "Configuração necessária",
+  "setupMessage": "Adicione seu URL Supabase e chave anônima ao arquivo .env e reinicie o aplicativo.\n\nConfigurações → API em seu painel Supabase.",
+  "fallbackInitials": "??"
+}

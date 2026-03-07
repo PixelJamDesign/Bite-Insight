@@ -1,0 +1,48 @@
+{
+  "step": {
+    "aboutYou": "Over jou",
+    "aboutThem": "Over hen",
+    "health": "Gezondheidsomstandigheden",
+    "nutrients": "Nutriënten-watchlist",
+    "allergies": "allergieën",
+    "dietary": "Dieetvoorkeuren"
+  },
+  "question": {
+    "healthCondition": "Heeft u een gezondheidsprobleem?",
+    "allergies": "Heeft u allergieën?",
+    "dietaryPreferences": "Heeft u dieetvoorkeuren?",
+    "healthConditionFamily": "Hebben ze gezondheidsproblemen?",
+    "allergiesFamily": "Hebben ze allergieën?",
+    "dietaryPreferencesFamily": "Hebben ze dieetvoorkeuren?"
+  },
+  "count": {
+    "condition_one": "{{count}} voorwaarde",
+    "condition_other": "{{count}} voorwaarden",
+    "allergy_one": "{{count}} allergie",
+    "allergy_other": "{{count}} allergieën",
+    "preference_one": "{{count}} voorkeur",
+    "preference_other": "{{count}} voorkeuren"
+  },
+  "chip": {
+    "youveSelected": "Je hebt geselecteerd"
+  },
+  "nutrient": {
+    "suggestion": "Op basis van uw omstandigheden raden we u aan deze voedingsstoffen in de gaten te houden",
+    "suggestionFamily": "Op basis van hun omstandigheden raden we aan deze voedingsstoffen in de gaten te houden",
+    "limiting": "Beperkend",
+    "boosting": ", stimuleren",
+    "tracking": "Volgen",
+    "nutrientCount_one": "{{count}} voedingsstof",
+    "nutrientCount_other": "{{count}} voedingsstoffen",
+    "alertSubtext": "We waarschuwen u wanneer gescande producten deze bevatten.",
+    "instructions": "Kies ervoor om elke voedingsstof te beperken, te stimuleren of over te slaan.",
+    "sectionLimit": "Voedingsstoffen om te beperken",
+    "sectionBoost": "Voedingsstoffen om te stimuleren",
+    "sectionNoChange": "Geen verandering",
+    "sectionLimiting": "Beperkend",
+    "sectionBoosting": "Stimuleren"
+  },
+  "progress": {
+    "next": "Volgende: {{label}}"
+  }
+}

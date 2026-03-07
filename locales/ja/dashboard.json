@@ -1,0 +1,15 @@
+{
+  "weekInNumbers": "数字で見るあなたの一週間…",
+  "scannedLabels": "食品ラベルをスキャンしました",
+  "flaggedIngredients": "フラグのある成分",
+  "ingredientQuestion": "これらの食材は好きですか？",
+  "ingredientSubtitle": "どの成分があなたにとって効果的で、どの成分が効果的でないのか教えてください。",
+  "completionTitle": "好きな食材と嫌いな食材のリストが完成しました。",
+  "completionSubtitle": "あなたの材料の選択により、アプリのエクスペリエンスをさらに向上させることができます。",
+  "viewLiked": "お気に入りの食材を表示",
+  "dailyInsight": "日々の洞察！",
+  "suitableFor": "以下に適しています:",
+  "setupRequired": "セットアップが必要です",
+  "setupMessage": "Supabase URL と anon キーを .env ファイルに追加し、アプリを再起動します。\n\nSupabase ダッシュボードの [設定] → [API] をクリックします。",
+  "fallbackInitials": "??"
+}

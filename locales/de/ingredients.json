@@ -1,0 +1,57 @@
+{
+  "detail": {
+    "doYouLike": "Gefällt dir",
+    "didYouKnow": "Wussten Sie?"
+  },
+  "preferences": {
+    "pageTitle": {
+      "liked": "Gefallene Zutaten",
+      "disliked": "Unbeliebte Zutaten",
+      "flagged": "Gekennzeichnete Zutaten"
+    },
+    "countVerb": {
+      "liked": "du magst",
+      "disliked": "du magst es nicht",
+      "flagged": "Du hast markiert"
+    },
+    "empty": {
+      "titleLiked": "Sie haben derzeit keine gewünschten Zutaten",
+      "titleDisliked": "Sie haben derzeit keine unerwünschten Zutaten",
+      "titleFlagged": "Sie haben derzeit keine markierten Zutaten",
+      "descriptionLiked": "Um Ihnen die Essensplanung zu erleichtern, bewerten Sie einige Ihrer Lieblingszutaten auf dem Dashboard. Wenn Sie den Insight Scanner verwenden, rücken wir sie ins Rampenlicht und schlagen Ihnen leckere Rezepte vor, die Sie lieben werden!",
+      "descriptionDisliked": "Bewerten Sie Zutaten auf dem Dashboard, um Ihre Liste der nicht gemochten Zutaten zu erstellen. Wir stellen sicher, dass sie immer dann gekennzeichnet werden, wenn sie in einem Produkt erscheinen.",
+      "descriptionFlagged": "Markieren Sie Zutaten im Dashboard oder scannen Sie Ergebnisse, um sie rot hervorzuheben, wenn sie in einem Produkt vorkommen."
+    },
+    "flaggedPlaceholder": {
+      "palmOil": "Palmöl",
+      "highFructoseCornSyrup": "Maissirup mit hohem Fruchtzuckergehalt",
+      "sodiumBenzoate": "Natriumbenzoat"
+    },
+    "subtitle": {
+      "currently": "Momentan",
+      "ingredient_one": "{{count}} Zutat",
+      "ingredient_other": "{{count}} Zutaten"
+    },
+    "search": {
+      "placeholder": "Zutaten suchen..."
+    },
+    "menu": {
+      "likeIngredient": "Wie Zutat",
+      "dislikeIngredient": "Zutat gefällt mir nicht",
+      "flagIngredient": "Zutat kennzeichnen",
+      "removeIngredient": "Zutat entfernen"
+    },
+    "error": {
+      "title": "Zutaten konnten nicht geladen werden",
+      "migrationRequired": "Datenbankmigration erforderlich. Bitte führen Sie die ALTER TABLE-Anweisungen in Ihrem Supabase SQL Editor aus, um die Spalten für die Zutatenpräferenz hinzuzufügen."
+    }
+  },
+  "upsell": {
+    "bite": "beißen",
+    "insight": "Einblick",
+    "plus": "Plus",
+    "plusSymbol": "+",
+    "tagline": "Markieren Sie die hervorzuhebenden Zutaten\nSie werden bei jedem Scan rot angezeigt",
+    "upgradeButton": "Upgrade auf Plus+"
+  }
+}

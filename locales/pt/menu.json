@@ -1,0 +1,139 @@
+{
+  "main": {
+    "whereLabel": "Para onde você gostaria de ir?",
+    "dashboard": "Painel",
+    "myIngredients": "Meus ingredientes",
+    "snackScanner": "Scanner de lanches",
+    "scanHistory": "Histórico de verificação",
+    "recipes": "Receitas",
+    "myAccount": "Minha conta",
+    "settings": "Configurações",
+    "logOut": "Sair"
+  },
+  "footer": {
+    "version": "ver. 1.0.0",
+    "reportProblem": "Informar um problema"
+  },
+  "ingredients": {
+    "title": "Meus ingredientes",
+    "liked": "Ingredientes preferidos",
+    "disliked": "Ingredientes não gostados",
+    "flagged": "Ingredientes sinalizados"
+  },
+  "account": {
+    "title": "Minha conta",
+    "editDetails": "Editar meus detalhes",
+    "familyMembers": "Membros da família",
+    "biteInsightPlus": "Mordida Insight +",
+    "changePassword": "Alterar a senha"
+  },
+  "settings": {
+    "title": "Configurações",
+    "security": "Segurança",
+    "notifications": "Notificações",
+    "helpSupport": "Ajuda e suporte",
+    "privacyPolicy": "política de Privacidade",
+    "cookiePolicy": "Política de Cookies",
+    "myData": "Meus dados",
+    "offlineDatabase": "Banco de dados off-line"
+  },
+  "security": {
+    "title": "Segurança",
+    "biometricLogin": "Login biométrico",
+    "enabledHint": "{{label}} está ativado. Você pode entrar sem digitar sua senha.",
+    "disabledHint": "Faça login com seu e-mail e senha para ativar {{label}}.",
+    "unavailableHint": "O login biométrico não está disponível neste dispositivo. Certifique-se de ter Face ID, Touch ID ou impressão digital configurados nas configurações do seu dispositivo."
+  },
+  "myData": {
+    "title": "Seus dados",
+    "memberSince": "Membro desde: {{date}}",
+    "productsScanned": "Produtos digitalizados",
+    "familyMembers": "Membros da família",
+    "downloadMyData": "Baixar meus dados",
+    "downloadSubtext": "Exporte todos os seus dados como um arquivo JSON.",
+    "exportDialogTitle": "Exporte seus dados",
+    "destructiveZone": "Zona destrutiva",
+    "clearMyData": "Limpar meus dados",
+    "clearSubtext": "Isso limpará todos os dados atuais desta conta.",
+    "closeMyAccount": "Fechar minha conta",
+    "closeSubtext": "Exclua permanentemente sua conta e todos os dados associados. Isto não pode ser desfeito.",
+    "confirm": {
+      "clearTitle": "Limpar todos os seus dados?",
+      "clearDescription": "Isso excluirá permanentemente seu histórico de varredura e todos os perfis familiares. Sua conta e preferências permanecerão intactas.",
+      "clearPhrase": "CLARO",
+      "clearLabel": "Limpar meus dados",
+      "closeTitle": "Fechar sua conta?",
+      "closeDescription": "Isso excluirá permanentemente seu perfil, histórico de verificação, membros da família, preferências e todos os dados associados. Esta ação não pode ser desfeita.",
+      "deletePhrase": "EXCLUIR",
+      "closeLabel": "Fechar minha conta"
+    },
+    "error": {
+      "clearFailed": "Falha ao limpar seus dados. Por favor, tente novamente.",
+      "exportFailedTitle": "Falha na exportação",
+      "exportFailedMessage": "Algo deu errado ao exportar seus dados. Por favor, tente novamente.",
+      "closeFailed": "Falha ao encerrar sua conta. Entre em contato com o suporte."
+    }
+  },
+  "offlineDb": {
+    "title": "Banco de dados off-line",
+    "description": "Baixe bancos de dados regionais de alimentos para leitura de código de barras offline. Após o download, as verificações funcionam sem conexão com a Internet.",
+    "loadingRegions": "Carregando regiões...",
+    "products": "produtos",
+    "downloadButton": "Download",
+    "retryButton": "Tentar novamente",
+    "downloading": "Baixando... {{percentage}}%",
+    "downloaded": "Baixado",
+    "storageHeading": "Armazenar",
+    "totalUsed": "Total usado",
+    "regionCount_one": "Região {{count}}",
+    "regionCount_other": "{{count}} regiões",
+    "deleteAll": "Excluir todos os bancos de dados",
+    "deleteAllSubtext": "Libere todo o armazenamento offline.",
+    "confirm": {
+      "deleteAllTitle": "Excluir todos os bancos de dados offline?",
+      "deleteOneTitle": "Excluir banco de dados {{label}}?",
+      "deleteAllDescription": "Isso removerá todos os bancos de dados de alimentos baixados do seu dispositivo. Você pode baixá-los novamente a qualquer momento. Seu histórico de varredura não será afetado.",
+      "deleteOneDescription": "Isso removerá o banco de dados de alimentos {{label}} do seu dispositivo. Você pode baixá-lo novamente a qualquer momento.",
+      "deletePhrase": "EXCLUIR",
+      "deleteAllLabel": "Excluir tudo",
+      "deleteOneLabel": "Excluir banco de dados"
+    }
+  },
+  "password": {
+    "title": "Alterar a senha",
+    "subtitle": "Digite sua senha atual e escolha uma nova.",
+    "label": {
+      "current": "Senha atual",
+      "new": "Nova Senha",
+      "confirm": "Confirme a nova senha"
+    },
+    "placeholder": {
+      "current": "Digite a senha atual",
+      "new": "Digite a nova senha",
+      "confirm": "Digite novamente a nova senha"
+    },
+    "rule": {
+      "minLength": "8 caracteres",
+      "uppercase": "Letra maiúscula",
+      "lowercase": "letra minúscula",
+      "number": "número"
+    },
+    "rulePrefix": {
+      "atLeast": "Pelo menos",
+      "one": "Um"
+    },
+    "button": {
+      "update": "Atualizar senha"
+    },
+    "error": {
+      "verifyFailed": "Não foi possível verificar sua identidade. Por favor, tente novamente.",
+      "incorrectCurrent": "A senha atual está incorreta.",
+      "generic": "Algo deu errado. Por favor, tente novamente.",
+      "mismatch": "As senhas não coincidem"
+    },
+    "success": {
+      "title": "Senha atualizada",
+      "body": "Sua senha foi alterada com sucesso."
+    }
+  }
+}

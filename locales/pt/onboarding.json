@@ -1,0 +1,48 @@
+{
+  "step": {
+    "aboutYou": "Sobre você",
+    "aboutThem": "Sobre eles",
+    "health": "Condições de saúde",
+    "nutrients": "Lista de nutrientes",
+    "allergies": "Alergias",
+    "dietary": "Preferências Dietéticas"
+  },
+  "question": {
+    "healthCondition": "Você tem algum problema de saúde?",
+    "allergies": "Você tem alguma alergia?",
+    "dietaryPreferences": "Você tem alguma preferência alimentar?",
+    "healthConditionFamily": "Eles têm algum problema de saúde?",
+    "allergiesFamily": "Eles têm alguma alergia?",
+    "dietaryPreferencesFamily": "Eles têm alguma preferência alimentar?"
+  },
+  "count": {
+    "condition_one": "{{count}} condição",
+    "condition_other": "{{count}} condições",
+    "allergy_one": "{{count}} alergia",
+    "allergy_other": "{{count}} alergias",
+    "preference_one": "{{count}} preferência",
+    "preference_other": "{{count}} preferências"
+  },
+  "chip": {
+    "youveSelected": "Você selecionou"
+  },
+  "nutrient": {
+    "suggestion": "Com base nas suas condições, sugerimos observar esses nutrientes",
+    "suggestionFamily": "Com base em suas condições, sugerimos observar esses nutrientes",
+    "limiting": "Limitando",
+    "boosting": ", impulsionando",
+    "tracking": "Monitorando",
+    "nutrientCount_one": "{{count}} nutriente",
+    "nutrientCount_other": "{{count}} nutrientes",
+    "alertSubtext": "Iremos alertá-lo quando os produtos digitalizados contiverem estes itens.",
+    "instructions": "Escolha limitar, aumentar ou pular cada nutriente.",
+    "sectionLimit": "Nutrientes a serem limitados",
+    "sectionBoost": "Nutrientes para impulsionar",
+    "sectionNoChange": "Sem alteração",
+    "sectionLimiting": "Limitando",
+    "sectionBoosting": "Impulsionando"
+  },
+  "progress": {
+    "next": "Próximo: {{label}}"
+  }
+}

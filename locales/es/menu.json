@@ -1,0 +1,139 @@
+{
+  "main": {
+    "whereLabel": "¿Adónde te gustaría ir?",
+    "dashboard": "Panel",
+    "myIngredients": "Mis ingredientes",
+    "snackScanner": "Escáner de bocadillos",
+    "scanHistory": "Historial de escaneo",
+    "recipes": "Recetas",
+    "myAccount": "Mi cuenta",
+    "settings": "Ajustes",
+    "logOut": "Finalizar la sesión"
+  },
+  "footer": {
+    "version": "ver. 1.0.0",
+    "reportProblem": "Informar un problema"
+  },
+  "ingredients": {
+    "title": "Mis ingredientes",
+    "liked": "Ingredientes favoritos",
+    "disliked": "Ingredientes que no te gustan",
+    "flagged": "Ingredientes marcados"
+  },
+  "account": {
+    "title": "Mi cuenta",
+    "editDetails": "Editar mis datos",
+    "familyMembers": "Miembros de la familia",
+    "biteInsightPlus": "Visión de mordida+",
+    "changePassword": "Cambiar la contraseña"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "security": "Seguridad",
+    "notifications": "Notificaciones",
+    "helpSupport": "Ayuda y soporte",
+    "privacyPolicy": "política de privacidad",
+    "cookiePolicy": "Política de cookies",
+    "myData": "Mis datos",
+    "offlineDatabase": "Base de datos sin conexión"
+  },
+  "security": {
+    "title": "Seguridad",
+    "biometricLogin": "Inicio de sesión biométrico",
+    "enabledHint": "{{label}} está habilitado. Puede iniciar sesión sin escribir su contraseña.",
+    "disabledHint": "Inicie sesión con su correo electrónico y contraseña para habilitar {{label}}.",
+    "unavailableHint": "El inicio de sesión biométrico no está disponible en este dispositivo. Asegúrese de tener Face ID, Touch ID o huella digital configurados en la configuración de su dispositivo."
+  },
+  "myData": {
+    "title": "Tus datos",
+    "memberSince": "Miembro desde: {{date}}",
+    "productsScanned": "Productos escaneados",
+    "familyMembers": "Miembros de la familia",
+    "downloadMyData": "descargar mis datos",
+    "downloadSubtext": "Exporta todos tus datos como un archivo JSON.",
+    "exportDialogTitle": "Exporta tus datos",
+    "destructiveZone": "Zona destructiva",
+    "clearMyData": "borrar mis datos",
+    "clearSubtext": "Esto borrará todos los datos actuales de esta cuenta.",
+    "closeMyAccount": "cerrar mi cuenta",
+    "closeSubtext": "Elimina permanentemente tu cuenta y todos los datos asociados. Esto no se puede deshacer.",
+    "confirm": {
+      "clearTitle": "¿Borrar todos tus datos?",
+      "clearDescription": "Esto eliminará permanentemente su historial de escaneo y todos los perfiles familiares. Su cuenta y sus preferencias permanecerán intactas.",
+      "clearPhrase": "CLARO",
+      "clearLabel": "borrar mis datos",
+      "closeTitle": "¿Cerrar tu cuenta?",
+      "closeDescription": "Esto eliminará permanentemente su perfil, historial de escaneo, miembros de su familia, preferencias y todos los datos asociados. Esta acción no se puede deshacer.",
+      "deletePhrase": "BORRAR",
+      "closeLabel": "cerrar mi cuenta"
+    },
+    "error": {
+      "clearFailed": "No se pudieron borrar sus datos. Por favor inténtalo de nuevo.",
+      "exportFailedTitle": "Exportación fallida",
+      "exportFailedMessage": "Algo salió mal al exportar tus datos. Por favor inténtalo de nuevo.",
+      "closeFailed": "No se pudo cerrar su cuenta. Por favor contacte al soporte."
+    }
+  },
+  "offlineDb": {
+    "title": "Base de datos sin conexión",
+    "description": "Descargue bases de datos de alimentos regionales para escanear códigos de barras sin conexión. Una vez descargados, los escaneos funcionan sin conexión a Internet.",
+    "loadingRegions": "Cargando regiones...",
+    "products": "productos",
+    "downloadButton": "Descargar",
+    "retryButton": "Rever",
+    "downloading": "Descargando... {{percentage}}%",
+    "downloaded": "Descargado",
+    "storageHeading": "Almacenamiento",
+    "totalUsed": "Total usado",
+    "regionCount_one": "{{count}} región",
+    "regionCount_other": "{{count}} regiones",
+    "deleteAll": "Eliminar todas las bases de datos",
+    "deleteAllSubtext": "Libere todo el almacenamiento fuera de línea.",
+    "confirm": {
+      "deleteAllTitle": "¿Eliminar todas las bases de datos fuera de línea?",
+      "deleteOneTitle": "¿Eliminar la base de datos {{label}}?",
+      "deleteAllDescription": "Esto eliminará todas las bases de datos de alimentos descargadas de su dispositivo. Puedes descargarlos nuevamente en cualquier momento. Su historial de escaneo no se verá afectado.",
+      "deleteOneDescription": "Esto eliminará la base de datos de alimentos {{label}} de su dispositivo. Puedes descargarlo nuevamente en cualquier momento.",
+      "deletePhrase": "BORRAR",
+      "deleteAllLabel": "eliminar todo",
+      "deleteOneLabel": "Eliminar base de datos"
+    }
+  },
+  "password": {
+    "title": "Cambiar la contraseña",
+    "subtitle": "Ingrese su contraseña actual y elija una nueva.",
+    "label": {
+      "current": "Contraseña actual",
+      "new": "Nueva contraseña",
+      "confirm": "Confirmar nueva contraseña"
+    },
+    "placeholder": {
+      "current": "Ingrese la contraseña actual",
+      "new": "Ingrese una nueva contraseña",
+      "confirm": "Vuelva a ingresar la nueva contraseña"
+    },
+    "rule": {
+      "minLength": "8 personajes",
+      "uppercase": "letra mayúscula",
+      "lowercase": "letra minúscula",
+      "number": "número"
+    },
+    "rulePrefix": {
+      "atLeast": "Al menos",
+      "one": "Uno"
+    },
+    "button": {
+      "update": "Actualizar contraseña"
+    },
+    "error": {
+      "verifyFailed": "No se puede verificar su identidad. Por favor inténtalo de nuevo.",
+      "incorrectCurrent": "La contraseña actual es incorrecta.",
+      "generic": "Algo salió mal. Por favor inténtalo de nuevo.",
+      "mismatch": "Las contraseñas no coinciden"
+    },
+    "success": {
+      "title": "Contraseña actualizada",
+      "body": "Su contraseña ha sido cambiada exitosamente."
+    }
+  }
+}

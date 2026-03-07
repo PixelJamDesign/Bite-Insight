@@ -1,0 +1,48 @@
+{
+  "step": {
+    "aboutYou": "Acerca de ti",
+    "aboutThem": "Acerca de ellos",
+    "health": "Condiciones de salud",
+    "nutrients": "Lista de vigilancia de nutrientes",
+    "allergies": "Alergias",
+    "dietary": "Preferencias dietéticas"
+  },
+  "question": {
+    "healthCondition": "¿Tiene alguna condición de salud?",
+    "allergies": "¿Tiene alguna alergia?",
+    "dietaryPreferences": "¿Tiene alguna preferencia dietética?",
+    "healthConditionFamily": "¿Tienen alguna condición de salud?",
+    "allergiesFamily": "¿Tienen alguna alergia?",
+    "dietaryPreferencesFamily": "¿Tienen alguna preferencia dietética?"
+  },
+  "count": {
+    "condition_one": "{{count}} condición",
+    "condition_other": "{{count}} condiciones",
+    "allergy_one": "{{count}} alergia",
+    "allergy_other": "{{count}} alergias",
+    "preference_one": "{{count}} preferencia",
+    "preference_other": "{{count}} preferencias"
+  },
+  "chip": {
+    "youveSelected": "Has seleccionado"
+  },
+  "nutrient": {
+    "suggestion": "Según tus condiciones, te sugerimos vigilar estos nutrientes.",
+    "suggestionFamily": "Según sus condiciones, sugerimos vigilar estos nutrientes.",
+    "limiting": "Limitando",
+    "boosting": ", impulsando",
+    "tracking": "Seguimiento",
+    "nutrientCount_one": "{{count}} nutriente",
+    "nutrientCount_other": "{{count}} nutrientes",
+    "alertSubtext": "Le avisaremos cuando los productos escaneados los contengan.",
+    "instructions": "Elija limitar, aumentar u omitir cada nutriente.",
+    "sectionLimit": "Nutrientes a limitar",
+    "sectionBoost": "Nutrientes para potenciar",
+    "sectionNoChange": "Sin cambios",
+    "sectionLimiting": "Limitando",
+    "sectionBoosting": "Impulsando"
+  },
+  "progress": {
+    "next": "Siguiente: {{label}}"
+  }
+}

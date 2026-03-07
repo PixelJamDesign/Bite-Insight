@@ -1,0 +1,48 @@
+{
+  "step": {
+    "aboutYou": "Au propos de vous",
+    "aboutThem": "À propos d'eux",
+    "health": "Problèmes de santé",
+    "nutrients": "Liste de surveillance des nutriments",
+    "allergies": "Allergies",
+    "dietary": "Préférences alimentaires"
+  },
+  "question": {
+    "healthCondition": "Avez-vous un problème de santé ?",
+    "allergies": "Avez-vous des allergies ?",
+    "dietaryPreferences": "Avez-vous des préférences alimentaires ?",
+    "healthConditionFamily": "Ont-ils des problèmes de santé ?",
+    "allergiesFamily": "Ont-ils des allergies ?",
+    "dietaryPreferencesFamily": "Ont-ils des préférences alimentaires ?"
+  },
+  "count": {
+    "condition_one": "État {{count}}",
+    "condition_other": "Conditions {{count}}",
+    "allergy_one": "{{count}} allergie",
+    "allergy_other": "{{count}} allergies",
+    "preference_one": "Préférence {{count}}",
+    "preference_other": "Préférences {{count}}"
+  },
+  "chip": {
+    "youveSelected": "Vous avez sélectionné"
+  },
+  "nutrient": {
+    "suggestion": "En fonction de vos conditions, nous vous suggérons de surveiller ces nutriments",
+    "suggestionFamily": "En fonction de leurs conditions, nous suggérons de surveiller ces nutriments",
+    "limiting": "Limiter",
+    "boosting": ", stimulant",
+    "tracking": "Suivi",
+    "nutrientCount_one": "{{count}} nutriment",
+    "nutrientCount_other": "{{count}} nutriments",
+    "alertSubtext": "Nous vous avertirons lorsque les produits numérisés en contiennent.",
+    "instructions": "Choisissez de limiter, d’augmenter ou d’ignorer chaque nutriment.",
+    "sectionLimit": "Nutriments à limiter",
+    "sectionBoost": "Des nutriments à booster",
+    "sectionNoChange": "Aucun changement",
+    "sectionLimiting": "Limiter",
+    "sectionBoosting": "Booster"
+  },
+  "progress": {
+    "next": "Suivant : {{label}}"
+  }
+}

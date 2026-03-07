@@ -1,0 +1,57 @@
+{
+  "detail": {
+    "doYouLike": "Te gusta",
+    "didYouKnow": "¿Sabías?"
+  },
+  "preferences": {
+    "pageTitle": {
+      "liked": "Ingredientes que te gustan",
+      "disliked": "Ingredientes que no te gustan",
+      "flagged": "Ingredientes marcados"
+    },
+    "countVerb": {
+      "liked": "te gusta",
+      "disliked": "no te gusta",
+      "flagged": "tu has marcado"
+    },
+    "empty": {
+      "titleLiked": "Actualmente no tienes ingredientes que te gusten",
+      "titleDisliked": "Actualmente no tienes ningún ingrediente que no te guste",
+      "titleFlagged": "Actualmente no tienes ingredientes marcados",
+      "descriptionLiked": "Para facilitar la planificación de sus comidas, califique algunos de sus ingredientes favoritos en el panel. Cuando utilice Insight Scanner, los destacaremos y le sugeriremos recetas sabrosas que le encantarán.",
+      "descriptionDisliked": "Califique los ingredientes en el panel para crear su lista de no me gusta. Nos aseguraremos de marcarlos cada vez que aparezcan en un producto.",
+      "descriptionFlagged": "Marque los ingredientes desde el panel o escanee los resultados para resaltarlos en rojo cada vez que aparezcan en un producto."
+    },
+    "flaggedPlaceholder": {
+      "palmOil": "Aceite de palma",
+      "highFructoseCornSyrup": "Jarabe de maíz con alto contenido de fructosa",
+      "sodiumBenzoate": "Benzoato de sodio"
+    },
+    "subtitle": {
+      "currently": "Actualmente",
+      "ingredient_one": "{{count}} ingrediente",
+      "ingredient_other": "{{count}} ingredientes"
+    },
+    "search": {
+      "placeholder": "Buscar ingredientes..."
+    },
+    "menu": {
+      "likeIngredient": "Como ingrediente",
+      "dislikeIngredient": "Ingrediente que no me gusta",
+      "flagIngredient": "Ingrediente de la bandera",
+      "removeIngredient": "Quitar ingrediente"
+    },
+    "error": {
+      "title": "No se pudieron cargar los ingredientes",
+      "migrationRequired": "Se requiere migración de base de datos. Ejecute las declaraciones ALTER TABLE en su editor SQL de Supabase para agregar las columnas de preferencia de ingredientes."
+    }
+  },
+  "upsell": {
+    "bite": "morder",
+    "insight": "conocimiento",
+    "plus": "más",
+    "plusSymbol": "+",
+    "tagline": "Marcar ingredientes para resaltar\nellos en rojo en cada escaneo",
+    "upgradeButton": "Actualízate a Plus+"
+  }
+}

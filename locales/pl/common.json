@@ -1,0 +1,109 @@
+{
+  "greeting": {
+    "morning": "Dzień dobry",
+    "afternoon": "Dzień dobry",
+    "evening": "Dobry wieczór",
+    "fallbackName": "Tam"
+  },
+  "buttons": {
+    "back": "Z powrotem",
+    "cancel": "Anulować",
+    "close": "Zamknąć",
+    "done": "Zrobione",
+    "finish": "Skończyć",
+    "save": "Ratować",
+    "search": "Szukaj",
+    "apply": "Stosować",
+    "clear": "Jasne",
+    "ok": "OK",
+    "next": "Następny: {{stepName}}",
+    "skip": "Na razie pomiń, skonfiguruję to później",
+    "editList": "Edytuj listę",
+    "deleteSelected": "Usuń wybrane"
+  },
+  "placeholder": {
+    "fullName": "Pełne imię i nazwisko",
+    "emailAddress": "Adres e-mail",
+    "password": "Hasło",
+    "search": "Szukaj..."
+  },
+  "error": {
+    "badge": "Błąd",
+    "title": "Błąd"
+  },
+  "alert": {
+    "saveFailedTitle": "Zapisywanie nie powiodło się"
+  },
+  "link": {
+    "signIn": "Zalogować się"
+  },
+  "filters": {
+    "all": "Wszystko"
+  },
+  "nutrientDirections": {
+    "limit": "Limit",
+    "boost": "Zwiększyć",
+    "noChange": "Bez zmian"
+  },
+  "ratings": {
+    "low": "Niski",
+    "moderate": "Umiarkowany",
+    "high": "Wysoki",
+    "veryHigh": "Bardzo wysoki",
+    "good": "Dobry"
+  },
+  "nutriscoreLabels": {
+    "a": "Niesamowity",
+    "b": "Dobry",
+    "c": "OK",
+    "d": "Słaby",
+    "e": "Zły"
+  },
+  "months": {
+    "full": {
+      "january": "Styczeń",
+      "february": "Luty",
+      "march": "marzec",
+      "april": "Kwiecień",
+      "may": "Móc",
+      "june": "Czerwiec",
+      "july": "Lipiec",
+      "august": "Sierpień",
+      "september": "Wrzesień",
+      "october": "Październik",
+      "november": "Listopad",
+      "december": "Grudzień"
+    },
+    "short": {
+      "jan": "styczeń",
+      "feb": "luty",
+      "mar": "Zniszczyć",
+      "apr": "kwiecień",
+      "may": "Móc",
+      "jun": "czerwca",
+      "jul": "lipiec",
+      "aug": "sierpień",
+      "sep": "wrzesień",
+      "oct": "paź",
+      "nov": "listopad",
+      "dec": "grudzień"
+    }
+  },
+  "days": {
+    "short": {
+      "monday": "pon",
+      "tuesday": "wt",
+      "wednesday": "Poślubić",
+      "thursday": "czw",
+      "friday": "piątek",
+      "saturday": "sob",
+      "sunday": "Słoneczny"
+    }
+  },
+  "ordinal": {
+    "th": "t",
+    "st": "ul",
+    "nd": "II",
+    "rd": "rd"
+  }
+}

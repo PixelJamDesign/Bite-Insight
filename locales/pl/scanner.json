@@ -1,0 +1,32 @@
+{
+  "topTitle": "Zeskanuj etykietę żywności",
+  "hint": {
+    "processing": "Przetwarzanie...",
+    "pointAtBarcode": "Wskaż kod kreskowy, który chcesz zeskanować"
+  },
+  "bottomHint": "Obsługuje kody EAN-13, EAN-8, UPC-A i QR",
+  "regions": {
+    "world": "Świat",
+    "unitedKingdom": "Zjednoczone Królestwo",
+    "unitedStates": "Stany Zjednoczone",
+    "france": "Francja",
+    "germany": "Niemcy",
+    "spain": "Hiszpania",
+    "italy": "Włochy",
+    "australia": "Australia",
+    "canada": "Kanada",
+    "netherlands": "Niderlandy"
+  },
+  "regionPicker": {
+    "title": "Wybierz region"
+  },
+  "permission": {
+    "title": "Wymagany dostęp do kamery",
+    "description": "BiteInsight potrzebuje dostępu do kamery, aby skanować etykiety i kody kreskowe żywności.",
+    "grantButton": "Przyznaj dostęp"
+  },
+  "alert": {
+    "scanFailedTitle": "Skanowanie nie powiodło się",
+    "scanFailedMessage": "Nie można przetworzyć tego kodu kreskowego. Spróbuj ponownie."
+  }
+}

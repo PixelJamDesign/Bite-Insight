@@ -1,0 +1,244 @@
+{
+  "healthConditionReasons": {
+    "diabetes": {
+      "0": "Aumenta o açúcar no sangue",
+      "1": "Causa queda de energia",
+      "2": "Afeta os níveis de insulina",
+      "3": "Médico aconselhou evitar",
+      "4": "Monitorando a ingestão de carboidratos"
+    },
+    "hypertension": {
+      "0": "Aumenta a pressão arterial",
+      "1": "Muito rico em sódio",
+      "2": "Médico aconselhou evitar",
+      "3": "Retenção de água",
+      "4": "Preocupação com a saúde cardíaca"
+    },
+    "ibs": {
+      "0": "Causa inchaço/gases",
+      "1": "Provoca cólicas estomacais",
+      "2": "Causa diarreia",
+      "3": "Gatilho FODMAP",
+      "4": "Piora os sintomas"
+    },
+    "highCholesterol": {
+      "0": "Aumenta o colesterol",
+      "1": "Muito rico em gordura saturada",
+      "2": "Médico aconselhou evitar",
+      "3": "Preocupação com a saúde cardíaca",
+      "4": "Tentando diminuir o LDL"
+    },
+    "eczema": {
+      "0": "Desencadeia um surto",
+      "1": "Causa coceira",
+      "2": "Causa inflamação",
+      "3": "Dermatologista aconselhado",
+      "4": "Reação cutânea"
+    },
+    "heartDisease": {
+      "0": "Preocupação com a saúde cardíaca",
+      "1": "Muito rico em gordura saturada",
+      "2": "Médico aconselhou evitar",
+      "3": "Aumenta o colesterol",
+      "4": "Alto risco de sódio"
+    },
+    "gerd": {
+      "0": "Provoca refluxo ácido",
+      "1": "Causa azia",
+      "2": "Irrita o estômago",
+      "3": "Médico aconselhou evitar",
+      "4": "Piora os sintomas"
+    },
+    "pcos": {
+      "0": "Aumenta o açúcar no sangue",
+      "1": "Causa desequilíbrio hormonal",
+      "2": "Médico aconselhou evitar",
+      "3": "Afeta os níveis de insulina",
+      "4": "Piora os sintomas"
+    },
+    "metabolicSyndrome": {
+      "0": "Aumenta o açúcar no sangue",
+      "1": "Muito rico em gordura saturada",
+      "2": "Médico aconselhou evitar",
+      "3": "Controle de peso",
+      "4": "Afeta os níveis de insulina"
+    },
+    "migraine": {
+      "0": "Desencadeia enxaquecas",
+      "1": "Contém compostos desencadeantes",
+      "2": "Médico aconselhou evitar",
+      "3": "Causa dores de cabeça",
+      "4": "Piora os sintomas"
+    },
+    "crohns": {
+      "0": "Causa surto",
+      "1": "Irrita o revestimento intestinal",
+      "2": "Médico aconselhou evitar",
+      "3": "Causa diarreia",
+      "4": "Piora os sintomas"
+    },
+    "uc": {
+      "0": "Causa surto",
+      "1": "Irrita o cólon",
+      "2": "Médico aconselhou evitar",
+      "3": "Causa diarreia",
+      "4": "Piora os sintomas"
+    },
+    "leakyGut": {
+      "0": "Irrita o revestimento intestinal",
+      "1": "Aumenta a permeabilidade",
+      "2": "Médico aconselhou evitar",
+      "3": "Causa inflamação",
+      "4": "Piora os sintomas"
+    },
+    "sibo": {
+      "0": "Alimenta o crescimento bacteriano",
+      "1": "Causa inchaço/gases",
+      "2": "Médico aconselhou evitar",
+      "3": "Gatilho FODMAP",
+      "4": "Piora os sintomas"
+    },
+    "me": {
+      "0": "Causa queda de energia",
+      "1": "Piora a fadiga",
+      "2": "Médico aconselhou evitar",
+      "3": "Causa névoa cerebral",
+      "4": "Piora os sintomas"
+    },
+    "ra": {
+      "0": "Causa inflamação",
+      "1": "Provoca dores nas articulações",
+      "2": "Médico aconselhou evitar",
+      "3": "Piora os sintomas",
+      "4": "Aumenta a rigidez"
+    },
+    "lupus": {
+      "0": "Causa inflamação",
+      "1": "Desencadeia um surto",
+      "2": "Médico aconselhou evitar",
+      "3": "Piora os sintomas",
+      "4": "Afeta o sistema imunológico"
+    },
+    "ms": {
+      "0": "Causa inflamação",
+      "1": "Piora os sintomas",
+      "2": "Médico aconselhou evitar",
+      "3": "Afeta a saúde dos nervos",
+      "4": "Desencadeia um surto"
+    },
+    "osteoporosis": {
+      "0": "Lixivia cálcio",
+      "1": "Enfraquece a densidade óssea",
+      "2": "Médico aconselhou evitar",
+      "3": "Afeta a absorção mineral",
+      "4": "Não é amigável aos ossos"
+    },
+    "adhd": {
+      "0": "Afeta o foco/atenção",
+      "1": "Contém aditivos artificiais",
+      "2": "Causa hiperatividade",
+      "3": "Médico aconselhou evitar",
+      "4": "Piora os sintomas"
+    },
+    "autism": {
+      "0": "Causa reação sensorial",
+      "1": "Contém aditivos artificiais",
+      "2": "Afeta o comportamento",
+      "3": "Médico aconselhou evitar",
+      "4": "Piora os sintomas"
+    }
+  },
+  "genericConditionReasons": {
+    "0": "Piora os sintomas",
+    "1": "Médico aconselhou evitar",
+    "2": "Causa desconforto",
+    "3": "Piora minha condição",
+    "4": "Tentando eliminar"
+  },
+  "allergyReasons": {
+    "0": "Risco de reação alérgica",
+    "1": "Causa urticária/erupção cutânea",
+    "2": "Causa inchaço",
+    "3": "Médico diagnosticado",
+    "4": "Causa dificuldade respiratória"
+  },
+  "intoleranceReasons": {
+    "0": "Causa inchaço",
+    "1": "Causa dor de estômago",
+    "2": "Causa náusea/diarréia",
+    "3": "Não consigo digerir",
+    "4": "Me faz sentir mal"
+  },
+  "sensitivityReasons": {
+    "0": "Causa dores de cabeça",
+    "1": "Desencadeia reação",
+    "2": "Causa rubor na pele",
+    "3": "Médico aconselhou evitar",
+    "4": "Sensibilidade confirmada"
+  },
+  "dietaryPreferenceReasons": {
+    "vegan": {
+      "0": "Contra minha dieta",
+      "1": "Razões éticas",
+      "2": "Preocupações ambientais",
+      "3": "Bem-estar animal",
+      "4": "Não quero consumir"
+    },
+    "vegetarian": {
+      "0": "Contra minha dieta",
+      "1": "Razões éticas",
+      "2": "Preocupações ambientais",
+      "3": "Bem-estar animal",
+      "4": "Não quero consumir"
+    },
+    "plantBased": {
+      "0": "Contra minha dieta",
+      "1": "Razões éticas",
+      "2": "Preocupações ambientais",
+      "3": "Bem-estar animal",
+      "4": "Não quero consumir"
+    },
+    "keto": {
+      "0": "Muitos carboidratos",
+      "1": "Me tira da cetose",
+      "2": "Muito açúcar",
+      "3": "Impede a perda de peso",
+      "4": "Não é amigo do ceto"
+    },
+    "weightLoss": {
+      "0": "Muitas calorias",
+      "1": "Muito rico em açúcar",
+      "2": "Muito rico em gordura",
+      "3": "Progresso das paralisações",
+      "4": "Tentando cortar"
+    },
+    "fodmap": {
+      "0": "Ingrediente rico em FODMAP",
+      "1": "Causa inchaço",
+      "2": "Desencadeia sintomas de SII",
+      "3": "Nutricionista aconselhou evitar",
+      "4": "Fase de eliminação"
+    },
+    "dairyFree": {
+      "0": "Contém laticínios",
+      "1": "Evitando todos os laticínios",
+      "2": "Causa problemas digestivos",
+      "3": "Reação cutânea",
+      "4": "Escolha pessoal"
+    }
+  },
+  "genericDietaryReasons": {
+    "0": "Não cabe na minha dieta",
+    "1": "Tentando evitar",
+    "2": "Escolha pessoal",
+    "3": "Razões de saúde",
+    "4": "Escolha de estilo de vida"
+  },
+  "sheet": {
+    "whyFlagging": "Por que você está sinalizando",
+    "otherHeader": "Outro",
+    "enterOwnReason": "Digite meu próprio motivo",
+    "otherPlaceholder": "por exemplo Me faz sentir inchado",
+    "flagIngredient": "Ingrediente de bandeira"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "topTitle": "مسح تسمية الغذاء",
+  "hint": {
+    "processing": "يعالج...",
+    "pointAtBarcode": "أشر إلى الرمز الشريطي لمسحه ضوئيًا"
+  },
+  "bottomHint": "يدعم رموز EAN-13 وEAN-8 وUPC-A وQR",
+  "regions": {
+    "world": "عالم",
+    "unitedKingdom": "المملكة المتحدة",
+    "unitedStates": "الولايات المتحدة",
+    "france": "فرنسا",
+    "germany": "ألمانيا",
+    "spain": "إسبانيا",
+    "italy": "إيطاليا",
+    "australia": "أستراليا",
+    "canada": "كندا",
+    "netherlands": "هولندا"
+  },
+  "regionPicker": {
+    "title": "اختر المنطقة"
+  },
+  "permission": {
+    "title": "الوصول إلى الكاميرا مطلوب",
+    "description": "يحتاج BiteInsight إلى الوصول إلى الكاميرا لمسح ملصقات الطعام والرموز الشريطية.",
+    "grantButton": "منح الوصول"
+  },
+  "alert": {
+    "scanFailedTitle": "فشل المسح",
+    "scanFailedMessage": "تعذرت معالجة هذا الرمز الشريطي. يرجى المحاولة مرة أخرى."
+  }
+}

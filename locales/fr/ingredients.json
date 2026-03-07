@@ -1,0 +1,57 @@
+{
+  "detail": {
+    "doYouLike": "Aimez-vous",
+    "didYouKnow": "Saviez-vous?"
+  },
+  "preferences": {
+    "pageTitle": {
+      "liked": "Ingrédients appréciés",
+      "disliked": "Ingrédients détestés",
+      "flagged": "Ingrédients signalés"
+    },
+    "countVerb": {
+      "liked": "tu aimes",
+      "disliked": "tu n'aimes pas",
+      "flagged": "tu as signalé"
+    },
+    "empty": {
+      "titleLiked": "Vous n'avez actuellement aucun ingrédient aimé",
+      "titleDisliked": "Vous n'avez actuellement aucun ingrédient que vous n'aimez pas",
+      "titleFlagged": "Vous n'avez actuellement aucun ingrédient signalé",
+      "descriptionLiked": "Pour faciliter la planification de vos repas, évaluez certains de vos ingrédients préférés sur le tableau de bord. Lorsque vous utilisez Insight Scanner, nous les mettrons en lumière et vous suggérerons des recettes savoureuses que vous adorerez !",
+      "descriptionDisliked": "Évaluez les ingrédients sur le tableau de bord pour créer votre liste de produits détestés. Nous veillerons à les signaler chaque fois qu'ils apparaissent dans un produit.",
+      "descriptionFlagged": "Marquez les ingrédients depuis le tableau de bord ou analysez les résultats pour les surligner en rouge chaque fois qu'ils apparaissent dans un produit."
+    },
+    "flaggedPlaceholder": {
+      "palmOil": "Huile de palme",
+      "highFructoseCornSyrup": "Sirop de maïs riche en fructose",
+      "sodiumBenzoate": "Benzoate de sodium"
+    },
+    "subtitle": {
+      "currently": "Actuellement",
+      "ingredient_one": "{{count}} ingrédient",
+      "ingredient_other": "{{count}} ingrédients"
+    },
+    "search": {
+      "placeholder": "Rechercher des ingrédients..."
+    },
+    "menu": {
+      "likeIngredient": "Comme l'ingrédient",
+      "dislikeIngredient": "Je n'aime pas l'ingrédient",
+      "flagIngredient": "Ingrédient indicateur",
+      "removeIngredient": "Supprimer l'ingrédient"
+    },
+    "error": {
+      "title": "Impossible de charger les ingrédients",
+      "migrationRequired": "Migration de base de données requise. Veuillez exécuter les instructions ALTER TABLE dans votre éditeur Supabase SQL pour ajouter les colonnes de préférences d'ingrédients."
+    }
+  },
+  "upsell": {
+    "bite": "mordre",
+    "insight": "aperçu",
+    "plus": "plus",
+    "plusSymbol": "+",
+    "tagline": "Signaler les ingrédients à mettre en évidence\nles en rouge à chaque scan",
+    "upgradeButton": "Passer à Plus+"
+  }
+}

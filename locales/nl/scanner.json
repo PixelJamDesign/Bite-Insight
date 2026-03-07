@@ -1,0 +1,32 @@
+{
+  "topTitle": "Voedseletiket scannen",
+  "hint": {
+    "processing": "Verwerken...",
+    "pointAtBarcode": "Wijs naar een streepjescode om te scannen"
+  },
+  "bottomHint": "Ondersteunt EAN-13-, EAN-8-, UPC-A- en QR-codes",
+  "regions": {
+    "world": "Wereld",
+    "unitedKingdom": "Verenigd Koninkrijk",
+    "unitedStates": "Verenigde Staten",
+    "france": "Frankrijk",
+    "germany": "Duitsland",
+    "spain": "Spanje",
+    "italy": "Italië",
+    "australia": "Australië",
+    "canada": "Canada",
+    "netherlands": "Nederland"
+  },
+  "regionPicker": {
+    "title": "Selecteer regio"
+  },
+  "permission": {
+    "title": "Cameratoegang vereist",
+    "description": "BiteInsight heeft cameratoegang nodig om voedseletiketten en streepjescodes te scannen.",
+    "grantButton": "Toegang verlenen"
+  },
+  "alert": {
+    "scanFailedTitle": "Scannen mislukt",
+    "scanFailedMessage": "Kan deze streepjescode niet verwerken. Probeer het opnieuw."
+  }
+}

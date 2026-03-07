@@ -1,0 +1,20 @@
+{
+  "screenTitle": "Scanverlauf",
+  "dateTabs": {
+    "today": "Heute",
+    "yesterday": "Gestern"
+  },
+  "calendar": {
+    "selectStartDate": "Wählen Sie das Startdatum",
+    "selectEndDate": "Wählen Sie das Enddatum aus"
+  },
+  "dateRange": {
+    "label": "Datumsbereich"
+  },
+  "empty": {
+    "noScansRange": "Keine Scans in diesem Bereich",
+    "noScansToday": "Heute keine Scans",
+    "noScansDay": "An diesem Tag gibt es keine Scans",
+    "description": "Tippen Sie unten auf die Scanner-Schaltfläche, um ein Lebensmitteletikett zu scannen."
+  }
+}

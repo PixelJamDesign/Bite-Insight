@@ -1,0 +1,32 @@
+{
+  "topTitle": "Scansiona l'etichetta degli alimenti",
+  "hint": {
+    "processing": "Elaborazione...",
+    "pointAtBarcode": "Punta su un codice a barre da scansionare"
+  },
+  "bottomHint": "Supporta i codici EAN-13, EAN-8, UPC-A e QR",
+  "regions": {
+    "world": "Mondo",
+    "unitedKingdom": "Regno Unito",
+    "unitedStates": "Stati Uniti",
+    "france": "Francia",
+    "germany": "Germania",
+    "spain": "Spagna",
+    "italy": "Italia",
+    "australia": "Australia",
+    "canada": "Canada",
+    "netherlands": "Paesi Bassi"
+  },
+  "regionPicker": {
+    "title": "Seleziona regione"
+  },
+  "permission": {
+    "title": "È richiesto l'accesso alla fotocamera",
+    "description": "BiteInsight necessita dell'accesso alla fotocamera per scansionare etichette e codici a barre degli alimenti.",
+    "grantButton": "Concedi l'accesso"
+  },
+  "alert": {
+    "scanFailedTitle": "Scansione non riuscita",
+    "scanFailedMessage": "Impossibile elaborare questo codice a barre. Per favore riprova."
+  }
+}

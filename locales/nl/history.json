@@ -1,0 +1,20 @@
+{
+  "screenTitle": "Geschiedenis scannen",
+  "dateTabs": {
+    "today": "Vandaag",
+    "yesterday": "Gisteren"
+  },
+  "calendar": {
+    "selectStartDate": "Selecteer startdatum",
+    "selectEndDate": "Selecteer einddatum"
+  },
+  "dateRange": {
+    "label": "Datumbereik"
+  },
+  "empty": {
+    "noScansRange": "Geen scans in dit bereik",
+    "noScansToday": "Geen scans vandaag",
+    "noScansDay": "Geen scans op deze dag",
+    "description": "Tik op de scannerknop hieronder om een ​​voedseletiket te scannen."
+  }
+}

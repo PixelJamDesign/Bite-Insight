@@ -1,0 +1,57 @@
+{
+  "detail": {
+    "doYouLike": "هل تحب",
+    "didYouKnow": "هل تعلم؟"
+  },
+  "preferences": {
+    "pageTitle": {
+      "liked": "المكونات المفضلة",
+      "disliked": "المكونات غير المرغوب فيها",
+      "flagged": "المكونات التي تم وضع علامة عليها"
+    },
+    "countVerb": {
+      "liked": "تريد",
+      "disliked": "أنت لا تحب",
+      "flagged": "لقد وضعت علامة"
+    },
+    "empty": {
+      "titleLiked": "ليس لديك حاليًا أي مكونات مفضلة",
+      "titleDisliked": "ليس لديك حاليًا أي مكونات غير مرغوب فيها",
+      "titleFlagged": "ليس لديك حاليًا أي مكونات تم وضع علامة عليها",
+      "descriptionLiked": "لتسهيل التخطيط لوجباتك، قم بتقييم بعض المكونات المفضلة لديك على لوحة القيادة. عندما تستخدم Insight Scanner، سنسلط الضوء عليها ونقترح عليك وصفات لذيذة ستحبها!",
+      "descriptionDisliked": "قم بتقييم المكونات على لوحة التحكم لإنشاء القائمة التي لا تعجبك. سوف نتأكد من وضع علامة عليها عند ظهورها في المنتج.",
+      "descriptionFlagged": "قم بوضع علامة على المكونات من لوحة المعلومات أو قم بمسح النتائج لتمييزها باللون الأحمر عند ظهورها في المنتج."
+    },
+    "flaggedPlaceholder": {
+      "palmOil": "زيت النخيل",
+      "highFructoseCornSyrup": "شراب الذرة عالي الفركتوز",
+      "sodiumBenzoate": "بنزوات الصوديوم"
+    },
+    "subtitle": {
+      "currently": "حالياً",
+      "ingredient_one": "{{count}} المكون",
+      "ingredient_other": "{{count}} المكونات"
+    },
+    "search": {
+      "placeholder": "مكونات البحث..."
+    },
+    "menu": {
+      "likeIngredient": "مثل المكون",
+      "dislikeIngredient": "لا يعجبني المكون",
+      "flagIngredient": "العلم العنصر",
+      "removeIngredient": "إزالة المكون"
+    },
+    "error": {
+      "title": "لا يمكن تحميل المكونات",
+      "migrationRequired": "مطلوب ترحيل قاعدة البيانات. يرجى تشغيل عبارات ALTER TABLE في محرر Supabase SQL الخاص بك لإضافة أعمدة تفضيلات المكونات."
+    }
+  },
+  "upsell": {
+    "bite": "يعض",
+    "insight": "بصيرة",
+    "plus": "زائد",
+    "plusSymbol": "+",
+    "tagline": "ضع علامة على المكونات المراد تسليط الضوء عليها\nلهم باللون الأحمر في كل عملية مسح",
+    "upgradeButton": "الترقية إلى بلس+"
+  }
+}

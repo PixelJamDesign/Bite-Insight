@@ -1,0 +1,109 @@
+{
+  "greeting": {
+    "morning": "Bom dia",
+    "afternoon": "Boa tarde",
+    "evening": "Boa noite",
+    "fallbackName": "lá"
+  },
+  "buttons": {
+    "back": "Voltar",
+    "cancel": "Cancelar",
+    "close": "Fechar",
+    "done": "Feito",
+    "finish": "Terminar",
+    "save": "Salvar",
+    "search": "Procurar",
+    "apply": "Aplicar",
+    "clear": "Claro",
+    "ok": "OK",
+    "next": "Próximo: {{stepName}}",
+    "skip": "Pule por enquanto, configurarei isso mais tarde",
+    "editList": "Editar lista",
+    "deleteSelected": "Excluir selecionado"
+  },
+  "placeholder": {
+    "fullName": "Nome completo",
+    "emailAddress": "Endereço de email",
+    "password": "Senha",
+    "search": "Procurar..."
+  },
+  "error": {
+    "badge": "Erro",
+    "title": "Erro"
+  },
+  "alert": {
+    "saveFailedTitle": "Falha ao salvar"
+  },
+  "link": {
+    "signIn": "Entrar"
+  },
+  "filters": {
+    "all": "Todos"
+  },
+  "nutrientDirections": {
+    "limit": "Limite",
+    "boost": "Impulsionar",
+    "noChange": "Sem alteração"
+  },
+  "ratings": {
+    "low": "Baixo",
+    "moderate": "Moderado",
+    "high": "Alto",
+    "veryHigh": "Muito alto",
+    "good": "Bom"
+  },
+  "nutriscoreLabels": {
+    "a": "Incrível",
+    "b": "Bom",
+    "c": "OK",
+    "d": "Pobre",
+    "e": "Ruim"
+  },
+  "months": {
+    "full": {
+      "january": "Janeiro",
+      "february": "Fevereiro",
+      "march": "Marchar",
+      "april": "abril",
+      "may": "Poderia",
+      "june": "Junho",
+      "july": "Julho",
+      "august": "Agosto",
+      "september": "Setembro",
+      "october": "outubro",
+      "november": "novembro",
+      "december": "dezembro"
+    },
+    "short": {
+      "jan": "janeiro",
+      "feb": "fevereiro",
+      "mar": "março",
+      "apr": "abril",
+      "may": "Poderia",
+      "jun": "junho",
+      "jul": "julho",
+      "aug": "agosto",
+      "sep": "Setembro",
+      "oct": "Outubro",
+      "nov": "novembro",
+      "dec": "dezembro"
+    }
+  },
+  "days": {
+    "short": {
+      "monday": "seg",
+      "tuesday": "ter",
+      "wednesday": "qua",
+      "thursday": "qui",
+      "friday": "sex",
+      "saturday": "Sentado",
+      "sunday": "Sol"
+    }
+  },
+  "ordinal": {
+    "th": "o",
+    "st": "st",
+    "nd": "e",
+    "rd": "terceiro"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "screenTitle": "扫描历史记录",
+  "dateTabs": {
+    "today": "今天",
+    "yesterday": "昨天"
+  },
+  "calendar": {
+    "selectStartDate": "选择开始日期",
+    "selectEndDate": "选择结束日期"
+  },
+  "dateRange": {
+    "label": "日期范围"
+  },
+  "empty": {
+    "noScansRange": "在此范围内没有扫描",
+    "noScansToday": "今天没有扫描",
+    "noScansDay": "当天没有扫描",
+    "description": "点击下面的扫描仪按钮来扫描食品标签。"
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "product": {
+    "unknownName": "Onbekend product"
+  },
+  "tab": {
+    "overview": "Overzicht",
+    "nutrition": "Voeding",
+    "ingredients": "Ingrediënten",
+    "recommended": "Aanbevolen",
+    "info": "Productinformatie"
+  },
+  "nutriscoreLabel": "Nutri-score",
+  "nutrientLabels": {
+    "energyKcal": "Calorieën",
+    "fat": "Vet",
+    "saturatedFat": "Verzadigd vet",
+    "carbs": "Koolhydraten",
+    "sugars": "Suikers",
+    "fiber": "Vezel",
+    "proteins": "Eiwit",
+    "netCarbs": "Netto koolhydraten",
+    "salt": "Zout"
+  },
+  "nutrientRating": {
+    "low": "Laag",
+    "moderate": "Gematigd",
+    "high": "Hoog",
+    "good": "Goed"
+  },
+  "insight": {
+    "glycemic": "Glycemische impact",
+    "sodium": "Natrium",
+    "calorie": "Caloriedichtheid",
+    "digestiveLoad": "Spijsvertering belasting",
+    "carbLoad": "Koolhydraatbelasting",
+    "additives": "Additieven"
+  },
+  "impact": {
+    "veryHigh": "Zeer hoog",
+    "high": "Hoog",
+    "moderate": "Gematigd",
+    "low": "Laag"
+  },
+  "insightExplanation": {
+    "glycemic": "De glycemische impact schat hoe snel dit product de bloedsuikerspiegel kan verhogen, op basis van het koolhydraat- en vezelgehalte.",
+    "sodium": "Het natriumgehalte geeft het zoutgehalte per portie aan. Een hoge natriuminname houdt verband met verhoogde bloeddruk en cardiovasculaire belasting.",
+    "saturatedFat": "Het verzadigde vetgehalte wordt in verband gebracht met een verhoogd LDL-cholesterol als het in overmaat wordt geconsumeerd.",
+    "sugar": "De suikerbelasting weerspiegelt het totale suikergehalte, dat de bloedsuikerspiegel, het energieniveau en de tandgezondheid beïnvloedt.",
+    "fiber": "Het vezelgehalte is van belang voor spijsverteringsaandoeningen zoals PDS en de ziekte van Crohn. Vezelrijk eten kan nuttig of problematisch zijn, afhankelijk van de aandoening.",
+    "protein": "Het eiwitgehalte is belangrijk voor spierherstel, verzadiging en metabolische aandoeningen zoals PCOS of post-bariatrisch herstel.",
+    "calorie": "Caloriedichtheid meet de energie-inhoud per gram voedsel. Voedsel met een hogere dichtheid levert meer energie in kleinere porties.",
+    "inflammatoryFat": "Ontstekingsvet is een proxy op basis van het verzadigde vet- en transvetgehalte, relevant voor auto-immuun- en ontstekingsaandoeningen.",
+    "digestiveLoad": "De spijsverteringsbelasting combineert het vet- en vezelgehalte om in te schatten hoeveel werk uw spijsverteringssysteem nodig heeft om dit voedsel te verwerken.",
+    "carbLoad": "De koolhydraatbelasting weerspiegelt het totale koolhydraatgehalte minus vezels, relevant voor keto-, diabetische en metabolische aandoeningen.",
+    "additives": "Het aantal additieven houdt het aantal levensmiddelenadditieven (E-nummers en dergelijke) bij dat in dit product aanwezig is."
+  },
+  "section": {
+    "importantForYou": "Belangrijk voor jou",
+    "importantSubtitle": "Gebaseerd op het gezondheidsprofiel van {{name}}.",
+    "importantSubtitleGeneric": "Op basis van uw gezondheidsprofiel.",
+    "nutrientWatch": "Voedingsmonitor",
+    "flaggedIngredients": "Gemarkeerde ingrediënten",
+    "flaggedIngredientsSubtitle": "Dit product bevat gemarkeerde ingrediënten.",
+    "highlightedNutrition": "Uitgelichte voedingsinformatie",
+    "nutritionalInfo": "Voedingsinformatie",
+    "nutrientWatchlist": "Uw nutriëntenvolglijst",
+    "nutrientWatchlistSubtitle": "Voedingsstoffen die u controleert op basis van uw gezondheidsprofiel.",
+    "allergens": "Allergenen",
+    "allergensSubtitle": "Allergenen vermeld voor dit product."
+  },
+  "allergen": {
+    "warningBadge": "Waarschuwing",
+    "warningText": "Bevat: {{allergens}}. Dit kan van invloed zijn op het gezondheidsprofiel van {{name}}.",
+    "allergensBadge": "Allergenen",
+    "containsText": "Bevat: {{allergens}}."
+  },
+  "nutrientWatch": {
+    "noMicroData": "Voor dit product zijn geen gegevens over micronutriënten beschikbaar."
+  },
+  "ingredients": {
+    "ingredient_one": "{{count}} ingrediënt",
+    "ingredient_other": "{{count}} ingrediënten",
+    "is": "is",
+    "are": "Zijn",
+    "considered": "beschouwd",
+    "harmful": "schadelijk",
+    "ok": "OK",
+    "safe": "veilig",
+    "listed": "vermeld",
+    "matchProductName": "Komt overeen met de productnaam",
+    "matchCategory": "Komt overeen met productcategorie"
+  },
+  "toggle": {
+    "perServing": "Per portie",
+    "per100g": "Per 100g",
+    "value": "Waarde",
+    "dri": "DRI (%)"
+  },
+  "loading": {
+    "nutritionalData": "Voedingsgegevens laden…",
+    "ingredients": "Ingrediënten laden…"
+  },
+  "empty": {
+    "limitedDataTitle": "Beperkte productgegevens",
+    "limitedDataText": "Er is voor dit product geen voedingsinformatie beschikbaar in de Open Food Facts-database.",
+    "noNutritionTitle": "Geen voedingsgegevens",
+    "noNutritionText": "Dit product bevat geen voedingsinformatie in de Open Food Facts-database.",
+    "noIngredientsTitle": "Geen ingrediënten vermeld",
+    "noIngredientsText": "Voor dit product is geen ingrediënteninformatie beschikbaar.",
+    "noAllergensTitle": "Geen allergenen vermeld",
+    "noAllergensText": "Voor dit product is geen allergeneninformatie beschikbaar."
+  },
+  "comingSoon": {
+    "title": "Binnenkort beschikbaar",
+    "text": "Deze sectie is in aanbouw en zal beschikbaar zijn in een toekomstige update."
+  },
+  "profile": {
+    "myProfile": "Mijn profiel",
+    "switch": "Schakelaar"
+  },
+  "flagReason": {
+    "veganTitle": "Niet veganistisch",
+    "veganBody": "Dit ingrediënt is niet veganistisch, wat in strijd is met jouw voedingsvoorkeuren.",
+    "vegetarianTitle": "Niet vegetarisch",
+    "vegetarianBody": "Dit ingrediënt is niet vegetarisch, wat in strijd is met jouw voedingsvoorkeuren.",
+    "userFlaggedTitle": "Persoonlijk gemarkeerd",
+    "userFlaggedBody": "Je hebt dit ingrediënt gemarkeerd. Het wordt gemarkeerd wanneer het verschijnt in producten die u scant.",
+    "personalBody": "Je hebt dit gemarkeerd vanwege je {{category}}."
+  },
+  "flaggedSheet": {
+    "substitutesTitle": "Geschikte vervangingen zijn onder meer:"
+  },
+  "ingredientSheet": {
+    "categoryOk": "OK",
+    "categorySafe": "Veilig",
+    "classifiedAs": "Geclassificeerd als {{category}}",
+    "defaultAdditiveLine1": "Dit is een voedingsadditief dat veel wordt gebruikt in bewerkte voedingsmiddelen.",
+    "defaultAdditiveLine2": "Het is door de voedselveiligheidsautoriteiten goedgekeurd voor gebruik in voedingsproducten."
+  }
+}

@@ -1,0 +1,139 @@
+{
+  "main": {
+    "whereLabel": "Wohin möchtest du gehen?",
+    "dashboard": "Armaturenbrett",
+    "myIngredients": "Meine Zutaten",
+    "snackScanner": "Snack-Scanner",
+    "scanHistory": "Scanverlauf",
+    "recipes": "Rezepte",
+    "myAccount": "Mein Konto",
+    "settings": "Einstellungen",
+    "logOut": "Abmelden"
+  },
+  "footer": {
+    "version": "ver. 1.0.0",
+    "reportProblem": "Melden Sie ein Problem"
+  },
+  "ingredients": {
+    "title": "Meine Zutaten",
+    "liked": "Gefallene Zutaten",
+    "disliked": "Unbeliebte Zutaten",
+    "flagged": "Gekennzeichnete Zutaten"
+  },
+  "account": {
+    "title": "Mein Konto",
+    "editDetails": "Bearbeiten Sie meine Daten",
+    "familyMembers": "Familienmitglieder",
+    "biteInsightPlus": "Bite Insight+",
+    "changePassword": "Kennwort ändern"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "security": "Sicherheit",
+    "notifications": "Benachrichtigungen",
+    "helpSupport": "Hilfe und Support",
+    "privacyPolicy": "Datenschutzrichtlinie",
+    "cookiePolicy": "Cookie-Richtlinie",
+    "myData": "Meine Daten",
+    "offlineDatabase": "Offline-Datenbank"
+  },
+  "security": {
+    "title": "Sicherheit",
+    "biometricLogin": "Biometrische Anmeldung",
+    "enabledHint": "{{label}} ist aktiviert. Sie können sich anmelden, ohne Ihr Passwort einzugeben.",
+    "disabledHint": "Melden Sie sich mit Ihrer E-Mail-Adresse und Ihrem Passwort an, um {{label}} zu aktivieren.",
+    "unavailableHint": "Die biometrische Anmeldung ist auf diesem Gerät nicht verfügbar. Bitte stellen Sie sicher, dass in Ihren Geräteeinstellungen Face ID, Touch ID oder Fingerabdruck eingerichtet sind."
+  },
+  "myData": {
+    "title": "Ihre Daten",
+    "memberSince": "Mitglied seit: {{date}}",
+    "productsScanned": "Produkte gescannt",
+    "familyMembers": "Familienmitglieder",
+    "downloadMyData": "Laden Sie meine Daten herunter",
+    "downloadSubtext": "Exportieren Sie alle Ihre Daten als JSON-Datei.",
+    "exportDialogTitle": "Exportieren Sie Ihre Daten",
+    "destructiveZone": "Zerstörerische Zone",
+    "clearMyData": "Meine Daten löschen",
+    "clearSubtext": "Dadurch werden alle aktuellen Daten auf diesem Konto gelöscht.",
+    "closeMyAccount": "Schließen Sie mein Konto",
+    "closeSubtext": "Löschen Sie Ihr Konto und alle damit verbundenen Daten endgültig. Dies kann nicht rückgängig gemacht werden.",
+    "confirm": {
+      "clearTitle": "Alle Daten löschen?",
+      "clearDescription": "Dadurch werden Ihr Scanverlauf und alle Familienprofile dauerhaft gelöscht. Ihr Konto und Ihre Einstellungen bleiben erhalten.",
+      "clearPhrase": "KLAR",
+      "clearLabel": "Meine Daten löschen",
+      "closeTitle": "Konto schließen?",
+      "closeDescription": "Dadurch werden Ihr Profil, Ihr Scanverlauf, Ihre Familienmitglieder, Ihre Einstellungen und alle damit verbundenen Daten dauerhaft gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
+      "deletePhrase": "LÖSCHEN",
+      "closeLabel": "Schließen Sie mein Konto"
+    },
+    "error": {
+      "clearFailed": "Ihre Daten konnten nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+      "exportFailedTitle": "Der Export ist fehlgeschlagen",
+      "exportFailedMessage": "Beim Exportieren Ihrer Daten ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+      "closeFailed": "Ihr Konto konnte nicht geschlossen werden. Bitte wenden Sie sich an den Support."
+    }
+  },
+  "offlineDb": {
+    "title": "Offline-Datenbank",
+    "description": "Laden Sie regionale Lebensmitteldatenbanken zum Offline-Barcode-Scannen herunter. Einmal heruntergeladen, funktionieren Scans ohne Internetverbindung.",
+    "loadingRegions": "Regionen werden geladen...",
+    "products": "Produkte",
+    "downloadButton": "Herunterladen",
+    "retryButton": "Wiederholen",
+    "downloading": "Wird heruntergeladen... {{percentage}}%",
+    "downloaded": "Heruntergeladen",
+    "storageHeading": "Lagerung",
+    "totalUsed": "Insgesamt verwendet",
+    "regionCount_one": "{{count}} Region",
+    "regionCount_other": "{{count}} Regionen",
+    "deleteAll": "Löschen Sie alle Datenbanken",
+    "deleteAllSubtext": "Geben Sie den gesamten Offline-Speicher frei.",
+    "confirm": {
+      "deleteAllTitle": "Alle Offline-Datenbanken löschen?",
+      "deleteOneTitle": "Datenbank {{label}} löschen?",
+      "deleteAllDescription": "Dadurch werden alle heruntergeladenen Lebensmitteldatenbanken von Ihrem Gerät entfernt. Sie können sie jederzeit erneut herunterladen. Ihr Scanverlauf wird dadurch nicht beeinträchtigt.",
+      "deleteOneDescription": "Dadurch wird die Lebensmitteldatenbank {{label}} von Ihrem Gerät entfernt. Sie können es jederzeit erneut herunterladen.",
+      "deletePhrase": "LÖSCHEN",
+      "deleteAllLabel": "Alles löschen",
+      "deleteOneLabel": "Datenbank löschen"
+    }
+  },
+  "password": {
+    "title": "Kennwort ändern",
+    "subtitle": "Geben Sie Ihr aktuelles Passwort ein und wählen Sie ein neues.",
+    "label": {
+      "current": "Aktuelles Passwort",
+      "new": "Neues Passwort",
+      "confirm": "Bestätigen Sie das neue Passwort"
+    },
+    "placeholder": {
+      "current": "Geben Sie das aktuelle Passwort ein",
+      "new": "Geben Sie ein neues Passwort ein",
+      "confirm": "Geben Sie das neue Passwort erneut ein"
+    },
+    "rule": {
+      "minLength": "8 Zeichen",
+      "uppercase": "Großbuchstabe",
+      "lowercase": "Kleinbuchstabe",
+      "number": "Nummer"
+    },
+    "rulePrefix": {
+      "atLeast": "Mindestens",
+      "one": "Eins"
+    },
+    "button": {
+      "update": "Passwort aktualisieren"
+    },
+    "error": {
+      "verifyFailed": "Ihre Identität konnte nicht überprüft werden. Bitte versuchen Sie es erneut.",
+      "incorrectCurrent": "Das aktuelle Passwort ist falsch.",
+      "generic": "Etwas ist schief gelaufen. Bitte versuchen Sie es erneut.",
+      "mismatch": "Passwörter stimmen nicht überein"
+    },
+    "success": {
+      "title": "Passwort aktualisiert",
+      "body": "Ihr Passwort wurde erfolgreich geändert."
+    }
+  }
+}

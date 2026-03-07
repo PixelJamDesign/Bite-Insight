@@ -1,0 +1,109 @@
+{
+  "greeting": {
+    "morning": "おはよう",
+    "afternoon": "こんにちは",
+    "evening": "こんばんは",
+    "fallbackName": "そこには"
+  },
+  "buttons": {
+    "back": "戻る",
+    "cancel": "キャンセル",
+    "close": "近い",
+    "done": "終わり",
+    "finish": "仕上げる",
+    "save": "保存",
+    "search": "検索",
+    "apply": "適用する",
+    "clear": "クリア",
+    "ok": "わかりました",
+    "next": "次へ: {{stepName}}",
+    "skip": "後で設定しますので、今はスキップしてください",
+    "editList": "リストの編集",
+    "deleteSelected": "選択したものを削除"
+  },
+  "placeholder": {
+    "fullName": "フルネーム",
+    "emailAddress": "電子メールアドレス",
+    "password": "パスワード",
+    "search": "検索..."
+  },
+  "error": {
+    "badge": "エラー",
+    "title": "エラー"
+  },
+  "alert": {
+    "saveFailedTitle": "保存に失敗しました"
+  },
+  "link": {
+    "signIn": "サインイン"
+  },
+  "filters": {
+    "all": "全て"
+  },
+  "nutrientDirections": {
+    "limit": "限界",
+    "boost": "ブースト",
+    "noChange": "変化なし"
+  },
+  "ratings": {
+    "low": "低い",
+    "moderate": "適度",
+    "high": "高い",
+    "veryHigh": "非常に高い",
+    "good": "良い"
+  },
+  "nutriscoreLabels": {
+    "a": "すばらしい",
+    "b": "良い",
+    "c": "わかりました",
+    "d": "貧しい",
+    "e": "悪い"
+  },
+  "months": {
+    "full": {
+      "january": "1月",
+      "february": "2月",
+      "march": "行進",
+      "april": "4月",
+      "may": "5月",
+      "june": "6月",
+      "july": "7月",
+      "august": "8月",
+      "september": "9月",
+      "october": "10月",
+      "november": "11月",
+      "december": "12月"
+    },
+    "short": {
+      "jan": "1月",
+      "feb": "2月",
+      "mar": "3月",
+      "apr": "4月",
+      "may": "5月",
+      "jun": "ジュン",
+      "jul": "7月",
+      "aug": "8月",
+      "sep": "9月",
+      "oct": "10月",
+      "nov": "11月",
+      "dec": "12月"
+    }
+  },
+  "days": {
+    "short": {
+      "monday": "月",
+      "tuesday": "火",
+      "wednesday": "水",
+      "thursday": "木",
+      "friday": "金",
+      "saturday": "土",
+      "sunday": "太陽"
+    }
+  },
+  "ordinal": {
+    "th": "番目",
+    "st": "セント",
+    "nd": "nd",
+    "rd": "rd"
+  }
+}

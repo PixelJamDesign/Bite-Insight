@@ -1,0 +1,20 @@
+{
+  "screenTitle": "Historia skanowania",
+  "dateTabs": {
+    "today": "Dzisiaj",
+    "yesterday": "Wczoraj"
+  },
+  "calendar": {
+    "selectStartDate": "Wybierz datę rozpoczęcia",
+    "selectEndDate": "Wybierz datę zakończenia"
+  },
+  "dateRange": {
+    "label": "Zakres dat"
+  },
+  "empty": {
+    "noScansRange": "Brak skanów w tym zakresie",
+    "noScansToday": "Dzisiaj bez skanów",
+    "noScansDay": "Brak skanów w tym dniu",
+    "description": "Kliknij przycisk skanera poniżej, aby zeskanować etykietę żywności."
+  }
+}

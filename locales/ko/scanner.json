@@ -1,0 +1,32 @@
+{
+  "topTitle": "식품 라벨 스캔",
+  "hint": {
+    "processing": "처리 중...",
+    "pointAtBarcode": "스캔할 바코드를 가리킵니다."
+  },
+  "bottomHint": "EAN-13, EAN-8, UPC-A 및 QR 코드 지원",
+  "regions": {
+    "world": "세계",
+    "unitedKingdom": "영국",
+    "unitedStates": "미국",
+    "france": "프랑스",
+    "germany": "독일",
+    "spain": "스페인",
+    "italy": "이탈리아",
+    "australia": "호주",
+    "canada": "캐나다",
+    "netherlands": "네덜란드"
+  },
+  "regionPicker": {
+    "title": "지역 선택"
+  },
+  "permission": {
+    "title": "카메라 액세스 필요",
+    "description": "BiteInsight는 식품 라벨과 바코드를 스캔하려면 카메라 액세스가 필요합니다.",
+    "grantButton": "액세스 권한 부여"
+  },
+  "alert": {
+    "scanFailedTitle": "스캔 실패",
+    "scanFailedMessage": "이 바코드를 처리할 수 없습니다. 다시 시도해 주세요."
+  }
+}
