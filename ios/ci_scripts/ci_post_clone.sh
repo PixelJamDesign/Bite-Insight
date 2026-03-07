@@ -37,6 +37,11 @@ EXPO_PUBLIC_REVENUECAT_ANDROID_KEY=${EXPO_PUBLIC_REVENUECAT_ANDROID_KEY:-}
 ENVEOF
 echo "  ✓ .env written"
 
+# ── Expo prebuild (regenerate native project from app config) ────────────────
+cd "$CI_PRIMARY_REPOSITORY_PATH"
+npx expo prebuild --platform ios --clean --no-install
+echo "  ✓ Expo prebuild complete"
+
 # ── CocoaPods (UTF-8 fix for Xcode Cloud) ───────────────────────────────────
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
