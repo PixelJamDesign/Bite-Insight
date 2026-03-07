@@ -551,7 +551,7 @@ export default function SignUpScreen() {
               onPress={handleCreateAndSkip}
               activeOpacity={0.7}
             >
-              <Text style={styles.skipText}>Skip for now — I'll set this up later</Text>
+              <Text style={styles.skipText}>Skip for now, I'll set this up later</Text>
             </TouchableOpacity>
           )}
 

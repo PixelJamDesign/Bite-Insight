@@ -510,7 +510,7 @@ export default function IngredientPreferencesScreen() {
           </Text>
           <Text style={[styles.emptyDesc, { textAlign: 'center', paddingHorizontal: 32, marginTop: 4 }]}>
             {fetchError.includes('does not exist')
-              ? 'Database migration required — please run the ALTER TABLE statements in your Supabase SQL Editor to add the ingredient preference columns.'
+              ? 'Database migration required. Please run the ALTER TABLE statements in your Supabase SQL Editor to add the ingredient preference columns.'
               : fetchError}
           </Text>
         </View>

@@ -759,9 +759,9 @@ function OfflineDatabaseScreen({ goBack }: { goBack: () => void }) {
                         <Text style={offlineDbStyles.regionLabel}>{label}</Text>
                         <Text style={offlineDbStyles.regionMeta}>
                           {status === 'ready'
-                            ? `${(productCount ?? 0).toLocaleString()} products  ·  ${fileSizeBytes ? formatBytes(fileSizeBytes) : '—'}`
+                            ? `${(productCount ?? 0).toLocaleString()} products  ·  ${fileSizeBytes ? formatBytes(fileSizeBytes) : '-'}`
                             : r.remoteProductCount
-                              ? `${(r.remoteProductCount).toLocaleString()} products  ·  ${r.remoteSize ? formatBytes(r.remoteSize) : '—'}`
+                              ? `${(r.remoteProductCount).toLocaleString()} products  ·  ${r.remoteSize ? formatBytes(r.remoteSize) : '-'}`
                               : r.remoteSize
                                 ? formatBytes(r.remoteSize)
                                 : ''

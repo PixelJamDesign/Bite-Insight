@@ -423,6 +423,70 @@ const Extra = {
   strokeSecondary: '#aad4cd',
 };
 
+// ── Micronutrient severity thresholds (per 100 g) ──────────────────────────
+// 4 cut-points → 5 levels matching the traffic-light scale:
+//   Amazing (#009a1f) · Good (#b8d828) · OK (#ffc72d) · Poor (#ff8736) · Bad (#ff7779)
+// For "limit": lower value = better.  For "boost": higher value = better.
+const MICRO_THRESHOLDS: Record<string, [number, number, number, number]> = {
+  // ─── Minerals (mg) ───                   [ok,   good,  poor,  bad]
+  'sodium_100g':      [200,  400,  800,  1200],
+  'potassium_100g':   [260,  525,  1050, 1750],
+  'phosphorus_100g':  [75,   150,  300,  500],
+  'calcium_100g':     [97,   195,  390,  650],
+  'iron_100g':        [1.35, 2.7,  5.4,  9],
+  'magnesium_100g':   [24,   48,   96,   160],
+  'zinc_100g':        [0.75, 1.5,  3,    5],
+  'copper_100g':      [0.07, 0.15, 0.3,  0.5],
+  'manganese_100g':   [0.15, 0.3,  0.6,  1],
+  'selenium_100g':    [4,    8.25, 16.5, 27.5],
+  // ─── Lipids ───
+  'cholesterol_100g': [20,   45,   90,   150],
+  'trans-fat_100g':   [0.05, 0.1,  0.3,  0.6],
+  'omega-3-fat_100g': [0.15, 0.3,  0.6,  1.0],
+  // ─── Vitamins ───
+  'vitamin-a_100g':   [60,   120,  240,  400],
+  'vitamin-c_100g':   [6.75, 13.5, 27,   45],
+  'vitamin-d_100g':   [0.75, 1.5,  3,    5],
+  'vitamin-e_100g':   [0.9,  1.8,  3.6,  6],
+  'vitamin-k_100g':   [5.6,  11.25,22.5, 37.5],
+  'vitamin-b9_100g':  [15,   30,   60,   100],
+};
+
+// Traffic-light colours (same scale as nutri-score)
+const SEV_AMAZING = Extra.positiveGreen; // #009a1f
+const SEV_GOOD    = Extra.goodLime;      // #b8d828
+const SEV_OK      = '#ffc72d';           // yellow (nutri-score C)
+const SEV_POOR    = Extra.poorOrange;    // #ff8736
+const SEV_BAD     = Extra.highRed;       // #ff7779
+
+/** Return a traffic-light colour for a micronutrient value. */
+function getNutrientSeverityColor(
+  offKey: string,
+  value: number,
+  direction: 'limit' | 'boost',
+): string {
+  const t = MICRO_THRESHOLDS[offKey];
+  if (!t) {
+    return direction === 'limit' ? SEV_POOR : SEV_GOOD;
+  }
+  const [a, b, c, d] = t;
+
+  if (direction === 'limit') {
+    // Lower = better for user
+    if (value < a) return SEV_AMAZING;
+    if (value < b) return SEV_GOOD;
+    if (value < c) return SEV_OK;
+    if (value < d) return SEV_POOR;
+    return SEV_BAD;
+  }
+  // boost: higher = better for user
+  if (value >= d) return SEV_AMAZING;
+  if (value >= c) return SEV_GOOD;
+  if (value >= b) return SEV_OK;
+  if (value >= a) return SEV_POOR;
+  return SEV_BAD;
+}
+
 // ── Nutri-score helpers ───────────────────────────────────────────────────────
 const NUTRISCORE_GRADES = ['a', 'b', 'c', 'd', 'e'] as const;
 const NUTRISCORE_COLORS: Record<string, string> = {
@@ -711,9 +775,9 @@ function getRating(
 }
 
 function fmtVal(raw: string | undefined, unit: string): string {
-  if (!raw) return '—';
+  if (!raw) return '-';
   const num = parseFloat(raw);
-  if (isNaN(num)) return '—';
+  if (isNaN(num)) return '-';
   if (unit === 'kcal') return `${Math.round(num)}${unit}`;
   if (num < 0.1) return `<0.1${unit}`;
   if (num < 10) return `${num.toFixed(1)}${unit}`;
@@ -721,9 +785,9 @@ function fmtVal(raw: string | undefined, unit: string): string {
 }
 
 function fmtDri(rawStr: string | undefined, key: NutrientKey): string {
-  if (!rawStr || !(key in DRI)) return '—';
+  if (!rawStr || !(key in DRI)) return '-';
   const val = parseFloat(rawStr);
-  if (isNaN(val)) return '—';
+  if (isNaN(val)) return '-';
   return `${Math.round((val / DRI[key]) * 100)}%`;
 }
 
@@ -1778,55 +1842,55 @@ const flaggedSheetStyles = StyleSheet.create({
 // or OFF id (e.g. "en:e476"). Looked up by exact match, then by E-number
 // extraction, then by substring.
 const ADDITIVE_DESCRIPTIONS: Record<string, { what: string; why: string }> = {
-  'en:e322': { what: 'Lecithin — a natural emulsifier usually derived from soy or sunflower seeds.', why: 'It helps blend ingredients that normally don\'t mix (like oil and water). Widely used and considered safe.' },
-  'en:e322i': { what: 'Lecithin — a natural emulsifier usually derived from soy or sunflower seeds.', why: 'It helps blend ingredients that normally don\'t mix (like oil and water). Widely used and considered safe.' },
-  'en:e330': { what: 'Citric acid — a natural acid found in citrus fruits like lemons and oranges.', why: 'Used as a preservative and flavour enhancer. It occurs naturally in many foods and is considered safe.' },
-  'en:e331': { what: 'Sodium citrate — the sodium salt of citric acid.', why: 'Used as a flavour enhancer and acidity regulator. Found naturally in citrus fruits and considered safe.' },
-  'en:e339': { what: 'Sodium phosphate — a mineral salt used in food processing.', why: 'Acts as an emulsifier and moisture retainer. Safe in normal food amounts, though excessive phosphate intake should be monitored.' },
-  'en:e412': { what: 'Guar gum — a natural thickener extracted from guar beans.', why: 'Used to thicken and stabilise foods. It\'s a soluble fibre and generally well tolerated.' },
-  'en:e414': { what: 'Gum arabic — a natural gum from acacia trees.', why: 'Used as a stabiliser and emulsifier. It\'s a natural plant-based ingredient and considered safe.' },
-  'en:e415': { what: 'Xanthan gum — a thickener produced by bacterial fermentation.', why: 'Widely used in sauces, dressings and gluten-free baking. Considered safe and is a common kitchen ingredient.' },
-  'en:e440': { what: 'Pectin — a natural gelling agent found in fruit.', why: 'Used to set jams and jellies. It\'s a natural plant fibre and perfectly safe.' },
-  'en:e450': { what: 'Diphosphates — mineral salts used as raising agents.', why: 'Commonly found in baking powder. Safe in normal food amounts.' },
-  'en:e460': { what: 'Cellulose — plant fibre, the main structural component of plant cell walls.', why: 'Used as a bulking agent and anti-caking agent. It\'s indigestible fibre and safe to consume.' },
-  'en:e466': { what: 'Carboxymethyl cellulose — a modified plant fibre used as a thickener.', why: 'Used to improve texture in sauces and ice cream. Generally recognised as safe.' },
-  'en:e471': { what: 'Mono- and diglycerides of fatty acids — emulsifiers derived from plant or animal fats.', why: 'Used to help ingredients mix smoothly. Very common in bread, ice cream and margarine.' },
-  'en:e472e': { what: 'DATEM (diacetyl tartaric acid esters) — an emulsifier used in baking.', why: 'Strengthens dough and improves bread texture. Considered safe.' },
-  'en:e476': { what: 'Polyglycerol polyricinoleate (PGPR) — an emulsifier made from castor oil and glycerol.', why: 'Used in chocolate to improve flow and reduce the amount of cocoa butter needed. Approved as safe by food authorities worldwide.' },
-  'en:e500': { what: 'Sodium bicarbonate — baking soda.', why: 'A common household ingredient used as a raising agent. Perfectly safe.' },
-  'en:e501': { what: 'Potassium carbonate — a mineral salt used as a raising agent.', why: 'Similar to baking soda. Used in baking and considered safe.' },
-  'en:e503': { what: 'Ammonium carbonate — a traditional raising agent.', why: 'Used in flat baked goods like cookies. Breaks down completely during baking.' },
-  'en:e507': { what: 'Hydrochloric acid — a mineral acid used for pH adjustment.', why: 'Used in tiny amounts to regulate acidity. Naturally present in your stomach.' },
-  'en:e509': { what: 'Calcium chloride — a mineral salt.', why: 'Used as a firming agent in canned vegetables and cheese-making. Considered safe.' },
-  'en:e516': { what: 'Calcium sulphate — a mineral used in food processing.', why: 'Used in tofu-making and as a dough conditioner. A natural mineral and considered safe.' },
-  'en:e551': { what: 'Silicon dioxide — a natural mineral (silica).', why: 'Used as an anti-caking agent to keep powders flowing freely. Found naturally in many foods.' },
-  'en:e621': { what: 'Monosodium glutamate (MSG) — a flavour enhancer.', why: 'Adds savoury/umami flavour. Glutamate occurs naturally in tomatoes, parmesan cheese and mushrooms. Generally considered safe, though some people report sensitivity.' },
-  'en:e901': { what: 'Beeswax — a natural wax produced by honeybees.', why: 'Used as a glazing agent on sweets and fruit. Natural and safe (not suitable for vegans).' },
-  'en:e903': { what: 'Carnauba wax — a natural plant wax from Brazilian palm leaves.', why: 'Used as a coating/glazing agent. Plant-based and considered safe.' },
-  'en:e904': { what: 'Shellac — a natural resin secreted by lac insects.', why: 'Used as a glazing agent on sweets and pills. Considered safe (not suitable for vegans).' },
-  'en:e950': { what: 'Acesulfame K — an artificial sweetener.', why: 'About 200× sweeter than sugar with zero calories. Approved by food safety authorities, though some prefer to avoid artificial sweeteners.' },
-  'en:e951': { what: 'Aspartame — an artificial sweetener.', why: 'One of the most studied food additives. Approved as safe, though people with PKU (phenylketonuria) should avoid it.' },
-  'en:e955': { what: 'Sucralose — an artificial sweetener made from sugar.', why: 'About 600× sweeter than sugar with zero calories. Widely approved as safe.' },
-  'en:e960': { what: 'Steviol glycosides (Stevia) — a natural sweetener from the stevia plant.', why: 'A plant-based, zero-calorie sweetener. Considered safe and a popular sugar alternative.' },
-  'en:e965': { what: 'Maltitol — a sugar alcohol used as a sweetener.', why: 'Lower calorie than sugar with less impact on blood glucose. May cause digestive discomfort in large amounts.' },
+  'en:e322': { what: 'Lecithin, a natural emulsifier usually derived from soy or sunflower seeds.', why: 'It helps blend ingredients that normally don\'t mix (like oil and water). Widely used and considered safe.' },
+  'en:e322i': { what: 'Lecithin, a natural emulsifier usually derived from soy or sunflower seeds.', why: 'It helps blend ingredients that normally don\'t mix (like oil and water). Widely used and considered safe.' },
+  'en:e330': { what: 'Citric acid, a natural acid found in citrus fruits like lemons and oranges.', why: 'Used as a preservative and flavour enhancer. It occurs naturally in many foods and is considered safe.' },
+  'en:e331': { what: 'Sodium citrate, the sodium salt of citric acid.', why: 'Used as a flavour enhancer and acidity regulator. Found naturally in citrus fruits and considered safe.' },
+  'en:e339': { what: 'Sodium phosphate, a mineral salt used in food processing.', why: 'Acts as an emulsifier and moisture retainer. Safe in normal food amounts, though excessive phosphate intake should be monitored.' },
+  'en:e412': { what: 'Guar gum, a natural thickener extracted from guar beans.', why: 'Used to thicken and stabilise foods. It\'s a soluble fibre and generally well tolerated.' },
+  'en:e414': { what: 'Gum arabic, a natural gum from acacia trees.', why: 'Used as a stabiliser and emulsifier. It\'s a natural plant-based ingredient and considered safe.' },
+  'en:e415': { what: 'Xanthan gum, a thickener produced by bacterial fermentation.', why: 'Widely used in sauces, dressings and gluten-free baking. Considered safe and is a common kitchen ingredient.' },
+  'en:e440': { what: 'Pectin, a natural gelling agent found in fruit.', why: 'Used to set jams and jellies. It\'s a natural plant fibre and perfectly safe.' },
+  'en:e450': { what: 'Diphosphates, mineral salts used as raising agents.', why: 'Commonly found in baking powder. Safe in normal food amounts.' },
+  'en:e460': { what: 'Cellulose, plant fibre, the main structural component of plant cell walls.', why: 'Used as a bulking agent and anti-caking agent. It\'s indigestible fibre and safe to consume.' },
+  'en:e466': { what: 'Carboxymethyl cellulose, a modified plant fibre used as a thickener.', why: 'Used to improve texture in sauces and ice cream. Generally recognised as safe.' },
+  'en:e471': { what: 'Mono- and diglycerides of fatty acids, emulsifiers derived from plant or animal fats.', why: 'Used to help ingredients mix smoothly. Very common in bread, ice cream and margarine.' },
+  'en:e472e': { what: 'DATEM (diacetyl tartaric acid esters), an emulsifier used in baking.', why: 'Strengthens dough and improves bread texture. Considered safe.' },
+  'en:e476': { what: 'Polyglycerol polyricinoleate (PGPR), an emulsifier made from castor oil and glycerol.', why: 'Used in chocolate to improve flow and reduce the amount of cocoa butter needed. Approved as safe by food authorities worldwide.' },
+  'en:e500': { what: 'Sodium bicarbonate, also known as baking soda.', why: 'A common household ingredient used as a raising agent. Perfectly safe.' },
+  'en:e501': { what: 'Potassium carbonate, a mineral salt used as a raising agent.', why: 'Similar to baking soda. Used in baking and considered safe.' },
+  'en:e503': { what: 'Ammonium carbonate, a traditional raising agent.', why: 'Used in flat baked goods like cookies. Breaks down completely during baking.' },
+  'en:e507': { what: 'Hydrochloric acid, a mineral acid used for pH adjustment.', why: 'Used in tiny amounts to regulate acidity. Naturally present in your stomach.' },
+  'en:e509': { what: 'Calcium chloride, a mineral salt.', why: 'Used as a firming agent in canned vegetables and cheese-making. Considered safe.' },
+  'en:e516': { what: 'Calcium sulphate, a mineral used in food processing.', why: 'Used in tofu-making and as a dough conditioner. A natural mineral and considered safe.' },
+  'en:e551': { what: 'Silicon dioxide, a natural mineral (silica).', why: 'Used as an anti-caking agent to keep powders flowing freely. Found naturally in many foods.' },
+  'en:e621': { what: 'Monosodium glutamate (MSG), a flavour enhancer.', why: 'Adds savoury/umami flavour. Glutamate occurs naturally in tomatoes, parmesan cheese and mushrooms. Generally considered safe, though some people report sensitivity.' },
+  'en:e901': { what: 'Beeswax, a natural wax produced by honeybees.', why: 'Used as a glazing agent on sweets and fruit. Natural and safe (not suitable for vegans).' },
+  'en:e903': { what: 'Carnauba wax, a natural plant wax from Brazilian palm leaves.', why: 'Used as a coating/glazing agent. Plant-based and considered safe.' },
+  'en:e904': { what: 'Shellac, a natural resin secreted by lac insects.', why: 'Used as a glazing agent on sweets and pills. Considered safe (not suitable for vegans).' },
+  'en:e950': { what: 'Acesulfame K, an artificial sweetener.', why: 'About 200x sweeter than sugar with zero calories. Approved by food safety authorities, though some prefer to avoid artificial sweeteners.' },
+  'en:e951': { what: 'Aspartame, an artificial sweetener.', why: 'One of the most studied food additives. Approved as safe, though people with PKU (phenylketonuria) should avoid it.' },
+  'en:e955': { what: 'Sucralose, an artificial sweetener made from sugar.', why: 'About 600x sweeter than sugar with zero calories. Widely approved as safe.' },
+  'en:e960': { what: 'Steviol glycosides (Stevia), a natural sweetener from the stevia plant.', why: 'A plant-based, zero-calorie sweetener. Considered safe and a popular sugar alternative.' },
+  'en:e965': { what: 'Maltitol, a sugar alcohol used as a sweetener.', why: 'Lower calorie than sugar with less impact on blood glucose. May cause digestive discomfort in large amounts.' },
   // Common non-E-number ingredient names
   'polyglycerol polyricinoleate': { what: 'An emulsifier (also known as E476 or PGPR) made from castor oil and glycerol.', why: 'Used in chocolate to improve flow and reduce cocoa butter. Approved as safe worldwide.' },
-  'soy lecithin': { what: 'A natural emulsifier extracted from soybeans.', why: 'One of the most common food additives — helps blend oil and water. Safe unless you have a soy allergy.' },
-  'soya lecithin': { what: 'A natural emulsifier extracted from soybeans.', why: 'One of the most common food additives — helps blend oil and water. Safe unless you have a soy allergy.' },
+  'soy lecithin': { what: 'A natural emulsifier extracted from soybeans.', why: 'One of the most common food additives. Helps blend oil and water. Safe unless you have a soy allergy.' },
+  'soya lecithin': { what: 'A natural emulsifier extracted from soybeans.', why: 'One of the most common food additives. Helps blend oil and water. Safe unless you have a soy allergy.' },
   'sunflower lecithin': { what: 'A natural emulsifier extracted from sunflower seeds.', why: 'Allergen-friendly alternative to soy lecithin. Considered safe.' },
   'xanthan gum': { what: 'A thickener produced by bacterial fermentation of sugar.', why: 'Widely used in sauces, dressings and gluten-free baking. Considered safe.' },
   'guar gum': { what: 'A natural thickener extracted from guar beans.', why: 'Used to thicken and stabilise foods. It\'s a soluble fibre and generally well tolerated.' },
   'carrageenan': { what: 'A thickener and stabiliser extracted from red seaweed.', why: 'Used in dairy products and plant milks. Generally recognised as safe, though some studies suggest it may irritate sensitive guts.' },
   'maltodextrin': { what: 'A starch-derived carbohydrate used as a thickener or filler.', why: 'Has a high glycemic index but is used in small amounts. Considered safe as a food additive.' },
-  'sodium benzoate': { what: 'A preservative — the sodium salt of benzoic acid, which occurs naturally in berries.', why: 'Prevents mould and bacterial growth. Safe at approved levels.' },
-  'potassium sorbate': { what: 'A preservative — the potassium salt of sorbic acid.', why: 'Prevents mould and yeast growth. Widely used and considered safe.' },
-  'calcium carbonate': { what: 'Chalk — a natural mineral and a source of calcium.', why: 'Used as a colour (white), acidity regulator and calcium supplement. Perfectly safe.' },
+  'sodium benzoate': { what: 'A preservative, the sodium salt of benzoic acid, which occurs naturally in berries.', why: 'Prevents mould and bacterial growth. Safe at approved levels.' },
+  'potassium sorbate': { what: 'A preservative, the potassium salt of sorbic acid.', why: 'Prevents mould and yeast growth. Widely used and considered safe.' },
+  'calcium carbonate': { what: 'Chalk, a natural mineral and a source of calcium.', why: 'Used as a colour (white), acidity regulator and calcium supplement. Perfectly safe.' },
   'mono- and diglycerides of fatty acids': { what: 'Emulsifiers derived from plant or animal fats (also known as E471).', why: 'Used to help ingredients mix smoothly. Very common in processed foods and considered safe.' },
-  'tbhq': { what: 'Tert-butylhydroquinone — a synthetic antioxidant.', why: 'Used in small amounts to prevent fats from going rancid. Approved as safe at regulated levels.' },
-  'pgpr': { what: 'Polyglycerol polyricinoleate (E476) — an emulsifier.', why: 'Used in chocolate to improve texture. Approved as safe worldwide.' },
-  'ascorbic acid': { what: 'Vitamin C — an essential nutrient.', why: 'Used as an antioxidant and preservative. It\'s simply vitamin C and perfectly safe.' },
-  'tocopherol': { what: 'Vitamin E — a natural antioxidant.', why: 'Used to prevent fats from going rancid. It\'s an essential vitamin and safe.' },
-  'sodium bicarbonate': { what: 'Baking soda — a common raising agent.', why: 'Used in baking to help doughs rise. A household staple and perfectly safe.' },
+  'tbhq': { what: 'Tert-butylhydroquinone, a synthetic antioxidant.', why: 'Used in small amounts to prevent fats from going rancid. Approved as safe at regulated levels.' },
+  'pgpr': { what: 'Polyglycerol polyricinoleate (E476), an emulsifier.', why: 'Used in chocolate to improve texture. Approved as safe worldwide.' },
+  'ascorbic acid': { what: 'Vitamin C, an essential nutrient.', why: 'Used as an antioxidant and preservative. It\'s simply vitamin C and perfectly safe.' },
+  'tocopherol': { what: 'Vitamin E, a natural antioxidant.', why: 'Used to prevent fats from going rancid. It\'s an essential vitamin and safe.' },
+  'sodium bicarbonate': { what: 'Baking soda, a common raising agent.', why: 'Used in baking to help doughs rise. A household staple and perfectly safe.' },
   'citric acid': { what: 'A natural acid found in citrus fruits like lemons and oranges.', why: 'Used as a preservative and flavour enhancer. Occurs naturally in many foods and is safe.' },
   'malic acid': { what: 'A natural acid found in apples and other fruits.', why: 'Used as a flavour enhancer to add tartness. Natural and safe.' },
   'lactic acid': { what: 'A natural acid produced during fermentation.', why: 'Found in yoghurt, sauerkraut and sourdough. Natural and safe.' },
@@ -2855,7 +2919,7 @@ export default function ScanResultScreen() {
             })()}
 
             {/* ── Important for you ── */}
-            {(hasProfileAllergenMatch || watchlistAlerts.length > 0 || activeInsights.length > 0) && (
+            {(hasProfileAllergenMatch || activeInsights.length > 0) && (
               <View style={styles.section}>
                 <View style={styles.sectionHeading}>
                   <Text style={styles.sectionTitle}>Important for you</Text>
@@ -2886,43 +2950,6 @@ export default function ScanResultScreen() {
                   );
                 })()}
 
-                {/* Nutrient watchlist alert — shows watched nutrients found in this product */}
-                {watchlistAlerts.length > 0 && (
-                  <View style={styles.nutrientAlertCard}>
-                    <View style={styles.nutrientAlertBadge}>
-                      <Ionicons name="nutrition" size={11} color="#fff" />
-                      <Text style={styles.nutrientAlertBadgeText}>Nutrient Watch</Text>
-                    </View>
-                    {watchlistAlerts.map((alert) => (
-                      <View key={alert.offKey} style={styles.nutrientAlertRow}>
-                        <View style={styles.nutrientAlertNameRow}>
-                          <View style={[styles.nutrientAlertDot, {
-                            backgroundColor: alert.direction === 'limit'
-                              ? Colors.status.negative
-                              : Colors.status.positive,
-                          }]} />
-                          <Text style={styles.nutrientAlertName}>
-                            {alert.nutrient}: {alert.value}{alert.unit}/100g
-                          </Text>
-                        </View>
-                        <Text style={styles.nutrientAlertReason}>
-                          {alert.direction === 'limit' ? 'Limit' : 'Boost'} — {alert.source}
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
-                )}
-
-                {/* No micronutrient data notice */}
-                {activeWatchlist.length > 0 && watchlistAlerts.length === 0 && !hasMicroData && !fetchingOff && (
-                  <View style={styles.noMicroDataCard}>
-                    <Ionicons name="information-circle-outline" size={16} color={Colors.secondary} />
-                    <Text style={styles.noMicroDataText}>
-                      Micronutrient data is not available for this product.
-                    </Text>
-                  </View>
-                )}
-
                 {/* Dynamic insight panels — rendered in pairs */}
                 {activeInsights.length > 0 && (
                   <View style={styles.impactPanelsRow}>
@@ -2949,6 +2976,44 @@ export default function ScanResultScreen() {
                     })}
                   </View>
                 )}
+
+              </View>
+            )}
+
+            {/* ── Nutrient Watch (own section for consistent gap) ── */}
+            {watchlistAlerts.length > 0 && (
+              <View style={styles.section}>
+                <View style={styles.sectionHeading}>
+                  <Text style={styles.sectionTitle}>Nutrient Watch</Text>
+                </View>
+                {watchlistAlerts.map((alert) => {
+                  const sevColor = getNutrientSeverityColor(alert.offKey, alert.value, alert.direction);
+                  return (
+                    <View key={alert.offKey} style={styles.nutrientAlertRow}>
+                      <View style={styles.nutrientAlertNameRow}>
+                        <View style={[styles.nutrientAlertDot, { backgroundColor: sevColor }]} />
+                        <Text style={styles.nutrientAlertName}>
+                          {alert.nutrient}: {Number(alert.value.toFixed(2))}{alert.unit}/100g
+                        </Text>
+                      </View>
+                      <Text style={[styles.nutrientAlertReason, { color: sevColor }]}>
+                        {alert.direction === 'limit' ? 'Limit' : 'Boost'} · {alert.source}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+
+            {/* No micronutrient data notice */}
+            {activeWatchlist.length > 0 && watchlistAlerts.length === 0 && !hasMicroData && !fetchingOff && (
+              <View style={[styles.section, { gap: Spacing.xs }]}>
+                <View style={styles.noMicroDataCard}>
+                  <Ionicons name="information-circle-outline" size={16} color={Colors.secondary} />
+                  <Text style={styles.noMicroDataText}>
+                    Micronutrient data is not available for this product.
+                  </Text>
+                </View>
               </View>
             )}
 
@@ -3011,7 +3076,6 @@ export default function ScanResultScreen() {
               <View style={styles.section}>
                 <View style={styles.sectionHeading}>
                   <Text style={styles.sectionTitle}>Highlighted Nutritional Info</Text>
-                  <Text style={styles.sectionSubtitle}>Highlighted Nutritional Info</Text>
                 </View>
 
                 {/* Toggle controls (Figma node 3164-4264) */}
@@ -3906,9 +3970,9 @@ const styles = StyleSheet.create({
 
   // Nutrient watchlist alert card
   nutrientAlertCard: {
-    backgroundColor: 'rgba(255,199,45,0.10)',
-    borderWidth: 2,
-    borderColor: '#ffc72d',
+    backgroundColor: Colors.surface.secondary,
+    borderWidth: 1,
+    borderColor: '#aad4cd',
     borderRadius: 16,
     padding: Spacing.s,
     gap: Spacing.xs,
@@ -3917,7 +3981,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#ffc72d',
+    backgroundColor: Colors.accent,
     borderRadius: 999,
     paddingHorizontal: Spacing.xs,
     paddingVertical: 4,
@@ -3932,6 +3996,12 @@ const styles = StyleSheet.create({
   },
   nutrientAlertRow: {
     gap: 2,
+    backgroundColor: Colors.surface.tertiary,
+    borderRadius: Radius.l,
+    borderWidth: 1,
+    borderColor: '#aad4cd',
+    paddingHorizontal: Spacing.s,
+    paddingVertical: 10,
   },
   nutrientAlertNameRow: {
     flexDirection: 'row',
@@ -3953,9 +4023,8 @@ const styles = StyleSheet.create({
   },
   nutrientAlertReason: {
     fontSize: 13,
-    fontWeight: '300',
-    fontFamily: 'Figtree_300Light',
-    color: Colors.secondary,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
     letterSpacing: -0.13,
     lineHeight: 18,
     marginLeft: 14,

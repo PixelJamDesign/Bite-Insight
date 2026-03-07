@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -23,16 +23,69 @@ import { supabase, uploadAvatar, getAvatarUrl } from '@/lib/supabase';
 import { useCachedAvatar } from '@/lib/useCachedAvatar';
 import { useAuth } from '@/lib/auth';
 import { Colors, Shadows } from '@/constants/theme';
+import { CONDITION_NUTRIENT_MAP } from '@/constants/conditionNutrientMap';
+import type { NutrientWatchlistEntry } from '@/lib/types';
 import { CameraIcon, PersonalIcon, TickIcon } from '@/components/MenuIcons';
 import Logo from '../assets/images/logo.svg';
 
-// ── Step metadata ─────────────────────────────────────────────────────────────
-const STEPS = [
-  { title: 'About Them',          nextLabel: 'Health Conditions' },
-  { title: 'Health Conditions',    nextLabel: 'Allergies' },
-  { title: 'Allergies',           nextLabel: 'Dietary Preferences' },
-  { title: 'Dietary Preferences', nextLabel: null },
-] as const;
+// ── Step types ────────────────────────────────────────────────────────────────
+type StepKey = 'about' | 'health' | 'nutrients' | 'allergies' | 'dietary';
+
+const STEP_META: Record<StepKey, { title: string }> = {
+  about:     { title: 'About Them' },
+  health:    { title: 'Health Conditions' },
+  nutrients: { title: 'Nutrient Watchlist' },
+  allergies: { title: 'Allergies' },
+  dietary:   { title: 'Dietary Preferences' },
+};
+
+// ── Unique nutrient type (tri-state) ─────────────────────────────────────────
+type UniqueNutrient = {
+  offKey: string;
+  nutrient: string;
+  unit: 'mg' | 'µg' | 'g';
+  source: string;
+  recommendedDirection: 'limit' | 'boost';
+  hasConflict: boolean;
+};
+
+/** Build de-duped nutrient list from selected health conditions */
+function buildUniqueNutrients(conditions: string[]): UniqueNutrient[] {
+  const map = new Map<string, UniqueNutrient>();
+  const limitKeys = new Set<string>();
+  const boostKeys = new Set<string>();
+
+  for (const condition of conditions) {
+    const profile = CONDITION_NUTRIENT_MAP[condition];
+    if (!profile) continue;
+
+    for (const item of profile.limit) {
+      limitKeys.add(item.offKey);
+      if (!map.has(item.offKey)) {
+        map.set(item.offKey, {
+          offKey: item.offKey, nutrient: item.nutrient, unit: item.unit,
+          source: condition, recommendedDirection: 'limit', hasConflict: false,
+        });
+      }
+    }
+    for (const item of profile.boost) {
+      boostKeys.add(item.offKey);
+      if (!map.has(item.offKey)) {
+        map.set(item.offKey, {
+          offKey: item.offKey, nutrient: item.nutrient, unit: item.unit,
+          source: condition, recommendedDirection: 'boost', hasConflict: false,
+        });
+      }
+    }
+  }
+
+  // Flag conflicts: nutrient in both limit and boost across conditions
+  for (const [key, n] of map) {
+    if (limitKeys.has(key) && boostKeys.has(key)) n.hasConflict = true;
+  }
+
+  return Array.from(map.values());
+}
 
 // ── Selection lists ───────────────────────────────────────────────────────────
 const HEALTH_CONDITIONS = [
@@ -98,6 +151,56 @@ export default function AddFamilyMemberScreen() {
   // Step 4 – Dietary Preferences
   const [dietaryPrefs, setDietaryPrefs] = useState<string[]>([]);
 
+  // ── Nutrient watchlist ──────────────────────────────────────────────────────
+  const [nutrientChoices, setNutrientChoices] = useState<Record<string, 'limit' | 'boost' | 'none'>>({});
+
+  const showNutrientStep = healthConditions.length > 0;
+
+  const stepSequence: StepKey[] = useMemo(() => [
+    'about',
+    'health',
+    ...(showNutrientStep ? ['nutrients' as StepKey] : []),
+    'allergies',
+    'dietary',
+  ], [showNutrientStep]);
+
+  const totalSteps = stepSequence.length;
+  const currentStepKey = stepSequence[step - 1] ?? 'about';
+  const isLastStep = step === totalSteps;
+  const nextStepKey = step < totalSteps ? stepSequence[step] : null;
+  const nextLabel = nextStepKey ? STEP_META[nextStepKey].title : null;
+  const stepTitle = STEP_META[currentStepKey].title;
+
+  const uniqueNutrients = useMemo(
+    () => buildUniqueNutrients(healthConditions),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [healthConditions.join(',')],
+  );
+
+  const limitNutrients = uniqueNutrients.filter(n => nutrientChoices[n.offKey] === 'limit');
+  const boostNutrients = uniqueNutrients.filter(n => nutrientChoices[n.offKey] === 'boost');
+  const noChangeNutrients = uniqueNutrients.filter(n => !nutrientChoices[n.offKey] || nutrientChoices[n.offKey] === 'none');
+
+  function setNutrientChoice(offKey: string, choice: 'limit' | 'boost' | 'none') {
+    setNutrientChoices(prev => ({ ...prev, [offKey]: choice }));
+  }
+
+  function buildFinalWatchlist(): NutrientWatchlistEntry[] {
+    return uniqueNutrients
+      .filter(n => {
+        const choice = nutrientChoices[n.offKey];
+        return choice === 'limit' || choice === 'boost';
+      })
+      .map(n => ({
+        offKey: n.offKey,
+        nutrient: n.nutrient,
+        direction: nutrientChoices[n.offKey] as 'limit' | 'boost',
+        unit: n.unit,
+        source: n.source,
+        reason: '',
+      }));
+  }
+
   // Chip search
   const [chipSearch, setChipSearch]           = useState('');
   const [chipSearchActive, setChipSearchActive] = useState(false);
@@ -125,14 +228,42 @@ export default function AddFamilyMemberScreen() {
           setHealthConditions((data.health_conditions as string[]) ?? []);
           setAllergies((data.allergies as string[]) ?? []);
           setDietaryPrefs((data.dietary_preferences as string[]) ?? []);
+
+          // Load existing nutrient watchlist choices
+          const existing = (data.nutrient_watchlist as NutrientWatchlistEntry[] | null) ?? [];
+          if (existing.length > 0) {
+            const choices: Record<string, 'limit' | 'boost' | 'none'> = {};
+            for (const e of existing) choices[e.offKey] = e.direction;
+            setNutrientChoices(choices);
+          }
         }
         setFetched(true);
       });
   }, [params.id]);
 
-  // Step progress animation
+  // Auto-select non-userConfirmRequired nutrients when suggestions change
+  const hasLoadedExistingRef = useRef(false);
+  useEffect(() => {
+    if (!fetched) return;
+    if (hasLoadedExistingRef.current) return;
+    hasLoadedExistingRef.current = true;
+  }, [fetched]);
+
+  // When health conditions change after initial load, recalculate choices
+  useEffect(() => {
+    if (!hasLoadedExistingRef.current) return;
+    setNutrientChoices(prev => {
+      const choices: Record<string, 'limit' | 'boost' | 'none'> = {};
+      for (const n of uniqueNutrients) {
+        choices[n.offKey] = prev[n.offKey] ?? (n.hasConflict ? 'none' : n.recommendedDirection);
+      }
+      return choices;
+    });
+  }, [uniqueNutrients]);
+
+  // Step progress animation (5 dots max to support optional nutrient step)
   const stepAnim    = useRef(new Animated.Value(1)).current;
-  const dotPops     = useRef([0, 1, 2, 3].map(() => new Animated.Value(1))).current;
+  const dotPops     = useRef([0, 1, 2, 3, 4].map(() => new Animated.Value(1))).current;
   const prevStepRef = useRef(1);
 
   // Animate step tracker on step change
@@ -209,11 +340,11 @@ export default function AddFamilyMemberScreen() {
 
   // ── Navigation ────────────────────────────────────────────────────────────
   function handleNext() {
-    if (step === 1 && !fullName.trim()) {
+    if (currentStepKey === 'about' && !fullName.trim()) {
       Alert.alert('Name required', 'Please enter a name for this family member.');
       return;
     }
-    setStep(s => s + 1);
+    setStep(s => Math.min(s + 1, totalSteps));
   }
 
   function handleBack() {
@@ -241,6 +372,7 @@ export default function AddFamilyMemberScreen() {
       health_conditions: healthConditions,
       allergies,
       dietary_preferences: dietaryPrefs,
+      nutrient_watchlist: buildFinalWatchlist(),
     };
 
     const { error } = isEditing
@@ -254,11 +386,11 @@ export default function AddFamilyMemberScreen() {
 
   // ── Progress indicator ────────────────────────────────────────────────────
   function renderProgress() {
-    const { nextLabel } = STEPS[step - 1];
+    const dots = Array.from({ length: totalSteps }, (_, i) => i + 1);
     return (
       <View style={styles.progressRow}>
         <View style={styles.progressDots}>
-          {([1, 2, 3, 4] as const).map((s) => {
+          {dots.map((s) => {
             const isDone = s < step;
             const bgColor = isDone ? '#3b9586' : s === step ? Colors.primary : `${Colors.primary}25`;
             const animWidth  = stepAnim.interpolate({ inputRange: [s - 1, s, s + 1], outputRange: [16, 48, 20], extrapolate: 'clamp' });
@@ -348,6 +480,100 @@ export default function AddFamilyMemberScreen() {
     );
   }
 
+  // ── Nutrient watchlist step ────────────────────────────────────────────────
+  function renderNutrientRow(n: UniqueNutrient) {
+    const choice = nutrientChoices[n.offKey] ?? 'none';
+    return (
+      <View key={n.offKey} style={styles.nutrientRow}>
+        <View style={styles.nutrientTopRow}>
+          <Text style={styles.nutrientName}>{n.nutrient}</Text>
+          <Text style={styles.sourceBadge}>{n.source}</Text>
+        </View>
+        <View style={styles.segmentedRow}>
+          <TouchableOpacity
+            style={[styles.segmentBtn, choice === 'limit' && styles.segmentBtnLimitActive]}
+            onPress={() => setNutrientChoice(n.offKey, 'limit')}
+            activeOpacity={0.75}
+          >
+            <Text style={[styles.segmentText, styles.segmentTextLimit, choice === 'limit' && styles.segmentTextActive]}>Limit</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.segmentBtn, choice === 'boost' && styles.segmentBtnBoostActive]}
+            onPress={() => setNutrientChoice(n.offKey, 'boost')}
+            activeOpacity={0.75}
+          >
+            <Text style={[styles.segmentText, styles.segmentTextBoost, choice === 'boost' && styles.segmentTextActive]}>Boost</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.segmentBtn, choice === 'none' && styles.segmentBtnNoneActive]}
+            onPress={() => setNutrientChoice(n.offKey, 'none')}
+            activeOpacity={0.75}
+          >
+            <Text style={[styles.segmentText, styles.segmentTextNone, choice === 'none' && styles.segmentTextNoneActive]}>No Change</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  function renderNutrientStep() {
+    const activeCount = limitNutrients.length + boostNutrients.length;
+    return (
+      <View style={styles.card}>
+        <View style={styles.chipCardInfo}>
+          <Text style={styles.cardTitle}>
+            Based on their conditions, we suggest watching these nutrients
+          </Text>
+          <View style={styles.countRow}>
+            <Text style={styles.countText}>Tracking </Text>
+            <Text style={styles.countBold}>
+              {activeCount} nutrient{activeCount !== 1 ? 's' : ''}
+            </Text>
+          </View>
+          <Text style={styles.nutrientSubtext}>
+            Choose to limit, boost, or skip each nutrient.
+          </Text>
+        </View>
+
+        {limitNutrients.length > 0 && (
+          <View style={styles.nutrientSection}>
+            <View style={styles.sectionHeaderRow}>
+              <Ionicons name="arrow-down-circle" size={16} color={Colors.status.negative} />
+              <Text style={[styles.sectionHeader, { color: Colors.status.negative }]}>
+                Limiting
+              </Text>
+            </View>
+            {limitNutrients.map(renderNutrientRow)}
+          </View>
+        )}
+
+        {boostNutrients.length > 0 && (
+          <View style={styles.nutrientSection}>
+            <View style={styles.sectionHeaderRow}>
+              <Ionicons name="arrow-up-circle" size={16} color={Colors.status.positive} />
+              <Text style={[styles.sectionHeader, { color: Colors.status.positive }]}>
+                Boosting
+              </Text>
+            </View>
+            {boostNutrients.map(renderNutrientRow)}
+          </View>
+        )}
+
+        {noChangeNutrients.length > 0 && (
+          <View style={styles.nutrientSection}>
+            <View style={styles.sectionHeaderRow}>
+              <Ionicons name="remove-circle" size={16} color={Colors.secondary} />
+              <Text style={[styles.sectionHeader, { color: Colors.secondary }]}>
+                No Change
+              </Text>
+            </View>
+            {noChangeNutrients.map(renderNutrientRow)}
+          </View>
+        )}
+      </View>
+    );
+  }
+
   // ── Loading state ─────────────────────────────────────────────────────────
   if (!fetched) {
     return (
@@ -360,7 +586,6 @@ export default function AddFamilyMemberScreen() {
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
-  const stepInfo = STEPS[step - 1];
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -376,7 +601,7 @@ export default function AddFamilyMemberScreen() {
         {/* Step header */}
         <View style={styles.stepHeader}>
           <View style={styles.stepTitleRow}>
-            <Text style={styles.stepTitle}>{stepInfo.title}</Text>
+            <Text style={styles.stepTitle}>{stepTitle}</Text>
           </View>
           {renderProgress()}
         </View>
@@ -388,8 +613,8 @@ export default function AddFamilyMemberScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* ── Step 1: About them ── */}
-          {step === 1 && (
+          {/* ── Step: About them ── */}
+          {currentStepKey === 'about' && (
             <>
               <TouchableOpacity style={styles.avatarContainer} onPress={pickAvatar} activeOpacity={0.85}>
                 <View style={styles.avatarCircle}>
@@ -461,8 +686,8 @@ export default function AddFamilyMemberScreen() {
             </>
           )}
 
-          {/* ── Step 2: Health Conditions ── */}
-          {step === 2 && (
+          {/* ── Step: Health Conditions ── */}
+          {currentStepKey === 'health' && (
             <View style={styles.card}>
               {renderChipHeader(
                 'Do they have any health conditions?',
@@ -475,8 +700,11 @@ export default function AddFamilyMemberScreen() {
             </View>
           )}
 
-          {/* ── Step 3: Allergies ── */}
-          {step === 3 && (
+          {/* ── Step: Nutrient Watchlist ── */}
+          {currentStepKey === 'nutrients' && renderNutrientStep()}
+
+          {/* ── Step: Allergies ── */}
+          {currentStepKey === 'allergies' && (
             <View style={styles.card}>
               {renderChipHeader(
                 'Do they have any allergies?',
@@ -489,8 +717,8 @@ export default function AddFamilyMemberScreen() {
             </View>
           )}
 
-          {/* ── Step 4: Dietary Preferences ── */}
-          {step === 4 && (
+          {/* ── Step: Dietary Preferences ── */}
+          {currentStepKey === 'dietary' && (
             <View style={styles.card}>
               {renderChipHeader(
                 'Do they have any dietary preferences?',
@@ -520,7 +748,7 @@ export default function AddFamilyMemberScreen() {
 
             <TouchableOpacity
               style={styles.nextBtn}
-              onPress={step === 4 ? handleSave : handleNext}
+              onPress={isLastStep ? handleSave : handleNext}
               disabled={saving}
               activeOpacity={0.88}
             >
@@ -528,9 +756,9 @@ export default function AddFamilyMemberScreen() {
                 <ActivityIndicator color="#fff" />
               ) : (
                 <Text style={styles.nextBtnText} numberOfLines={1} adjustsFontSizeToFit>
-                  {step === 4
+                  {isLastStep
                     ? (isEditing ? 'Save Changes' : 'Finish')
-                    : `Next: ${stepInfo.nextLabel}`}
+                    : `Next: ${nextLabel}`}
                 </Text>
               )}
             </TouchableOpacity>
@@ -844,6 +1072,103 @@ const styles = StyleSheet.create({
     letterSpacing: -0.32,
   },
   chipLabelActive: {
+    color: '#fff',
+  },
+
+  // ── Nutrient watchlist step styles ──────────────────────────────────────────
+  nutrientSubtext: {
+    fontSize: 14,
+    fontFamily: 'Figtree_300Light',
+    fontWeight: '300',
+    color: Colors.secondary,
+    letterSpacing: -0.14,
+    lineHeight: 21,
+  },
+  nutrientSection: {
+    gap: 8,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  sectionHeader: {
+    fontSize: 14,
+    fontFamily: 'Figtree_700Bold',
+    fontWeight: '700',
+    letterSpacing: -0.28,
+    lineHeight: 17,
+  },
+  nutrientRow: {
+    gap: 8,
+    padding: 12,
+    backgroundColor: Colors.surface.tertiary,
+    borderRadius: 8,
+  },
+  nutrientTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  nutrientName: {
+    fontSize: 16,
+    fontFamily: 'Figtree_700Bold',
+    fontWeight: '700',
+    color: Colors.primary,
+    letterSpacing: -0.32,
+  },
+  sourceBadge: {
+    fontSize: 12,
+    fontFamily: 'Figtree_300Light',
+    fontWeight: '300',
+    color: Colors.secondary,
+    letterSpacing: -0.12,
+  },
+  segmentedRow: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  segmentBtn: {
+    flex: 1,
+    paddingVertical: 6,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: '#aad4cd',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  segmentBtnLimitActive: {
+    backgroundColor: Colors.status.negative,
+    borderColor: Colors.status.negative,
+  },
+  segmentBtnBoostActive: {
+    backgroundColor: Colors.status.positive,
+    borderColor: Colors.status.positive,
+  },
+  segmentBtnNoneActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  segmentText: {
+    fontSize: 13,
+    fontFamily: 'Figtree_700Bold',
+    fontWeight: '700',
+    letterSpacing: -0.26,
+  },
+  segmentTextLimit: {
+    color: Colors.status.negative,
+  },
+  segmentTextBoost: {
+    color: Colors.status.positive,
+  },
+  segmentTextNone: {
+    color: Colors.secondary,
+  },
+  segmentTextActive: {
+    color: '#fff',
+  },
+  segmentTextNoneActive: {
     color: '#fff',
   },
 

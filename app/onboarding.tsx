@@ -60,16 +60,19 @@ const STEP_META: Record<StepKey, { title: string }> = {
   dietary:   { title: 'Dietary Preferences' },
 };
 
-// ── Nutrient suggestion type ─────────────────────────────────────────────────
-type NutrientSuggestion = NutrientWatchlistEntry & {
-  userConfirmRequired?: boolean;
+// ── Nutrient types ──────────────────────────────────────────────────────────
+type UniqueNutrient = {
+  offKey: string;
+  nutrient: string;
+  unit: 'mg' | 'µg' | 'g';
+  source: string;
+  recommendedDirection: 'limit' | 'boost';
+  hasConflict: boolean;
 };
 
-/** Build de-duped nutrient suggestions from selected health conditions */
-function buildNutrientSuggestions(conditions: string[]): NutrientSuggestion[] {
-  const suggestions: NutrientSuggestion[] = [];
-  const limitSeen = new Set<string>();
-  const boostSeen = new Set<string>();
+/** Build de-duped unique nutrients from selected health conditions */
+function buildUniqueNutrients(conditions: string[]): UniqueNutrient[] {
+  const map = new Map<string, UniqueNutrient>();
   const limitKeys = new Set<string>();
   const boostKeys = new Set<string>();
 
@@ -78,44 +81,30 @@ function buildNutrientSuggestions(conditions: string[]): NutrientSuggestion[] {
     if (!profile) continue;
 
     for (const item of profile.limit) {
-      if (!limitSeen.has(item.offKey)) {
-        limitSeen.add(item.offKey);
-        limitKeys.add(item.offKey);
-        suggestions.push({
-          offKey: item.offKey,
-          nutrient: item.nutrient,
-          direction: 'limit',
-          unit: item.unit,
-          source: condition,
-          reason: item.reason,
-          userConfirmRequired: item.userConfirmRequired,
+      limitKeys.add(item.offKey);
+      if (!map.has(item.offKey)) {
+        map.set(item.offKey, {
+          offKey: item.offKey, nutrient: item.nutrient, unit: item.unit,
+          source: condition, recommendedDirection: 'limit', hasConflict: false,
         });
       }
     }
     for (const item of profile.boost) {
-      if (!boostSeen.has(item.offKey)) {
-        boostSeen.add(item.offKey);
-        boostKeys.add(item.offKey);
-        suggestions.push({
-          offKey: item.offKey,
-          nutrient: item.nutrient,
-          direction: 'boost',
-          unit: item.unit,
-          source: condition,
-          reason: item.reason,
-          userConfirmRequired: item.userConfirmRequired,
+      boostKeys.add(item.offKey);
+      if (!map.has(item.offKey)) {
+        map.set(item.offKey, {
+          offKey: item.offKey, nutrient: item.nutrient, unit: item.unit,
+          source: condition, recommendedDirection: 'boost', hasConflict: false,
         });
       }
     }
   }
 
-  // Flag conflicts: nutrient in both limit and boost across conditions
-  for (const s of suggestions) {
-    if (s.direction === 'limit' && boostKeys.has(s.offKey)) s.userConfirmRequired = true;
-    if (s.direction === 'boost' && limitKeys.has(s.offKey)) s.userConfirmRequired = true;
+  for (const [key, n] of map) {
+    if (limitKeys.has(key) && boostKeys.has(key)) n.hasConflict = true;
   }
 
-  return suggestions;
+  return Array.from(map.values());
 }
 
 function toggle(list: string[], item: string): string[] {
@@ -134,44 +123,41 @@ export default function OnboardingScreen() {
   const [dietaryPrefs, setDietaryPrefs] = useState<string[]>([]);
 
   // ── Nutrient watchlist ──────────────────────────────────────────────────────
-  const [selectedNutrientKeys, setSelectedNutrientKeys] = useState<Set<string>>(new Set());
+  const [nutrientChoices, setNutrientChoices] = useState<Record<string, 'limit' | 'boost' | 'none'>>({});
 
   const showNutrientStep = healthConditions.length > 0;
 
-  const nutrientSuggestions = useMemo(
-    () => buildNutrientSuggestions(healthConditions),
+  const uniqueNutrients = useMemo(
+    () => buildUniqueNutrients(healthConditions),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [healthConditions.join(',')],
   );
 
-  // Auto-select non-userConfirmRequired nutrients when suggestions change
+  // Auto-populate choices with recommended directions
   useEffect(() => {
-    const autoSelected = new Set<string>();
-    for (const s of nutrientSuggestions) {
-      if (!s.userConfirmRequired) {
-        autoSelected.add(`${s.direction}:${s.offKey}`);
-      }
+    const choices: Record<string, 'limit' | 'boost' | 'none'> = {};
+    for (const n of uniqueNutrients) {
+      choices[n.offKey] = n.hasConflict ? 'none' : n.recommendedDirection;
     }
-    setSelectedNutrientKeys(autoSelected);
-  }, [nutrientSuggestions]);
+    setNutrientChoices(choices);
+  }, [uniqueNutrients]);
 
-  const limitSuggestions = nutrientSuggestions.filter(s => s.direction === 'limit');
-  const boostSuggestions = nutrientSuggestions.filter(s => s.direction === 'boost');
+  const limitNutrients = uniqueNutrients.filter(n => nutrientChoices[n.offKey] === 'limit');
+  const boostNutrients = uniqueNutrients.filter(n => nutrientChoices[n.offKey] === 'boost');
+  const noChangeNutrients = uniqueNutrients.filter(n => !nutrientChoices[n.offKey] || nutrientChoices[n.offKey] === 'none');
 
-  function toggleNutrient(key: string) {
-    setSelectedNutrientKeys(prev => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
+  function setNutrientChoice(offKey: string, dir: 'limit' | 'boost' | 'none') {
+    setNutrientChoices(prev => ({ ...prev, [offKey]: dir }));
   }
 
-  // Build final watchlist entries from selected keys
   function buildFinalWatchlist(): NutrientWatchlistEntry[] {
-    return nutrientSuggestions
-      .filter(s => selectedNutrientKeys.has(`${s.direction}:${s.offKey}`))
-      .map(({ userConfirmRequired: _, ...entry }) => entry);
+    return uniqueNutrients
+      .filter(n => nutrientChoices[n.offKey] === 'limit' || nutrientChoices[n.offKey] === 'boost')
+      .map(n => ({
+        offKey: n.offKey, nutrient: n.nutrient,
+        direction: nutrientChoices[n.offKey] as 'limit' | 'boost',
+        unit: n.unit, source: n.source, reason: '',
+      }));
   }
 
   // ── Dynamic step sequence ──────────────────────────────────────────────────
@@ -332,52 +318,48 @@ export default function OnboardingScreen() {
   }
 
   // ── Nutrient watchlist step ────────────────────────────────────────────────
-  function renderNutrientRow(s: NutrientSuggestion) {
-    const key = `${s.direction}:${s.offKey}`;
-    const isSelected = selectedNutrientKeys.has(key);
-    const isLimit = s.direction === 'limit';
-    const accentColor = isLimit ? Colors.status.negative : Colors.status.positive;
-
+  function renderNutrientRow(n: UniqueNutrient) {
+    const choice = nutrientChoices[n.offKey] ?? 'none';
     return (
-      <TouchableOpacity
-        key={key}
-        style={[
-          styles.nutrientRow,
-          isSelected && { borderColor: accentColor, backgroundColor: `${accentColor}08` },
-        ]}
-        onPress={() => toggleNutrient(key)}
-        activeOpacity={0.75}
-      >
-        <View style={[styles.chipCheck, isSelected && { backgroundColor: accentColor, borderColor: accentColor }]}>
-          {isSelected && <Ionicons name="checkmark" size={12} color="#fff" />}
+      <View key={n.offKey} style={styles.nutrientRow}>
+        <View style={styles.nutrientTopRow}>
+          <Text style={styles.nutrientName}>{n.nutrient}</Text>
+          <Text style={styles.sourceBadge}>{n.source}</Text>
         </View>
-        <View style={styles.nutrientInfo}>
-          <View style={styles.nutrientNameRow}>
-            <Text style={[styles.nutrientName, isSelected && { color: Colors.primary }]}>
-              {s.nutrient}
+        <View style={styles.segmentedRow}>
+          <TouchableOpacity
+            style={[styles.segmentBtn, choice === 'limit' && styles.segmentBtnLimitActive]}
+            onPress={() => setNutrientChoice(n.offKey, 'limit')}
+            activeOpacity={0.75}
+          >
+            <Text style={[styles.segmentText, styles.segmentTextLimit, choice === 'limit' && styles.segmentTextActive]}>
+              Limit
             </Text>
-            {s.userConfirmRequired && (
-              <View style={styles.confirmBadge}>
-                <Ionicons name="information-circle" size={12} color={Colors.secondary} />
-              </View>
-            )}
-          </View>
-          <Text style={styles.nutrientReason} numberOfLines={2}>{s.reason}</Text>
-          <View style={styles.nutrientMeta}>
-            <View style={[styles.directionBadge, { backgroundColor: `${accentColor}18` }]}>
-              <Text style={[styles.directionText, { color: accentColor }]}>
-                {isLimit ? 'Limit' : 'Boost'}
-              </Text>
-            </View>
-            <Text style={styles.sourceBadge}>{s.source}</Text>
-          </View>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.segmentBtn, choice === 'boost' && styles.segmentBtnBoostActive]}
+            onPress={() => setNutrientChoice(n.offKey, 'boost')}
+            activeOpacity={0.75}
+          >
+            <Text style={[styles.segmentText, styles.segmentTextBoost, choice === 'boost' && styles.segmentTextActive]}>
+              Boost
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.segmentBtn, choice === 'none' && styles.segmentBtnNoneActive]}
+            onPress={() => setNutrientChoice(n.offKey, 'none')}
+            activeOpacity={0.75}
+          >
+            <Text style={[styles.segmentText, styles.segmentTextNone, choice === 'none' && styles.segmentTextNoneActive]}>
+              No Change
+            </Text>
+          </TouchableOpacity>
         </View>
-      </TouchableOpacity>
+      </View>
     );
   }
 
   function renderNutrientStep() {
-    const selectedCount = selectedNutrientKeys.size;
     return (
       <>
         <View style={styles.chipCardInfo}>
@@ -385,17 +367,17 @@ export default function OnboardingScreen() {
             Based on your conditions, we suggest watching these nutrients
           </Text>
           <View style={styles.countRow}>
-            <Text style={styles.countText}>You've selected </Text>
-            <Text style={styles.countBold}>
-              {selectedCount} nutrient{selectedCount !== 1 ? 's' : ''}
-            </Text>
+            <Text style={styles.countText}>Limiting </Text>
+            <Text style={styles.countBold}>{limitNutrients.length}</Text>
+            <Text style={styles.countText}>, boosting </Text>
+            <Text style={styles.countBold}>{boostNutrients.length}</Text>
           </View>
           <Text style={styles.nutrientSubtext}>
-            Tap to select or deselect. We'll alert you when scanned products contain these.
+            We'll alert you when scanned products contain these.
           </Text>
         </View>
 
-        {limitSuggestions.length > 0 && (
+        {limitNutrients.length > 0 && (
           <View style={styles.nutrientSection}>
             <View style={styles.sectionHeaderRow}>
               <Ionicons name="arrow-down-circle" size={16} color={Colors.status.negative} />
@@ -403,11 +385,11 @@ export default function OnboardingScreen() {
                 Nutrients to Limit
               </Text>
             </View>
-            {limitSuggestions.map(renderNutrientRow)}
+            {limitNutrients.map(renderNutrientRow)}
           </View>
         )}
 
-        {boostSuggestions.length > 0 && (
+        {boostNutrients.length > 0 && (
           <View style={styles.nutrientSection}>
             <View style={styles.sectionHeaderRow}>
               <Ionicons name="arrow-up-circle" size={16} color={Colors.status.positive} />
@@ -415,7 +397,19 @@ export default function OnboardingScreen() {
                 Nutrients to Boost
               </Text>
             </View>
-            {boostSuggestions.map(renderNutrientRow)}
+            {boostNutrients.map(renderNutrientRow)}
+          </View>
+        )}
+
+        {noChangeNutrients.length > 0 && (
+          <View style={styles.nutrientSection}>
+            <View style={styles.sectionHeaderRow}>
+              <Ionicons name="remove-circle" size={16} color={`${Colors.primary}50`} />
+              <Text style={[styles.sectionHeader, { color: `${Colors.primary}50` }]}>
+                No Change
+              </Text>
+            </View>
+            {noChangeNutrients.map(renderNutrientRow)}
           </View>
         )}
       </>
@@ -481,7 +475,7 @@ export default function OnboardingScreen() {
           onPress={() => router.replace('/(tabs)/')}
           activeOpacity={0.7}
         >
-          <Text style={styles.skipText}>Skip for now — I'll set this up later</Text>
+          <Text style={styles.skipText}>Skip for now, I'll set this up later</Text>
         </TouchableOpacity>
 
         <View style={{ height: 120 }} />
@@ -732,58 +726,22 @@ const styles = StyleSheet.create({
     lineHeight: 17,
   },
   nutrientRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-    padding: 12,
     backgroundColor: Colors.surface.tertiary,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'transparent',
+    padding: 12,
+    gap: 8,
   },
-  nutrientInfo: {
-    flex: 1,
-    gap: 4,
-  },
-  nutrientNameRow: {
+  nutrientTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    justifyContent: 'space-between',
   },
   nutrientName: {
     fontSize: 16,
     fontFamily: 'Figtree_700Bold',
     fontWeight: '700',
-    color: Colors.secondary,
+    color: Colors.primary,
     letterSpacing: -0.32,
-  },
-  confirmBadge: {
-    opacity: 0.7,
-  },
-  nutrientReason: {
-    fontSize: 13,
-    fontFamily: 'Figtree_300Light',
-    fontWeight: '300',
-    color: Colors.secondary,
-    letterSpacing: -0.13,
-    lineHeight: 18,
-  },
-  nutrientMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 2,
-  },
-  directionBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  directionText: {
-    fontSize: 12,
-    fontFamily: 'Figtree_700Bold',
-    fontWeight: '700',
-    letterSpacing: -0.24,
   },
   sourceBadge: {
     fontSize: 12,
@@ -791,6 +749,52 @@ const styles = StyleSheet.create({
     fontWeight: '300',
     color: Colors.secondary,
     letterSpacing: -0.12,
+  },
+  segmentedRow: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  segmentBtn: {
+    flex: 1,
+    paddingVertical: 6,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: '#aad4cd',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  segmentBtnLimitActive: {
+    backgroundColor: Colors.status.negative,
+    borderColor: Colors.status.negative,
+  },
+  segmentBtnBoostActive: {
+    backgroundColor: Colors.status.positive,
+    borderColor: Colors.status.positive,
+  },
+  segmentBtnNoneActive: {
+    backgroundColor: `${Colors.primary}15`,
+    borderColor: `${Colors.primary}30`,
+  },
+  segmentText: {
+    fontSize: 13,
+    fontFamily: 'Figtree_700Bold',
+    fontWeight: '700',
+    letterSpacing: -0.26,
+  },
+  segmentTextLimit: {
+    color: Colors.status.negative,
+  },
+  segmentTextBoost: {
+    color: Colors.status.positive,
+  },
+  segmentTextNone: {
+    color: `${Colors.primary}50`,
+  },
+  segmentTextActive: {
+    color: '#fff',
+  },
+  segmentTextNoneActive: {
+    color: Colors.primary,
   },
 
   skipBtn: {
