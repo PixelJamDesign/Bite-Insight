@@ -654,7 +654,7 @@ export default function IngredientPreferencesScreen() {
       visible={flagReasonTarget !== null}
       ingredientName={flagReasonTarget?.ingredients.name ?? ''}
       onClose={() => setFlagReasonTarget(null)}
-      onConfirm={async (reason) => {
+      onConfirm={async (reasons) => {
         if (!flagReasonTarget || !session?.user) return;
         const ingredientId = flagReasonTarget.ingredient_id;
         setFlagReasonTarget(null);
@@ -662,13 +662,13 @@ export default function IngredientPreferencesScreen() {
         // Move ingredient to flagged list
         await handleMove(ingredientId, 'flagged');
 
-        // Persist the flag reason
+        // Persist the flag reason(s)
         await supabase.from('ingredient_flag_reasons').upsert(
           {
             user_id: session.user.id,
             ingredient_id: ingredientId,
-            reason_category: reason.category,
-            reason_text: reason.text,
+            reason_category: reasons.map((r) => r.category).join(', '),
+            reason_text: reasons.map((r) => r.text).join(', '),
           },
           { onConflict: 'user_id,ingredient_id' }
         );

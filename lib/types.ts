@@ -8,6 +8,15 @@ export type DietaryTag =
   | 'pescatarian'
   | 'kosher';
 
+export interface NutrientWatchlistEntry {
+  offKey: string;        // e.g. "potassium_100g"
+  nutrient: string;      // "Potassium"
+  direction: 'limit' | 'boost';
+  unit: 'mg' | 'µg' | 'g';
+  source: string;        // "Heart Disease" — which condition suggested it
+  reason: string;        // "May worsen heart condition"
+}
+
 export interface UserProfile {
   id: string;
   email: string;
@@ -25,6 +34,7 @@ export interface UserProfile {
   liked_ingredients: string[] | null;
   disliked_ingredients: string[] | null;
   flagged_ingredients: string[] | null;
+  nutrient_watchlist: NutrientWatchlistEntry[] | null;
   created_at: string;
 }
 
@@ -73,6 +83,7 @@ export interface FamilyProfile {
   dietary_preferences: DietaryTag[];
   health_conditions: string[];
   allergies: string[];
+  nutrient_watchlist: NutrientWatchlistEntry[];
   created_at: string;
   updated_at: string;
 }

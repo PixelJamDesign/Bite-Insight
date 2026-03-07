@@ -20,7 +20,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Spacing, Radius } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
-import type { UserProfile, FamilyProfile, DietaryTag } from '@/lib/types';
+import type { UserProfile, FamilyProfile, DietaryTag, NutrientWatchlistEntry } from '@/lib/types';
 import { useActiveFamily } from '@/lib/activeFamilyContext';
 import { FamilySwitcherSheet } from '@/components/FamilySwitcherSheet';
 import { TickIcon } from '@/components/MenuIcons';
@@ -2225,6 +2225,7 @@ export default function ScanResultScreen() {
   const [flaggedNameToIdMap, setFlaggedNameToIdMap] = useState<Record<string, string>>({});
   const [switcherVisible, setSwitcherVisible] = useState(false);
   const [activeFamilyProfile, setActiveFamilyProfile] = useState<FamilyProfile | null>(null);
+  const [micronutrients, setMicronutrients] = useState<Record<string, number | null>>({});
   const [insightSheetDef, setInsightSheetDef] = useState<{ def: InsightDef; result: ImpactResult } | null>(null);
   const [flaggedSheetIng, setFlaggedSheetIng] = useState<FlaggedIngredient | null>(null);
   const [infoSheetIng, setInfoSheetIng] = useState<{ ing: OffIngredient; category: 'ok' | 'safe' } | null>(null);
@@ -2370,10 +2371,70 @@ export default function ScanResultScreen() {
             ingredientsJson: op.ingredients ? JSON.stringify(op.ingredients) : '',
             offLang: op.ingredients_text_en ? 'en' : (op.lang || op.lc || 'en'),
           });
+          // Extract micronutrient data for watchlist feature
+          setMicronutrients({
+            'potassium_100g': n.potassium_100g ?? null,
+            'calcium_100g': n.calcium_100g ?? null,
+            'iron_100g': n.iron_100g ?? null,
+            'magnesium_100g': n.magnesium_100g ?? null,
+            'zinc_100g': n.zinc_100g ?? null,
+            'phosphorus_100g': n.phosphorus_100g ?? null,
+            'cholesterol_100g': n.cholesterol_100g ?? null,
+            'trans-fat_100g': n['trans-fat_100g'] ?? null,
+            'vitamin-a_100g': n['vitamin-a_100g'] ?? null,
+            'vitamin-c_100g': n['vitamin-c_100g'] ?? null,
+            'vitamin-d_100g': n['vitamin-d_100g'] ?? null,
+            'vitamin-e_100g': n['vitamin-e_100g'] ?? null,
+            'vitamin-k_100g': n['vitamin-k_100g'] ?? null,
+            'copper_100g': n.copper_100g ?? null,
+            'manganese_100g': n.manganese_100g ?? null,
+            'selenium_100g': n.selenium_100g ?? null,
+            'vitamin-b9_100g': n['vitamin-b9_100g'] ?? null,
+            'omega-3-fat_100g': n['omega-3-fat_100g'] ?? null,
+            'sodium_100g': n.sodium_100g ?? null,
+          });
         }
       })
       .catch(() => {/* silently ignore — the empty state handles no-data */})
       .finally(() => setFetchingOff(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // When macros were passed via route params (scanner already had them),
+  // still fetch micronutrients from OFF for the nutrient watchlist feature.
+  useEffect(() => {
+    if (needsOffFetch || !p.barcode) return; // main fetch handles this case
+    fetch(`https://world.openfoodfacts.org/api/v0/product/${p.barcode}.json`, {
+      headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.status === 1 && data.product) {
+          const n = data.product.nutriments ?? {};
+          setMicronutrients({
+            'potassium_100g': n.potassium_100g ?? null,
+            'calcium_100g': n.calcium_100g ?? null,
+            'iron_100g': n.iron_100g ?? null,
+            'magnesium_100g': n.magnesium_100g ?? null,
+            'zinc_100g': n.zinc_100g ?? null,
+            'phosphorus_100g': n.phosphorus_100g ?? null,
+            'cholesterol_100g': n.cholesterol_100g ?? null,
+            'trans-fat_100g': n['trans-fat_100g'] ?? null,
+            'vitamin-a_100g': n['vitamin-a_100g'] ?? null,
+            'vitamin-c_100g': n['vitamin-c_100g'] ?? null,
+            'vitamin-d_100g': n['vitamin-d_100g'] ?? null,
+            'vitamin-e_100g': n['vitamin-e_100g'] ?? null,
+            'vitamin-k_100g': n['vitamin-k_100g'] ?? null,
+            'copper_100g': n.copper_100g ?? null,
+            'manganese_100g': n.manganese_100g ?? null,
+            'selenium_100g': n.selenium_100g ?? null,
+            'vitamin-b9_100g': n['vitamin-b9_100g'] ?? null,
+            'omega-3-fat_100g': n['omega-3-fat_100g'] ?? null,
+            'sodium_100g': n.sodium_100g ?? null,
+          });
+        }
+      })
+      .catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -2586,6 +2647,21 @@ export default function ScanResultScreen() {
     : profile?.dietary_preferences?.map((d) => DIETARY_LABELS[d] ?? d) ?? [];
   const nutrientThresholds = buildThresholds(activeConditions, activeAllergies, activeDietaryLabels);
 
+  // ── Nutrient watchlist alerts ───────────────────────────────────────────────
+  type WatchlistAlert = NutrientWatchlistEntry & { value: number };
+  const activeWatchlist: NutrientWatchlistEntry[] =
+    activeFamilyProfile?.nutrient_watchlist ?? profile?.nutrient_watchlist ?? [];
+  const watchlistAlerts: WatchlistAlert[] = activeWatchlist
+    .filter((entry) => {
+      const val = micronutrients[entry.offKey];
+      return val != null && val > 0;
+    })
+    .map((entry) => ({
+      ...entry,
+      value: micronutrients[entry.offKey]!,
+    }));
+  const hasMicroData = Object.values(micronutrients).some((v) => v != null && v > 0);
+
   // Personalised impact insights (Overview → Important for you section)
   // Dynamically filtered based on the active profile's conditions/allergies/preferences.
   const activeInsights = getActiveInsights(
@@ -2779,7 +2855,7 @@ export default function ScanResultScreen() {
             })()}
 
             {/* ── Important for you ── */}
-            {(hasProfileAllergenMatch || activeInsights.length > 0) && (
+            {(hasProfileAllergenMatch || watchlistAlerts.length > 0 || activeInsights.length > 0) && (
               <View style={styles.section}>
                 <View style={styles.sectionHeading}>
                   <Text style={styles.sectionTitle}>Important for you</Text>
@@ -2809,6 +2885,43 @@ export default function ScanResultScreen() {
                     </View>
                   );
                 })()}
+
+                {/* Nutrient watchlist alert — shows watched nutrients found in this product */}
+                {watchlistAlerts.length > 0 && (
+                  <View style={styles.nutrientAlertCard}>
+                    <View style={styles.nutrientAlertBadge}>
+                      <Ionicons name="nutrition" size={11} color="#fff" />
+                      <Text style={styles.nutrientAlertBadgeText}>Nutrient Watch</Text>
+                    </View>
+                    {watchlistAlerts.map((alert) => (
+                      <View key={alert.offKey} style={styles.nutrientAlertRow}>
+                        <View style={styles.nutrientAlertNameRow}>
+                          <View style={[styles.nutrientAlertDot, {
+                            backgroundColor: alert.direction === 'limit'
+                              ? Colors.status.negative
+                              : Colors.status.positive,
+                          }]} />
+                          <Text style={styles.nutrientAlertName}>
+                            {alert.nutrient}: {alert.value}{alert.unit}/100g
+                          </Text>
+                        </View>
+                        <Text style={styles.nutrientAlertReason}>
+                          {alert.direction === 'limit' ? 'Limit' : 'Boost'} — {alert.source}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+
+                {/* No micronutrient data notice */}
+                {activeWatchlist.length > 0 && watchlistAlerts.length === 0 && !hasMicroData && !fetchingOff && (
+                  <View style={styles.noMicroDataCard}>
+                    <Ionicons name="information-circle-outline" size={16} color={Colors.secondary} />
+                    <Text style={styles.noMicroDataText}>
+                      Micronutrient data is not available for this product.
+                    </Text>
+                  </View>
+                )}
 
                 {/* Dynamic insight panels — rendered in pairs */}
                 {activeInsights.length > 0 && (
@@ -3101,6 +3214,44 @@ export default function ScanResultScreen() {
                 </View>
               )}
             </View>
+
+            {/* ── Your Nutrient Watchlist ── */}
+            {watchlistAlerts.length > 0 && (
+              <View style={styles.section}>
+                <View style={styles.sectionHeading}>
+                  <Text style={styles.sectionTitle}>Your Nutrient Watchlist</Text>
+                  <Text style={styles.sectionSubtitle}>
+                    Nutrients you're monitoring based on your health profile.
+                  </Text>
+                </View>
+                <View style={styles.nutritionRows}>
+                  {watchlistAlerts.map((alert) => (
+                    <View key={alert.offKey} style={styles.nutritionRow}>
+                      <View style={styles.nutritionRowLeft}>
+                        <View style={[styles.watchlistDot, {
+                          backgroundColor: alert.direction === 'limit'
+                            ? Colors.status.negative
+                            : Colors.status.positive,
+                        }]} />
+                        <Text style={styles.nutritionName}>{alert.nutrient}</Text>
+                      </View>
+                      <View style={styles.nutritionRowRight}>
+                        <Text style={styles.nutritionValue}>
+                          {alert.value}{alert.unit}
+                        </Text>
+                        <Text style={[styles.nutritionRating, {
+                          color: alert.direction === 'limit'
+                            ? Colors.status.negative
+                            : Colors.status.positive,
+                        }]}>
+                          {alert.direction === 'limit' ? 'Limit' : 'Boost'}
+                        </Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
           </View>
         )}
 
@@ -3751,6 +3902,87 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     letterSpacing: -0.26,
     lineHeight: 18,
+  },
+
+  // Nutrient watchlist alert card
+  nutrientAlertCard: {
+    backgroundColor: 'rgba(255,199,45,0.10)',
+    borderWidth: 2,
+    borderColor: '#ffc72d',
+    borderRadius: 16,
+    padding: Spacing.s,
+    gap: Spacing.xs,
+  },
+  nutrientAlertBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#ffc72d',
+    borderRadius: 999,
+    paddingHorizontal: Spacing.xs,
+    paddingVertical: 4,
+    alignSelf: 'flex-start',
+  },
+  nutrientAlertBadgeText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    letterSpacing: -0.28,
+  },
+  nutrientAlertRow: {
+    gap: 2,
+  },
+  nutrientAlertNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  nutrientAlertDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  nutrientAlertName: {
+    fontSize: 15,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.26,
+    lineHeight: 18,
+  },
+  nutrientAlertReason: {
+    fontSize: 13,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
+    color: Colors.secondary,
+    letterSpacing: -0.13,
+    lineHeight: 18,
+    marginLeft: 14,
+  },
+  noMicroDataCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    backgroundColor: Colors.surface.tertiary,
+    borderRadius: Radius.m,
+    padding: Spacing.s,
+  },
+  noMicroDataText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
+    color: Colors.secondary,
+    letterSpacing: -0.14,
+    lineHeight: 21,
+  },
+  watchlistDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginLeft: 11,
+    marginRight: 5,
   },
 
   // Nutrition rows (per Figma Macro Stack node 3263-5386)
