@@ -200,3 +200,56 @@ insert into public.ingredients (name, description, dietary_tags) values
   ('Penne Pasta', 'A classic carbohydrate source. Look for wholegrain options for more fibre.', ARRAY['vegetarian']),
   ('Avocado', 'Packed with healthy monounsaturated fats, potassium and fibre.', ARRAY['vegan', 'vegetarian', 'keto', 'diabetic', 'gluten-free'])
 on conflict do nothing;
+
+-- ── get_testimonial_avatar ───────────────────────────────
+-- Used by the website to fetch a user's profile avatar by email
+-- for displaying on the testimonial carousel. Callable with anon key.
+create or replace function public.get_testimonial_avatar(lookup_email text)
+returns text
+language sql
+security definer
+as $$
+  select p.avatar_url
+  from auth.users u
+  join public.profiles p on p.id = u.id
+  where u.email = lower(lookup_email)
+  limit 1;
+$$;
+
+-- ── bug_reports ──────────────────────────────────────────
+-- Website "Report a Problem" form submissions
+create table if not exists public.bug_reports (
+  id                  uuid default gen_random_uuid() primary key,
+  created_at          timestamptz default now() not null,
+  name                text,
+  email               text not null,
+  category            text not null,
+  severity            text,
+  subject             text not null,
+  description         text not null,
+  steps_to_reproduce  text,
+  expected_behaviour  text,
+  actual_behaviour    text,
+  device_info         text,
+  app_version         text,
+  screenshot_url      text,
+  user_agent          text,
+  status              text default 'new',
+  notes               text
+);
+
+-- RLS: anonymous users can INSERT only (write-only)
+alter table public.bug_reports enable row level security;
+
+create policy "Allow anonymous inserts"
+  on public.bug_reports
+  for insert
+  to anon
+  with check (true);
+
+create policy "Allow service role full access"
+  on public.bug_reports
+  for all
+  to service_role
+  using (true)
+  with check (true);
