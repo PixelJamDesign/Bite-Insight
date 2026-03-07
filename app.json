@@ -80,9 +80,7 @@
       }
     },
     "owner": "biteinsightapp",
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "1.0.0",
     "updates": {
       "url": "https://u.expo.dev/dcda6136-ab96-4037-8f10-40fc2a71d25a"
     }
