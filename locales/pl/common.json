@@ -43,6 +43,8 @@
   "nutrientDirections": {
     "limit": "Limit",
     "boost": "Zwiększyć",
+    "balance": "Balansować",
+    "increase": "Zwiększyć",
     "noChange": "Bez zmian"
   },
   "ratings": {

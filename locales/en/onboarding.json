@@ -27,6 +27,9 @@
     "youveSelected": "You've selected "
   },
   "nutrient": {
+    "conditionTitle": "These nutrients are affected by your health conditions.",
+    "conditionTitleFamily": "These nutrients are affected by their health conditions.",
+    "conditionSubtitle": "We will flag these nutrients when you scan a product.",
     "suggestion": "Based on your conditions, we suggest watching these nutrients",
     "suggestionFamily": "Based on their conditions, we suggest watching these nutrients",
     "limiting": "Limiting ",

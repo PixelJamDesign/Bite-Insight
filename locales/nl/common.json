@@ -43,6 +43,8 @@
   "nutrientDirections": {
     "limit": "Beperken",
     "boost": "Boost",
+    "balance": "Evenwicht",
+    "increase": "Toename",
     "noChange": "Geen verandering"
   },
   "ratings": {

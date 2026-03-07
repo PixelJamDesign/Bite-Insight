@@ -27,6 +27,9 @@
     "youveSelected": "Je hebt geselecteerd"
   },
   "nutrient": {
+    "conditionTitle": "Deze voedingsstoffen worden beïnvloed door uw gezondheidstoestand.",
+    "conditionTitleFamily": "Deze voedingsstoffen worden beïnvloed door hun gezondheidstoestand.",
+    "conditionSubtitle": "Deze voedingsstoffen markeren wij als u een product scant.",
     "suggestion": "Op basis van uw omstandigheden raden we u aan deze voedingsstoffen in de gaten te houden",
     "suggestionFamily": "Op basis van hun omstandigheden raden we aan deze voedingsstoffen in de gaten te houden",
     "limiting": "Beperkend",

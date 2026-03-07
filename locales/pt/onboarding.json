@@ -27,6 +27,9 @@
     "youveSelected": "Você selecionou"
   },
   "nutrient": {
+    "conditionTitle": "Esses nutrientes são afetados por suas condições de saúde.",
+    "conditionTitleFamily": "Esses nutrientes são afetados por suas condições de saúde.",
+    "conditionSubtitle": "Sinalizaremos esses nutrientes quando você digitalizar um produto.",
     "suggestion": "Com base nas suas condições, sugerimos observar esses nutrientes",
     "suggestionFamily": "Com base em suas condições, sugerimos observar esses nutrientes",
     "limiting": "Limitando",

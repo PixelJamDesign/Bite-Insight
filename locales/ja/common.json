@@ -43,6 +43,8 @@
   "nutrientDirections": {
     "limit": "限界",
     "boost": "ブースト",
+    "balance": "バランス",
+    "increase": "増加",
     "noChange": "変化なし"
   },
   "ratings": {

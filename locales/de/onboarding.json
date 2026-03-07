@@ -27,6 +27,9 @@
     "youveSelected": "Sie haben ausgewählt"
   },
   "nutrient": {
+    "conditionTitle": "Diese Nährstoffe werden von Ihrem Gesundheitszustand beeinflusst.",
+    "conditionTitleFamily": "Diese Nährstoffe werden durch ihren Gesundheitszustand beeinflusst.",
+    "conditionSubtitle": "Wir kennzeichnen diese Nährstoffe, wenn Sie ein Produkt scannen.",
     "suggestion": "Basierend auf Ihren Bedingungen empfehlen wir, auf diese Nährstoffe zu achten",
     "suggestionFamily": "Aufgrund ihres Zustands empfehlen wir, auf diese Nährstoffe zu achten",
     "limiting": "Begrenzend",

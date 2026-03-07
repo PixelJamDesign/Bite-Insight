@@ -27,6 +27,9 @@
     "youveSelected": "您已选择"
   },
   "nutrient": {
+    "conditionTitle": "这些营养素会受到您的健康状况的影响。",
+    "conditionTitleFamily": "这些营养素受到其健康状况的影响。",
+    "conditionSubtitle": "当您扫描产品时，我们会标记这些营养成分。",
     "suggestion": "根据您的情况，我们建议关注这些营养素",
     "suggestionFamily": "根据他们的情况，我们建议关注这些营养素",
     "limiting": "限制",

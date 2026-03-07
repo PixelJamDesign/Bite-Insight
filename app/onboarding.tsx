@@ -24,12 +24,26 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { Colors, Shadows } from '@/constants/theme';
 import { CONDITION_NUTRIENT_MAP } from '@/constants/conditionNutrientMap';
-import { HEALTH_CONDITION_KEYS, ALLERGY_KEYS, DIETARY_PREFERENCE_KEYS } from '@/constants/profileOptions';
+import {
+  HEALTH_CONDITION_KEYS, ALLERGY_KEYS, DIETARY_PREFERENCE_KEYS,
+  HEALTH_CONDITION_LEGACY_MAP,
+} from '@/constants/profileOptions';
 import type { NutrientWatchlistEntry } from '@/lib/types';
 import Logo from '../assets/images/logo.svg';
 
 // ── Step types ────────────────────────────────────────────────────────────────
 type StepKey = 'health' | 'nutrients' | 'allergies' | 'dietary';
+
+// ── Condition key helpers ──────────────────────────────────────────────────
+// CONDITION_NUTRIENT_MAP uses legacy English keys ("Diabetes") while the
+// onboarding state uses new camelCase keys ("diabetes"). Build a reverse map.
+const KEY_TO_LEGACY: Record<string, string> = {};
+for (const [legacy, key] of Object.entries(HEALTH_CONDITION_LEGACY_MAP)) {
+  KEY_TO_LEGACY[key] = legacy;
+}
+function conditionMapKey(conditionKey: string): string {
+  return KEY_TO_LEGACY[conditionKey] ?? conditionKey;
+}
 
 // ── Nutrient types ──────────────────────────────────────────────────────────
 type UniqueNutrient = {
@@ -41,6 +55,18 @@ type UniqueNutrient = {
   hasConflict: boolean;
 };
 
+type ConditionNutrientItem = {
+  offKey: string;
+  nutrient: string;
+  unit: 'mg' | 'µg' | 'g';
+  recommendedDirection: 'limit' | 'boost';
+};
+
+type ConditionGroup = {
+  conditionKey: string;
+  nutrients: ConditionNutrientItem[];
+};
+
 /** Build de-duped unique nutrients from selected health conditions */
 function buildUniqueNutrients(conditions: string[]): UniqueNutrient[] {
   const map = new Map<string, UniqueNutrient>();
@@ -48,7 +74,7 @@ function buildUniqueNutrients(conditions: string[]): UniqueNutrient[] {
   const boostKeys = new Set<string>();
 
   for (const condition of conditions) {
-    const profile = CONDITION_NUTRIENT_MAP[condition];
+    const profile = CONDITION_NUTRIENT_MAP[conditionMapKey(condition)];
     if (!profile) continue;
 
     for (const item of profile.limit) {
@@ -71,11 +97,34 @@ function buildUniqueNutrients(conditions: string[]): UniqueNutrient[] {
     }
   }
 
-  for (const [key, n] of map) {
-    if (limitKeys.has(key) && boostKeys.has(key)) n.hasConflict = true;
+  for (const [, n] of map) {
+    if (limitKeys.has(n.offKey) && boostKeys.has(n.offKey)) n.hasConflict = true;
   }
 
   return Array.from(map.values());
+}
+
+/** Build per-condition nutrient groups for the grouped card layout */
+function buildConditionGroups(conditions: string[]): ConditionGroup[] {
+  return conditions
+    .map((conditionKey) => {
+      const profile = CONDITION_NUTRIENT_MAP[conditionMapKey(conditionKey)];
+      if (!profile) return null;
+
+      const nutrients: ConditionNutrientItem[] = [
+        ...profile.limit.map((n) => ({
+          offKey: n.offKey, nutrient: n.nutrient, unit: n.unit,
+          recommendedDirection: 'limit' as const,
+        })),
+        ...profile.boost.map((n) => ({
+          offKey: n.offKey, nutrient: n.nutrient, unit: n.unit,
+          recommendedDirection: 'boost' as const,
+        })),
+      ];
+
+      return { conditionKey, nutrients };
+    })
+    .filter(Boolean) as ConditionGroup[];
 }
 
 function toggle(list: string[], item: string): string[] {
@@ -107,6 +156,12 @@ export default function OnboardingScreen() {
     [healthConditions.join(',')],
   );
 
+  const conditionGroups = useMemo(
+    () => buildConditionGroups(healthConditions),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [healthConditions.join(',')],
+  );
+
   // Auto-populate choices with recommended directions
   useEffect(() => {
     const choices: Record<string, 'limit' | 'boost' | 'none'> = {};
@@ -115,10 +170,6 @@ export default function OnboardingScreen() {
     }
     setNutrientChoices(choices);
   }, [uniqueNutrients]);
-
-  const limitNutrients = uniqueNutrients.filter(n => nutrientChoices[n.offKey] === 'limit');
-  const boostNutrients = uniqueNutrients.filter(n => nutrientChoices[n.offKey] === 'boost');
-  const noChangeNutrients = uniqueNutrients.filter(n => !nutrientChoices[n.offKey] || nutrientChoices[n.offKey] === 'none');
 
   function setNutrientChoice(offKey: string, dir: 'limit' | 'boost' | 'none') {
     setNutrientChoices(prev => ({ ...prev, [offKey]: dir }));
@@ -292,101 +343,96 @@ export default function OnboardingScreen() {
     );
   }
 
-  // ── Nutrient watchlist step ────────────────────────────────────────────────
-  function renderNutrientRow(n: UniqueNutrient) {
-    const choice = nutrientChoices[n.offKey] ?? 'none';
+  // ── Nutrient dropdown ────────────────────────────────────────────────────
+  type NutrientDir = 'limit' | 'boost' | 'none';
+
+  const DROPDOWN_CONFIG: Record<NutrientDir, { label: string; bg: string; iconColor: string }> = {
+    none:  { label: tc('nutrientDirections.balance'),  bg: '#aad4cd', iconColor: Colors.primary },
+    boost: { label: tc('nutrientDirections.increase'), bg: '#009a1f', iconColor: '#fff' },
+    limit: { label: tc('nutrientDirections.limit'),    bg: Colors.status.negative, iconColor: '#fff' },
+  };
+
+  function renderDropdownIcon(dir: NutrientDir) {
+    if (dir === 'none') {
+      // Equals sign (two horizontal bars)
+      return (
+        <View style={{ width: 14, height: 14, justifyContent: 'center', alignItems: 'center' }}>
+          <View style={{ width: 9, height: 1.8, backgroundColor: Colors.primary, borderRadius: 1, marginBottom: 2.5 }} />
+          <View style={{ width: 9, height: 1.8, backgroundColor: Colors.primary, borderRadius: 1 }} />
+        </View>
+      );
+    }
     return (
-      <View key={n.offKey} style={styles.nutrientRow}>
-        <View style={styles.nutrientTopRow}>
-          <Text style={styles.nutrientName}>{n.nutrient}</Text>
-          <Text style={styles.sourceBadge}>{n.source}</Text>
-        </View>
-        <View style={styles.segmentedRow}>
-          <TouchableOpacity
-            style={[styles.segmentBtn, choice === 'limit' && styles.segmentBtnLimitActive]}
-            onPress={() => setNutrientChoice(n.offKey, 'limit')}
-            activeOpacity={0.75}
-          >
-            <Text style={[styles.segmentText, styles.segmentTextLimit, choice === 'limit' && styles.segmentTextActive]}>
-              {tc('nutrientDirections.limit')}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.segmentBtn, choice === 'boost' && styles.segmentBtnBoostActive]}
-            onPress={() => setNutrientChoice(n.offKey, 'boost')}
-            activeOpacity={0.75}
-          >
-            <Text style={[styles.segmentText, styles.segmentTextBoost, choice === 'boost' && styles.segmentTextActive]}>
-              {tc('nutrientDirections.boost')}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.segmentBtn, choice === 'none' && styles.segmentBtnNoneActive]}
-            onPress={() => setNutrientChoice(n.offKey, 'none')}
-            activeOpacity={0.75}
-          >
-            <Text style={[styles.segmentText, styles.segmentTextNone, choice === 'none' && styles.segmentTextNoneActive]}>
-              {tc('nutrientDirections.noChange')}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      <Ionicons
+        name={dir === 'boost' ? 'arrow-up' : 'arrow-down'}
+        size={14}
+        color="#fff"
+      />
     );
   }
 
+  function NutrientDropdown({ offKey }: { offKey: string }) {
+    const value: NutrientDir = nutrientChoices[offKey] ?? 'none';
+    const config = DROPDOWN_CONFIG[value];
+    const cycle: NutrientDir[] = ['none', 'boost', 'limit'];
+    const nextIdx = (cycle.indexOf(value) + 1) % cycle.length;
+
+    return (
+      <TouchableOpacity
+        style={styles.dropdown}
+        onPress={() => setNutrientChoice(offKey, cycle[nextIdx])}
+        activeOpacity={0.75}
+      >
+        <View style={[styles.dropdownCircle, { backgroundColor: config.bg }]}>
+          {renderDropdownIcon(value)}
+        </View>
+        <Text style={styles.dropdownLabel} numberOfLines={1}>{config.label}</Text>
+        <Ionicons name="chevron-down" size={14} color={Colors.primary} style={{ opacity: 0.5 }} />
+      </TouchableOpacity>
+    );
+  }
+
+  // ── Nutrient watchlist step ────────────────────────────────────────────────
   function renderNutrientStep() {
     return (
       <>
-        <View style={styles.chipCardInfo}>
+        {/* Header text */}
+        <View style={styles.nutrientHeader}>
           <Text style={styles.cardTitle}>
-            {t('nutrient.suggestion')}
+            {t('nutrient.conditionTitle')}
           </Text>
-          <View style={styles.countRow}>
-            <Text style={styles.countText}>{t('nutrient.limiting')}</Text>
-            <Text style={styles.countBold}>{limitNutrients.length}</Text>
-            <Text style={styles.countText}>{t('nutrient.boosting')}</Text>
-            <Text style={styles.countBold}>{boostNutrients.length}</Text>
-          </View>
-          <Text style={styles.nutrientSubtext}>
-            {t('nutrient.alertSubtext')}
+          <Text style={styles.nutrientSubtitle}>
+            {t('nutrient.conditionSubtitle')}
           </Text>
         </View>
 
-        {limitNutrients.length > 0 && (
-          <View style={styles.nutrientSection}>
-            <View style={styles.sectionHeaderRow}>
-              <Ionicons name="arrow-down-circle" size={16} color={Colors.status.negative} />
-              <Text style={[styles.sectionHeader, { color: Colors.status.negative }]}>
-                {t('nutrient.sectionLimit')}
+        {/* Per-condition groups */}
+        {conditionGroups.map((group) => (
+          <View key={group.conditionKey} style={styles.conditionSection}>
+            {/* Pill tag */}
+            <View style={styles.conditionPill}>
+              <Text style={styles.conditionPillText}>
+                {tpo(`healthConditions.${group.conditionKey}`)}
               </Text>
             </View>
-            {limitNutrients.map(renderNutrientRow)}
-          </View>
-        )}
 
-        {boostNutrients.length > 0 && (
-          <View style={styles.nutrientSection}>
-            <View style={styles.sectionHeaderRow}>
-              <Ionicons name="arrow-up-circle" size={16} color={Colors.status.positive} />
-              <Text style={[styles.sectionHeader, { color: Colors.status.positive }]}>
-                {t('nutrient.sectionBoost')}
-              </Text>
+            {/* Bordered nutrient card */}
+            <View style={styles.conditionCard}>
+              {group.nutrients.map((n, i) => (
+                <View
+                  key={`${group.conditionKey}-${n.offKey}`}
+                  style={[
+                    styles.nutrientRow,
+                    i < group.nutrients.length - 1 && styles.nutrientRowBorder,
+                  ]}
+                >
+                  <Text style={styles.nutrientName}>{n.nutrient}</Text>
+                  <NutrientDropdown offKey={n.offKey} />
+                </View>
+              ))}
             </View>
-            {boostNutrients.map(renderNutrientRow)}
           </View>
-        )}
-
-        {noChangeNutrients.length > 0 && (
-          <View style={styles.nutrientSection}>
-            <View style={styles.sectionHeaderRow}>
-              <Ionicons name="remove-circle" size={16} color={`${Colors.primary}50`} />
-              <Text style={[styles.sectionHeader, { color: `${Colors.primary}50` }]}>
-                {t('nutrient.sectionNoChange')}
-              </Text>
-            </View>
-            {noChangeNutrients.map(renderNutrientRow)}
-          </View>
-        )}
+        ))}
       </>
     );
   }
@@ -415,7 +461,7 @@ export default function OnboardingScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.card}>
+        <View style={currentStepKey === 'nutrients' ? styles.nutrientCard : styles.card}>
           {currentStepKey === 'health' && renderChipHeader(
             t('question.healthCondition'),
             healthConditions.length,
@@ -676,100 +722,107 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 
-  // ── Nutrient watchlist step ────────────────────────────────────────────────
-  nutrientSubtext: {
-    fontSize: 14,
+  // ── Nutrient watchlist step (redesigned) ──────────────────────────────────
+  nutrientCard: {
+    backgroundColor: Colors.surface.secondary,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.surface.secondary,
+    paddingTop: 24,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    gap: 24,
+    ...Shadows.level4,
+  },
+  nutrientHeader: {
+    gap: 4,
+  },
+  nutrientSubtitle: {
+    fontSize: 16,
     fontFamily: 'Figtree_300Light',
     fontWeight: '300',
     color: Colors.secondary,
-    letterSpacing: -0.14,
-    lineHeight: 21,
+    lineHeight: 24,
   },
-  nutrientSection: {
+  conditionSection: {
     gap: 8,
   },
-  sectionHeaderRow: {
-    flexDirection: 'row',
+  conditionPill: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#b8dfd6',
+    height: 24,
+    paddingHorizontal: 8,
+    borderRadius: 999,
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: 6,
+    shadowColor: 'rgba(86,138,130,0.1)',
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 1,
+    shadowRadius: 32,
+    elevation: 2,
   },
-  sectionHeader: {
-    fontSize: 14,
+  conditionPillText: {
+    fontSize: 13,
     fontFamily: 'Figtree_700Bold',
     fontWeight: '700',
-    letterSpacing: -0.28,
-    lineHeight: 17,
+    color: Colors.primary,
+    letterSpacing: -0.26,
+    lineHeight: 16,
+    textAlign: 'center',
   },
-  nutrientRow: {
-    backgroundColor: Colors.surface.tertiary,
+  conditionCard: {
+    backgroundColor: Colors.surface.secondary,
+    borderWidth: 1,
+    borderColor: '#aad4cd',
     borderRadius: 8,
-    padding: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
     gap: 8,
   },
-  nutrientTopRow: {
+  nutrientRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 8,
+  },
+  nutrientRowBorder: {
+    // visual separator via gap; no actual border needed between rows
   },
   nutrientName: {
+    flex: 1,
+    fontSize: 18,
+    fontFamily: 'Figtree_700Bold',
+    fontWeight: '700',
+    color: Colors.primary,
+    letterSpacing: -0.36,
+    lineHeight: 24,
+  },
+  // ── Dropdown ──
+  dropdown: {
+    width: 144,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: Colors.surface.secondary,
+    borderWidth: 1,
+    borderColor: '#aad4cd',
+    borderRadius: 12,
+    padding: 8,
+  },
+  dropdownCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dropdownLabel: {
+    flex: 1,
     fontSize: 16,
     fontFamily: 'Figtree_700Bold',
     fontWeight: '700',
     color: Colors.primary,
     letterSpacing: -0.32,
-  },
-  sourceBadge: {
-    fontSize: 12,
-    fontFamily: 'Figtree_300Light',
-    fontWeight: '300',
-    color: Colors.secondary,
-    letterSpacing: -0.12,
-  },
-  segmentedRow: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  segmentBtn: {
-    flex: 1,
-    paddingVertical: 6,
-    borderRadius: 6,
-    borderWidth: 1.5,
-    borderColor: '#aad4cd',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  segmentBtnLimitActive: {
-    backgroundColor: Colors.status.negative,
-    borderColor: Colors.status.negative,
-  },
-  segmentBtnBoostActive: {
-    backgroundColor: Colors.status.positive,
-    borderColor: Colors.status.positive,
-  },
-  segmentBtnNoneActive: {
-    backgroundColor: `${Colors.primary}15`,
-    borderColor: `${Colors.primary}30`,
-  },
-  segmentText: {
-    fontSize: 13,
-    fontFamily: 'Figtree_700Bold',
-    fontWeight: '700',
-    letterSpacing: -0.26,
-  },
-  segmentTextLimit: {
-    color: Colors.status.negative,
-  },
-  segmentTextBoost: {
-    color: Colors.status.positive,
-  },
-  segmentTextNone: {
-    color: `${Colors.primary}50`,
-  },
-  segmentTextActive: {
-    color: '#fff',
-  },
-  segmentTextNoneActive: {
-    color: Colors.primary,
+    lineHeight: 24,
   },
 
   skipBtn: {

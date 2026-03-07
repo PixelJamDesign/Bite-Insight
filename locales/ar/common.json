@@ -43,6 +43,8 @@
   "nutrientDirections": {
     "limit": "حد",
     "boost": "يعزز",
+    "balance": "توازن",
+    "increase": "يزيد",
     "noChange": "لا تغيير"
   },
   "ratings": {

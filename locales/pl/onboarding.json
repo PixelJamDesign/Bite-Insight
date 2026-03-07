@@ -27,6 +27,9 @@
     "youveSelected": "Wybrałeś"
   },
   "nutrient": {
+    "conditionTitle": "Na te składniki odżywcze ma wpływ stan zdrowia.",
+    "conditionTitleFamily": "Na te składniki odżywcze wpływa ich stan zdrowia.",
+    "conditionSubtitle": "Oznaczymy te składniki odżywcze podczas skanowania produktu.",
     "suggestion": "W zależności od Twojego stanu zdrowia sugerujemy obserwowanie tych składników odżywczych",
     "suggestionFamily": "Biorąc pod uwagę ich stan, sugerujemy obserwowanie tych składników odżywczych",
     "limiting": "Ograniczające",

@@ -27,6 +27,9 @@
     "youveSelected": "あなたが選択しました"
   },
   "nutrient": {
+    "conditionTitle": "これらの栄養素は健康状態の影響を受けます。",
+    "conditionTitleFamily": "これらの栄養素は健康状態によって影響を受けます。",
+    "conditionSubtitle": "製品をスキャンするときに、これらの栄養素にフラグを立てます。",
     "suggestion": "あなたの状態に基づいて、これらの栄養素に注意することをお勧めします",
     "suggestionFamily": "状態に応じて、これらの栄養素に注意することをお勧めします",
     "limiting": "制限する",

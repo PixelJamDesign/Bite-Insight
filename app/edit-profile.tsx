@@ -27,11 +27,21 @@ import { Colors, Shadows } from '@/constants/theme';
 import { CONDITION_NUTRIENT_MAP } from '@/constants/conditionNutrientMap';
 import {
   HEALTH_CONDITION_KEYS, ALLERGY_KEYS, DIETARY_PREFERENCE_KEYS,
+  HEALTH_CONDITION_LEGACY_MAP,
   normalizeHealthCondition, normalizeAllergy, normalizeDietaryPreference,
 } from '@/constants/profileOptions';
 import type { NutrientWatchlistEntry } from '@/lib/types';
 import { CameraIcon, PersonalIcon, EmailIcon, BirthdayIcon, TickIcon } from '@/components/MenuIcons';
 import Logo from '../assets/images/logo.svg';
+
+// ── Condition key helpers ──────────────────────────────────────────────────────
+const KEY_TO_LEGACY: Record<string, string> = {};
+for (const [legacy, key] of Object.entries(HEALTH_CONDITION_LEGACY_MAP)) {
+  KEY_TO_LEGACY[key] = legacy;
+}
+function conditionMapKey(conditionKey: string): string {
+  return KEY_TO_LEGACY[conditionKey] ?? conditionKey;
+}
 
 // ── Step types ────────────────────────────────────────────────────────────────
 type StepKey = 'about' | 'health' | 'nutrients' | 'allergies' | 'dietary';
@@ -46,6 +56,18 @@ type UniqueNutrient = {
   hasConflict: boolean;
 };
 
+type ConditionNutrientItem = {
+  offKey: string;
+  nutrient: string;
+  unit: 'mg' | 'µg' | 'g';
+  recommendedDirection: 'limit' | 'boost';
+};
+
+type ConditionGroup = {
+  conditionKey: string;
+  nutrients: ConditionNutrientItem[];
+};
+
 /** Build de-duped unique nutrients from selected health conditions */
 function buildUniqueNutrients(conditions: string[]): UniqueNutrient[] {
   const map = new Map<string, UniqueNutrient>();
@@ -53,7 +75,7 @@ function buildUniqueNutrients(conditions: string[]): UniqueNutrient[] {
   const boostKeys = new Set<string>();
 
   for (const condition of conditions) {
-    const profile = CONDITION_NUTRIENT_MAP[condition];
+    const profile = CONDITION_NUTRIENT_MAP[conditionMapKey(condition)];
     if (!profile) continue;
 
     for (const item of profile.limit) {
@@ -76,11 +98,32 @@ function buildUniqueNutrients(conditions: string[]): UniqueNutrient[] {
     }
   }
 
-  for (const [key, n] of map) {
-    if (limitKeys.has(key) && boostKeys.has(key)) n.hasConflict = true;
+  for (const [, n] of map) {
+    if (limitKeys.has(n.offKey) && boostKeys.has(n.offKey)) n.hasConflict = true;
   }
 
   return Array.from(map.values());
+}
+
+/** Build condition-grouped nutrients for the new dropdown UI */
+function buildConditionGroups(conditions: string[]): ConditionGroup[] {
+  return conditions
+    .map((conditionKey) => {
+      const profile = CONDITION_NUTRIENT_MAP[conditionMapKey(conditionKey)];
+      if (!profile) return null;
+      const nutrients: ConditionNutrientItem[] = [
+        ...profile.limit.map((n) => ({
+          offKey: n.offKey, nutrient: n.nutrient, unit: n.unit,
+          recommendedDirection: 'limit' as const,
+        })),
+        ...profile.boost.map((n) => ({
+          offKey: n.offKey, nutrient: n.nutrient, unit: n.unit,
+          recommendedDirection: 'boost' as const,
+        })),
+      ];
+      return { conditionKey, nutrients };
+    })
+    .filter(Boolean) as ConditionGroup[];
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -146,9 +189,10 @@ export default function EditProfileScreen() {
     [healthConditions.join(',')],
   );
 
-  const limitNutrients = uniqueNutrients.filter(n => nutrientChoices[n.offKey] === 'limit');
-  const boostNutrients = uniqueNutrients.filter(n => nutrientChoices[n.offKey] === 'boost');
-  const noChangeNutrients = uniqueNutrients.filter(n => !nutrientChoices[n.offKey] || nutrientChoices[n.offKey] === 'none');
+  const conditionGroups = useMemo(
+    () => buildConditionGroups(healthConditions),
+    [healthConditions.join(',')],
+  );
 
   function setNutrientChoice(offKey: string, dir: 'limit' | 'boost' | 'none') {
     setNutrientChoices(prev => ({ ...prev, [offKey]: dir }));
@@ -446,102 +490,92 @@ export default function EditProfileScreen() {
     );
   }
 
-  // ── Nutrient watchlist step ────────────────────────────────────────────────
-  function renderNutrientRow(n: UniqueNutrient) {
-    const choice = nutrientChoices[n.offKey] ?? 'none';
+  // ── Nutrient dropdown ────────────────────────────────────────────────────
+  type NutrientDir = 'limit' | 'boost' | 'none';
+
+  const DROPDOWN_CONFIG: Record<NutrientDir, { label: string; bg: string; iconColor: string }> = {
+    none:  { label: tc('nutrientDirections.balance'),  bg: '#aad4cd', iconColor: Colors.primary },
+    boost: { label: tc('nutrientDirections.increase'), bg: '#009a1f', iconColor: '#fff' },
+    limit: { label: tc('nutrientDirections.limit'),    bg: Colors.status.negative, iconColor: '#fff' },
+  };
+
+  function renderDropdownIcon(dir: NutrientDir) {
+    if (dir === 'none') {
+      return (
+        <View style={{ width: 14, height: 14, justifyContent: 'center', alignItems: 'center' }}>
+          <View style={{ width: 9, height: 1.8, backgroundColor: Colors.primary, borderRadius: 1, marginBottom: 2.5 }} />
+          <View style={{ width: 9, height: 1.8, backgroundColor: Colors.primary, borderRadius: 1 }} />
+        </View>
+      );
+    }
     return (
-      <View key={n.offKey} style={styles.nutrientRow}>
-        <View style={styles.nutrientTopRow}>
-          <Text style={styles.nutrientName}>{n.nutrient}</Text>
-          <Text style={styles.sourceBadge}>{n.source}</Text>
-        </View>
-        <View style={styles.segmentedRow}>
-          <TouchableOpacity
-            style={[styles.segmentBtn, choice === 'limit' && styles.segmentBtnLimitActive]}
-            onPress={() => setNutrientChoice(n.offKey, 'limit')}
-            activeOpacity={0.75}
-          >
-            <Text style={[styles.segmentText, styles.segmentTextLimit, choice === 'limit' && styles.segmentTextActive]}>
-              {tc('nutrientDirections.limit')}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.segmentBtn, choice === 'boost' && styles.segmentBtnBoostActive]}
-            onPress={() => setNutrientChoice(n.offKey, 'boost')}
-            activeOpacity={0.75}
-          >
-            <Text style={[styles.segmentText, styles.segmentTextBoost, choice === 'boost' && styles.segmentTextActive]}>
-              {tc('nutrientDirections.boost')}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.segmentBtn, choice === 'none' && styles.segmentBtnNoneActive]}
-            onPress={() => setNutrientChoice(n.offKey, 'none')}
-            activeOpacity={0.75}
-          >
-            <Text style={[styles.segmentText, styles.segmentTextNone, choice === 'none' && styles.segmentTextNoneActive]}>
-              {tc('nutrientDirections.noChange')}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      <Ionicons
+        name={dir === 'boost' ? 'arrow-up' : 'arrow-down'}
+        size={14}
+        color="#fff"
+      />
     );
   }
 
+  function NutrientDropdown({ offKey }: { offKey: string }) {
+    const value: NutrientDir = nutrientChoices[offKey] ?? 'none';
+    const config = DROPDOWN_CONFIG[value];
+    const cycle: NutrientDir[] = ['none', 'boost', 'limit'];
+    const nextIdx = (cycle.indexOf(value) + 1) % cycle.length;
+
+    return (
+      <TouchableOpacity
+        style={styles.dropdown}
+        onPress={() => setNutrientChoice(offKey, cycle[nextIdx])}
+        activeOpacity={0.75}
+      >
+        <View style={[styles.dropdownCircle, { backgroundColor: config.bg }]}>
+          {renderDropdownIcon(value)}
+        </View>
+        <Text style={styles.dropdownLabel} numberOfLines={1}>{config.label}</Text>
+        <Ionicons name="chevron-down" size={14} color={Colors.primary} style={{ opacity: 0.5 }} />
+      </TouchableOpacity>
+    );
+  }
+
+  // ── Nutrient watchlist step ────────────────────────────────────────────────
   function renderNutrientStep() {
     return (
-      <View style={styles.card}>
-        <View style={styles.chipCardInfo}>
+      <>
+        <View style={styles.nutrientHeader}>
           <Text style={styles.cardTitle}>
-            {to('nutrient.suggestion')}
+            {to('nutrient.conditionTitle')}
           </Text>
-          <View style={styles.countRow}>
-            <Text style={styles.countText}>{to('nutrient.limiting')}</Text>
-            <Text style={styles.countBold}>{limitNutrients.length}</Text>
-            <Text style={styles.countText}>{to('nutrient.boosting')}</Text>
-            <Text style={styles.countBold}>{boostNutrients.length}</Text>
-          </View>
-          <Text style={styles.nutrientSubtext}>
-            {to('nutrient.alertSubtext')}
+          <Text style={styles.nutrientSubtitle}>
+            {to('nutrient.conditionSubtitle')}
           </Text>
         </View>
 
-        {limitNutrients.length > 0 && (
-          <View style={styles.nutrientSection}>
-            <View style={styles.sectionHeaderRow}>
-              <Ionicons name="arrow-down-circle" size={16} color={Colors.status.negative} />
-              <Text style={[styles.sectionHeader, { color: Colors.status.negative }]}>
-                {to('nutrient.sectionLimit')}
+        {conditionGroups.map((group) => (
+          <View key={group.conditionKey} style={styles.conditionSection}>
+            <View style={styles.conditionPill}>
+              <Text style={styles.conditionPillText}>
+                {tpo(`healthConditions.${group.conditionKey}`)}
               </Text>
             </View>
-            {limitNutrients.map(renderNutrientRow)}
-          </View>
-        )}
 
-        {boostNutrients.length > 0 && (
-          <View style={styles.nutrientSection}>
-            <View style={styles.sectionHeaderRow}>
-              <Ionicons name="arrow-up-circle" size={16} color={Colors.status.positive} />
-              <Text style={[styles.sectionHeader, { color: Colors.status.positive }]}>
-                {to('nutrient.sectionBoost')}
-              </Text>
+            <View style={styles.conditionCard}>
+              {group.nutrients.map((n, i) => (
+                <View
+                  key={`${group.conditionKey}-${n.offKey}`}
+                  style={[
+                    styles.nutrientRow,
+                    i < group.nutrients.length - 1 && styles.nutrientRowBorder,
+                  ]}
+                >
+                  <Text style={styles.nutrientName}>{n.nutrient}</Text>
+                  <NutrientDropdown offKey={n.offKey} />
+                </View>
+              ))}
             </View>
-            {boostNutrients.map(renderNutrientRow)}
           </View>
-        )}
-
-        {noChangeNutrients.length > 0 && (
-          <View style={styles.nutrientSection}>
-            <View style={styles.sectionHeaderRow}>
-              <Ionicons name="remove-circle" size={16} color={`${Colors.primary}50`} />
-              <Text style={[styles.sectionHeader, { color: `${Colors.primary}50` }]}>
-                {to('nutrient.sectionNoChange')}
-              </Text>
-            </View>
-            {noChangeNutrients.map(renderNutrientRow)}
-          </View>
-        )}
-      </View>
+        ))}
+      </>
     );
   }
 
@@ -675,7 +709,11 @@ export default function EditProfileScreen() {
           )}
 
           {/* ── Step: Nutrient Watchlist ── */}
-          {currentStepKey === 'nutrients' && renderNutrientStep()}
+          {currentStepKey === 'nutrients' && (
+            <View style={styles.nutrientCard}>
+              {renderNutrientStep()}
+            </View>
+          )}
 
           {/* ── Step: Allergies ── */}
           {currentStepKey === 'allergies' && (
@@ -1016,99 +1054,103 @@ const styles = StyleSheet.create({
   },
 
   // ── Nutrient watchlist step styles ──────────────────────────────────────────
-  nutrientSubtext: {
-    fontSize: 14,
+  nutrientCard: {
+    backgroundColor: Colors.surface.secondary,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.surface.secondary,
+    paddingTop: 24,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    gap: 24,
+    ...Shadows.level4,
+  },
+  nutrientHeader: {
+    gap: 4,
+  },
+  nutrientSubtitle: {
+    fontSize: 16,
     fontFamily: 'Figtree_300Light',
     fontWeight: '300',
     color: Colors.secondary,
-    letterSpacing: -0.14,
-    lineHeight: 21,
+    lineHeight: 24,
   },
-  nutrientSection: {
+  conditionSection: {
     gap: 8,
   },
-  sectionHeaderRow: {
-    flexDirection: 'row',
+  conditionPill: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#b8dfd6',
+    height: 24,
+    paddingHorizontal: 8,
+    borderRadius: 999,
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: 6,
+    shadowColor: 'rgba(86,138,130,0.1)',
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 1,
+    shadowRadius: 32,
+    elevation: 2,
   },
-  sectionHeader: {
-    fontSize: 14,
+  conditionPillText: {
+    fontSize: 13,
     fontFamily: 'Figtree_700Bold',
     fontWeight: '700',
-    letterSpacing: -0.28,
-    lineHeight: 17,
+    color: Colors.primary,
+    letterSpacing: -0.26,
+    lineHeight: 16,
+    textAlign: 'center',
   },
-  nutrientRow: {
-    backgroundColor: Colors.surface.tertiary,
+  conditionCard: {
+    backgroundColor: Colors.surface.secondary,
+    borderWidth: 1,
+    borderColor: '#aad4cd',
     borderRadius: 8,
-    padding: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
     gap: 8,
   },
-  nutrientTopRow: {
+  nutrientRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 8,
   },
+  nutrientRowBorder: {},
   nutrientName: {
+    flex: 1,
+    fontSize: 18,
+    fontFamily: 'Figtree_700Bold',
+    fontWeight: '700',
+    color: Colors.primary,
+    letterSpacing: -0.36,
+    lineHeight: 24,
+  },
+  dropdown: {
+    width: 144,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: Colors.surface.secondary,
+    borderWidth: 1,
+    borderColor: '#aad4cd',
+    borderRadius: 12,
+    padding: 8,
+  },
+  dropdownCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dropdownLabel: {
+    flex: 1,
     fontSize: 16,
     fontFamily: 'Figtree_700Bold',
     fontWeight: '700',
     color: Colors.primary,
     letterSpacing: -0.32,
-  },
-  sourceBadge: {
-    fontSize: 12,
-    fontFamily: 'Figtree_300Light',
-    fontWeight: '300',
-    color: Colors.secondary,
-    letterSpacing: -0.12,
-  },
-  segmentedRow: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  segmentBtn: {
-    flex: 1,
-    paddingVertical: 6,
-    borderRadius: 6,
-    borderWidth: 1.5,
-    borderColor: '#aad4cd',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  segmentBtnLimitActive: {
-    backgroundColor: Colors.status.negative,
-    borderColor: Colors.status.negative,
-  },
-  segmentBtnBoostActive: {
-    backgroundColor: Colors.status.positive,
-    borderColor: Colors.status.positive,
-  },
-  segmentBtnNoneActive: {
-    backgroundColor: `${Colors.primary}15`,
-    borderColor: `${Colors.primary}30`,
-  },
-  segmentText: {
-    fontSize: 13,
-    fontFamily: 'Figtree_700Bold',
-    fontWeight: '700',
-    letterSpacing: -0.26,
-  },
-  segmentTextLimit: {
-    color: Colors.status.negative,
-  },
-  segmentTextBoost: {
-    color: Colors.status.positive,
-  },
-  segmentTextNone: {
-    color: `${Colors.primary}50`,
-  },
-  segmentTextActive: {
-    color: '#fff',
-  },
-  segmentTextNoneActive: {
-    color: Colors.primary,
+    lineHeight: 24,
   },
 
   footer: {

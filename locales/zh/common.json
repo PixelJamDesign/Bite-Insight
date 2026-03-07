@@ -43,6 +43,8 @@
   "nutrientDirections": {
     "limit": "限制",
     "boost": "促进",
+    "balance": "平衡",
+    "increase": "增加",
     "noChange": "没有变化"
   },
   "ratings": {
