@@ -16,7 +16,7 @@
       "newArchEnabled": true,
       "supportsTablet": false,
       "bundleIdentifier": "com.biteinsight.app",
-      "buildNumber": "2",
+      "buildNumber": "3",
       "icon": {
         "light": "./assets/images/icon.png",
         "dark": "./assets/images/icon-dark.png",
