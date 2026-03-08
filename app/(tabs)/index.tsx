@@ -92,6 +92,7 @@ function getInitials(name: string | null | undefined, fallback: string = '??'): 
 export default function HomeDashboard() {
   const { t } = useTranslation('dashboard');
   const { t: tc } = useTranslation('common');
+  const { t: tpo } = useTranslation('profileOptions');
   const { session, avatarUrl } = useAuth();
   const { isPlus } = useSubscription();
   const { menuOpen, menuVisible, openMenu, closeMenu, closeMenuInstant } = useMenu();
@@ -280,12 +281,12 @@ export default function HomeDashboard() {
                 ))}
                 {(profile?.health_conditions ?? []).map((condition) => (
                   <View key={condition} style={styles.genericChip}>
-                    <Text style={styles.genericChipLabel}>{condition}</Text>
+                    <Text style={styles.genericChipLabel}>{tpo(`healthConditions.${condition}`, condition)}</Text>
                   </View>
                 ))}
                 {(profile?.allergies ?? []).map((allergy) => (
                   <View key={allergy} style={[styles.genericChip, styles.allergyChip]}>
-                    <Text style={styles.genericChipLabel}>{allergy}</Text>
+                    <Text style={styles.genericChipLabel}>{tpo(`allergies.${allergy}`, allergy)}</Text>
                   </View>
                 ))}
               </View>

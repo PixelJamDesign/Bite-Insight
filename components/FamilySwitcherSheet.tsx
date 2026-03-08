@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { Colors } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
@@ -22,28 +23,14 @@ import type { FamilyProfile, UserProfile } from '@/lib/types';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
-// Colours to cycle through for condition/allergy/dietary tags
-const TAG_COLORS = [
-  Colors.dietary.diabetic,
-  Colors.dietary.glutenFree,
-  Colors.dietary.keto,
-  Colors.dietary.vegan,
-  Colors.dietary.pescatarian,
-  Colors.dietary.kosher,
-  Colors.dietary.lactose,
-  Colors.dietary.vegetarian,
-];
+// Unified tag colour for all chips in the family switcher
+const TAG_COLOR = '#B8DFD6';
 
-const DIETARY_LABELS: Record<string, string> = {
-  diabetic: 'Diabetic',
-  keto: 'Keto',
-  'gluten-free': 'Gluten-free',
-  vegan: 'Vegan',
-  vegetarian: 'Vegetarian',
-  lactose: 'Lactose-free',
-  pescatarian: 'Pescatarian',
-  kosher: 'Kosher',
-};
+interface TagItem {
+  key: string;
+  label: string;
+  color: string;
+}
 
 function getInitials(name: string): string {
   return name
@@ -55,21 +42,32 @@ function getInitials(name: string): string {
     .slice(0, 2) || '?';
 }
 
-function getAllTags(p: FamilyProfile): string[] {
-  const tags: string[] = [];
-  if (p.health_conditions?.length) tags.push(...p.health_conditions);
-  if (p.allergies?.length) tags.push(...p.allergies);
-  if (p.dietary_preferences?.length)
-    tags.push(...p.dietary_preferences.map((d) => DIETARY_LABELS[d] ?? d));
-  return tags;
-}
-
-function getUserTags(p: UserProfile): string[] {
-  const tags: string[] = [];
-  if (p.health_conditions?.length) tags.push(...p.health_conditions);
-  if (p.allergies?.length) tags.push(...p.allergies);
-  if (p.dietary_preferences?.length)
-    tags.push(...p.dietary_preferences.map((d) => DIETARY_LABELS[d] ?? d));
+function buildTags(
+  healthConditions: string[] | null | undefined,
+  allergies: string[] | null | undefined,
+  dietaryPreferences: string[] | null | undefined,
+  tpo: (key: string, options?: Record<string, unknown>) => string,
+): TagItem[] {
+  const tags: TagItem[] = [];
+  if (healthConditions?.length) {
+    for (const c of healthConditions) {
+      tags.push({ key: c, label: tpo(`healthConditions.${c}`, { defaultValue: c }), color: TAG_COLOR });
+    }
+  }
+  if (allergies?.length) {
+    for (const a of allergies) {
+      tags.push({ key: a, label: tpo(`allergies.${a}`, { defaultValue: a }), color: TAG_COLOR });
+    }
+  }
+  if (dietaryPreferences?.length) {
+    for (const d of dietaryPreferences) {
+      tags.push({
+        key: d,
+        label: tpo(`dietaryPreferences.${d}`, { defaultValue: d }),
+        color: TAG_COLOR,
+      });
+    }
+  }
   return tags;
 }
 
@@ -92,6 +90,7 @@ export function FamilySwitcherSheet({
   const { activeFamilyId, setActiveFamilyId, clearActiveFamily } =
     useActiveFamily();
   const insets = useSafeAreaInsets();
+  const { t: tpo } = useTranslation('profileOptions');
 
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
@@ -172,7 +171,9 @@ export function FamilySwitcherSheet({
     userProfile?.full_name ||
     session?.user?.email?.split('@')[0] ||
     'Me';
-  const mainUserTags = userProfile ? getUserTags(userProfile) : [];
+  const mainUserTags = userProfile
+    ? buildTags(userProfile.health_conditions, userProfile.allergies, userProfile.dietary_preferences, tpo)
+    : [];
 
   return (
     <Modal
@@ -254,18 +255,12 @@ export function FamilySwitcherSheet({
                 </View>
                 {mainUserTags.length > 0 && (
                   <View style={styles.tagsRow}>
-                    {mainUserTags.slice(0, 3).map((tag, i) => (
+                    {mainUserTags.slice(0, 3).map((tag) => (
                       <View
-                        key={tag}
-                        style={[
-                          styles.tag,
-                          {
-                            backgroundColor:
-                              TAG_COLORS[i % TAG_COLORS.length],
-                          },
-                        ]}
+                        key={tag.key}
+                        style={[styles.tag, { backgroundColor: tag.color }]}
                       >
-                        <Text style={styles.tagText}>{tag}</Text>
+                        <Text style={styles.tagText}>{tag.label}</Text>
                       </View>
                     ))}
                   </View>
@@ -284,7 +279,7 @@ export function FamilySwitcherSheet({
 
             {/* ── Family member rows ── */}
             {familyProfiles.map((profile) => {
-              const tags = getAllTags(profile);
+              const tags = buildTags(profile.health_conditions, profile.allergies, profile.dietary_preferences, tpo);
               const isSelected = activeFamilyId === profile.id;
               return (
                 <TouchableOpacity
@@ -314,18 +309,12 @@ export function FamilySwitcherSheet({
                     </View>
                     {tags.length > 0 && (
                       <View style={styles.tagsRow}>
-                        {tags.slice(0, 3).map((tag, i) => (
+                        {tags.slice(0, 3).map((tag) => (
                           <View
-                            key={tag}
-                            style={[
-                              styles.tag,
-                              {
-                                backgroundColor:
-                                  TAG_COLORS[i % TAG_COLORS.length],
-                              },
-                            ]}
+                            key={tag.key}
+                            style={[styles.tag, { backgroundColor: tag.color }]}
                           >
-                            <Text style={styles.tagText}>{tag}</Text>
+                            <Text style={styles.tagText}>{tag.label}</Text>
                           </View>
                         ))}
                       </View>

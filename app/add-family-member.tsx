@@ -12,6 +12,8 @@ import {
   StyleSheet,
   Image,
   Animated,
+  Modal,
+  Pressable,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { safeBack } from '@/lib/safeBack';
@@ -525,23 +527,71 @@ export default function AddFamilyMemberScreen() {
   }
 
   function NutrientDropdown({ offKey }: { offKey: string }) {
+    const [open, setOpen] = useState(false);
     const value: NutrientDir = nutrientChoices[offKey] ?? 'none';
     const config = DROPDOWN_CONFIG[value];
-    const cycle: NutrientDir[] = ['none', 'boost', 'limit'];
-    const nextIdx = (cycle.indexOf(value) + 1) % cycle.length;
+    const options: NutrientDir[] = ['boost', 'none', 'limit'];
+    const triggerRef = useRef<View>(null);
+    const [menuPos, setMenuPos] = useState({ top: 0, left: 0, width: 0 });
+
+    function handleOpen() {
+      triggerRef.current?.measureInWindow((x, y, w, h) => {
+        setMenuPos({ top: y + h + 4, left: x, width: w });
+        setOpen(true);
+      });
+    }
+
+    function handleSelect(dir: NutrientDir) {
+      setNutrientChoice(offKey, dir);
+      setOpen(false);
+    }
 
     return (
-      <TouchableOpacity
-        style={styles.dropdown}
-        onPress={() => setNutrientChoice(offKey, cycle[nextIdx])}
-        activeOpacity={0.75}
-      >
-        <View style={[styles.dropdownCircle, { backgroundColor: config.bg }]}>
-          {renderDropdownIcon(value)}
-        </View>
-        <Text style={styles.dropdownLabel} numberOfLines={1}>{config.label}</Text>
-        <Ionicons name="chevron-down" size={14} color={Colors.primary} style={{ opacity: 0.5 }} />
-      </TouchableOpacity>
+      <>
+        <TouchableOpacity
+          ref={triggerRef}
+          style={styles.dropdown}
+          onPress={handleOpen}
+          activeOpacity={0.75}
+        >
+          <View style={[styles.dropdownCircle, { backgroundColor: config.bg }]}>
+            {renderDropdownIcon(value)}
+          </View>
+          <Text style={styles.dropdownLabel} numberOfLines={1}>{config.label}</Text>
+          <Ionicons name="chevron-down" size={14} color={Colors.primary} style={{ opacity: 0.5 }} />
+        </TouchableOpacity>
+
+        <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
+          <Pressable style={styles.dropdownOverlay} onPress={() => setOpen(false)}>
+            <View style={[styles.dropdownMenu, { top: menuPos.top, left: menuPos.left, minWidth: menuPos.width }]}>
+              {options.map((dir) => {
+                const opt = DROPDOWN_CONFIG[dir];
+                const isActive = dir === value;
+                return (
+                  <TouchableOpacity
+                    key={dir}
+                    style={[styles.dropdownMenuItem, isActive && styles.dropdownMenuItemActive]}
+                    onPress={() => handleSelect(dir)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.dropdownMenuCircle, { backgroundColor: opt.bg }]}>
+                      {renderDropdownIcon(dir)}
+                    </View>
+                    <Text style={[styles.dropdownMenuItemLabel, isActive && styles.dropdownMenuItemLabelActive]}>
+                      {opt.label}
+                    </Text>
+                    {isActive ? (
+                      <Ionicons name="checkmark" size={16} color={Colors.primary} />
+                    ) : (
+                      <View style={{ width: 16 }} />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </Pressable>
+        </Modal>
+      </>
     );
   }
 
@@ -566,20 +616,16 @@ export default function AddFamilyMemberScreen() {
               </Text>
             </View>
 
-            <View style={styles.conditionCard}>
-              {group.nutrients.map((n, i) => (
-                <View
-                  key={`${group.conditionKey}-${n.offKey}`}
-                  style={[
-                    styles.nutrientRow,
-                    i < group.nutrients.length - 1 && styles.nutrientRowBorder,
-                  ]}
-                >
-                  <Text style={styles.nutrientName}>{n.nutrient}</Text>
-                  <NutrientDropdown offKey={n.offKey} />
-                </View>
-              ))}
-            </View>
+            {/* Nutrient rows */}
+            {group.nutrients.map((n) => (
+              <View
+                key={`${group.conditionKey}-${n.offKey}`}
+                style={styles.nutrientRow}
+              >
+                <Text style={styles.nutrientName}>{n.nutrient}</Text>
+                <NutrientDropdown offKey={n.offKey} />
+              </View>
+            ))}
           </View>
         ))}
       </>
@@ -1114,7 +1160,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   conditionSection: {
-    gap: 8,
+    gap: 12,
   },
   conditionPill: {
     alignSelf: 'flex-start',
@@ -1164,7 +1210,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   dropdown: {
-    width: 144,
+    width: 154,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -1189,6 +1235,50 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     letterSpacing: -0.32,
     lineHeight: 24,
+  },
+  dropdownOverlay: {
+    flex: 1,
+  },
+  dropdownMenu: {
+    position: 'absolute',
+    backgroundColor: Colors.surface.secondary,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#aad4cd',
+    paddingVertical: 4,
+    ...Shadows.level4,
+  },
+  dropdownMenuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginHorizontal: 4,
+  },
+  dropdownMenuItemActive: {
+    backgroundColor: Colors.surface.tertiary,
+  },
+  dropdownMenuCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dropdownMenuItemLabel: {
+    flex: 1,
+    fontSize: 16,
+    fontFamily: 'Figtree_300Light',
+    fontWeight: '300',
+    color: Colors.primary,
+    letterSpacing: -0.32,
+    lineHeight: 24,
+  },
+  dropdownMenuItemLabelActive: {
+    fontFamily: 'Figtree_700Bold',
+    fontWeight: '700',
   },
 
   footer: {

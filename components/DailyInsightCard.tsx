@@ -23,6 +23,7 @@ export function DailyInsightCard({
   allergies = [],
 }: DailyInsightCardProps) {
   const { t } = useTranslation('dashboard');
+  const { t: tpo } = useTranslation('profileOptions');
   const hasChips =
     dietaryPreferences.length > 0 ||
     healthConditions.length > 0 ||
@@ -54,12 +55,12 @@ export function DailyInsightCard({
             ))}
             {healthConditions.map((condition) => (
               <View key={condition} style={[styles.genericChip, { backgroundColor: '#B8DFD6' }]}>
-                <Text style={styles.genericChipLabel}>{condition}</Text>
+                <Text style={styles.genericChipLabel}>{tpo(`healthConditions.${condition}`, condition)}</Text>
               </View>
             ))}
             {allergies.map((allergy) => (
               <View key={allergy} style={[styles.genericChip, { backgroundColor: '#B8DFD6' }]}>
-                <Text style={styles.genericChipLabel}>{allergy}</Text>
+                <Text style={styles.genericChipLabel}>{tpo(`allergies.${allergy}`, allergy)}</Text>
               </View>
             ))}
           </View>
