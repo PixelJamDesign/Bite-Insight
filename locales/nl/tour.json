@@ -1,0 +1,32 @@
+{
+  "welcome": {
+    "line1": "Bedankt voor het downloaden van Bite Insight.",
+    "line2": "We zijn er om je te helpen begrijpen wat er echt in het eten zit dat je eet."
+  },
+  "intro": {
+    "cardTitle": "Voordat we beginnen…",
+    "cardBody": "Laten we even de tijd nemen om je door de app te leiden en te laten zien hoe je er het meeste uit kunt halen. We gaan stap voor stap, zodat het makkelijk te volgen is!",
+    "letsBegin": "Laten we beginnen!"
+  },
+  "steps": {
+    "navigation": {
+      "section": "Navigatie",
+      "title": "Dit is je tabnavigatie!",
+      "subtitle": "Hier vind je al je snelle toegang."
+    }
+  },
+  "progress": {
+    "next": "Volgende: {{stepName}}"
+  },
+  "skip": {
+    "title": "App-tour overslaan",
+    "message": "Weet je zeker dat je de app-tour wilt overslaan?",
+    "cancel": "Annuleren",
+    "confirm": "Ja, overslaan"
+  },
+  "buttons": {
+    "skip": "Overslaan",
+    "next": "Volgende",
+    "finish": "Voltooien"
+  }
+}

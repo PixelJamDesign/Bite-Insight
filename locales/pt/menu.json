@@ -135,5 +135,11 @@
       "title": "Senha atualizada",
       "body": "Sua senha foi alterada com sucesso."
     }
+  },
+  "help": {
+    "title": "Ajuda e suporte",
+    "helpGuides": "Guias de ajuda",
+    "faqs": "Perguntas frequentes",
+    "appOnboarding": "Tour do aplicativo"
   }
 }

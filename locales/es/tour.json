@@ -1,0 +1,32 @@
+{
+  "welcome": {
+    "line1": "Gracias por descargar Bite Insight.",
+    "line2": "Estamos aquí para ayudarte a entender qué hay realmente dentro de los alimentos que comes."
+  },
+  "intro": {
+    "cardTitle": "Antes de comenzar…",
+    "cardBody": "Tomemos un momento para guiarte por la aplicación y mostrarte cómo sacarle el máximo provecho. ¡Iremos paso a paso para que sea fácil de seguir!",
+    "letsBegin": "¡Comencemos!"
+  },
+  "steps": {
+    "navigation": {
+      "section": "Navegación",
+      "title": "¡Esta es tu barra de navegación!",
+      "subtitle": "Aquí es donde viven todos tus accesos rápidos."
+    }
+  },
+  "progress": {
+    "next": "Siguiente: {{stepName}}"
+  },
+  "skip": {
+    "title": "Saltar tour de la app",
+    "message": "¿Estás seguro de que deseas saltar el tour de la app?",
+    "cancel": "Cancelar",
+    "confirm": "Sí, saltar"
+  },
+  "buttons": {
+    "skip": "Saltar",
+    "next": "Siguiente",
+    "finish": "Finalizar"
+  }
+}

@@ -135,5 +135,11 @@
       "title": "Mot de passe mis à jour",
       "body": "Votre mot de passe a été modifié avec succès."
     }
+  },
+  "help": {
+    "title": "Aide et assistance",
+    "helpGuides": "Guides d'aide",
+    "faqs": "FAQ",
+    "appOnboarding": "Tour de l'application"
   }
 }

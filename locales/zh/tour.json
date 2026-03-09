@@ -1,0 +1,32 @@
+{
+  "welcome": {
+    "line1": "感谢下载 Bite Insight。",
+    "line2": "我们在这里帮助您了解您所吃食物中的真正成分。"
+  },
+  "intro": {
+    "cardTitle": "在我们开始之前…",
+    "cardBody": "让我们花一点时间带你了解这个应用，并展示如何充分利用它。我们会一步步来，简单易懂！",
+    "letsBegin": "开始吧！"
+  },
+  "steps": {
+    "navigation": {
+      "section": "导航",
+      "title": "这是你的标签导航！",
+      "subtitle": "你的所有快捷访问都在这里。"
+    }
+  },
+  "progress": {
+    "next": "下一步：{{stepName}}"
+  },
+  "skip": {
+    "title": "跳过应用导览",
+    "message": "你确定要跳过应用导览吗？",
+    "cancel": "取消",
+    "confirm": "是的，跳过"
+  },
+  "buttons": {
+    "skip": "跳过",
+    "next": "下一步",
+    "finish": "完成"
+  }
+}

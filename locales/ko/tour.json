@@ -1,0 +1,32 @@
+{
+  "welcome": {
+    "line1": "Bite Insight를 다운로드해 주셔서 감사합니다.",
+    "line2": "먹는 음식에 실제로 무엇이 들어있는지 이해할 수 있도록 도와드리겠습니다."
+  },
+  "intro": {
+    "cardTitle": "시작하기 전에…",
+    "cardBody": "앱을 안내하고 최대한 활용하는 방법을 보여드리겠습니다. 단계별로 진행하니 쉽게 따라할 수 있어요!",
+    "letsBegin": "시작하기!"
+  },
+  "steps": {
+    "navigation": {
+      "section": "내비게이션",
+      "title": "이것은 탭 내비게이션입니다!",
+      "subtitle": "자주 사용하는 기능에 빠르게 접근할 수 있습니다."
+    }
+  },
+  "progress": {
+    "next": "다음: {{stepName}}"
+  },
+  "skip": {
+    "title": "앱 투어 건너뛰기",
+    "message": "앱 투어를 건너뛰시겠습니까?",
+    "cancel": "취소",
+    "confirm": "네, 건너뛰기"
+  },
+  "buttons": {
+    "skip": "건너뛰기",
+    "next": "다음",
+    "finish": "완료"
+  }
+}

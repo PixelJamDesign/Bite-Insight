@@ -11,6 +11,8 @@ import {
   Platform,
   TextInput,
   Image,
+  Animated,
+  Easing,
   useWindowDimensions,
 } from 'react-native';
 import type { GestureResponderEvent } from 'react-native';
@@ -26,6 +28,7 @@ import { ScreenLayout } from '@/components/ScreenLayout';
 import { MenuLikedIcon, MenuDislikedIcon, MenuFlaggedIcon, ActionSearchIcon, ActionPenIcon } from '@/components/MenuIcons';
 import { IngredientDetailModal } from '@/components/IngredientDetailModal';
 import { FlagReasonSheet } from '@/components/FlagReasonSheet';
+import { useTabBarSlide } from '@/lib/tabBarContext';
 import type { Ingredient, DietaryTag } from '@/lib/types';
 
 type PreferenceTab = 'liked' | 'disliked' | 'flagged';
@@ -84,6 +87,16 @@ export default function IngredientPreferencesScreen() {
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(false);
+  const tabBarSlide = useTabBarSlide();
+  // Slide tab bar off-screen when edit mode is active
+  useEffect(() => {
+    Animated.timing(tabBarSlide, {
+      toValue: editMode ? 150 : 0,
+      duration: 250,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [editMode]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [menuIngredient, setMenuIngredient] = useState<PreferenceItem | null>(null);
   const [menuAnchor, setMenuAnchor] = useState({ x: 0, y: 0 });

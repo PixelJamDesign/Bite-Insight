@@ -135,5 +135,11 @@
       "title": "Hasło zaktualizowane",
       "body": "Twoje hasło zostało pomyślnie zmienione."
     }
+  },
+  "help": {
+    "title": "Pomoc i wsparcie",
+    "helpGuides": "Przewodniki pomocy",
+    "faqs": "Często zadawane pytania",
+    "appOnboarding": "Przewodnik po aplikacji"
   }
 }

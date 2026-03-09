@@ -135,5 +135,11 @@
       "title": "Passwort aktualisiert",
       "body": "Ihr Passwort wurde erfolgreich geändert."
     }
+  },
+  "help": {
+    "title": "Hilfe und Support",
+    "helpGuides": "Hilfe-Leitfäden",
+    "faqs": "FAQ",
+    "appOnboarding": "App-Tour"
   }
 }

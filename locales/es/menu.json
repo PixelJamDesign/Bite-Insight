@@ -135,5 +135,11 @@
       "title": "Contraseña actualizada",
       "body": "Su contraseña ha sido cambiada exitosamente."
     }
+  },
+  "help": {
+    "title": "Ayuda y soporte",
+    "helpGuides": "Guías de ayuda",
+    "faqs": "Preguntas frecuentes",
+    "appOnboarding": "Tour de la app"
   }
 }

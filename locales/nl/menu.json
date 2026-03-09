@@ -135,5 +135,11 @@
       "title": "Wachtwoord bijgewerkt",
       "body": "Uw wachtwoord is succesvol gewijzigd."
     }
+  },
+  "help": {
+    "title": "Hulp en ondersteuning",
+    "helpGuides": "Hulpgidsen",
+    "faqs": "Veelgestelde vragen",
+    "appOnboarding": "App-tour"
   }
 }

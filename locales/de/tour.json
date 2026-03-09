@@ -1,0 +1,32 @@
+{
+  "welcome": {
+    "line1": "Danke, dass du Bite Insight heruntergeladen hast.",
+    "line2": "Wir helfen dir zu verstehen, was wirklich in den Lebensmitteln steckt, die du isst."
+  },
+  "intro": {
+    "cardTitle": "Bevor wir beginnen…",
+    "cardBody": "Nehmen wir uns einen Moment Zeit, um dir die App zu zeigen und wie du das Beste daraus machen kannst. Wir gehen Schritt für Schritt vor, damit es leicht zu folgen ist!",
+    "letsBegin": "Los geht's!"
+  },
+  "steps": {
+    "navigation": {
+      "section": "Navigation",
+      "title": "Das ist deine Tab-Navigation!",
+      "subtitle": "Hier findest du alle deine Schnellzugriffe."
+    }
+  },
+  "progress": {
+    "next": "Weiter: {{stepName}}"
+  },
+  "skip": {
+    "title": "App-Tour überspringen",
+    "message": "Bist du sicher, dass du die App-Tour überspringen möchtest?",
+    "cancel": "Abbrechen",
+    "confirm": "Ja, überspringen"
+  },
+  "buttons": {
+    "skip": "Überspringen",
+    "next": "Weiter",
+    "finish": "Fertig"
+  }
+}

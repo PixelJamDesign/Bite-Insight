@@ -37,6 +37,12 @@
     "myData": "My Data",
     "offlineDatabase": "Offline Database"
   },
+  "help": {
+    "title": "Help & Support",
+    "helpGuides": "Help Guides",
+    "faqs": "FAQs",
+    "appOnboarding": "App Onboarding"
+  },
   "security": {
     "title": "Security",
     "biometricLogin": "Biometric Login",

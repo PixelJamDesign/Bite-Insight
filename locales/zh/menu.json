@@ -135,5 +135,11 @@
       "title": "密码已更新",
       "body": "您的密码已成功更改。"
     }
+  },
+  "help": {
+    "title": "帮助与支持",
+    "helpGuides": "帮助指南",
+    "faqs": "常见问题",
+    "appOnboarding": "应用导览"
   }
 }

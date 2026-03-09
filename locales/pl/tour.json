@@ -1,0 +1,32 @@
+{
+  "welcome": {
+    "line1": "Dziękujemy za pobranie Bite Insight.",
+    "line2": "Jesteśmy tutaj, aby pomóc Ci zrozumieć, co naprawdę znajduje się w jedzeniu, które jesz."
+  },
+  "intro": {
+    "cardTitle": "Zanim zaczniemy…",
+    "cardBody": "Poświęćmy chwilę, aby oprowadzić cię po aplikacji i pokazać, jak najlepiej z niej korzystać. Pójdziemy krok po kroku, więc będzie łatwo nadążyć!",
+    "letsBegin": "Zaczynajmy!"
+  },
+  "steps": {
+    "navigation": {
+      "section": "Nawigacja",
+      "title": "To jest twoja nawigacja zakładek!",
+      "subtitle": "Tutaj znajdziesz wszystkie swoje skróty."
+    }
+  },
+  "progress": {
+    "next": "Dalej: {{stepName}}"
+  },
+  "skip": {
+    "title": "Pomiń przewodnik po aplikacji",
+    "message": "Czy na pewno chcesz pominąć przewodnik po aplikacji?",
+    "cancel": "Anuluj",
+    "confirm": "Tak, pomiń"
+  },
+  "buttons": {
+    "skip": "Pomiń",
+    "next": "Dalej",
+    "finish": "Zakończ"
+  }
+}

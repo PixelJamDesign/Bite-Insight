@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
   Alert,
   TextInput,
+  Linking,
 } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
@@ -74,7 +75,7 @@ import {
   ALL_REGIONS,
 } from '@/lib/offlineDatabase';
 
-type MenuScreen = 'main' | 'ingredients' | 'account' | 'settings' | 'security' | 'mydata' | 'password' | 'offlinedb';
+type MenuScreen = 'main' | 'ingredients' | 'account' | 'settings' | 'security' | 'mydata' | 'password' | 'offlinedb' | 'help';
 
 // ─── Shared sub-components ────────────────────────────────────────────────────
 
@@ -186,7 +187,7 @@ function SettingsScreen({ goBack, onNavigate }: { goBack: () => void; onNavigate
       <View style={styles.navList}>
         <NavItem icon={<MenuLockIcon color={Colors.secondary} />} label={t('settings.security')} onPress={() => onNavigate('security')} chevron />
         <NavItem icon={<MenuNotificationsIcon color={Colors.secondary} />} label={t('settings.notifications')} onPress={() => {}} />
-        <NavItem icon={<MenuHelpIcon color={Colors.secondary} />} label={t('settings.helpSupport')} onPress={() => {}} />
+        <NavItem icon={<MenuHelpIcon color={Colors.secondary} />} label={t('settings.helpSupport')} onPress={() => onNavigate('help')} chevron />
         <NavItem icon={<MenuPrivacyIcon color={Colors.secondary} />} label={t('settings.privacyPolicy')} onPress={() => {}} />
         <NavItem icon={<MenuCookieIcon color={Colors.secondary} />} label={t('settings.cookiePolicy')} onPress={() => {}} />
         <NavItem icon={<MenuDataIcon color={Colors.secondary} />} label={t('settings.myData')} onPress={() => onNavigate('mydata')} chevron />
@@ -199,6 +200,27 @@ function SettingsScreen({ goBack, onNavigate }: { goBack: () => void; onNavigate
             plus={!isPlus}
           />
         )}
+      </View>
+    </>
+  );
+}
+
+function HelpSupportScreen({ goBack, onGo }: { goBack: () => void; onGo: (route: string) => void }) {
+  const { t } = useTranslation('menu');
+  const { t: tc } = useTranslation('common');
+  return (
+    <>
+      <View style={styles.subHeader}>
+        <TouchableOpacity style={styles.backBtn} onPress={goBack} activeOpacity={0.7}>
+          <MenuArrowLeftIcon color={Colors.secondary} size={16} />
+          <Text style={styles.backText}>{tc('buttons.back')}</Text>
+        </TouchableOpacity>
+        <Text style={styles.subTitle}>{t('help.title')}</Text>
+      </View>
+      <View style={styles.navList}>
+        <NavItem icon={<MenuHelpIcon color={Colors.secondary} />} label={t('help.helpGuides')} onPress={() => Linking.openURL('https://biteinsight.co.uk/contact.html')} chevron />
+        <NavItem icon={<MenuHelpIcon color={Colors.secondary} />} label={t('help.faqs')} onPress={() => Linking.openURL('https://biteinsight.co.uk/contact.html')} chevron />
+        <NavItem icon={<MenuHelpIcon color={Colors.secondary} />} label={t('help.appOnboarding')} onPress={() => onGo('/app-tour')} />
       </View>
     </>
   );
@@ -1566,6 +1588,9 @@ export function MenuModal({ onClose, onNavigate }: MenuModalProps) {
     }
     if (s === 'password') {
       return <><ChangePasswordScreen goBack={() => navigate('account', true)} /><Footer /></>;
+    }
+    if (s === 'help') {
+      return <><HelpSupportScreen goBack={() => navigate('settings', true)} onGo={handleNavigate} /><Footer /></>;
     }
     return <><SecurityScreen goBack={() => navigate('settings', true)} /><Footer /></>;
   }
