@@ -1,10 +1,13 @@
 // ── Flag Reason Mappings ──────────────────────────────────────────────────────
 // Dynamically builds predefined reasons based on the user's health conditions,
 // allergies, and dietary preferences from onboarding. Used by FlagReasonSheet.
+//
+// Keys match the lowercase keys stored in the profiles table and defined in
+// constants/profileOptions.ts  (e.g. 'diabetes', 'keto', 'celery').
 
 export interface FlagReasonOption {
   text: string;
-  source: string; // The condition/allergy/preference label, e.g. "Diabetes"
+  source: string; // Display-ready label resolved via i18n
 }
 
 export interface FlagReasonGroup {
@@ -15,147 +18,147 @@ export interface FlagReasonGroup {
 // ── Health Conditions ────────────────────────────────────────────────────────
 
 const HEALTH_CONDITION_REASONS: Record<string, string[]> = {
-  Diabetes: [
+  diabetes: [
     'Spikes blood sugar',
     'Causes energy crash',
     'Affects insulin levels',
     'Doctor advised to avoid',
     'Monitoring carb intake',
   ],
-  Hypertension: [
+  hypertension: [
     'Raises blood pressure',
     'Too high in sodium',
     'Doctor advised to avoid',
     'Retaining water',
     'Heart health concern',
   ],
-  IBS: [
+  ibs: [
     'Causes bloating / gas',
     'Triggers stomach cramps',
     'Causes diarrhoea',
     'FODMAP trigger',
     'Makes symptoms worse',
   ],
-  'High Cholesterol': [
+  highCholesterol: [
     'Raises cholesterol',
     'Too high in saturated fat',
     'Doctor advised to avoid',
     'Heart health concern',
     'Trying to lower LDL',
   ],
-  'Eczema / Psoriasis': [
+  eczema: [
     'Triggers flare-up',
     'Causes itching',
     'Causes inflammation',
     'Dermatologist advised',
     'Skin reaction',
   ],
-  'Heart Disease': [
+  heartDisease: [
     'Heart health concern',
     'Too high in saturated fat',
     'Doctor advised to avoid',
     'Raises cholesterol',
     'High sodium risk',
   ],
-  'GERD / Acid Reflux': [
+  gerd: [
     'Triggers acid reflux',
     'Causes heartburn',
     'Irritates stomach',
     'Doctor advised to avoid',
     'Makes symptoms worse',
   ],
-  PCOS: [
+  pcos: [
     'Spikes blood sugar',
     'Causes hormonal imbalance',
     'Doctor advised to avoid',
     'Affects insulin levels',
     'Worsens symptoms',
   ],
-  'Metabolic Syndrome': [
+  metabolicSyndrome: [
     'Spikes blood sugar',
     'Too high in saturated fat',
     'Doctor advised to avoid',
     'Weight management',
     'Affects insulin levels',
   ],
-  'Migraine / Chronic Headaches': [
+  migraine: [
     'Triggers migraines',
     'Contains trigger compounds',
     'Doctor advised to avoid',
     'Causes headaches',
     'Makes symptoms worse',
   ],
-  "Chron's Disease": [
+  crohns: [
     'Causes flare-up',
     'Irritates gut lining',
     'Doctor advised to avoid',
     'Causes diarrhoea',
     'Makes symptoms worse',
   ],
-  'Ulcerative Colitis': [
+  uc: [
     'Causes flare-up',
     'Irritates colon',
     'Doctor advised to avoid',
     'Causes diarrhoea',
     'Makes symptoms worse',
   ],
-  'Leaky Gut Syndrome': [
+  leakyGut: [
     'Irritates gut lining',
     'Increases permeability',
     'Doctor advised to avoid',
     'Causes inflammation',
     'Makes symptoms worse',
   ],
-  SIBO: [
+  sibo: [
     'Feeds bacterial overgrowth',
     'Causes bloating / gas',
     'Doctor advised to avoid',
     'FODMAP trigger',
     'Makes symptoms worse',
   ],
-  'ME / Chronic Fatigue': [
+  me: [
     'Causes energy crash',
     'Worsens fatigue',
     'Doctor advised to avoid',
     'Causes brain fog',
     'Makes symptoms worse',
   ],
-  'Rheumatoid Arthritis': [
+  ra: [
     'Causes inflammation',
     'Triggers joint pain',
     'Doctor advised to avoid',
     'Worsens symptoms',
     'Increases stiffness',
   ],
-  Lupus: [
+  lupus: [
     'Causes inflammation',
     'Triggers flare-up',
     'Doctor advised to avoid',
     'Worsens symptoms',
     'Affects immune system',
   ],
-  'Multiple Sclerosis': [
+  ms: [
     'Causes inflammation',
     'Worsens symptoms',
     'Doctor advised to avoid',
     'Affects nerve health',
     'Triggers flare-up',
   ],
-  Osteoporosis: [
+  osteoporosis: [
     'Leaches calcium',
     'Weakens bone density',
     'Doctor advised to avoid',
     'Affects mineral absorption',
     'Not bone-friendly',
   ],
-  ADHD: [
+  adhd: [
     'Affects focus / attention',
     'Contains artificial additives',
     'Causes hyperactivity',
     'Doctor advised to avoid',
     'Makes symptoms worse',
   ],
-  Autism: [
+  autism: [
     'Causes sensory reaction',
     'Contains artificial additives',
     'Affects behaviour',
@@ -198,73 +201,73 @@ const SENSITIVITY_REASONS: string[] = [
   'Sensitivity confirmed',
 ];
 
-/** Classify each allergy label from onboarding into its sub-type */
+/** Classify each allergy key into its sub-type */
 const ALLERGY_CLASSIFICATION: Record<string, 'allergy' | 'intolerance' | 'sensitivity'> = {
-  'Celery Allergy': 'allergy',
-  'Egg Allergy': 'allergy',
-  'Fish Allergy': 'allergy',
-  'Fructose Intolerance': 'intolerance',
-  'Gluten Intolerance': 'intolerance',
-  'Histamine Intolerance': 'intolerance',
-  'Lactose Intolerance': 'intolerance',
-  'Lupin Allergy': 'allergy',
-  'MSG Sensitivity': 'sensitivity',
-  'Mustard Allergy': 'allergy',
-  'Peanut Allergy': 'allergy',
-  'Salicylate Sensitivity': 'sensitivity',
-  'Sesame Allergy': 'allergy',
-  'Shellfish Allergy': 'allergy',
-  'Soy Allergy': 'allergy',
-  'Sulphite Sensitivity': 'sensitivity',
-  'Tree Nut Allergy': 'allergy',
+  celery: 'allergy',
+  egg: 'allergy',
+  fish: 'allergy',
+  fructose: 'intolerance',
+  gluten: 'intolerance',
+  histamine: 'intolerance',
+  lactose: 'intolerance',
+  lupin: 'allergy',
+  msg: 'sensitivity',
+  mustard: 'allergy',
+  peanut: 'allergy',
+  salicylate: 'sensitivity',
+  sesame: 'allergy',
+  shellfish: 'allergy',
+  soy: 'allergy',
+  sulphite: 'sensitivity',
+  treeNut: 'allergy',
 };
 
 // ── Dietary Preferences ─────────────────────────────────────────────────────
 
 const DIETARY_PREFERENCE_REASONS: Record<string, string[]> = {
-  Vegan: [
+  vegan: [
     'Against my diet',
     'Ethical reasons',
     'Environmental concerns',
     'Animal welfare',
     "Don't want to consume",
   ],
-  Vegetarian: [
+  vegetarian: [
     'Against my diet',
     'Ethical reasons',
     'Environmental concerns',
     'Animal welfare',
     "Don't want to consume",
   ],
-  'Plant-Based': [
+  plantBased: [
     'Against my diet',
     'Ethical reasons',
     'Environmental concerns',
     'Animal welfare',
     "Don't want to consume",
   ],
-  'Low-Carb / Keto': [
+  keto: [
     'Too many carbs',
     'Knocks me out of ketosis',
     'Too much sugar',
     'Stalls weight loss',
     'Not keto-friendly',
   ],
-  'Weight Loss': [
+  weightLoss: [
     'Too many calories',
     'Too high in sugar',
     'Too high in fat',
     'Stalls progress',
     'Trying to cut out',
   ],
-  'FODMAP Diet': [
+  fodmap: [
     'High FODMAP ingredient',
     'Causes bloating',
     'Triggers IBS symptoms',
     'Dietitian advised to avoid',
     'Elimination phase',
   ],
-  'Dairy-Free': [
+  dairyFree: [
     'Contains dairy',
     'Avoiding all dairy',
     'Causes digestive issues',
@@ -281,23 +284,51 @@ const GENERIC_DIETARY_REASONS: string[] = [
   'Lifestyle choice',
 ];
 
+// ── Display Name Resolver ─────────────────────────────────────────────────────
+// Maps lowercase profile keys → human-readable display names.
+// These are used as section headers in the FlagReasonSheet.
+// A translation function can be passed for i18n support.
+
+type TranslateFn = (key: string) => string;
+
+function resolveDisplayName(
+  key: string,
+  namespace: 'healthConditions' | 'allergies' | 'dietaryPreferences',
+  tpo?: TranslateFn,
+): string {
+  if (tpo) {
+    const translated = tpo(`${namespace}.${key}`);
+    // i18next returns the key path if missing — check for that
+    if (translated && !translated.includes(`.${key}`)) {
+      return translated;
+    }
+  }
+  // Fallback: just return the key as-is
+  return key;
+}
+
 // ── Builder ─────────────────────────────────────────────────────────────────
 
 /**
  * Given a user's profile data, builds a grouped list of flag reason options
  * dynamically based on their health conditions, allergies and dietary prefs.
+ *
+ * @param tpo — optional i18n translate function for the 'profileOptions' namespace.
+ *              Pass `t` from `useTranslation('profileOptions')` to get localised headers.
  */
 export function buildFlagReasonGroups(
   healthConditions: string[],
   allergies: string[],
   dietaryPreferences: string[],
+  tpo?: TranslateFn,
 ): FlagReasonGroup[] {
   const groups: FlagReasonGroup[] = [];
 
   // Health conditions
   for (const condition of healthConditions) {
     const reasons = HEALTH_CONDITION_REASONS[condition] ?? GENERIC_CONDITION_REASONS;
-    groups.push({ source: condition, reasons });
+    const source = resolveDisplayName(condition, 'healthConditions', tpo);
+    groups.push({ source, reasons });
   }
 
   // Allergies / Intolerances / Sensitivities
@@ -309,13 +340,15 @@ export function buildFlagReasonGroups(
         : classification === 'sensitivity'
           ? SENSITIVITY_REASONS
           : ALLERGY_REASONS;
-    groups.push({ source: allergy, reasons });
+    const source = resolveDisplayName(allergy, 'allergies', tpo);
+    groups.push({ source, reasons });
   }
 
   // Dietary preferences
   for (const pref of dietaryPreferences) {
     const reasons = DIETARY_PREFERENCE_REASONS[pref] ?? GENERIC_DIETARY_REASONS;
-    groups.push({ source: pref, reasons });
+    const source = resolveDisplayName(pref, 'dietaryPreferences', tpo);
+    groups.push({ source, reasons });
   }
 
   return groups;

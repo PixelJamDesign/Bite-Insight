@@ -44,6 +44,7 @@ export function FlagReasonSheet({
 }: FlagReasonSheetProps) {
   const { t } = useTranslation('flagReasons');
   const { t: tc } = useTranslation('common');
+  const { t: tpo } = useTranslation('profileOptions');
   const insets = useSafeAreaInsets();
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
@@ -55,7 +56,7 @@ export function FlagReasonSheet({
   const [isOther, setIsOther] = useState(false);
   const [otherText, setOtherText] = useState('');
 
-  const groups = buildFlagReasonGroups(healthConditions, allergies, dietaryPreferences);
+  const groups = buildFlagReasonGroups(healthConditions, allergies, dietaryPreferences, tpo);
   const canConfirm = selectedReasons.size > 0 || (isOther && otherText.trim().length > 0);
 
   // ── Animation ───────────────────────────────────────────────────────────────
