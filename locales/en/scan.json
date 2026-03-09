@@ -118,6 +118,12 @@
     "myProfile": "My Profile",
     "switch": "Switch"
   },
+  "flagged": {
+    "badge": "Flagged",
+    "title": "This product matches a flagged ingredient.",
+    "subtitle": "You said that this item could cause: {{reason}}.",
+    "subtitleGeneric": "You've flagged this ingredient."
+  },
   "flagReason": {
     "veganTitle": "Not vegan",
     "veganBody": "This ingredient is not vegan, which conflicts with your dietary preferences.",

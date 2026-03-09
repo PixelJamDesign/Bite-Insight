@@ -281,12 +281,12 @@ export default function HomeDashboard() {
                 ))}
                 {(profile?.health_conditions ?? []).map((condition) => (
                   <View key={condition} style={styles.genericChip}>
-                    <Text style={styles.genericChipLabel}>{tpo(`healthConditions.${condition}`, condition)}</Text>
+                    <Text style={styles.genericChipLabel}>{tpo(`healthConditions.${condition}`, { defaultValue: condition })}</Text>
                   </View>
                 ))}
                 {(profile?.allergies ?? []).map((allergy) => (
                   <View key={allergy} style={[styles.genericChip, styles.allergyChip]}>
-                    <Text style={styles.genericChipLabel}>{tpo(`allergies.${allergy}`, allergy)}</Text>
+                    <Text style={styles.genericChipLabel}>{tpo(`allergies.${allergy}`, { defaultValue: allergy })}</Text>
                   </View>
                 ))}
               </View>

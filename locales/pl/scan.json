@@ -118,6 +118,12 @@
     "myProfile": "Mój profil",
     "switch": "Przełącznik"
   },
+  "flagged": {
+    "badge": "Oznaczony",
+    "title": "Ten produkt zawiera oznaczony składnik.",
+    "subtitle": "Wskazałeś, że ten produkt może powodować: {{reason}}.",
+    "subtitleGeneric": "Oznaczyłeś ten składnik."
+  },
   "flagReason": {
     "veganTitle": "Nie wegańskie",
     "veganBody": "Składnik ten nie jest wegański, co kłóci się z Twoimi preferencjami żywieniowymi.",

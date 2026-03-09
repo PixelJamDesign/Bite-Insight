@@ -24,7 +24,7 @@ import { useAuth } from '@/lib/auth';
 import type { UserProfile, FamilyProfile, DietaryTag, NutrientWatchlistEntry } from '@/lib/types';
 import { useActiveFamily } from '@/lib/activeFamilyContext';
 import { FamilySwitcherSheet } from '@/components/FamilySwitcherSheet';
-import { TickIcon } from '@/components/MenuIcons';
+import { TickIcon, MenuFlaggedIcon } from '@/components/MenuIcons';
 import { NoImagePlaceholder } from '@/components/NoImagePlaceholder';
 import {
   parseIngredientsText,
@@ -425,6 +425,10 @@ const Extra = {
   poorOrange: '#ff8736',
   highRed: '#ff7779',
   strokeSecondary: '#aad4cd',
+  flaggedOrange: '#ff8736',
+  flaggedOrangeBadge: '#ff7824',
+  flaggedOrangeBg: 'rgba(255,135,54,0.1)',
+  flaggedOrangeText: '#b94a00',
 };
 
 // ── Micronutrient severity thresholds (per 100 g) ──────────────────────────
@@ -828,6 +832,7 @@ type FlaggedIngredient = OffIngredient & {
 
 type IngredientCategory = {
   harmful: FlaggedIngredient[];
+  userFlagged: FlaggedIngredient[];
   ok: OffIngredient[];
   safe: OffIngredient[];
 };
@@ -847,6 +852,7 @@ function categoriseIngredients(
   categoriesTags?: string[],// OFF category tags for product-level matching
 ): IngredientCategory {
   const harmful: FlaggedIngredient[] = [];
+  const userFlagged: FlaggedIngredient[] = [];
   const ok: OffIngredient[] = [];
   const safe: OffIngredient[] = [];
   const allergenSet = new Set(allergenTags.map((a) => a.toLowerCase()));
@@ -871,7 +877,7 @@ function categoriseIngredients(
           const uuid = flaggedNameToIdMap[lc];
           if (uuid && flagReasonMap[uuid]) personalReason = flagReasonMap[uuid];
         }
-        harmful.push({
+        userFlagged.push({
           text: nameMatch.charAt(0).toUpperCase() + nameMatch.slice(1),
           flagReason: 'user_flagged',
           personalReason,
@@ -894,7 +900,7 @@ function categoriseIngredients(
             const uuid = flaggedNameToIdMap[lc];
             if (uuid && flagReasonMap[uuid]) personalReason = flagReasonMap[uuid];
           }
-          harmful.push({
+          userFlagged.push({
             text: catMatch.charAt(0).toUpperCase() + catMatch.slice(1),
             flagReason: 'user_flagged',
             personalReason,
@@ -969,7 +975,12 @@ function categoriseIngredients(
           personalReason = flagReasonMap[ingredientUuid];
         }
       }
-      harmful.push({ ...ing, flagReason: reason, personalReason, matchSource: 'ingredient' });
+      const entry: FlaggedIngredient = { ...ing, flagReason: reason, personalReason, matchSource: 'ingredient' };
+      if (reason === 'user_flagged') {
+        userFlagged.push(entry);
+      } else {
+        harmful.push(entry);
+      }
       continue;
     }
 
@@ -978,7 +989,7 @@ function categoriseIngredients(
 
     safe.push(ing);
   }
-  return { harmful, ok, safe };
+  return { harmful, userFlagged, ok, safe };
 }
 
 // ── Allergen keyword mapping ─────────────────────────────────────────────────
@@ -3111,6 +3122,43 @@ export default function ScanResultScreen() {
                   );
                 })()}
 
+                {/* User-flagged ingredient warning (orange card) */}
+                {categorised.userFlagged.length > 0 && (
+                  <View style={styles.flaggedCard}>
+                    <View style={styles.flaggedBadge}>
+                      <MenuFlaggedIcon color="#fff" size={11} />
+                      <Text style={styles.flaggedBadgeText}>{t('flagged.badge')}</Text>
+                    </View>
+                    <Text style={styles.flaggedTitle}>{t('flagged.title')}</Text>
+                    {categorised.userFlagged.map((ing, i) => {
+                      const reason = ing.personalReason
+                        ? t('flagged.subtitle', { reason: ing.personalReason.text })
+                        : t('flagged.subtitleGeneric');
+                      return (
+                        <View key={ing.id ?? `uf-${i}`} style={styles.ingRow}>
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.ingName} numberOfLines={2}>
+                              {sentenceCase(ing.text)}
+                            </Text>
+                            <Text style={styles.flaggedSubtitle}>{reason}</Text>
+                          </View>
+                          <TouchableOpacity
+                            style={styles.ingInfoContainer}
+                            onPress={() => setFlaggedSheetIng(ing)}
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                          >
+                            <Ionicons
+                              name="information-circle-outline"
+                              size={16}
+                              color={Colors.secondary}
+                            />
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
+
                 {/* Dynamic insight panels — rendered in pairs */}
                 {activeInsights.length > 0 && (
                   <View style={styles.impactPanelsRow}>
@@ -3329,7 +3377,7 @@ export default function ScanResultScreen() {
             )}
 
             {/* Empty state */}
-            {!fetchingOff && !hasNutrition && allergenList.length === 0 && categorised.harmful.length === 0 && (
+            {!fetchingOff && !hasNutrition && allergenList.length === 0 && categorised.harmful.length === 0 && categorised.userFlagged.length === 0 && (
               <View style={styles.emptyState}>
                 <Ionicons name="information-circle-outline" size={40} color={Colors.secondary} />
                 <Text style={styles.emptyStateTitle}>{t('empty.limitedDataTitle')}</Text>
@@ -3515,6 +3563,37 @@ export default function ScanResultScreen() {
                     </View>
                   );
                 })()}
+
+                {/* ── User-flagged card (orange) ── */}
+                {categorised.userFlagged.length > 0 && (
+                  <View style={styles.flaggedCard}>
+                    <View style={styles.flaggedBadge}>
+                      <MenuFlaggedIcon color="#fff" size={11} />
+                      <Text style={styles.flaggedBadgeText}>{t('flagged.badge')}</Text>
+                    </View>
+                    <Text style={styles.flaggedTitle}>{t('flagged.title')}</Text>
+                    {categorised.userFlagged.map((ing, i) => {
+                      const reason = ing.personalReason
+                        ? t('flagged.subtitle', { reason: ing.personalReason.text })
+                        : t('flagged.subtitleGeneric');
+                      return (
+                        <View key={ing.id ?? `uf-${i}`} style={styles.ingRow}>
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.ingName} numberOfLines={2}>{sentenceCase(ing.text)}</Text>
+                            <Text style={styles.flaggedSubtitle}>{reason}</Text>
+                          </View>
+                          <TouchableOpacity
+                            style={styles.ingInfoContainer}
+                            onPress={() => setFlaggedSheetIng(ing)}
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                          >
+                            <InfoIcon width={16} height={16} />
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
 
                 {/* ── Harmful card ── */}
                 {categorised.harmful.length > 0 && (
@@ -4140,6 +4219,49 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
     letterSpacing: -0.26,
+    lineHeight: 18,
+  },
+
+  // Flagged ingredient (orange card)
+  flaggedCard: {
+    backgroundColor: Extra.flaggedOrangeBg,
+    borderWidth: 2,
+    borderColor: Extra.flaggedOrange,
+    borderRadius: 16,
+    padding: Spacing.s,
+    gap: Spacing.xs,
+  },
+  flaggedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: Extra.flaggedOrangeBadge,
+    borderRadius: 999,
+    paddingHorizontal: Spacing.xs,
+    paddingVertical: 4,
+    alignSelf: 'flex-start',
+  },
+  flaggedBadgeText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    letterSpacing: -0.28,
+  },
+  flaggedTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.28,
+    lineHeight: 18,
+  },
+  flaggedSubtitle: {
+    fontSize: 14,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
+    color: Extra.flaggedOrangeText,
+    letterSpacing: -0.14,
     lineHeight: 18,
   },
 

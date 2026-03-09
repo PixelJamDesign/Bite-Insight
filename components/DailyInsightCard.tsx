@@ -55,12 +55,12 @@ export function DailyInsightCard({
             ))}
             {healthConditions.map((condition) => (
               <View key={condition} style={[styles.genericChip, { backgroundColor: '#B8DFD6' }]}>
-                <Text style={styles.genericChipLabel}>{tpo(`healthConditions.${condition}`, condition)}</Text>
+                <Text style={styles.genericChipLabel}>{tpo(`healthConditions.${condition}`, { defaultValue: condition })}</Text>
               </View>
             ))}
             {allergies.map((allergy) => (
               <View key={allergy} style={[styles.genericChip, { backgroundColor: '#B8DFD6' }]}>
-                <Text style={styles.genericChipLabel}>{tpo(`allergies.${allergy}`, allergy)}</Text>
+                <Text style={styles.genericChipLabel}>{tpo(`allergies.${allergy}`, { defaultValue: allergy })}</Text>
               </View>
             ))}
           </View>

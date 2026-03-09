@@ -118,6 +118,12 @@
     "myProfile": "Mijn profiel",
     "switch": "Schakelaar"
   },
+  "flagged": {
+    "badge": "Gemarkeerd",
+    "title": "Dit product komt overeen met een gemarkeerd ingrediënt.",
+    "subtitle": "Je hebt aangegeven dat dit item het volgende kan veroorzaken: {{reason}}.",
+    "subtitleGeneric": "Je hebt dit ingrediënt gemarkeerd."
+  },
   "flagReason": {
     "veganTitle": "Niet veganistisch",
     "veganBody": "Dit ingrediënt is niet veganistisch, wat in strijd is met jouw voedingsvoorkeuren.",

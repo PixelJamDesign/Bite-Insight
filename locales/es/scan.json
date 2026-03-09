@@ -118,6 +118,12 @@
     "myProfile": "Mi perfil",
     "switch": "Cambiar"
   },
+  "flagged": {
+    "badge": "Marcado",
+    "title": "Este producto coincide con un ingrediente marcado.",
+    "subtitle": "Indicaste que este artículo podría causar: {{reason}}.",
+    "subtitleGeneric": "Has marcado este ingrediente."
+  },
   "flagReason": {
     "veganTitle": "No vegano",
     "veganBody": "Este ingrediente no es vegano, lo que entra en conflicto con tus preferencias dietéticas.",

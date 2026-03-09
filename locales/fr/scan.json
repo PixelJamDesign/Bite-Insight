@@ -118,6 +118,12 @@
     "myProfile": "Mon profil",
     "switch": "Changer"
   },
+  "flagged": {
+    "badge": "Signalé",
+    "title": "Ce produit correspond à un ingrédient signalé.",
+    "subtitle": "Vous avez indiqué que cet article pourrait causer : {{reason}}.",
+    "subtitleGeneric": "Vous avez signalé cet ingrédient."
+  },
   "flagReason": {
     "veganTitle": "Pas végétalien",
     "veganBody": "Cet ingrédient n'est pas végétalien, ce qui entre en conflit avec vos préférences alimentaires.",

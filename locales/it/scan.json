@@ -118,6 +118,12 @@
     "myProfile": "Il mio profilo",
     "switch": "Interruttore"
   },
+  "flagged": {
+    "badge": "Segnalato",
+    "title": "Questo prodotto corrisponde a un ingrediente segnalato.",
+    "subtitle": "Hai indicato che questo articolo potrebbe causare: {{reason}}.",
+    "subtitleGeneric": "Hai segnalato questo ingrediente."
+  },
   "flagReason": {
     "veganTitle": "Non vegano",
     "veganBody": "Questo ingrediente non è vegano, il che è in conflitto con le tue preferenze dietetiche.",

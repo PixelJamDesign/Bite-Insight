@@ -118,6 +118,12 @@
     "myProfile": "我的个人资料",
     "switch": "转变"
   },
+  "flagged": {
+    "badge": "已标记",
+    "title": "此产品与已标记的成分匹配。",
+    "subtitle": "您曾表示此产品可能导致：{{reason}}。",
+    "subtitleGeneric": "您已标记此成分。"
+  },
   "flagReason": {
     "veganTitle": "不是素食主义者",
     "veganBody": "这种成分不是素食主义者，这与您的饮食偏好相冲突。",

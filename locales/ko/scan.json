@@ -118,6 +118,12 @@
     "myProfile": "내 프로필",
     "switch": "스위치"
   },
+  "flagged": {
+    "badge": "표시됨",
+    "title": "이 제품은 표시된 성분과 일치합니다.",
+    "subtitle": "이 항목이 다음을 유발할 수 있다고 하셨습니다: {{reason}}.",
+    "subtitleGeneric": "이 성분을 표시하셨습니다."
+  },
   "flagReason": {
     "veganTitle": "비건 채식 아님",
     "veganBody": "이 성분은 비건이 아니므로 귀하의 식단 선호도와 상충됩니다.",

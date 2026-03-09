@@ -118,6 +118,12 @@
     "myProfile": "Mein Profil",
     "switch": "Schalten"
   },
+  "flagged": {
+    "badge": "Markiert",
+    "title": "Dieses Produkt enthält eine markierte Zutat.",
+    "subtitle": "Sie haben angegeben, dass dieser Artikel Folgendes verursachen könnte: {{reason}}.",
+    "subtitleGeneric": "Sie haben diese Zutat markiert."
+  },
   "flagReason": {
     "veganTitle": "Nicht vegan",
     "veganBody": "Diese Zutat ist nicht vegan, was im Widerspruch zu Ihren Ernährungspräferenzen steht.",
