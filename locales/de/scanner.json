@@ -20,6 +20,10 @@
   "regionPicker": {
     "title": "Region auswählen"
   },
+  "gallery": {
+    "title": "Foto-Scan",
+    "description": "Das Scannen von Barcodes aus Fotos wird bald verfügbar sein. Bitte verwenden Sie vorerst die Kamera, um Barcodes direkt zu scannen."
+  },
   "permission": {
     "title": "Kamerazugriff erforderlich",
     "description": "BiteInsight benötigt Kamerazugriff, um Lebensmitteletiketten und Barcodes zu scannen.",
@@ -28,5 +32,15 @@
   "alert": {
     "scanFailedTitle": "Der Scan ist fehlgeschlagen",
     "scanFailedMessage": "Dieser Barcode konnte nicht verarbeitet werden. Bitte versuchen Sie es erneut."
+  },
+  "search": {
+    "placeholder": "Nach Produktname suchen...",
+    "title": "Suchergebnisse",
+    "showing": "{{count}} Ergebnisse für {{term}}",
+    "noResults": "Keine Produkte für '{{term}}' gefunden",
+    "searching": "Suche...",
+    "prompt": "Nach einem Produkt suchen",
+    "back": "Zurück",
+    "noImage": "Kein Bild"
   }
 }

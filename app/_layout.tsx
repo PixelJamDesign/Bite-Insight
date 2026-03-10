@@ -131,6 +131,7 @@ function RootLayoutInner() {
             <Stack.Screen name="add-family-member" />
             <Stack.Screen name="upgrade-success" />
             <Stack.Screen name="app-tour" />
+            <Stack.Screen name="food-search" />
             <Stack.Screen name="reset-password" />
             <Stack.Screen name="+not-found" />
           </Stack>

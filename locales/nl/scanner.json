@@ -20,6 +20,10 @@
   "regionPicker": {
     "title": "Selecteer regio"
   },
+  "gallery": {
+    "title": "Foto scannen",
+    "description": "Het scannen van streepjescodes uit foto's is binnenkort beschikbaar. Gebruik voorlopig de camera om streepjescodes direct te scannen."
+  },
   "permission": {
     "title": "Cameratoegang vereist",
     "description": "BiteInsight heeft cameratoegang nodig om voedseletiketten en streepjescodes te scannen.",
@@ -28,5 +32,15 @@
   "alert": {
     "scanFailedTitle": "Scannen mislukt",
     "scanFailedMessage": "Kan deze streepjescode niet verwerken. Probeer het opnieuw."
+  },
+  "search": {
+    "placeholder": "Zoek op productnaam...",
+    "title": "Zoekresultaten",
+    "showing": "{{count}} resultaten voor {{term}}",
+    "noResults": "Geen producten gevonden voor '{{term}}'",
+    "searching": "Zoeken...",
+    "prompt": "Zoek een product op naam",
+    "back": "Terug",
+    "noImage": "Geen afbeelding"
   }
 }

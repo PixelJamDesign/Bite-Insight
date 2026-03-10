@@ -20,6 +20,10 @@
   "regionPicker": {
     "title": "Select region"
   },
+  "gallery": {
+    "title": "Photo Scan",
+    "description": "Photo barcode scanning is coming soon. For now, please use the camera to scan barcodes directly."
+  },
   "permission": {
     "title": "Camera Access Required",
     "description": "BiteInsight needs camera access to scan food labels and barcodes.",
@@ -28,5 +32,15 @@
   "alert": {
     "scanFailedTitle": "Scan failed",
     "scanFailedMessage": "Could not process this barcode. Please try again."
+  },
+  "search": {
+    "placeholder": "Search by product name...",
+    "title": "Search Results",
+    "showing": "Showing {{count}} results for {{term}}",
+    "noResults": "No products found for '{{term}}'",
+    "searching": "Searching...",
+    "prompt": "Search for a product by name",
+    "back": "Back",
+    "noImage": "No image"
   }
 }

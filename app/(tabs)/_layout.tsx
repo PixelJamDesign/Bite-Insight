@@ -45,8 +45,10 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const activeName = state.routes[state.index]?.name;
 
   useEffect(() => {
-    const x = tabPositions.current[activeName];
+    let x = tabPositions.current[activeName];
     if (x === undefined) return;
+    // Center the 48px indicator behind the wider 84px scanner button
+    if (activeName === 'scanner') x += 18;
     if (!initializedRef.current) {
       indicatorX.setValue(x);
       indicatorOpacity.setValue(1);
@@ -115,6 +117,17 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
                 onPress={onPress}
                 style={styles.scannerButton}
                 activeOpacity={0.9}
+                onLayout={(e) => {
+                  const x = e.nativeEvent.layout.x;
+                  tabPositions.current[route.name] = x;
+                  if (isFocused) {
+                    indicatorX.setValue(x + 18); // center 48px indicator behind 84px button
+                    if (!initializedRef.current) {
+                      indicatorOpacity.setValue(1);
+                      initializedRef.current = true;
+                    }
+                  }
+                }}
               >
                 <View style={styles.scannerInner}>
                   <ScannerIcon size={42} />

@@ -20,6 +20,10 @@
   "regionPicker": {
     "title": "Wybierz region"
   },
+  "gallery": {
+    "title": "Skan ze zdjęcia",
+    "description": "Skanowanie kodów kreskowych ze zdjęć będzie wkrótce dostępne. Na razie użyj aparatu, aby bezpośrednio skanować kody kreskowe."
+  },
   "permission": {
     "title": "Wymagany dostęp do kamery",
     "description": "BiteInsight potrzebuje dostępu do kamery, aby skanować etykiety i kody kreskowe żywności.",
@@ -28,5 +32,15 @@
   "alert": {
     "scanFailedTitle": "Skanowanie nie powiodło się",
     "scanFailedMessage": "Nie można przetworzyć tego kodu kreskowego. Spróbuj ponownie."
+  },
+  "search": {
+    "placeholder": "Szukaj po nazwie produktu...",
+    "title": "Wyniki wyszukiwania",
+    "showing": "Wyświetlanie {{count}} wyników dla {{term}}",
+    "noResults": "Nie znaleziono produktów dla '{{term}}'",
+    "searching": "Wyszukiwanie...",
+    "prompt": "Wyszukaj produkt po nazwie",
+    "back": "Wstecz",
+    "noImage": "Brak zdjęcia"
   }
 }

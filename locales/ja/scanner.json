@@ -20,6 +20,10 @@
   "regionPicker": {
     "title": "地域を選択してください"
   },
+  "gallery": {
+    "title": "写真スキャン",
+    "description": "写真からのバーコードスキャンは近日公開予定です。現在はカメラを使用してバーコードを直接スキャンしてください。"
+  },
   "permission": {
     "title": "カメラへのアクセスが必要です",
     "description": "BiteInsight では、食品ラベルとバーコードをスキャンするためにカメラにアクセスする必要があります。",
@@ -28,5 +32,15 @@
   "alert": {
     "scanFailedTitle": "スキャンに失敗しました",
     "scanFailedMessage": "このバーコードを処理できませんでした。もう一度試してください。"
+  },
+  "search": {
+    "placeholder": "商品名で検索...",
+    "title": "検索結果",
+    "showing": "{{term}} の {{count}} 件の結果",
+    "noResults": "'{{term}}' の商品が見つかりませんでした",
+    "searching": "検索中...",
+    "prompt": "商品名で検索してください",
+    "back": "戻る",
+    "noImage": "画像なし"
   }
 }

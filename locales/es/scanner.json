@@ -20,6 +20,10 @@
   "regionPicker": {
     "title": "Seleccionar región"
   },
+  "gallery": {
+    "title": "Escaneo de foto",
+    "description": "El escaneo de códigos de barras desde fotos estará disponible pronto. Por ahora, utiliza la cámara para escanear códigos de barras directamente."
+  },
   "permission": {
     "title": "Se requiere acceso a la cámara",
     "description": "BiteInsight necesita acceso a la cámara para escanear etiquetas de alimentos y códigos de barras.",
@@ -28,5 +32,15 @@
   "alert": {
     "scanFailedTitle": "Error de escaneo",
     "scanFailedMessage": "No se pudo procesar este código de barras. Por favor inténtalo de nuevo."
+  },
+  "search": {
+    "placeholder": "Buscar por nombre de producto...",
+    "title": "Resultados de búsqueda",
+    "showing": "Mostrando {{count}} resultados para {{term}}",
+    "noResults": "No se encontraron productos para '{{term}}'",
+    "searching": "Buscando...",
+    "prompt": "Busca un producto por nombre",
+    "back": "Volver",
+    "noImage": "Sin imagen"
   }
 }

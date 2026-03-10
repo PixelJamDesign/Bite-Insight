@@ -286,3 +286,29 @@ export function MenuDataIcon({ color, size = 22 }: IconProps) {
     </Svg>
   );
 }
+
+// ── Scanner action bar icons ─────────────────────────────────────────────────
+
+export function ActionGalleryIcon({ color, size = 24 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M3 16.5L8.29289 11.2071C8.68342 10.8166 9.31658 10.8166 9.70711 11.2071L14.5 16M14.5 16L16.7929 13.7071C17.1834 13.3166 17.8166 13.3166 18.2071 13.7071L21 16.5M14.5 16L17 18.5M5 21H19C20.1046 21 21 20.1046 21 19V5C21 3.89543 20.1046 3 19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21ZM15.5 8.5C15.5 9.32843 14.8284 10 14 10C13.1716 10 12.5 9.32843 12.5 8.5C12.5 7.67157 13.1716 7 14 7C14.8284 7 15.5 7.67157 15.5 8.5Z" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+export function ActionChevronDownIcon({ color, size = 24 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M6 9L12 15L18 9" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+export function ActionCheckIcon({ color, size = 20 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 20 20" fill="none">
+      <Path d="M4 10.5L8 14.5L16 6.5" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}

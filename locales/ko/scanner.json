@@ -20,6 +20,10 @@
   "regionPicker": {
     "title": "지역 선택"
   },
+  "gallery": {
+    "title": "사진 스캔",
+    "description": "사진에서 바코드 스캔 기능이 곧 제공될 예정입니다. 현재는 카메라를 사용하여 바코드를 직접 스캔해 주세요."
+  },
   "permission": {
     "title": "카메라 액세스 필요",
     "description": "BiteInsight는 식품 라벨과 바코드를 스캔하려면 카메라 액세스가 필요합니다.",
@@ -28,5 +32,15 @@
   "alert": {
     "scanFailedTitle": "스캔 실패",
     "scanFailedMessage": "이 바코드를 처리할 수 없습니다. 다시 시도해 주세요."
+  },
+  "search": {
+    "placeholder": "제품명으로 검색...",
+    "title": "검색 결과",
+    "showing": "{{term}}에 대한 {{count}}개의 결과",
+    "noResults": "'{{term}}'에 대한 제품을 찾을 수 없습니다",
+    "searching": "검색 중...",
+    "prompt": "제품명으로 검색하세요",
+    "back": "뒤로",
+    "noImage": "이미지 없음"
   }
 }

@@ -1,15 +1,18 @@
 import { useState, useRef, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, Modal, FlatList, Platform, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, Modal, Platform, Dimensions, Image } from 'react-native';
 import { CameraView, useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
-import { safeBack } from '@/lib/safeBack';
 import { useAuth } from '@/lib/auth';
 import { useSubscription } from '@/lib/subscriptionContext';
-import { Colors } from '@/constants/theme';
+import { useUpsellSheet } from '@/lib/upsellSheetContext';
+import { Colors, Spacing, Shadows } from '@/constants/theme';
+import { ActionSearchIcon, ActionGalleryIcon, ActionChevronDownIcon, ActionCheckIcon } from '@/components/MenuIcons';
 import { getCachedProduct, cacheProduct } from '@/lib/productCache';
 import { getOfflineProduct } from '@/lib/offlineDatabase';
 import { WebBarcodeScanner } from '@/components/WebBarcodeScanner';
@@ -18,17 +21,36 @@ import { WebBarcodeScanner } from '@/components/WebBarcodeScanner';
 type Region = { code: string; label: string; subdomain: string };
 
 const REGIONS: Region[] = [
-  { code: 'world', label: 'World', subdomain: 'world' },
   { code: 'gb',    label: 'United Kingdom', subdomain: 'uk' },
-  { code: 'us',    label: 'United States', subdomain: 'us' },
-  { code: 'fr',    label: 'France', subdomain: 'fr' },
-  { code: 'de',    label: 'Germany', subdomain: 'de' },
-  { code: 'es',    label: 'Spain', subdomain: 'es' },
-  { code: 'it',    label: 'Italy', subdomain: 'it' },
-  { code: 'au',    label: 'Australia', subdomain: 'au' },
-  { code: 'ca',    label: 'Canada', subdomain: 'ca' },
-  { code: 'nl',    label: 'Netherlands', subdomain: 'nl' },
+  { code: 'world', label: 'Global',         subdomain: 'world' },
+  { code: 'us',    label: 'United States',  subdomain: 'us' },
+  { code: 'it',    label: 'Italy',          subdomain: 'it' },
+  { code: 'de',    label: 'Germany',        subdomain: 'de' },
+  { code: 'es',    label: 'Spain',          subdomain: 'es' },
+  { code: 'fr',    label: 'France',         subdomain: 'fr' },
 ];
+
+/** Flag icon images for each region */
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const FLAG_IMAGES: Record<string, any> = {
+  gb: require('@/assets/images/region_uk.webp'),
+  world: require('@/assets/images/region_global.webp'),
+  us: require('@/assets/images/region_usa.webp'),
+  it: require('@/assets/images/region_italy.webp'),
+  de: require('@/assets/images/region_germany.webp'),
+  es: require('@/assets/images/region_spain.webp'),
+  fr: require('@/assets/images/region_france.webp'),
+};
+
+/** Inline Plus+ badge for premium regions */
+function PlusTag() {
+  return (
+    <View style={pStyles.plusTag}>
+      <Text style={pStyles.plusText}>plus</Text>
+      <Text style={pStyles.plusStar}>⁺</Text>
+    </View>
+  );
+}
 
 /** Detect the user's default region from device locale */
 function getDefaultRegion(): Region {
@@ -60,7 +82,45 @@ export default function ScannerScreen() {
   const router = useRouter();
   const { session } = useAuth();
   const { isPlus } = useSubscription();
+  const { showUpsell } = useUpsellSheet();
+  const insets = useSafeAreaInsets();
   const lastScan = useRef<string | null>(null);
+
+  // Bottom offset to position action bar above the tab bar
+  // Tab bar: paddingTop(32) + pill(60) + paddingBottom(insets.bottom+8) + gap(8)
+  const actionBarBottom = insets.bottom + 8 + 60 + 32 + 8;
+
+  /** Open photo library and attempt to scan a barcode from the selected image */
+  async function handleGalleryScan() {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        quality: 1,
+      });
+      if (result.canceled || !result.assets?.length) return;
+      // Static image barcode detection requires native modules not yet available
+      // in Expo managed workflow — show informative message for now
+      Alert.alert(
+        t('gallery.title'),
+        t('gallery.description'),
+        [{ text: tc('buttons.ok') }],
+      );
+    } catch {
+      // Picker cancelled or failed — ignore silently
+    }
+  }
+
+  /** Handle region selection — gate premium regions behind Plus (UK always free) */
+  function handleRegionSelect(region: Region) {
+    if (region.code !== 'gb' && !isPlus) {
+      // Non-UK regions require Plus subscription
+      setRegionPickerVisible(false);
+      showUpsell();
+      return;
+    }
+    setSelectedRegion(region);
+    setRegionPickerVisible(false);
+  }
 
   // Reset scanner state every time the tab comes into focus
   useFocusEffect(
@@ -345,6 +405,108 @@ export default function ScannerScreen() {
     }
   }
 
+  // ── Shared: Region picker panel content ──────────────────────────────────────
+  function renderRegionPanel() {
+    return (
+      <View style={styles.regionPanel}>
+        <Text style={styles.regionPanelTitle}>{t('regionPicker.title')}</Text>
+
+        {/* Selected region — always the first item */}
+        <View style={styles.regionPanelContent}>
+          <TouchableOpacity
+            style={styles.regionRow}
+            activeOpacity={0.7}
+            onPress={() => handleRegionSelect(selectedRegion)}
+          >
+            <Image source={FLAG_IMAGES[selectedRegion.code]} style={styles.flagImage} resizeMode="contain" />
+            <Text style={styles.regionRowLabel}>{selectedRegion.label}</Text>
+            <ActionCheckIcon color={Colors.accent} size={20} />
+          </TouchableOpacity>
+
+          {/* Divider */}
+          <View style={styles.regionDivider} />
+
+          {/* Other regions */}
+          <View style={styles.regionOthersList}>
+            {REGIONS.filter((r) => r.code !== selectedRegion.code).map((region) => {
+              const isFree = region.code === 'gb';
+              return (
+                <TouchableOpacity
+                  key={region.code}
+                  style={styles.regionRow}
+                  activeOpacity={0.7}
+                  onPress={() => handleRegionSelect(region)}
+                >
+                  <Image source={FLAG_IMAGES[region.code]} style={styles.flagImage} resizeMode="contain" />
+                  <Text style={styles.regionRowLabel}>{region.label}</Text>
+                  {!isFree && !isPlus && <PlusTag />}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  // ── Shared: Bottom action bar ───────────────────────────────────────────────
+  function renderActionBar() {
+    return (
+      <View style={[styles.actionBar, { bottom: actionBarBottom }]}>
+        {/* Region dropdown */}
+        <TouchableOpacity
+          style={styles.regionDropdown}
+          activeOpacity={0.85}
+          onPress={() => setRegionPickerVisible(true)}
+        >
+          <Image source={FLAG_IMAGES[selectedRegion.code]} style={styles.flagImage} resizeMode="contain" />
+          <Text style={styles.regionDropdownLabel} numberOfLines={1}>{selectedRegion.label}</Text>
+          <ActionChevronDownIcon color={Colors.primary} size={24} />
+        </TouchableOpacity>
+
+        {/* Icon buttons */}
+        <View style={styles.actionBtnGroup}>
+          <TouchableOpacity style={styles.actionBtn} activeOpacity={0.8} onPress={handleGalleryScan}>
+            <ActionGalleryIcon color={Colors.primary} size={24} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionBtn} activeOpacity={0.8} onPress={() => router.push('/food-search')}>
+            <ActionSearchIcon color={Colors.primary} size={22} />
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  // ── Shared: Region picker modal ─────────────────────────────────────────────
+  function renderRegionModal() {
+    return (
+      <Modal
+        visible={regionPickerVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setRegionPickerVisible(false)}
+      >
+        <TouchableOpacity
+          style={StyleSheet.absoluteFill}
+          activeOpacity={1}
+          onPress={() => setRegionPickerVisible(false)}
+        >
+          {/* Blur backdrop */}
+          {Platform.OS === 'ios' ? (
+            <BlurView intensity={25} tint="default" style={[StyleSheet.absoluteFill, styles.regionBackdrop]} />
+          ) : (
+            <View style={[StyleSheet.absoluteFill, styles.regionBackdrop]} />
+          )}
+        </TouchableOpacity>
+
+        {/* Panel — positioned bottom-left, above action bar */}
+        <View style={[styles.regionPanelWrapper, { bottom: actionBarBottom + 56 }]} pointerEvents="box-none">
+          {renderRegionPanel()}
+        </View>
+      </Modal>
+    );
+  }
+
   // ── Web: camera barcode scanner with BarcodeDetector API ──────────────────
   if (Platform.OS === 'web') {
     return (
@@ -355,31 +517,9 @@ export default function ScannerScreen() {
           onBarcodeScanned={(data) => handleBarcodeScan({ data } as BarcodeScanningResult)}
         />
 
-        {/* Overlay UI — absolutely positioned over the camera */}
+        {/* Overlay UI — transparent, no dark tint */}
         <View style={[styles.overlay, StyleSheet.absoluteFillObject]} pointerEvents="box-none">
-          {/* Top bar — back button + region selector */}
-          <SafeAreaView edges={['top']} pointerEvents="box-none">
-            <View style={styles.topBar}>
-              <TouchableOpacity style={styles.backBtn} onPress={safeBack}>
-                <Ionicons name="arrow-back" size={24} color="#fff" />
-              </TouchableOpacity>
-              {isPlus ? (
-                <TouchableOpacity
-                  style={styles.switcherPill}
-                  onPress={() => setRegionPickerVisible(true)}
-                  activeOpacity={0.85}
-                >
-                  <Ionicons name="globe-outline" size={16} color="#fff" />
-                  <Text style={styles.switcherText}>{selectedRegion.label}</Text>
-                  <Ionicons name="chevron-down" size={14} color="rgba(255,255,255,0.7)" />
-                </TouchableOpacity>
-              ) : (
-                <View style={{ width: 44 }} />
-              )}
-            </View>
-          </SafeAreaView>
-
-          {/* Scan frame — centered rectangle */}
+          {/* Scan frame — centered */}
           <View style={styles.frameArea} pointerEvents="none">
             <View style={styles.webFrame}>
               <View style={[styles.corner, styles.topLeft]} />
@@ -387,52 +527,17 @@ export default function ScannerScreen() {
               <View style={[styles.corner, styles.bottomLeft]} />
               <View style={[styles.corner, styles.bottomRight]} />
             </View>
-            <Text style={styles.frameHint}>
-              {processing ? t('hint.processing') : t('hint.pointAtBarcode')}
-            </Text>
             {processing && (
               <ActivityIndicator size="large" color="#fff" style={{ marginTop: 16 }} />
             )}
           </View>
-
-          {/* Spacer to balance the layout */}
-          <View style={{ height: 80 }} />
         </View>
 
-        {/* Region picker modal — Plus subscribers only */}
-        <Modal
-          visible={regionPickerVisible}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setRegionPickerVisible(false)}
-        >
-          <TouchableOpacity
-            style={styles.switcherBackdrop}
-            activeOpacity={1}
-            onPress={() => setRegionPickerVisible(false)}
-          >
-            <View style={styles.switcherDropdown}>
-              <Text style={styles.switcherDropdownTitle}>{t('regionPicker.title')}</Text>
-              <FlatList
-                data={REGIONS}
-                keyExtractor={(item) => item.code}
-                style={{ maxHeight: 340 }}
-                renderItem={({ item: region }) => (
-                  <TouchableOpacity
-                    style={styles.switcherOption}
-                    onPress={() => { setSelectedRegion(region); setRegionPickerVisible(false); }}
-                    activeOpacity={0.8}
-                  >
-                    <View style={[styles.switcherCheck, selectedRegion.code === region.code && styles.switcherCheckActive]}>
-                      {selectedRegion.code === region.code && <Ionicons name="checkmark" size={14} color="#fff" />}
-                    </View>
-                    <Text style={styles.switcherOptionText}>{region.label}</Text>
-                  </TouchableOpacity>
-                )}
-              />
-            </View>
-          </TouchableOpacity>
-        </Modal>
+        {/* Bottom action bar */}
+        {renderActionBar()}
+
+        {/* Region picker modal */}
+        {renderRegionModal()}
       </View>
     );
   }
@@ -475,108 +580,69 @@ export default function ScannerScreen() {
         onBarcodeScanned={scanning ? handleBarcodeScan : undefined}
       />
 
-      {/* Overlay */}
-      <View style={styles.overlay}>
-        {/* Top bar */}
-        <SafeAreaView edges={['top']}>
-          <View style={styles.topBar}>
-            <TouchableOpacity style={styles.backBtn} onPress={safeBack}>
-              <Ionicons name="arrow-back" size={24} color="#fff" />
-            </TouchableOpacity>
-            <Text style={styles.topTitle}>{t('topTitle')}</Text>
-            <View style={{ width: 44 }} />
-          </View>
-        </SafeAreaView>
-
-        {/* Region selector pill — only shown for Plus subscribers */}
-        {isPlus && (
-          <View style={styles.switcherRow}>
-            <TouchableOpacity
-              style={styles.switcherPill}
-              onPress={() => setRegionPickerVisible(true)}
-              activeOpacity={0.85}
-            >
-              <Ionicons name="globe-outline" size={16} color="#fff" />
-              <Text style={styles.switcherText}>{selectedRegion.label}</Text>
-              <Ionicons name="chevron-down" size={14} color="rgba(255,255,255,0.7)" />
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* Scan frame */}
-        <View style={styles.frameArea}>
+      {/* Transparent overlay — no dark tint, just positions content */}
+      <View style={styles.overlay} pointerEvents="box-none">
+        {/* Viewfinder — centered */}
+        <View style={styles.frameArea} pointerEvents="none">
           <View style={styles.nativeFrame}>
             <View style={[styles.corner, styles.topLeft]} />
             <View style={[styles.corner, styles.topRight]} />
             <View style={[styles.corner, styles.bottomLeft]} />
             <View style={[styles.corner, styles.bottomRight]} />
           </View>
-          <Text style={styles.frameHint}>
-            {processing ? t('hint.processing') : t('hint.pointAtBarcode')}
-          </Text>
           {processing && (
             <ActivityIndicator size="large" color="#fff" style={{ marginTop: 16 }} />
           )}
         </View>
-
-        {/* Bottom hint */}
-        <SafeAreaView edges={['bottom']}>
-          <View style={styles.bottomBar}>
-            <Text style={styles.bottomHint}>
-              {t('bottomHint')}
-            </Text>
-          </View>
-        </SafeAreaView>
       </View>
 
-      {/* Region picker modal — Plus subscribers only */}
-      <Modal
-        visible={regionPickerVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setRegionPickerVisible(false)}
-      >
-        <TouchableOpacity
-          style={styles.switcherBackdrop}
-          activeOpacity={1}
-          onPress={() => setRegionPickerVisible(false)}
-        >
-          <View style={styles.switcherDropdown}>
-            <Text style={styles.switcherDropdownTitle}>{t('regionPicker.title')}</Text>
-            <FlatList
-              data={REGIONS}
-              keyExtractor={(item) => item.code}
-              style={{ maxHeight: 340 }}
-              renderItem={({ item: region }) => (
-                <TouchableOpacity
-                  style={styles.switcherOption}
-                  onPress={() => { setSelectedRegion(region); setRegionPickerVisible(false); }}
-                  activeOpacity={0.8}
-                >
-                  <View style={[styles.switcherCheck, selectedRegion.code === region.code && styles.switcherCheckActive]}>
-                    {selectedRegion.code === region.code && <Ionicons name="checkmark" size={14} color="#fff" />}
-                  </View>
-                  <Text style={styles.switcherOptionText}>{region.label}</Text>
-                </TouchableOpacity>
-              )}
-            />
-          </View>
-        </TouchableOpacity>
-      </Modal>
+      {/* Bottom action bar */}
+      {renderActionBar()}
+
+      {/* Region picker modal */}
+      {renderRegionModal()}
     </View>
   );
 }
 
-const FRAME_SIZE = 260;
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const FRAME_WIDTH = Math.min(450, SCREEN_WIDTH * 0.9);
 const FRAME_HEIGHT = FRAME_WIDTH * 0.6;
-const CORNER_SIZE = 32;
+const CORNER_SIZE = 36;
 const CORNER_THICKNESS = 4;
+
+// ── PlusTag badge styles ──────────────────────────────────────────────────────
+const pStyles = StyleSheet.create({
+  plusTag: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: Colors.primary, // #023432
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+  },
+  plusText: {
+    fontSize: 16,
+    fontFamily: 'Figtree_700Bold',
+    fontWeight: '700',
+    color: '#fff',
+    lineHeight: 17.6,
+    letterSpacing: -0.32,
+  },
+  plusStar: {
+    fontSize: 8,
+    fontFamily: 'Figtree_700Bold',
+    fontWeight: '700',
+    color: '#fff',
+    marginTop: -1,
+  },
+});
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
   center: { flex: 1, backgroundColor: Colors.background, alignItems: 'center', justifyContent: 'center' },
+
+  // ── Permission states ─────────────────────────────────────────────────────
   permissionContainer: {
     flex: 1,
     backgroundColor: Colors.background,
@@ -613,38 +679,18 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
   },
+
+  // ── Camera overlay — transparent, no dark tint ────────────────────────────
   overlay: {
-    flex: 1,
-    justifyContent: 'space-between',
-    backgroundColor: 'rgba(0,0,0,0.45)',
-  },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-  },
-  backBtn: {
-    width: 44,
-    height: 44,
+    ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  topTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-  },
+
+  // ── Viewfinder ────────────────────────────────────────────────────────────
   frameArea: {
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  frame: {
-    width: FRAME_SIZE,
-    height: FRAME_SIZE,
-    position: 'relative',
   },
   nativeFrame: {
     width: FRAME_WIDTH,
@@ -667,133 +713,140 @@ const styles = StyleSheet.create({
     left: 0,
     borderTopWidth: CORNER_THICKNESS,
     borderLeftWidth: CORNER_THICKNESS,
-    borderTopLeftRadius: 4,
+    borderTopLeftRadius: 12,
   },
   topRight: {
     top: 0,
     right: 0,
     borderTopWidth: CORNER_THICKNESS,
     borderRightWidth: CORNER_THICKNESS,
-    borderTopRightRadius: 4,
+    borderTopRightRadius: 12,
   },
   bottomLeft: {
     bottom: 0,
     left: 0,
     borderBottomWidth: CORNER_THICKNESS,
     borderLeftWidth: CORNER_THICKNESS,
-    borderBottomLeftRadius: 4,
+    borderBottomLeftRadius: 12,
   },
   bottomRight: {
     bottom: 0,
     right: 0,
     borderBottomWidth: CORNER_THICKNESS,
     borderRightWidth: CORNER_THICKNESS,
-    borderBottomRightRadius: 4,
-  },
-  frameHint: {
-    color: 'rgba(255,255,255,0.85)',
-    fontSize: 14,
-    fontFamily: 'Figtree_300Light',
-    marginTop: 24,
-    textAlign: 'center',
-  },
-  bottomBar: {
-    paddingHorizontal: 24,
-    paddingBottom: 32,
-    alignItems: 'center',
-  },
-  bottomHint: {
-    color: 'rgba(255,255,255,0.5)',
-    fontSize: 12,
-    fontFamily: 'Figtree_300Light',
-    textAlign: 'center',
+    borderBottomRightRadius: 12,
   },
 
-  // Profile switcher
-  switcherRow: {
-    alignItems: 'center',
-    paddingTop: 8,
-    paddingBottom: 4,
-  },
-  switcherPill: {
+  // ── Bottom action bar ─────────────────────────────────────────────────────
+  actionBar: {
+    position: 'absolute',
+    left: Spacing.m,   // 24
+    right: Spacing.m,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.25)',
-    borderRadius: 999,
-    paddingVertical: 7,
-    paddingHorizontal: 14,
+    justifyContent: 'space-between',
   },
-  switcherText: {
-    color: '#fff',
-    fontSize: 14,
-    fontFamily: 'Figtree_700Bold',
-    fontWeight: '700',
-    letterSpacing: -0.28,
-  },
-  switcherBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+
+  // Region dropdown pill (left side)
+  regionDropdown: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-  },
-  switcherDropdown: {
     backgroundColor: '#fff',
-    borderRadius: 16,
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-    width: 260,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 12,
-  },
-  switcherDropdownTitle: {
-    fontSize: 12,
-    fontFamily: 'Figtree_300Light',
-    fontWeight: '300',
-    color: Colors.secondary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
-  },
-  switcherOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 13,
-    borderRadius: 12,
-    marginHorizontal: 4,
-  },
-  switcherCheck: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: '#aad4cd',
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderRadius: 12,
+    paddingHorizontal: Spacing.xs,   // 8
+    paddingVertical: Spacing.xs,
+    height: 48,
+    width: 201,
+    gap: Spacing.xs,
+    overflow: 'hidden',
   },
-  switcherCheckActive: {
-    backgroundColor: Colors.secondary,
-    borderColor: Colors.secondary,
+  flagImage: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
   },
-  switcherOptionText: {
-    fontSize: 15,
+  regionDropdownLabel: {
+    flex: 1,
+    fontSize: 16,
     fontFamily: 'Figtree_700Bold',
     fontWeight: '700',
     color: Colors.primary,
-    letterSpacing: -0.3,
+    letterSpacing: -0.32,
   },
-  switcherOptionSub: {
-    fontSize: 13,
+
+  // Action icon buttons (right side)
+  actionBtnGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  actionBtn: {
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(228,241,239,0.9)',
+    borderWidth: 1,
+    borderColor: '#fff',
+    borderRadius: 16,
+    ...Shadows.level3,
+  },
+
+  // ── Region picker modal ───────────────────────────────────────────────────
+  regionBackdrop: {
+    backgroundColor: 'rgba(217,217,217,0.5)',
+  },
+  regionPanelWrapper: {
+    position: 'absolute',
+    left: Spacing.m, // 24
+  },
+  regionPanel: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    width: 275,
+    paddingTop: Spacing.s,      // 16
+    paddingBottom: Spacing.m,   // 24
+    paddingHorizontal: Spacing.s,
+    gap: Spacing.xs,            // 8
+  },
+  regionPanelTitle: {
+    fontSize: 16,
     fontFamily: 'Figtree_300Light',
     fontWeight: '300',
     color: Colors.secondary,
+    lineHeight: 24,
+  },
+  regionPanelContent: {
+    gap: Spacing.s,   // 16
+  },
+
+  // Region rows
+  regionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  flagImageSmall: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+  },
+  regionRowLabel: {
+    flex: 1,
+    fontSize: 16,
+    fontFamily: 'Figtree_700Bold',
+    fontWeight: '700',
+    color: Colors.primary,
+    letterSpacing: -0.32,
+    lineHeight: 24,
+  },
+  regionDivider: {
+    height: 1,
+    backgroundColor: '#aad4cd',
+  },
+  regionOthersList: {
+    gap: 8,
   },
 });

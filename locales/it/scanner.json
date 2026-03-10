@@ -20,6 +20,10 @@
   "regionPicker": {
     "title": "Seleziona regione"
   },
+  "gallery": {
+    "title": "Scansione foto",
+    "description": "La scansione dei codici a barre dalle foto sarà presto disponibile. Per ora, utilizza la fotocamera per scansionare i codici a barre direttamente."
+  },
   "permission": {
     "title": "È richiesto l'accesso alla fotocamera",
     "description": "BiteInsight necessita dell'accesso alla fotocamera per scansionare etichette e codici a barre degli alimenti.",
@@ -28,5 +32,15 @@
   "alert": {
     "scanFailedTitle": "Scansione non riuscita",
     "scanFailedMessage": "Impossibile elaborare questo codice a barre. Per favore riprova."
+  },
+  "search": {
+    "placeholder": "Cerca per nome prodotto...",
+    "title": "Risultati di ricerca",
+    "showing": "{{count}} risultati per {{term}}",
+    "noResults": "Nessun prodotto trovato per '{{term}}'",
+    "searching": "Ricerca...",
+    "prompt": "Cerca un prodotto per nome",
+    "back": "Indietro",
+    "noImage": "Nessuna immagine"
   }
 }

@@ -77,6 +77,14 @@
   "nutrientWatch": {
     "noMicroData": "Micronutrient data is not available for this product."
   },
+  "ingredientSubTab": {
+    "fullList": "Full list",
+    "insightGroups": "Insight groups"
+  },
+  "fullList": {
+    "ingredients_one": "{{count}} ingredient",
+    "ingredients_other": "{{count}} ingredients"
+  },
   "ingredients": {
     "ingredient_one": "{{count}} ingredient",
     "ingredient_other": "{{count}} ingredients",

@@ -20,6 +20,10 @@
   "regionPicker": {
     "title": "选择地区"
   },
+  "gallery": {
+    "title": "照片扫描",
+    "description": "从照片扫描条形码功能即将推出。目前请使用相机直接扫描条形码。"
+  },
   "permission": {
     "title": "需要访问相机",
     "description": "BiteInsight 需要摄像头访问才能扫描食品标签和条形码。",
@@ -28,5 +32,15 @@
   "alert": {
     "scanFailedTitle": "扫描失败",
     "scanFailedMessage": "无法处理该条形码。请再试一次。"
+  },
+  "search": {
+    "placeholder": "按产品名称搜索...",
+    "title": "搜索结果",
+    "showing": "显示 {{count}} 个关于 {{term}} 的结果",
+    "noResults": "未找到 '{{term}}' 的产品",
+    "searching": "搜索中...",
+    "prompt": "按名称搜索产品",
+    "back": "返回",
+    "noImage": "无图片"
   }
 }

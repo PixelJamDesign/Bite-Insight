@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   View,
   Text,
+  TextInput,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
@@ -14,6 +15,7 @@ import {
   Animated,
   Easing,
   Dimensions,
+  LayoutAnimation,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,12 +30,16 @@ import { TickIcon, MenuFlaggedIcon } from '@/components/MenuIcons';
 import { NoImagePlaceholder } from '@/components/NoImagePlaceholder';
 import {
   parseIngredientsText,
-  buildHybridIngredients,
+  parseIngredientsWithHierarchy,
+  parseIngredientTree,
+  cleanTreeToken,
   translateToEnglish,
   cleanIngredientName,
   matchesFlaggedIngredient,
   normaliseCategoryTag,
+  isNegatedInContext,
 } from '@/lib/ingredientsCleaner';
+import type { IngredientNode } from '@/lib/ingredientsCleaner';
 import { safeBack } from '@/lib/safeBack';
 import SwitchIcon from '@/assets/icons/switch.svg';
 import InfoIcon from '@/assets/icons/info.svg';
@@ -215,7 +221,7 @@ const INSIGHT_DEFS: InsightDef[] = [
       const score = (sugars * 2 + netCarbs) / (fiber + 1);
       if (score > 30) return { label: 'Very High', color: Colors.status.negative, iconKey: 'veryHigh' };
       if (score > 15) return { label: 'High',      color: Extra.poorOrange,       iconKey: 'high' };
-      if (score > 5)  return { label: 'Moderate',  color: Extra.okYellow,         iconKey: 'moderate' };
+      if (score > 5)  return { label: 'Moderate',  color: Extra.poorOrange,       iconKey: 'moderate' };
       return { label: 'Low', color: Extra.positiveGreen, iconKey: 'low' };
     },
     icons: GlycemicIcons,
@@ -233,7 +239,7 @@ const INSIGHT_DEFS: InsightDef[] = [
       if (isNaN(salt)) return null;
       if (salt > 3)   return { label: 'Very High', color: Colors.status.negative, iconKey: 'veryHigh' };
       if (salt > 1.5) return { label: 'High',      color: Extra.poorOrange,       iconKey: 'high' };
-      if (salt > 0.3) return { label: 'Moderate',  color: Extra.okYellow,         iconKey: 'moderate' };
+      if (salt > 0.3) return { label: 'Moderate',  color: Extra.poorOrange,       iconKey: 'moderate' };
       return { label: 'Low', color: Extra.positiveGreen, iconKey: 'low' };
     },
     icons: SodiumIcons,
@@ -253,7 +259,7 @@ const INSIGHT_DEFS: InsightDef[] = [
       if (isNaN(kcal)) return null;
       if (kcal > 400) return { label: 'Very High', color: Colors.status.negative, iconKey: 'veryHigh' };
       if (kcal > 250) return { label: 'High',      color: Extra.poorOrange,       iconKey: 'high' };
-      if (kcal > 100) return { label: 'Moderate',  color: Extra.okYellow,         iconKey: 'moderate' };
+      if (kcal > 100) return { label: 'Moderate',  color: Extra.poorOrange,       iconKey: 'moderate' };
       return { label: 'Low', color: Extra.positiveGreen, iconKey: 'low' };
     },
     icons: CalorieIcons,
@@ -276,7 +282,7 @@ const INSIGHT_DEFS: InsightDef[] = [
       const score = fat + fiber;
       if (score > 15) return { label: 'Very High', color: Colors.status.negative, iconKey: 'veryHigh' };
       if (score > 8)  return { label: 'High',      color: Extra.poorOrange,       iconKey: 'high' };
-      if (score > 4)  return { label: 'Moderate',  color: Extra.okYellow,         iconKey: 'moderate' };
+      if (score > 4)  return { label: 'Moderate',  color: Extra.poorOrange,       iconKey: 'moderate' };
       return { label: 'Low', color: Extra.positiveGreen, iconKey: 'low' };
     },
     icons: DigestiveLoadIcons,
@@ -294,7 +300,7 @@ const INSIGHT_DEFS: InsightDef[] = [
       if (isNaN(carbs)) return null;
       if (carbs > 30) return { label: 'Very High', color: Colors.status.negative, iconKey: 'veryHigh' };
       if (carbs > 15) return { label: 'High',      color: Extra.poorOrange,       iconKey: 'high' };
-      if (carbs > 5)  return { label: 'Moderate',  color: Extra.okYellow,         iconKey: 'moderate' };
+      if (carbs > 5)  return { label: 'Moderate',  color: Extra.poorOrange,       iconKey: 'moderate' };
       return { label: 'Low', color: Extra.positiveGreen, iconKey: 'low' };
     },
     icons: CarbLoadIcons,
@@ -314,7 +320,7 @@ const INSIGHT_DEFS: InsightDef[] = [
       if (count < 0) return null;
       if (count >= 5) return { label: 'Very High', color: Colors.status.negative, iconKey: 'veryHigh' };
       if (count >= 3) return { label: 'High',      color: Extra.poorOrange,       iconKey: 'high' };
-      if (count >= 1) return { label: 'Moderate',  color: Extra.okYellow,         iconKey: 'moderate' };
+      if (count >= 1) return { label: 'Moderate',  color: Extra.poorOrange,       iconKey: 'moderate' };
       return { label: 'Low', color: Extra.positiveGreen, iconKey: 'low' };
     },
     icons: AdditiveIcons,
@@ -463,7 +469,7 @@ const MICRO_THRESHOLDS: Record<string, [number, number, number, number]> = {
 // Traffic-light colours (same scale as nutri-score)
 const SEV_AMAZING = Extra.positiveGreen; // #009a1f
 const SEV_GOOD    = Extra.goodLime;      // #b8d828
-const SEV_OK      = '#ffc72d';           // yellow (nutri-score C)
+const SEV_OK      = Extra.poorOrange;    // #ff8736 — orange (yellow #ffc72d fails accessibility on light bg)
 const SEV_POOR    = Extra.poorOrange;    // #ff8736
 const SEV_BAD     = Extra.highRed;       // #ff7779
 
@@ -773,7 +779,7 @@ function getRating(
 
   if (t.inverted) {
     if (value >= t.moderate) return { label: highLabel, color: Extra.positiveGreen };
-    if (value >= t.low)      return { label: modLabel,  color: Extra.okYellow };
+    if (value >= t.low)      return { label: modLabel,  color: Extra.poorOrange };
     return { label: lowLabel, color: Colors.status.negative };
   }
 
@@ -820,6 +826,9 @@ type OffIngredient = {
   vegan?: string;      // "yes" | "no" | "maybe"
   vegetarian?: string; // "yes" | "no" | "maybe"
   percent_estimate?: number;
+  percent?: number;
+  ingredients?: OffIngredient[];  // sub-ingredients from OFF JSON
+  depth?: number;                 // hierarchy depth (0 = top-level)
 };
 
 type FlagReason = 'vegan' | 'vegetarian' | 'user_flagged';
@@ -936,6 +945,10 @@ function categoriseIngredients(
     // 4. OFF id match: compare en:chocolate against ing.id
     if (!reason && flaggedSet.size > 0) {
       for (const f of flaggedSet) {
+        // Skip if the flagged term appears in a negated context
+        // e.g. "sugar-free sweetener" should NOT flag for "sugar"
+        if (isNegatedInContext(ing.text, f)) continue;
+
         // 1. Exact text match
         if (ingText === f) { reason = 'user_flagged'; matchedFlaggedName = f; break; }
 
@@ -2445,6 +2458,8 @@ export default function ScanResultScreen() {
   };
 
   const [activeTab, setActiveTab] = useState<Tab>('overview');
+  const [ingredientSubTab, setIngredientSubTab] = useState<'fullList' | 'insightGroups'>('fullList');
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [tabScrollX, setTabScrollX] = useState(0);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [flaggedNames, setFlaggedNames] = useState<string[]>([]);
@@ -2488,10 +2503,12 @@ export default function ScanResultScreen() {
   const [fetchingOff, setFetchingOff] = useState(false);
 
   // Nutrition tab toggles
-  type ServingMode = '100g' | 'serving';
+  type ServingMode = 'serving' | '100g' | 'custom';
   type DriMode = 'value' | 'dri';
   const [servingMode, setServingMode] = useState<ServingMode>('serving');
   const [driMode, setDriMode] = useState<DriMode>('value');
+  const [customWeight, setCustomWeight] = useState(100);
+  const [editingWeight, setEditingWeight] = useState(false);
 
   // Fetch user profile + flagged ingredient names
   useEffect(() => {
@@ -2788,18 +2805,19 @@ export default function ScanResultScreen() {
   const servingIs100g = /\b100\s*(g|ml)\b/i.test(servingSize);
   // Only show the per-100g tab when serving differs from 100g
   const showBothModes = hasServingData && !servingIs100g;
-  // Clean serving label with closing bracket only, e.g. "30g" → "30g)", "(30g)" → "30g)"
+  // Clean serving label, e.g. "(30 g)" → "30g", "15g" → "15g"
   const servingLabelRaw = servingSize.replace(/^\(|\)$/g, '').trim().replace(/(\d)\s+(g|mg|kg|ml|l|oz|fl)\b/gi, '$1$2');
-  const servingLabel = servingLabelRaw ? `${servingLabelRaw})` : '';
-  // Available modes for the toggle
-  const servingModes: ServingMode[] = showBothModes ? ['serving', '100g'] : ['100g'];
-  // If we only have one mode, force it
-  const effectiveServingMode: ServingMode = showBothModes ? servingMode : '100g';
+  const servingLabel = servingLabelRaw ? `Per Serving (${servingLabelRaw})` : '';
+  // Available modes for the toggle (always show custom; show serving only when data exists)
+  const servingModes: ServingMode[] = showBothModes ? ['serving', '100g', 'custom'] : ['100g', 'custom'];
+  // If we only have one mode, force it; custom uses 100g base values with weight scaling
+  const effectiveServingMode: ServingMode = showBothModes ? servingMode : (servingMode === 'serving' ? '100g' : servingMode);
 
   // All nutrient rows in display order (matches Figma Macro Stack)
   // Switches between per-100g and per-serving based on the active toggle.
   // Falls back to 100g if no serving data is available.
   const useServing = effectiveServingMode === 'serving' && hasServingData;
+  const isCustomMode = effectiveServingMode === 'custom';
   const nutrientRows: { key: NutrientKey; raw: string | undefined }[] = [
     { key: 'energyKcal', raw: useServing ? rawEnergyKcalServing : rawEnergyKcal },
     { key: 'fat', raw: useServing ? rawFatServing : rawFat },
@@ -2819,36 +2837,41 @@ export default function ScanResultScreen() {
   const hasNutrition =
     !fetchingOff && nutrientRows.some(({ raw }) => raw && parseFloat(raw) >= 0);
 
+  // Weight scaling: only applies in Custom mode (uses per-100g base values with weight multiplier).
+  // Per-serving and Per-100g modes remain unscaled.
+  const weightScale = (isCustomMode && customWeight !== 100) ? customWeight / 100 : 1;
+
+  /** Scale a raw nutrient string by the current weight factor */
+  function scaleRaw(raw: string | undefined): string | undefined {
+    if (!raw || weightScale === 1) return raw;
+    const n = parseFloat(raw);
+    return isNaN(n) ? raw : String(n * weightScale);
+  }
+
   // Ingredients parsing for Ingredients tab — clean text-based list
   const ingredientsList: string[] = parseIngredientsText(ingredientsText);
 
-  // Structured OFF ingredients — deduplicated, cleaned raw JSON for metadata (vegan/vegetarian flags)
-  const rawStructured: OffIngredient[] = ingredientsJsonRaw
+  // Flat structured OFF JSON — used only for metadata (vegan/vegetarian flags).
+  // The OFF API returns a flat list even when ingredients have sub-ingredients,
+  // so we cannot rely on it for hierarchy.  Hierarchy comes from text parsing.
+  const rawStructuredFlat: OffIngredient[] = ingredientsJsonRaw
     ? (() => {
         try {
-          const raw = JSON.parse(ingredientsJsonRaw) as OffIngredient[];
-          const seen = new Set<string>();
-          return raw
-            .map((ing) => ({ ...ing, text: cleanIngredientName(ing.text) }))
-            .filter((ing) => {
-              // Drop empty or very short entries left after cleaning
-              if (ing.text.length <= 1) return false;
-              const key = (ing.id ?? ing.text).toLowerCase();
-              if (seen.has(key)) return false;
-              seen.add(key);
-              return true;
-            });
+          return JSON.parse(ingredientsJsonRaw) as OffIngredient[];
         } catch { return []; }
       })()
     : [];
 
-  // Hybrid approach: use clean text names for display, structured data for metadata.
-  // When English text is available, buildHybridIngredients matches clean names to
-  // structured entries so we get proper display names with vegan/vegetarian flags.
-  // Falls back to raw structured data when no text is available.
-  const structuredIngredients: OffIngredient[] = ingredientsList.length > 0
-    ? buildHybridIngredients(ingredientsList, rawStructured)
-    : rawStructured;
+  // Build hierarchical ingredient list from raw text, enriched with OFF metadata.
+  // parseIngredientsWithHierarchy parses parentheses/brackets in the raw text to
+  // derive the tree structure, then matches each entry to the flat OFF JSON to
+  // attach vegan/vegetarian flags.  Falls back to flat text parsing if needed.
+  const structuredIngredients: OffIngredient[] = ingredientsText
+    ? parseIngredientsWithHierarchy(ingredientsText, rawStructuredFlat)
+    : rawStructuredFlat.length > 0
+      ? rawStructuredFlat.map((ing) => ({ ...ing, text: cleanIngredientName(ing.text), depth: 0 }))
+          .filter((ing) => ing.text.length > 1)
+      : [];
 
   // Use active family member's preferences when selected, else main user's
   const activePrefs: DietaryTag[] = activeFamilyProfile
@@ -2870,6 +2893,100 @@ export default function ScanResultScreen() {
     categoriesArray,
   );
 
+  // ── Full List tree + category lookup for Ingredients sub-tabs ──
+  const ingredientTree: IngredientNode[] = useMemo(
+    () => ingredientsText ? parseIngredientTree(ingredientsText) : [],
+    [ingredientsText],
+  );
+
+  // Auto-expand all accordion nodes when tree first loads
+  useEffect(() => {
+    if (ingredientTree.length === 0) return;
+    const keys = new Set<string>();
+    ingredientTree.forEach((topNode, topIdx) => {
+      topNode.children.forEach((child, childIdx) => {
+        if (child.children.length > 0) {
+          const childKey = `${topIdx}-${childIdx}`;
+          keys.add(childKey);
+          child.children.forEach((sub, subIdx) => {
+            if (sub.children.length > 0) keys.add(`${childKey}-${subIdx}`);
+          });
+        }
+      });
+    });
+    setExpandedNodes(keys);
+  }, [ingredientTree]);
+
+  // Build a map from ingredient name → category for status icons in Full List
+  const categoryMap = useMemo(() => {
+    const map = new Map<string, 'harmful' | 'ok' | 'safe' | 'flagged'>();
+    categorised.userFlagged.forEach((ing) => map.set(ing.text.toLowerCase(), 'flagged'));
+    categorised.harmful.forEach((ing) => map.set(ing.text.toLowerCase(), 'harmful'));
+    categorised.ok.forEach((ing) => map.set(ing.text.toLowerCase(), 'ok'));
+    categorised.safe.forEach((ing) => map.set(ing.text.toLowerCase(), 'safe'));
+    return map;
+  }, [categorised]);
+
+  // Set of parent ingredient names (depth-0 with children) — excluded from Insight Groups
+  const parentIngredientNames = useMemo(() => {
+    const names = new Set<string>();
+    for (const node of ingredientTree) {
+      if (node.children.length > 0) {
+        const cleaned = cleanTreeToken(node.text).toLowerCase();
+        if (cleaned) names.add(cleaned);
+      }
+    }
+    return names;
+  }, [ingredientTree]);
+
+  // Filtered categorised lists for Insight Groups (excludes parent ingredients)
+  const filteredCategorised = useMemo(() => ({
+    userFlagged: categorised.userFlagged.filter(
+      (ing) => !parentIngredientNames.has(ing.text.toLowerCase()),
+    ),
+    harmful: categorised.harmful.filter(
+      (ing) => !parentIngredientNames.has(ing.text.toLowerCase()),
+    ),
+    ok: categorised.ok.filter(
+      (ing) => !parentIngredientNames.has(ing.text.toLowerCase()),
+    ),
+    safe: categorised.safe.filter(
+      (ing) => !parentIngredientNames.has(ing.text.toLowerCase()),
+    ),
+  }), [categorised, parentIngredientNames]);
+
+  // Count total children recursively for a tree node
+  function countDescendants(node: IngredientNode): number {
+    let count = 0;
+    for (const child of node.children) {
+      count += 1 + countDescendants(child);
+    }
+    return count;
+  }
+
+  // Toggle expand/collapse for a node
+  function toggleExpanded(nodeKey: string) {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setExpandedNodes((prev) => {
+      const next = new Set(prev);
+      if (next.has(nodeKey)) next.delete(nodeKey);
+      else next.add(nodeKey);
+      return next;
+    });
+  }
+
+  // Get category icon props for an ingredient name
+  function getCategoryIcon(name: string): { iconName: 'checkmark' | 'close'; color: string } {
+    const cat = categoryMap.get(name.toLowerCase());
+    if (cat === 'harmful' || cat === 'flagged') {
+      return { iconName: 'close', color: Colors.status.negative };
+    }
+    if (cat === 'ok') {
+      return { iconName: 'checkmark', color: Extra.poorOrange };
+    }
+    return { iconName: 'checkmark', color: Extra.positiveGreen };
+  }
+
   // Build condition-aware nutrient thresholds from the active profile
   const activeConditions = activeFamilyProfile
     ? activeFamilyProfile.health_conditions ?? []
@@ -2881,6 +2998,21 @@ export default function ScanResultScreen() {
     ? activeFamilyProfile.dietary_preferences?.map((d) => DIETARY_LABELS_T[d] ?? d) ?? []
     : profile?.dietary_preferences?.map((d) => DIETARY_LABELS_T[d] ?? d) ?? [];
   const nutrientThresholds = buildThresholds(activeConditions, activeAllergies, activeDietaryLabels);
+
+  // Compute the minimum width for the rating column so it matches the widest label present.
+  // This prevents columns from jumping around when some rows say "Low" and others "Moderate".
+  let _ratingMaxLen = 0;
+  for (const { key, raw } of nutrientRows) {
+    if (!raw) continue;
+    const num = parseFloat(raw);
+    if (isNaN(num) || num < 0) continue;
+    const scaled = scaleRaw(raw);
+    const scaledNum = scaled ? parseFloat(scaled) : num;
+    const rating = getRatingT(key, isNaN(scaledNum) ? num : scaledNum, nutrientThresholds);
+    if (rating.label.length > _ratingMaxLen) _ratingMaxLen = rating.label.length;
+  }
+  // Figtree_700Bold 14px ≈ 7.8px per character
+  const ratingMinWidth = _ratingMaxLen > 0 ? Math.ceil(_ratingMaxLen * 7.8) : undefined;
 
   // ── Nutrient watchlist alerts ───────────────────────────────────────────────
   type WatchlistAlert = NutrientWatchlistEntry & { value: number };
@@ -3037,22 +3169,17 @@ export default function ScanResultScreen() {
                 ? activeFamilyProfile!.avatar_url
                 : profile.avatar_url;
               // Merge all tags into one list (health conditions + allergies + dietary labels)
+              // Map each through i18n so keys like "diabetes" display as "Diabetic"
               const tags: string[] = [];
-              if (isFamily) {
-                if (activeFamilyProfile!.health_conditions?.length)
-                  tags.push(...activeFamilyProfile!.health_conditions);
-                if (activeFamilyProfile!.allergies?.length)
-                  tags.push(...activeFamilyProfile!.allergies);
-                if (activeFamilyProfile!.dietary_preferences?.length)
-                  tags.push(...activeFamilyProfile!.dietary_preferences.map((d) => DIETARY_LABELS_T[d] ?? d));
-              } else {
-                if (profile.health_conditions?.length)
-                  tags.push(...profile.health_conditions);
-                if (profile.allergies?.length)
-                  tags.push(...profile.allergies);
-                if (profile.dietary_preferences?.length)
-                  tags.push(...profile.dietary_preferences.map((d) => DIETARY_LABELS_T[d] ?? d));
-              }
+              const hc = isFamily ? activeFamilyProfile!.health_conditions : profile.health_conditions;
+              const al = isFamily ? activeFamilyProfile!.allergies : profile.allergies;
+              const dp = isFamily ? activeFamilyProfile!.dietary_preferences : profile.dietary_preferences;
+              if (hc?.length)
+                tags.push(...hc.map((c) => tpo(`healthConditions.${c}`, { defaultValue: c })));
+              if (al?.length)
+                tags.push(...al.map((a) => tpo(`allergies.${a}`, { defaultValue: a })));
+              if (dp?.length)
+                tags.push(...dp.map((d) => DIETARY_LABELS_T[d] ?? d));
               return (
                 <View style={styles.familySection}>
                   <View style={styles.familyAvatar}>
@@ -3122,42 +3249,51 @@ export default function ScanResultScreen() {
                   );
                 })()}
 
-                {/* User-flagged ingredient warning (orange card) */}
-                {categorised.userFlagged.length > 0 && (
-                  <View style={styles.flaggedCard}>
-                    <View style={styles.flaggedBadge}>
-                      <MenuFlaggedIcon color="#fff" size={11} />
-                      <Text style={styles.flaggedBadgeText}>{t('flagged.badge')}</Text>
-                    </View>
-                    <Text style={styles.flaggedTitle}>{t('flagged.title')}</Text>
-                    {categorised.userFlagged.map((ing, i) => {
-                      const reason = ing.personalReason
-                        ? t('flagged.subtitle', { reason: ing.personalReason.text })
-                        : t('flagged.subtitleGeneric');
-                      return (
-                        <View key={ing.id ?? `uf-${i}`} style={styles.ingRow}>
-                          <View style={{ flex: 1 }}>
-                            <Text style={styles.ingName} numberOfLines={2}>
-                              {sentenceCase(ing.text)}
-                            </Text>
-                            <Text style={styles.flaggedSubtitle}>{reason}</Text>
+                {/* User-flagged ingredient warning (orange card) — deduplicated by name */}
+                {categorised.userFlagged.length > 0 && (() => {
+                  const seen = new Set<string>();
+                  const unique = categorised.userFlagged.filter((ing) => {
+                    const key = ing.text.toLowerCase();
+                    if (seen.has(key)) return false;
+                    seen.add(key);
+                    return true;
+                  });
+                  return (
+                    <View style={styles.flaggedCard}>
+                      <View style={styles.flaggedBadge}>
+                        <MenuFlaggedIcon color="#fff" size={11} />
+                        <Text style={styles.flaggedBadgeText}>{t('flagged.badge')}</Text>
+                      </View>
+                      <Text style={styles.flaggedTitle}>{t('flagged.title')}</Text>
+                      {unique.map((ing, i) => {
+                        const reason = ing.personalReason
+                          ? t('flagged.subtitle', { reason: ing.personalReason.text })
+                          : t('flagged.subtitleGeneric');
+                        return (
+                          <View key={ing.id ?? `uf-${i}`} style={styles.ingRow}>
+                            <View style={{ flex: 1 }}>
+                              <Text style={styles.ingName} numberOfLines={2}>
+                                {sentenceCase(ing.text)}
+                              </Text>
+                              <Text style={styles.flaggedSubtitle}>{reason}</Text>
+                            </View>
+                            <TouchableOpacity
+                              style={styles.ingInfoContainer}
+                              onPress={() => setFlaggedSheetIng(ing)}
+                              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                            >
+                              <Ionicons
+                                name="information-circle-outline"
+                                size={16}
+                                color={Colors.secondary}
+                              />
+                            </TouchableOpacity>
                           </View>
-                          <TouchableOpacity
-                            style={styles.ingInfoContainer}
-                            onPress={() => setFlaggedSheetIng(ing)}
-                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                          >
-                            <Ionicons
-                              name="information-circle-outline"
-                              size={16}
-                              color={Colors.secondary}
-                            />
-                          </TouchableOpacity>
-                        </View>
-                      );
-                    })}
-                  </View>
-                )}
+                        );
+                      })}
+                    </View>
+                  );
+                })()}
 
                 {/* Dynamic insight panels — rendered in pairs */}
                 {activeInsights.length > 0 && (
@@ -3172,7 +3308,7 @@ export default function ScanResultScreen() {
                           onPress={() => setInsightSheetDef({ def, result })}
                         >
                           <View style={styles.impactPanelInfo}>
-                            <InfoIcon width={16} height={16} />
+                            <InfoIcon width={16} height={16} color={Colors.secondary} />
                           </View>
                           <Icon width={def.iconWidth} height={def.iconHeight} />
                           <View style={styles.impactLabelGroup}>
@@ -3249,7 +3385,7 @@ export default function ScanResultScreen() {
                   </Text>
                   <View style={{ gap: 4 }}>
                     {categorised.harmful.map((ing, i) => (
-                      <View key={ing.id ?? `flag-${i}`} style={styles.ingRow}>
+                      <View key={ing.id ?? `flag-${i}`} style={[styles.ingRow, (ing.depth ?? 0) > 0 && { paddingLeft: (ing.depth ?? 0) * 20 }]}>
                         <Ionicons name="close" size={24} color={Colors.status.negative} />
                         <View style={{ flex: 1 }}>
                           <Text style={styles.ingName} numberOfLines={2}>
@@ -3316,7 +3452,9 @@ export default function ScanResultScreen() {
                         >
                           {mode === 'serving'
                             ? servingLabel || t('toggle.perServing')
-                            : t('toggle.per100g')}
+                            : mode === 'custom'
+                              ? t('toggle.custom', { defaultValue: 'Custom' })
+                              : t('toggle.per100g')}
                         </Text>
                       </TouchableOpacity>
                     ))}
@@ -3345,15 +3483,60 @@ export default function ScanResultScreen() {
                   </View>
                 </View>
 
+                {/* Weight stepper — only shown in Custom mode */}
+                {isCustomMode && (
+                  <View style={styles.weightStepper}>
+                    <TouchableOpacity
+                      style={styles.weightStepBtn}
+                      onPress={() => setCustomWeight((w) => Math.max(5, w - 5))}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.weightStepBtnText}>−</Text>
+                    </TouchableOpacity>
+                    {editingWeight ? (
+                      <TextInput
+                        style={styles.weightInputText}
+                        keyboardType="numeric"
+                        value={String(customWeight)}
+                        onChangeText={(v) => {
+                          const n = parseInt(v, 10);
+                          if (!isNaN(n) && n > 0 && n <= 9999) setCustomWeight(n);
+                          else if (v === '') setCustomWeight(0);
+                        }}
+                        onBlur={() => {
+                          setEditingWeight(false);
+                          if (customWeight < 1) setCustomWeight(100);
+                        }}
+                        autoFocus
+                        selectTextOnFocus
+                        maxLength={4}
+                      />
+                    ) : (
+                      <TouchableOpacity onPress={() => setEditingWeight(true)} activeOpacity={0.7}>
+                        <Text style={styles.weightValueText}>{customWeight}g</Text>
+                      </TouchableOpacity>
+                    )}
+                    <TouchableOpacity
+                      style={styles.weightStepBtn}
+                      onPress={() => setCustomWeight((w) => Math.min(9999, w + 5))}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.weightStepBtnText}>+</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
                 <View style={styles.nutritionRows}>
                   {overviewNutrients.map(({ key, raw }) => {
                     if (!raw) return null;
                     const num = parseFloat(raw);
                     if (isNaN(num) || num < 0) return null;
-                    const rating = getRatingT(key, num, nutrientThresholds);
+                    const scaled = scaleRaw(raw);
+                    const scaledNum = scaled ? parseFloat(scaled) : num;
+                    const rating = getRatingT(key, isNaN(scaledNum) ? num : scaledNum, nutrientThresholds);
                     const unit = NUTRIENT_UNITS[key];
                     const displayVal =
-                      driMode === 'dri' ? fmtDri(raw, key) : fmtVal(raw, unit);
+                      driMode === 'dri' ? fmtDri(scaled, key) : fmtVal(scaled, unit);
                     const IconComp = FoodIcons[key];
                     return (
                       <View key={key} style={styles.nutritionRow}>
@@ -3365,7 +3548,7 @@ export default function ScanResultScreen() {
                         </View>
                         <View style={styles.nutritionRowRight}>
                           <Text style={styles.nutritionValue}>{displayVal}</Text>
-                          <Text style={[styles.nutritionRating, { color: rating.color }]}>
+                          <Text style={[styles.nutritionRating, { color: rating.color, minWidth: ratingMinWidth }]} numberOfLines={1}>
                             {rating.label}
                           </Text>
                         </View>
@@ -3419,8 +3602,10 @@ export default function ScanResultScreen() {
                         ]}
                       >
                         {mode === 'serving'
-                          ? servingLabel || 'Per Serving'
-                          : 'Per 100g'}
+                          ? servingLabel || t('toggle.perServing')
+                          : mode === 'custom'
+                            ? t('toggle.custom', { defaultValue: 'Custom' })
+                            : t('toggle.per100g')}
                       </Text>
                     </TouchableOpacity>
                   ))}
@@ -3449,6 +3634,49 @@ export default function ScanResultScreen() {
                 </View>
               </View>
 
+              {/* Weight stepper — only shown in Custom mode */}
+              {isCustomMode && hasNutrition && (
+                <View style={styles.weightStepper}>
+                  <TouchableOpacity
+                    style={styles.weightStepBtn}
+                    onPress={() => setCustomWeight((w) => Math.max(5, w - 5))}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.weightStepBtnText}>−</Text>
+                  </TouchableOpacity>
+                  {editingWeight ? (
+                    <TextInput
+                      style={styles.weightInputText}
+                      keyboardType="numeric"
+                      value={String(customWeight)}
+                      onChangeText={(v) => {
+                        const n = parseInt(v, 10);
+                        if (!isNaN(n) && n > 0 && n <= 9999) setCustomWeight(n);
+                        else if (v === '') setCustomWeight(0);
+                      }}
+                      onBlur={() => {
+                        setEditingWeight(false);
+                        if (customWeight < 1) setCustomWeight(100);
+                      }}
+                      autoFocus
+                      selectTextOnFocus
+                      maxLength={4}
+                    />
+                  ) : (
+                    <TouchableOpacity onPress={() => setEditingWeight(true)} activeOpacity={0.7}>
+                      <Text style={styles.weightValueText}>{customWeight}g</Text>
+                    </TouchableOpacity>
+                  )}
+                  <TouchableOpacity
+                    style={styles.weightStepBtn}
+                    onPress={() => setCustomWeight((w) => Math.min(9999, w + 5))}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.weightStepBtnText}>+</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
               {fetchingOff ? (
                 <View style={styles.fetchingRow}>
                   <ActivityIndicator size="small" color={Colors.primary} />
@@ -3461,9 +3689,11 @@ export default function ScanResultScreen() {
                     const num = parseFloat(raw);
                     if (isNaN(num) || num < 0) return null;
                     const unit = NUTRIENT_UNITS[key];
-                    const rating = getRatingT(key, num, nutrientThresholds);
+                    const scaled = scaleRaw(raw);
+                    const scaledNum = scaled ? parseFloat(scaled) : num;
+                    const rating = getRatingT(key, isNaN(scaledNum) ? num : scaledNum, nutrientThresholds);
                     const displayVal =
-                      driMode === 'dri' ? fmtDri(raw, key) : fmtVal(raw, unit);
+                      driMode === 'dri' ? fmtDri(scaled, key) : fmtVal(scaled, unit);
                     const IconComp = FoodIcons[key];
                     return (
                       <View key={key} style={styles.nutritionRow}>
@@ -3475,7 +3705,7 @@ export default function ScanResultScreen() {
                         </View>
                         <View style={styles.nutritionRowRight}>
                           <Text style={styles.nutritionValue}>{displayVal}</Text>
-                          <Text style={[styles.nutritionRating, { color: rating.color }]}>
+                          <Text style={[styles.nutritionRating, { color: rating.color, minWidth: ratingMinWidth }]} numberOfLines={1}>
                             {rating.label}
                           </Text>
                         </View>
@@ -3535,7 +3765,7 @@ export default function ScanResultScreen() {
         )}
 
         {/* ══════════════════════════════════════════════════════
-            INGREDIENTS TAB — 3-card categorised layout (Figma node 3308-3929)
+            INGREDIENTS TAB — Sub-tabs: Full List + Insight Groups
         ══════════════════════════════════════════════════════ */}
         {activeTab === 'ingredients' && (
           <View style={[styles.tabContent, { gap: Spacing.s }]}>
@@ -3546,147 +3776,350 @@ export default function ScanResultScreen() {
               </View>
             ) : structuredIngredients.length > 0 ? (
               <>
-                {/* ── Allergen warning (only when profile has matching allergies) ── */}
-                {hasProfileAllergenMatch && (() => {
-                  const firstName = activeFamilyProfile
-                    ? activeFamilyProfile.name.trim().split(/\s+/)[0]
-                    : profile?.full_name?.trim().split(/\s+/)[0];
-                  return (
-                    <View style={styles.allergenCard}>
-                      <View style={styles.allergenBadge}>
-                        <Ionicons name="warning" size={11} color="#fff" />
-                        <Text style={styles.allergenBadgeText}>{t('allergen.warningBadge')}</Text>
-                      </View>
-                      <Text style={styles.allergenText}>
-                        {t('allergen.warningText', { allergens: matchedAllergens.join(', '), name: firstName })}
-                      </Text>
-                    </View>
-                  );
-                })()}
+                {/* ── Sub-tab toggle: Full list / Insight groups ── */}
+                <View style={styles.toggleRowCompact}>
+                  <TouchableOpacity
+                    style={[
+                      styles.overviewToggle,
+                      ingredientSubTab === 'fullList' && styles.overviewToggleActive,
+                    ]}
+                    onPress={() => setIngredientSubTab('fullList')}
+                  >
+                    <Text
+                      style={[
+                        styles.overviewToggleText,
+                        ingredientSubTab === 'fullList' && styles.overviewToggleTextActive,
+                      ]}
+                    >
+                      {t('ingredientSubTab.fullList')}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.overviewToggle,
+                      ingredientSubTab === 'insightGroups' && styles.overviewToggleActive,
+                    ]}
+                    onPress={() => setIngredientSubTab('insightGroups')}
+                  >
+                    <Text
+                      style={[
+                        styles.overviewToggleText,
+                        ingredientSubTab === 'insightGroups' && styles.overviewToggleTextActive,
+                      ]}
+                    >
+                      {t('ingredientSubTab.insightGroups')}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
 
-                {/* ── User-flagged card (orange) ── */}
-                {categorised.userFlagged.length > 0 && (
-                  <View style={styles.flaggedCard}>
-                    <View style={styles.flaggedBadge}>
-                      <MenuFlaggedIcon color="#fff" size={11} />
-                      <Text style={styles.flaggedBadgeText}>{t('flagged.badge')}</Text>
-                    </View>
-                    <Text style={styles.flaggedTitle}>{t('flagged.title')}</Text>
-                    {categorised.userFlagged.map((ing, i) => {
-                      const reason = ing.personalReason
-                        ? t('flagged.subtitle', { reason: ing.personalReason.text })
-                        : t('flagged.subtitleGeneric');
-                      return (
-                        <View key={ing.id ?? `uf-${i}`} style={styles.ingRow}>
-                          <View style={{ flex: 1 }}>
-                            <Text style={styles.ingName} numberOfLines={2}>{sentenceCase(ing.text)}</Text>
-                            <Text style={styles.flaggedSubtitle}>{reason}</Text>
+                {/* ═══════ FULL LIST sub-tab ═══════ */}
+                {ingredientSubTab === 'fullList' && (
+                  <View style={{ gap: Spacing.xs }}>
+                    {ingredientTree.map((topNode, topIdx) => {
+                      const cleaned = cleanTreeToken(topNode.text);
+                      const label = cleaned.charAt(0).toUpperCase() + cleaned.slice(1).toLowerCase();
+                      const hasChildren = topNode.children.length > 0;
+                      const descendantCount = hasChildren ? countDescendants(topNode) : 0;
+
+                      if (!hasChildren) {
+                        // Standalone leaf at top level — render as a single row
+                        const { iconName, color } = getCategoryIcon(label);
+                        return (
+                          <View key={`leaf-${topIdx}`} style={styles.fullListRow}>
+                            <View style={styles.fullListStatusIcon}>
+                              <Ionicons name={iconName} size={18} color={color} />
+                            </View>
+                            <Text style={styles.fullListIngName} numberOfLines={2}>
+                              {label}
+                            </Text>
                           </View>
-                          <TouchableOpacity
-                            style={styles.ingInfoContainer}
-                            onPress={() => setFlaggedSheetIng(ing)}
-                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                          >
-                            <InfoIcon width={16} height={16} />
-                          </TouchableOpacity>
+                        );
+                      }
+
+                      // Parent with children — show header + card
+                      return (
+                        <View key={`parent-${topIdx}`} style={{ gap: Spacing.xs }}>
+                          {/* Parent header: name + child count */}
+                          <View style={styles.fullListHeader}>
+                            <Text style={styles.fullListParentName}>{label}</Text>
+                            <Text style={styles.fullListChildCount}>
+                              {t('fullList.ingredients', { count: descendantCount })}
+                            </Text>
+                          </View>
+
+                          {/* Card with children */}
+                          <View style={styles.fullListCard}>
+                            {topNode.children.map((child, childIdx) => {
+                              const childCleaned = cleanTreeToken(child.text);
+                              const childLabel = childCleaned.charAt(0).toUpperCase() + childCleaned.slice(1).toLowerCase();
+                              const childHasChildren = child.children.length > 0;
+                              const childKey = `${topIdx}-${childIdx}`;
+                              const isExpanded = expandedNodes.has(childKey);
+                              const { iconName: childIconName, color: childColor } = getCategoryIcon(childLabel);
+                              const isHarmfulOrFlagged = categoryMap.get(childLabel.toLowerCase()) === 'harmful'
+                                || categoryMap.get(childLabel.toLowerCase()) === 'flagged';
+
+                              return (
+                                <View key={childKey}>
+                                  {/* Separator line between rows (not before first) */}
+                                  {childIdx > 0 && <View style={styles.fullListSeparator} />}
+
+                                  {/* Child row */}
+                                  <TouchableOpacity
+                                    activeOpacity={childHasChildren ? 0.6 : 1}
+                                    onPress={childHasChildren ? () => toggleExpanded(childKey) : undefined}
+                                    style={styles.fullListRow}
+                                  >
+                                    <View style={styles.fullListStatusIcon}>
+                                      <Ionicons name={childIconName} size={18} color={childColor} />
+                                    </View>
+                                    <Text style={styles.fullListIngName} numberOfLines={2}>
+                                      {childLabel}
+                                    </Text>
+                                    {isHarmfulOrFlagged && (
+                                      <TouchableOpacity
+                                        style={styles.fullListChevron}
+                                        onPress={() => {
+                                          const lc = childLabel.toLowerCase();
+                                          const matchedFlagged =
+                                            categorised.harmful.find((fi) => fi.text.toLowerCase() === lc)
+                                            ?? categorised.userFlagged.find((fi) => fi.text.toLowerCase() === lc);
+                                          if (matchedFlagged) setFlaggedSheetIng(matchedFlagged);
+                                        }}
+                                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                      >
+                                        <InfoIcon width={16} height={16} color={Colors.secondary} />
+                                      </TouchableOpacity>
+                                    )}
+                                    {childHasChildren && (
+                                      <TouchableOpacity
+                                        style={styles.fullListChevron}
+                                        onPress={() => toggleExpanded(childKey)}
+                                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                      >
+                                        <Ionicons
+                                          name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                                          size={16}
+                                          color={Colors.secondary}
+                                        />
+                                      </TouchableOpacity>
+                                    )}
+                                  </TouchableOpacity>
+
+                                  {/* Expanded sub-children */}
+                                  {childHasChildren && isExpanded && (
+                                    <View>
+                                      {child.children.map((sub, subIdx) => {
+                                        const subCleaned = cleanTreeToken(sub.text);
+                                        const subLabel = subCleaned.charAt(0).toUpperCase() + subCleaned.slice(1).toLowerCase();
+                                        const subHasChildren = sub.children.length > 0;
+                                        const subKey = `${childKey}-${subIdx}`;
+                                        const isSubExpanded = expandedNodes.has(subKey);
+                                        const { iconName: subIcon, color: subColor } = getCategoryIcon(subLabel);
+
+                                        return (
+                                          <View key={subKey}>
+                                            <TouchableOpacity
+                                              activeOpacity={subHasChildren ? 0.6 : 1}
+                                              onPress={subHasChildren ? () => toggleExpanded(subKey) : undefined}
+                                              style={[styles.fullListRow, { paddingLeft: 21 }]}
+                                            >
+                                              <Ionicons name="return-down-forward-outline" size={16} color={Colors.secondary} />
+                                              <View style={styles.fullListStatusIcon}>
+                                                <Ionicons name={subIcon} size={18} color={subColor} />
+                                              </View>
+                                              <Text style={styles.fullListIngName} numberOfLines={2}>
+                                                {subLabel}
+                                              </Text>
+                                              {subHasChildren && (
+                                                <TouchableOpacity
+                                                  style={styles.fullListChevron}
+                                                  onPress={() => toggleExpanded(subKey)}
+                                                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                                >
+                                                  <Ionicons
+                                                    name={isSubExpanded ? 'chevron-up' : 'chevron-down'}
+                                                    size={16}
+                                                    color={Colors.secondary}
+                                                  />
+                                                </TouchableOpacity>
+                                              )}
+                                            </TouchableOpacity>
+
+                                            {/* Depth-3 sub-sub-children */}
+                                            {subHasChildren && isSubExpanded && sub.children.map((deep, deepIdx) => {
+                                              const deepCleaned = cleanTreeToken(deep.text);
+                                              const deepLabel = deepCleaned.charAt(0).toUpperCase() + deepCleaned.slice(1).toLowerCase();
+                                              const { iconName: deepIcon, color: deepColor } = getCategoryIcon(deepLabel);
+                                              return (
+                                                <View key={`${subKey}-${deepIdx}`} style={[styles.fullListRow, { paddingLeft: 65 }]}>
+                                                  <Ionicons name="return-down-forward-outline" size={16} color={Colors.secondary} />
+                                                  <View style={styles.fullListStatusIcon}>
+                                                    <Ionicons name={deepIcon} size={18} color={deepColor} />
+                                                  </View>
+                                                  <Text style={styles.fullListIngName} numberOfLines={2}>
+                                                    {deepLabel}
+                                                  </Text>
+                                                </View>
+                                              );
+                                            })}
+                                          </View>
+                                        );
+                                      })}
+                                    </View>
+                                  )}
+                                </View>
+                              );
+                            })}
+                          </View>
                         </View>
                       );
                     })}
                   </View>
                 )}
 
-                {/* ── Harmful card ── */}
-                {categorised.harmful.length > 0 && (
-                  <View style={styles.ingCategoryCard}>
-                    {/* "2 ingredients" bold + " are considered " light + "harmful" bold red */}
-                    <Text style={styles.ingCategoryHeading}>
-                      <Text style={styles.ingCount}>
-                        {t('ingredients.ingredient', { count: categorised.harmful.length })}
-                      </Text>
-                      <Text style={styles.ingMiddle}>
-                        {' '}{categorised.harmful.length === 1 ? t('ingredients.is') : t('ingredients.are')} {t('ingredients.considered')}{' '}
-                      </Text>
-                      <Text style={[styles.ingWord, { color: Colors.status.negative }]}>{t('ingredients.harmful')}</Text>
-                    </Text>
-                    {/* Harmful rows: gap-2 between rows, gap-8 within row, with ⓘ info icon */}
-                    <View style={{ gap: 2 }}>
-                      {categorised.harmful.map((ing, i) => (
-                        <View key={ing.id ?? `flag-${i}`} style={styles.ingRow}>
-                          <Ionicons name="close" size={24} color={Colors.status.negative} />
-                          <View style={{ flex: 1 }}>
-                            <Text style={styles.ingName} numberOfLines={2}>{sentenceCase(ing.text)}</Text>
-                            {ing.matchSource === 'product-name' && (
-                              <Text style={styles.matchSourceLabel}>{t('ingredients.matchProductName')}</Text>
-                            )}
-                            {ing.matchSource === 'category' && (
-                              <Text style={styles.matchSourceLabel}>{t('ingredients.matchCategory')}</Text>
-                            )}
+                {/* ═══════ INSIGHT GROUPS sub-tab ═══════ */}
+                {ingredientSubTab === 'insightGroups' && (
+                  <View style={{ gap: Spacing.s }}>
+                    {/* ── Allergen warning (only when profile has matching allergies) ── */}
+                    {hasProfileAllergenMatch && (() => {
+                      const firstName = activeFamilyProfile
+                        ? activeFamilyProfile.name.trim().split(/\s+/)[0]
+                        : profile?.full_name?.trim().split(/\s+/)[0];
+                      return (
+                        <View style={styles.allergenCard}>
+                          <View style={styles.allergenBadge}>
+                            <Ionicons name="warning" size={11} color="#fff" />
+                            <Text style={styles.allergenBadgeText}>{t('allergen.warningBadge')}</Text>
                           </View>
-                          <TouchableOpacity
-                            style={styles.ingInfoContainer}
-                            onPress={() => setFlaggedSheetIng(ing)}
-                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                          >
-                            <InfoIcon width={16} height={16} />
-                          </TouchableOpacity>
+                          <Text style={styles.allergenText}>
+                            {t('allergen.warningText', { allergens: matchedAllergens.join(', '), name: firstName })}
+                          </Text>
                         </View>
-                      ))}
-                    </View>
-                  </View>
-                )}
+                      );
+                    })()}
 
-                {/* ── Ok card ── */}
-                {categorised.ok.length > 0 && (
-                  <View style={styles.ingCategoryCard}>
-                    <Text style={styles.ingCategoryHeading}>
-                      <Text style={styles.ingCount}>
-                        {t('ingredients.ingredient', { count: categorised.ok.length })}
-                      </Text>
-                      <Text style={styles.ingMiddle}>
-                        {' '}{categorised.ok.length === 1 ? t('ingredients.is') : t('ingredients.are')} {t('ingredients.considered')}{' '}
-                      </Text>
-                      <Text style={[styles.ingWord, { color: Extra.poorOrange }]}>{t('ingredients.ok')}</Text>
-                    </Text>
-                    {/* Ok rows: gap-2 between rows, gap-4 within row, with ⓘ info icon */}
-                    <View style={{ gap: 2 }}>
-                      {categorised.ok.map((ing, i) => (
-                        <View key={ing.id ?? i} style={styles.ingRowSmall}>
-                          <Ionicons name="checkmark" size={24} color={Extra.poorOrange} />
-                          <Text style={styles.ingName} numberOfLines={2}>{sentenceCase(ing.text)}</Text>
-                          <TouchableOpacity
-                            style={styles.ingInfoContainer}
-                            onPress={() => setInfoSheetIng({ ing, category: 'ok' })}
-                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                          >
-                            <InfoIcon width={16} height={16} />
-                          </TouchableOpacity>
+                    {/* ── User-flagged card (orange) ── */}
+                    {filteredCategorised.userFlagged.length > 0 && (
+                      <View style={styles.flaggedCard}>
+                        <View style={styles.flaggedBadge}>
+                          <MenuFlaggedIcon color="#fff" size={11} />
+                          <Text style={styles.flaggedBadgeText}>{t('flagged.badge')}</Text>
                         </View>
-                      ))}
-                    </View>
-                  </View>
-                )}
+                        <Text style={styles.flaggedTitle}>{t('flagged.title')}</Text>
+                        {filteredCategorised.userFlagged.map((ing, i) => {
+                          const reason = ing.personalReason
+                            ? t('flagged.subtitle', { reason: ing.personalReason.text })
+                            : t('flagged.subtitleGeneric');
+                          return (
+                            <View key={ing.id ?? `uf-${i}`} style={styles.ingRow}>
+                              <View style={{ flex: 1 }}>
+                                <Text style={styles.ingName} numberOfLines={2}>{sentenceCase(ing.text)}</Text>
+                                <Text style={styles.flaggedSubtitle}>{reason}</Text>
+                              </View>
+                              <TouchableOpacity
+                                style={styles.ingInfoContainer}
+                                onPress={() => setFlaggedSheetIng(ing)}
+                                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                              >
+                                <InfoIcon width={16} height={16} color={Colors.secondary} />
+                              </TouchableOpacity>
+                            </View>
+                          );
+                        })}
+                      </View>
+                    )}
 
-                {/* ── Safe card ── */}
-                {categorised.safe.length > 0 && (
-                  <View style={styles.ingCategoryCard}>
-                    <Text style={styles.ingCategoryHeading}>
-                      <Text style={styles.ingCount}>
-                        {t('ingredients.ingredient', { count: categorised.safe.length })}
-                      </Text>
-                      <Text style={styles.ingMiddle}>
-                        {' '}{categorised.safe.length === 1 ? t('ingredients.is') : t('ingredients.are')} {t('ingredients.considered')}{' '}
-                      </Text>
-                      <Text style={[styles.ingWord, { color: Extra.positiveGreen }]}>{t('ingredients.safe')}</Text>
-                    </Text>
-                    {/* Safe rows: gap-2 between rows, gap-4 within row, no ⓘ info icon */}
-                    <View style={{ gap: 2 }}>
-                      {categorised.safe.map((ing, i) => (
-                        <View key={ing.id ?? i} style={styles.ingRowSmall}>
-                          <Ionicons name="checkmark" size={24} color={Extra.positiveGreen} />
-                          <Text style={styles.ingName} numberOfLines={2}>{sentenceCase(ing.text)}</Text>
+                    {/* ── Harmful card ── */}
+                    {filteredCategorised.harmful.length > 0 && (
+                      <View style={styles.ingCategoryCard}>
+                        <Text style={styles.ingCategoryHeading}>
+                          <Text style={styles.ingCount}>
+                            {t('ingredients.ingredient', { count: filteredCategorised.harmful.length })}
+                          </Text>
+                          <Text style={styles.ingMiddle}>
+                            {' '}{filteredCategorised.harmful.length === 1 ? t('ingredients.is') : t('ingredients.are')} {t('ingredients.considered')}{' '}
+                          </Text>
+                          <Text style={[styles.ingWord, { color: Colors.status.negative }]}>{t('ingredients.harmful')}</Text>
+                        </Text>
+                        <View style={{ gap: 2 }}>
+                          {filteredCategorised.harmful.map((ing, i) => (
+                            <View key={ing.id ?? `flag-${i}`} style={styles.ingRow}>
+                              <Ionicons name="close" size={24} color={Colors.status.negative} />
+                              <View style={{ flex: 1 }}>
+                                <Text style={styles.ingName} numberOfLines={2}>{sentenceCase(ing.text)}</Text>
+                                {ing.matchSource === 'product-name' && (
+                                  <Text style={styles.matchSourceLabel}>{t('ingredients.matchProductName')}</Text>
+                                )}
+                                {ing.matchSource === 'category' && (
+                                  <Text style={styles.matchSourceLabel}>{t('ingredients.matchCategory')}</Text>
+                                )}
+                              </View>
+                              <TouchableOpacity
+                                style={styles.ingInfoContainer}
+                                onPress={() => setFlaggedSheetIng(ing)}
+                                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                              >
+                                <InfoIcon width={16} height={16} color={Colors.secondary} />
+                              </TouchableOpacity>
+                            </View>
+                          ))}
                         </View>
-                      ))}
-                    </View>
+                      </View>
+                    )}
+
+                    {/* ── Ok card ── */}
+                    {filteredCategorised.ok.length > 0 && (
+                      <View style={styles.ingCategoryCard}>
+                        <Text style={styles.ingCategoryHeading}>
+                          <Text style={styles.ingCount}>
+                            {t('ingredients.ingredient', { count: filteredCategorised.ok.length })}
+                          </Text>
+                          <Text style={styles.ingMiddle}>
+                            {' '}{filteredCategorised.ok.length === 1 ? t('ingredients.is') : t('ingredients.are')} {t('ingredients.considered')}{' '}
+                          </Text>
+                          <Text style={[styles.ingWord, { color: Extra.poorOrange }]}>{t('ingredients.ok')}</Text>
+                        </Text>
+                        <View style={{ gap: 2 }}>
+                          {filteredCategorised.ok.map((ing, i) => (
+                            <View key={ing.id ?? i} style={styles.ingRowSmall}>
+                              <Ionicons name="checkmark" size={24} color={Extra.poorOrange} />
+                              <Text style={styles.ingName} numberOfLines={2}>{sentenceCase(ing.text)}</Text>
+                              <TouchableOpacity
+                                style={styles.ingInfoContainer}
+                                onPress={() => setInfoSheetIng({ ing, category: 'ok' })}
+                                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                              >
+                                <InfoIcon width={16} height={16} color={Colors.secondary} />
+                              </TouchableOpacity>
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+                    )}
+
+                    {/* ── Safe card ── */}
+                    {filteredCategorised.safe.length > 0 && (
+                      <View style={styles.ingCategoryCard}>
+                        <Text style={styles.ingCategoryHeading}>
+                          <Text style={styles.ingCount}>
+                            {t('ingredients.ingredient', { count: filteredCategorised.safe.length })}
+                          </Text>
+                          <Text style={styles.ingMiddle}>
+                            {' '}{filteredCategorised.safe.length === 1 ? t('ingredients.is') : t('ingredients.are')} {t('ingredients.considered')}{' '}
+                          </Text>
+                          <Text style={[styles.ingWord, { color: Extra.positiveGreen }]}>{t('ingredients.safe')}</Text>
+                        </Text>
+                        <View style={{ gap: 2 }}>
+                          {filteredCategorised.safe.map((ing, i) => (
+                            <View key={ing.id ?? i} style={styles.ingRowSmall}>
+                              <Ionicons name="checkmark" size={24} color={Extra.positiveGreen} />
+                              <Text style={styles.ingName} numberOfLines={2}>{sentenceCase(ing.text)}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+                    )}
                   </View>
                 )}
               </>
@@ -4351,17 +4784,64 @@ const styles = StyleSheet.create({
     marginRight: 5,
   },
 
+  // Weight stepper for custom weight input
+  weightStepper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    gap: 2,
+    paddingHorizontal: 2,
+  },
+  weightStepBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 999,
+    backgroundColor: Colors.surface.tertiary,
+    borderWidth: 2,
+    borderColor: '#aad4cd',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  weightStepBtnText: {
+    fontSize: 16,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    lineHeight: 18,
+  },
+  weightValueText: {
+    fontSize: 13,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.secondary,
+    letterSpacing: -0.26,
+    lineHeight: 16,
+    width: 68,
+    textAlign: 'center',
+  },
+  weightInputText: {
+    fontSize: 13,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.26,
+    lineHeight: 16,
+    width: 68,
+    textAlign: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: Colors.accent,
+    paddingVertical: 2,
+  },
+
   // Nutrition rows (per Figma Macro Stack node 3263-5386)
   // EACH ROW is individually styled — no shared card wrapper
   nutritionRows: {
     gap: Spacing.xxs,  // 4px between rows, per Figma
   },
   nutritionRow: {
-    // Individual row styling per Figma
+    // Individual row styling per Figma node 4351-5516
     backgroundColor: Colors.surface.tertiary,
     borderRadius: Radius.m,            // 8px, NOT 16
-    borderWidth: 1,
-    borderColor: '#aad4cd',
     flexDirection: 'row',
     alignItems: 'center',
     paddingLeft: Spacing.xs,           // 8px
@@ -4410,8 +4890,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     letterSpacing: -0.28,
-    width: 63,               // fixed width per Figma node 3164-4290
     lineHeight: 17,          // 1.2 × 14px
+    textAlign: 'left',
+    flexShrink: 0,
   },
 
   // Nutrition tab toggles
@@ -4550,6 +5031,69 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexShrink: 0,
   },
+
+  // Full List sub-tab styles (Figma node 3263-3941)
+  fullListHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+  } as const,
+  fullListParentName: {
+    fontSize: 18,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.36,
+    lineHeight: 24,
+  } as const,
+  fullListChildCount: {
+    fontSize: 14,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
+    color: Colors.secondary,
+    letterSpacing: -0.14,
+    lineHeight: 21,
+  } as const,
+  fullListCard: {
+    backgroundColor: '#f5fbfb',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#aad4cd',
+    padding: 16,
+  } as const,
+  fullListSeparator: {
+    height: 1,
+    backgroundColor: '#e0eeec',
+    marginVertical: 4,
+  } as const,
+  fullListRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    minHeight: 24,
+    paddingVertical: 4,
+  } as const,
+  fullListStatusIcon: {
+    width: 18,
+    height: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  } as const,
+  fullListIngName: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.28,
+    lineHeight: 17,
+  } as const,
+  fullListChevron: {
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  } as const,
 
   // Empty / coming soon
   emptyState: {
