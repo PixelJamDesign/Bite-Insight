@@ -119,6 +119,9 @@ export default function FoodSearchScreen() {
   const pageRef = useRef(1);
   const currentTermRef = useRef('');
   const inputRef = useRef<TextInput>(null);
+  // Keep a ref to selectedRegion so the debounce timeout always reads the latest value
+  const regionRef = useRef(selectedRegion);
+  regionRef.current = selectedRegion;
 
   /** Handle region selection — gate premium regions behind Plus (UK always free) */
   function handleRegionSelect(region: Region) {
@@ -128,16 +131,17 @@ export default function FoodSearchScreen() {
       return;
     }
     setSelectedRegion(region);
+    regionRef.current = region;           // update ref immediately
     setRegionPickerVisible(false);
-    // Re-search with new region if there's an active query
+    // Re-search with new region using whatever is in the search field
     const trimmed = query.trim();
     if (trimmed.length >= 2) {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
+      if (debounceRef.current) { clearTimeout(debounceRef.current); debounceRef.current = null; }
       performSearch(trimmed, region);
     }
   }
 
-  // ── Debounced search ────────────────────────────────────────────────────────
+  // ── Debounced search — fires a fresh API call every time query changes ──────
   useEffect(() => {
     // Always clear previous debounce first
     if (debounceRef.current) {
@@ -149,9 +153,11 @@ export default function FoodSearchScreen() {
 
     // Reset state when input is cleared
     if (!trimmed) {
+      if (abortRef.current) { abortRef.current.abort(); abortRef.current = null; }
       setResults([]);
       setTotalCount(0);
       setHasSearched(false);
+      setHasMore(false);
       setSubmittedQuery('');
       return undefined;
     }
@@ -161,8 +167,8 @@ export default function FoodSearchScreen() {
 
     debounceRef.current = setTimeout(() => {
       debounceRef.current = null;
-      // Double-check we still have a valid query before searching
-      performSearch(trimmed);
+      // Always read region from ref (avoids stale closure)
+      performSearch(trimmed, regionRef.current);
     }, DEBOUNCE_MS);
 
     return () => {
@@ -172,23 +178,6 @@ export default function FoodSearchScreen() {
       }
     };
   }, [query]);
-
-  /** Returns true if a product is meaningfully related to the search term.
-   *  Since the CGI search endpoint already does server-side relevance filtering,
-   *  we only do a light client-side check to remove truly unrelated items. */
-  function isRelevant(product: SearchProduct, term: string): boolean {
-    const name = (product.product_name || '').toLowerCase();
-    const brand = (product.brands || '').toLowerCase();
-    const combined = `${brand} ${name}`;
-    const words = term.toLowerCase().split(/\s+/).filter(Boolean);
-    if (words.length === 0) return true;
-    // Full phrase present in combined text
-    if (combined.includes(term.toLowerCase())) return true;
-    // Count how many search words appear anywhere in name + brand
-    const hits = words.filter((w) => combined.includes(w)).length;
-    // At least one search word must appear somewhere in name or brand
-    return hits >= 1;
-  }
 
   /** Score a product's relevance to the search term (higher = more relevant) */
   function scoreRelevance(product: SearchProduct, term: string): number {
@@ -241,16 +230,15 @@ export default function FoodSearchScreen() {
     return score;
   }
 
-  /** Fetch, filter, score and sort a single page of results */
+  /** Sort results by relevance — the CGI endpoint already handles filtering,
+   *  so we only remove nameless products and re-rank client-side. */
   function processResults(products: SearchProduct[], searchTerm: string): SearchProduct[] {
-    // Remove products without a name
+    // Only remove products that are completely nameless
     const named = products.filter(
       (p) => p.product_name && p.product_name.trim() !== '',
     );
-    // Remove truly irrelevant results (no search words match at all)
-    const relevant = named.filter((p) => isRelevant(p, searchTerm));
-    // Score and sort by relevance
-    const scored = relevant.map((p, i) => ({
+    // Score and sort by relevance (no client-side filtering — trust the API)
+    const scored = named.map((p, i) => ({
       product: p,
       relevance: scoreRelevance(p, searchTerm),
       apiOrder: i,
@@ -259,24 +247,23 @@ export default function FoodSearchScreen() {
     return scored.map((s) => s.product);
   }
 
-  async function performSearch(searchTerm: string, regionOverride?: Region) {
+  /** Perform a fresh search against the Open Food Facts CGI search endpoint */
+  async function performSearch(searchTerm: string, region: Region) {
     // Cancel any in-flight request
     if (abortRef.current) abortRef.current.abort();
     const controller = new AbortController();
     abortRef.current = controller;
 
     setLoading(true);
+    setResults([]);                      // clear previous results immediately
     setSubmittedQuery(searchTerm);
     setHasSearched(true);
     pageRef.current = 1;
     currentTermRef.current = searchTerm;
 
-    const region = regionOverride ?? selectedRegion;
-
     try {
-      // Use CGI search endpoint — the v2 /api/v2/search endpoint does NOT filter
-      // by search_terms (it returns random products). The CGI endpoint performs
-      // actual Elasticsearch text search and returns relevant results.
+      // CGI search endpoint performs real Elasticsearch text search.
+      // The v2 /api/v2/search endpoint does NOT filter by search_terms.
       const url = `https://${region.subdomain}.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(searchTerm)}&search_simple=1&action=process&json=1&page=1&page_size=${PAGE_SIZE}&fields=${SEARCH_FIELDS}`;
 
       const res = await fetch(url, {
@@ -284,16 +271,18 @@ export default function FoodSearchScreen() {
         headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
       });
 
-      if (!res.ok) throw new Error('Network error');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
 
-      const sorted = processResults(data.products ?? [], searchTerm);
+      const products: SearchProduct[] = data.products ?? [];
+      const sorted = processResults(products, searchTerm);
 
       setResults(sorted);
       setTotalCount(data.count ?? 0);
       setHasMore((data.count ?? 0) > PAGE_SIZE);
     } catch (err: any) {
       if (err?.name !== 'AbortError') {
+        console.warn('[FoodSearch] Search failed:', err?.message ?? err);
         setResults([]);
         setTotalCount(0);
         setHasMore(false);
@@ -311,7 +300,7 @@ export default function FoodSearchScreen() {
     pageRef.current = nextPage;
     setLoadingMore(true);
 
-    const region = selectedRegion;
+    const region = regionRef.current;
     const searchTerm = currentTermRef.current;
 
     try {
@@ -546,7 +535,7 @@ export default function FoodSearchScreen() {
               const trimmed = query.trim();
               if (trimmed.length >= 2) {
                 if (debounceRef.current) clearTimeout(debounceRef.current);
-                performSearch(trimmed);
+                performSearch(trimmed, regionRef.current);
                 Keyboard.dismiss();
               }
             }}
