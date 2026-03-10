@@ -8,6 +8,8 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   ActivityIndicator,
   Alert,
@@ -15,12 +17,12 @@ import {
   Modal,
   Pressable,
   Image,
+  Animated,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
-import InfoIcon from '@/assets/icons/info.svg';
 import { useTranslation } from 'react-i18next';
 import { supabase, getAvatarUrl, uploadAvatar } from '@/lib/supabase';
 import { useCachedAvatar } from '@/lib/useCachedAvatar';
@@ -34,7 +36,7 @@ import {
   normalizeHealthCondition, normalizeAllergy, normalizeDietaryPreference,
 } from '@/constants/profileOptions';
 import type { NutrientWatchlistEntry } from '@/lib/types';
-import { CameraIcon, BirthdayIcon } from '@/components/MenuIcons';
+import { CameraIcon, PersonalIcon, EmailIcon, BirthdayIcon, TickIcon } from '@/components/MenuIcons';
 import Logo from '../assets/images/logo.svg';
 
 // ── Step types ────────────────────────────────────────────────────────────────
@@ -261,6 +263,42 @@ export default function OnboardingScreen() {
 
   const [saving, setSaving] = useState(false);
 
+  // Step progress animation (5 dots max to support optional nutrient step)
+  const stepAnim    = useRef(new Animated.Value(1)).current;
+  const dotPops     = useRef([0, 1, 2, 3, 4].map(() => new Animated.Value(1))).current;
+  const prevStepRef = useRef(1);
+
+  // Animate step tracker on step change
+  useEffect(() => {
+    const prev = prevStepRef.current;
+    prevStepRef.current = overallStep;
+
+    Animated.spring(stepAnim, {
+      toValue: overallStep,
+      useNativeDriver: false,
+      tension: 120,
+      friction: 10,
+    }).start();
+
+    if (overallStep > prev) {
+      const doneIdx = prev - 1;
+      Animated.sequence([
+        Animated.spring(dotPops[doneIdx], {
+          toValue: 1.2,
+          useNativeDriver: true,
+          tension: 200,
+          friction: 2,
+        }),
+        Animated.spring(dotPops[doneIdx], {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 100,
+          friction: 1,
+        }),
+      ]).start();
+    }
+  }, [overallStep]);
+
   // Reset chip search on step change
   useEffect(() => {
     setChipSearch('');
@@ -311,8 +349,11 @@ export default function OnboardingScreen() {
       }
     }
 
+    const trimmedName = fullName.trim();
     await supabase.from('profiles').update({
       avatar_url: newAvatarUrl,
+      full_name: trimmedName || null,
+      display_name: trimmedName ? trimmedName.split(' ')[0] : null,
       age: age.trim() ? parseInt(age.trim(), 10) : null,
     }).eq('id', userId);
   }
@@ -363,22 +404,25 @@ export default function OnboardingScreen() {
     setSaving(false);
   }
 
-  // ── Progress indicator ─────────────────────────────────────────────────────
+  // ── Progress indicator (animated, matching edit-profile) ─────────────────
   function renderProgress() {
+    const dots = Array.from({ length: totalSteps }, (_, i) => i + 1);
     return (
       <View style={styles.progressRow}>
         <View style={styles.progressDots}>
-          {Array.from({ length: totalSteps }, (_, i) => {
-            const s = i + 1;
-            if (s < overallStep) {
-              return (
-                <View key={s} style={styles.stepDone}>
-                  <Ionicons name="checkmark" size={10} color="#fff" />
-                </View>
-              );
-            }
-            if (s === overallStep) return <View key={s} style={styles.stepCurrent} />;
-            return <View key={s} style={styles.stepUpcoming} />;
+          {dots.map((s) => {
+            const isDone = s < overallStep;
+            const bgColor = isDone ? '#3b9586' : s === overallStep ? Colors.primary : `${Colors.primary}25`;
+            const animWidth  = stepAnim.interpolate({ inputRange: [s - 1, s, s + 1], outputRange: [16, 48, 20], extrapolate: 'clamp' });
+            const animHeight = stepAnim.interpolate({ inputRange: [s - 1, s, s + 1], outputRange: [10, 10, 20], extrapolate: 'clamp' });
+            const animRadius = stepAnim.interpolate({ inputRange: [s - 1, s, s + 1], outputRange: [5,  5,  10], extrapolate: 'clamp' });
+            return (
+              <Animated.View key={s} style={{ transform: [{ scale: dotPops[s - 1] }] }}>
+                <Animated.View style={{ width: animWidth, height: animHeight, borderRadius: animRadius, backgroundColor: bgColor, alignItems: 'center', justifyContent: 'center' }}>
+                  {isDone && <TickIcon size={10} color="#fff" />}
+                </Animated.View>
+              </Animated.View>
+            );
           })}
         </View>
         {nextLabel && <Text style={styles.nextLabel}>{t('progress.next', { label: nextLabel })}</Text>}
@@ -447,7 +491,7 @@ export default function OnboardingScreen() {
               activeOpacity={0.75}
             >
               <View style={[styles.chipCheck, active && styles.chipCheckActive]}>
-                {active && <Ionicons name="checkmark" size={12} color="#fff" />}
+                {active && <TickIcon size={14} color="#fff" />}
               </View>
               <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>{tpo(`${labelPrefix}.${key}`)}</Text>
             </TouchableOpacity>
@@ -597,169 +641,246 @@ export default function OnboardingScreen() {
   // ── Render ────────────────────────────────────────────────────────────────────
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      {/* Logo */}
-      <View style={styles.logoArea}>
-        <Logo width={141} height={36} />
-      </View>
-
-      {/* Step header */}
-      <View style={styles.stepHeader}>
-        <View style={styles.stepTitleRow}>
-          <Text style={styles.stepTitle}>{stepTitle}</Text>
-          <View style={{ opacity: 0.5 }}><InfoIcon width={20} height={20} /></View>
-        </View>
-        {renderProgress()}
-      </View>
-
-      {/* Scrollable content */}
-      <ScrollView
+      <KeyboardAvoidingView
         style={{ flex: 1 }}
-        contentContainerStyle={styles.scroll}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        {/* ── Step: About You ── */}
-        {currentStepKey === 'about' && (
-          <>
-            <TouchableOpacity style={styles.avatarContainer} onPress={pickAvatar} activeOpacity={0.85}>
-              <View style={styles.avatarCircle}>
-                {displayAvatar ? (
-                  <Image source={{ uri: displayAvatar }} style={styles.avatarImage} />
-                ) : (
-                  <Text style={styles.avatarInitials}>{getInitials(fullName || session?.user?.user_metadata?.full_name || '')}</Text>
-                )}
-              </View>
-              <View style={styles.cameraBadge}>
-                <CameraIcon size={16} color="#fff" />
-              </View>
-            </TouchableOpacity>
+        {/* Logo */}
+        <View style={styles.logoArea}>
+          <Logo width={141} height={36} />
+        </View>
 
-            <View style={[styles.card, styles.cardWithAvatar]}>
-              <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>{tj('about.title')}</Text>
-                <Text style={styles.cardSubtitle}>{tj('about.subtitle')}</Text>
-              </View>
+        {/* Step header */}
+        <View style={styles.stepHeader}>
+          <View style={styles.stepTitleRow}>
+            <Text style={styles.stepTitle}>{stepTitle}</Text>
+          </View>
+          {renderProgress()}
+        </View>
 
-              <View style={styles.aboutFields}>
-                <View style={[styles.aboutInputRow, focusedField === 'age' && styles.aboutInputRowFocused]}>
-                  <BirthdayIcon size={20} color={Colors.primary} />
-                  <TextInput
-                    style={[styles.aboutInputField, age ? styles.aboutInputFieldBold : null]}
-                    placeholder={tj('about.agePlaceholder')}
-                    placeholderTextColor={Colors.secondary}
-                    selectionColor={Colors.primary}
-                    keyboardType="number-pad"
-                    value={age}
-                    onChangeText={setAge}
-                    onFocus={() => setFocusedField('age')}
-                    onBlur={() => setFocusedField(null)}
-                  />
-                  {age ? (
-                    <TouchableOpacity onPress={() => setAge('')} hitSlop={8}>
-                      <Ionicons name="close" size={18} color={`${Colors.primary}80`} />
-                    </TouchableOpacity>
-                  ) : null}
+        {/* Scrollable content */}
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* ── Step: About You ── */}
+          {currentStepKey === 'about' && (
+            <>
+              <TouchableOpacity style={styles.avatarContainer} onPress={pickAvatar} activeOpacity={0.85}>
+                <View style={styles.avatarCircle}>
+                  {displayAvatar ? (
+                    <Image source={{ uri: displayAvatar }} style={styles.avatarImage} />
+                  ) : (
+                    <Text style={styles.avatarInitials}>{getInitials(fullName || session?.user?.user_metadata?.full_name || '')}</Text>
+                  )}
+                </View>
+                <View style={styles.cameraBadge}>
+                  <CameraIcon size={16} color="#fff" />
+                </View>
+              </TouchableOpacity>
+
+              <View style={[styles.card, styles.cardWithAvatar]}>
+                <View style={styles.cardHeader}>
+                  <Text style={styles.cardTitle}>{tj('about.title')}</Text>
+                  <Text style={styles.cardSubtitle}>{tj('about.subtitle')}</Text>
+                </View>
+
+                <View style={styles.fields}>
+                  <View style={[styles.inputRow, focusedField === 'name' && styles.inputRowFocused]}>
+                    <PersonalIcon size={16} color={Colors.primary} />
+                    <TextInput
+                      style={[styles.inputFieldInner, fullName ? styles.inputFieldBold : null]}
+                      placeholder={tc('placeholder.fullName')}
+                      placeholderTextColor={`${Colors.secondary}`}
+                      selectionColor={Colors.primary}
+                      autoCapitalize="words"
+                      value={fullName}
+                      onChangeText={setFullName}
+                      onFocus={() => setFocusedField('name')}
+                      onBlur={() => setFocusedField(null)}
+                    />
+                    {fullName ? (
+                      <TouchableOpacity onPress={() => setFullName('')} hitSlop={8}>
+                        <Ionicons name="close" size={18} color={`${Colors.primary}80`} />
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                  <View style={[styles.inputRow, styles.inputRowReadOnly]}>
+                    <EmailIcon size={20} color={`${Colors.primary}50`} />
+                    <TextInput
+                      style={[styles.inputFieldInner, styles.inputReadOnly]}
+                      value={session?.user?.email ?? ''}
+                      editable={false}
+                      selectTextOnFocus={false}
+                    />
+                  </View>
+                  <View style={[styles.inputRow, focusedField === 'age' && styles.inputRowFocused]}>
+                    <BirthdayIcon size={20} color={Colors.primary} />
+                    <TextInput
+                      style={[styles.inputFieldInner, age ? styles.inputFieldBold : null]}
+                      placeholder={tj('about.agePlaceholder')}
+                      placeholderTextColor={`${Colors.secondary}`}
+                      selectionColor={Colors.primary}
+                      keyboardType="number-pad"
+                      value={age}
+                      onChangeText={setAge}
+                      onFocus={() => setFocusedField('age')}
+                      onBlur={() => setFocusedField(null)}
+                    />
+                    {age ? (
+                      <TouchableOpacity onPress={() => setAge('')} hitSlop={8}>
+                        <Ionicons name="close" size={18} color={`${Colors.primary}80`} />
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
                 </View>
               </View>
+            </>
+          )}
+
+          {/* ── Steps: Health / Allergies / Dietary / Nutrients ── */}
+          {currentStepKey !== 'about' && (
+            <View style={currentStepKey === 'nutrients' ? styles.nutrientCard : styles.card}>
+              {currentStepKey === 'health' && renderChipHeader(
+                t('question.healthCondition'),
+                healthConditions.length,
+                t('count.condition', { count: healthConditions.length }),
+              )}
+              {currentStepKey === 'allergies' && renderChipHeader(
+                t('question.allergies'),
+                allergies.length,
+                t('count.allergy', { count: allergies.length }),
+              )}
+              {currentStepKey === 'dietary' && renderChipHeader(
+                t('question.dietaryPreferences'),
+                dietaryPrefs.length,
+                t('count.preference', { count: dietaryPrefs.length }),
+              )}
+
+              {currentStepKey === 'health' && renderChips(HEALTH_CONDITION_KEYS, 'healthConditions', healthConditions, key =>
+                setHealthConditions(prev => toggle(prev, key))
+              )}
+              {currentStepKey === 'nutrients' && renderNutrientStep()}
+              {currentStepKey === 'allergies' && renderChips(ALLERGY_KEYS, 'allergies', allergies, key =>
+                setAllergies(prev => toggle(prev, key))
+              )}
+              {currentStepKey === 'dietary' && renderChips(DIETARY_PREFERENCE_KEYS, 'dietaryPreferences', dietaryPrefs, key =>
+                setDietaryPrefs(prev => toggle(prev, key))
+              )}
             </View>
-          </>
-        )}
+          )}
 
-        {/* ── Steps: Health / Allergies / Dietary / Nutrients ── */}
-        {currentStepKey !== 'about' && (
-          <View style={currentStepKey === 'nutrients' ? styles.nutrientCard : styles.card}>
-            {currentStepKey === 'health' && renderChipHeader(
-              t('question.healthCondition'),
-              healthConditions.length,
-              t('count.condition', { count: healthConditions.length }),
-            )}
-            {currentStepKey === 'allergies' && renderChipHeader(
-              t('question.allergies'),
-              allergies.length,
-              t('count.allergy', { count: allergies.length }),
-            )}
-            {currentStepKey === 'dietary' && renderChipHeader(
-              t('question.dietaryPreferences'),
-              dietaryPrefs.length,
-              t('count.preference', { count: dietaryPrefs.length }),
-            )}
+          {/* Skip link — skips remaining health/allergies/diet, goes to disclaimer */}
+          {currentStepKey !== 'about' && (
+            <TouchableOpacity
+              style={styles.skipBtn}
+              onPress={async () => {
+                setSaving(true);
+                try { await advanceTo('disclaimer'); } catch { /* JourneyGuard handles */ }
+                setSaving(false);
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.skipText}>{tc('buttons.skip')}</Text>
+            </TouchableOpacity>
+          )}
 
-            {currentStepKey === 'health' && renderChips(HEALTH_CONDITION_KEYS, 'healthConditions', healthConditions, key =>
-              setHealthConditions(prev => toggle(prev, key))
-            )}
-            {currentStepKey === 'nutrients' && renderNutrientStep()}
-            {currentStepKey === 'allergies' && renderChips(ALLERGY_KEYS, 'allergies', allergies, key =>
-              setAllergies(prev => toggle(prev, key))
-            )}
-            {currentStepKey === 'dietary' && renderChips(DIETARY_PREFERENCE_KEYS, 'dietaryPreferences', dietaryPrefs, key =>
-              setDietaryPrefs(prev => toggle(prev, key))
-            )}
+          <View style={{ height: 120 }} />
+        </ScrollView>
+
+        {/* ── Footer ── */}
+        <View style={styles.footer}>
+          <LinearGradient
+            colors={['rgba(226,241,238,0)', Colors.background]}
+            style={styles.footerFade}
+            pointerEvents="none"
+          />
+          <View style={[styles.footerButtons, { paddingBottom: insets.bottom + 12 }]}>
+            <TouchableOpacity style={styles.backBtn} onPress={handleBack} activeOpacity={0.8}>
+              <Text style={styles.backBtnText}>{pos === 0 ? tj('about.signOut') : tc('buttons.back')}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.nextBtn}
+              onPress={isLastStep ? handleFinish : handleNext}
+              disabled={saving}
+              activeOpacity={0.88}
+            >
+              {saving ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.nextBtnText} numberOfLines={1} adjustsFontSizeToFit>
+                  {isLastStep ? tc('buttons.finish') : t('progress.next', { label: nextLabel })}
+                </Text>
+              )}
+            </TouchableOpacity>
           </View>
-        )}
-
-        {/* Skip link — skips remaining health/allergies/diet, goes to disclaimer */}
-        {currentStepKey !== 'about' && (
-          <TouchableOpacity
-            style={styles.skipBtn}
-            onPress={async () => {
-              setSaving(true);
-              try { await advanceTo('disclaimer'); } catch { /* JourneyGuard handles */ }
-              setSaving(false);
-            }}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.skipText}>{tc('buttons.skip')}</Text>
-          </TouchableOpacity>
-        )}
-
-        <View style={{ height: 120 }} />
-      </ScrollView>
-
-      {/* ── Footer ── */}
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
-        <LinearGradient
-          colors={['rgba(226,241,238,0)', Colors.background]}
-          style={styles.footerFade}
-          pointerEvents="none"
-        />
-        <View style={styles.footerButtons}>
-          <TouchableOpacity style={styles.backBtn} onPress={handleBack} activeOpacity={0.8}>
-            <Text style={styles.backBtnText}>{pos === 0 ? tj('about.signOut') : tc('buttons.back')}</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.nextBtn}
-            onPress={isLastStep ? handleFinish : handleNext}
-            disabled={saving}
-            activeOpacity={0.88}
-          >
-            {saving ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.nextBtnText} numberOfLines={1} adjustsFontSizeToFit>
-                {isLastStep ? tc('buttons.finish') : (currentStepKey === 'about' ? tj('about.continue') : t('progress.next', { label: nextLabel }))}
-              </Text>
-            )}
-          </TouchableOpacity>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
+// ── Styles (matching edit-profile.tsx) ──────────────────────────────────────
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: Colors.background,
   },
+
   logoArea: {
     paddingHorizontal: 24,
-    paddingTop: 8,
-    paddingBottom: 12,
+    paddingTop: 30,
+    paddingBottom: 48,
   },
 
-  // ── About You step ──────────────────────────────────────────────────────────
+  stepHeader: {
+    paddingHorizontal: 24,
+    paddingBottom: 12,
+    gap: 8,
+  },
+  stepTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  stepTitle: {
+    fontSize: 24,
+    fontFamily: 'Figtree_700Bold',
+    fontWeight: '700',
+    color: Colors.primary,
+    letterSpacing: -0.48,
+    lineHeight: 30,
+  },
+
+  progressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    minHeight: 21,
+  },
+  progressDots: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  nextLabel: {
+    fontSize: 14,
+    fontFamily: 'Figtree_300Light',
+    fontWeight: '300',
+    color: Colors.secondary,
+    letterSpacing: -0.14,
+    lineHeight: 21,
+  },
+
+  scroll: {
+    paddingHorizontal: 24,
+    paddingTop: 4,
+  },
+
   avatarContainer: {
     marginLeft: 16,
     marginBottom: -60,
@@ -807,11 +928,27 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: '#fff',
   },
+
+  card: {
+    backgroundColor: Colors.surface.secondary,
+    borderRadius: 16,
+    padding: 20,
+    gap: 16,
+    ...Shadows.level4,
+  },
   cardWithAvatar: {
     paddingTop: 80,
   },
   cardHeader: {
     gap: 4,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontFamily: 'Figtree_700Bold',
+    fontWeight: '700',
+    color: Colors.primary,
+    letterSpacing: -0.36,
+    lineHeight: 24,
   },
   cardSubtitle: {
     fontSize: 16,
@@ -820,10 +957,11 @@ const styles = StyleSheet.create({
     color: Colors.secondary,
     lineHeight: 24,
   },
-  aboutFields: {
+
+  fields: {
     gap: 10,
   },
-  aboutInputRow: {
+  inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -834,100 +972,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 13,
   },
-  aboutInputRowFocused: {
+  inputRowFocused: {
     borderWidth: 2,
     borderColor: Colors.accent,
     margin: -1,
   },
-  aboutInputField: {
+  inputFieldBold: {
+    fontFamily: 'Figtree_700Bold',
+    fontWeight: '700',
+  },
+  inputRowReadOnly: {
+    opacity: 0.5,
+  },
+  inputFieldInner: {
     flex: 1,
     fontSize: 16,
     fontFamily: 'Figtree_300Light',
     fontWeight: '300',
     color: Colors.primary,
   },
-  aboutInputFieldBold: {
-    fontFamily: 'Figtree_700Bold',
-    fontWeight: '700',
-  },
-  stepHeader: {
-    paddingHorizontal: 24,
-    paddingBottom: 12,
-    gap: 8,
-  },
-  stepTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  stepTitle: {
-    fontSize: 24,
-    fontFamily: 'Figtree_700Bold',
-    fontWeight: '700',
-    color: Colors.primary,
-    letterSpacing: -0.48,
-    lineHeight: 30,
-  },
-
-  progressRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  progressDots: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  stepDone: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#3b9586',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepCurrent: {
-    width: 48,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: Colors.primary,
-  },
-  stepUpcoming: {
-    width: 16,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: `${Colors.primary}25`,
-  },
-  nextLabel: {
-    fontSize: 14,
-    fontFamily: 'Figtree_300Light',
-    fontWeight: '300',
-    color: Colors.secondary,
-    letterSpacing: -0.14,
-    lineHeight: 21,
-  },
-
-  scroll: {
-    paddingHorizontal: 24,
-    paddingTop: 4,
-  },
-
-  card: {
-    backgroundColor: Colors.surface.secondary,
-    borderRadius: 16,
-    padding: 20,
-    gap: 16,
-    ...Shadows.level4,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontFamily: 'Figtree_700Bold',
-    fontWeight: '700',
-    color: Colors.primary,
-    letterSpacing: -0.36,
-    lineHeight: 24,
+  inputReadOnly: {
+    color: `${Colors.primary}80`,
   },
 
   chipCardInfo: {
@@ -1027,7 +1092,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 
-  // ── Nutrient watchlist step (redesigned) ──────────────────────────────────
+  // ── Nutrient watchlist step ──────────────────────────────────────────────
   nutrientCard: {
     backgroundColor: Colors.surface.secondary,
     borderRadius: 16,
@@ -1075,22 +1140,10 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     textAlign: 'center',
   },
-  conditionCard: {
-    backgroundColor: Colors.surface.secondary,
-    borderWidth: 1,
-    borderColor: '#aad4cd',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    gap: 8,
-  },
   nutrientRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-  },
-  nutrientRowBorder: {
-    // visual separator via gap; no actual border needed between rows
   },
   nutrientName: {
     flex: 1,
@@ -1101,7 +1154,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.36,
     lineHeight: 24,
   },
-  // ── Dropdown ──
   dropdown: {
     width: 154,
     flexDirection: 'row',
@@ -1182,8 +1234,8 @@ const styles = StyleSheet.create({
   },
   skipText: {
     fontSize: 15,
-    fontFamily: 'Figtree_400Regular',
-    fontWeight: '400',
+    fontFamily: 'Figtree_300Light',
+    fontWeight: '300',
     color: Colors.secondary,
     letterSpacing: -0.15,
     textDecorationLine: 'underline',
