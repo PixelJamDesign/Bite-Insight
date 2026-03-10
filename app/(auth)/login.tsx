@@ -18,7 +18,6 @@ import {
   ImageBackground,
   useWindowDimensions,
 } from 'react-native';
-import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -274,7 +273,8 @@ export default function LoginScreen() {
       Alert.alert(t('signup.alert.checkEmailTitle'), t('signup.alert.checkEmailBody'));
       return;
     }
-    router.push('/onboarding');
+    // Session exists (email verification not required) — AuthGuard + JourneyGuard
+    // will automatically redirect the user to the correct journey step.
   }
 
   async function handleForgotPassword() {

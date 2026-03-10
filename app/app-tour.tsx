@@ -9,13 +9,12 @@ import {
   Animated,
   Easing,
 } from 'react-native';
-import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import LottieView from 'lottie-react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/auth';
+import { useJourney } from '@/lib/journeyContext';
 import { Colors, Shadows } from '@/constants/theme';
 
 // ── Step data (extensible — add more steps here) ────────────────────────────
@@ -49,6 +48,7 @@ export default function AppTourScreen() {
   const { t: tc } = useTranslation('common');
   const { t } = useTranslation('tour');
   const { session } = useAuth();
+  const { advanceTo } = useJourney();
 
   // -2 = welcome (word-by-word), -1 = intro, 0+ = step index
   const [currentIndex, setCurrentIndex] = useState(-2);
@@ -166,8 +166,11 @@ export default function AppTourScreen() {
 
   // ── Completion ──────────────────────────────────────────────────────────────
   const completeTour = async () => {
-    await AsyncStorage.setItem('hasSeenAppTour', 'true');
-    router.replace('/(tabs)');
+    try {
+      await advanceTo('complete');
+    } catch {
+      // JourneyGuard will redirect on next render
+    }
   };
 
   // ── Skip confirmation ───────────────────────────────────────────────────────

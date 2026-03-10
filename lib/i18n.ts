@@ -16,6 +16,7 @@ import en_ingredients from '@/locales/en/ingredients.json';
 import en_history from '@/locales/en/history.json';
 import en_scanner from '@/locales/en/scanner.json';
 import en_tour from '@/locales/en/tour.json';
+import en_journey from '@/locales/en/journey.json';
 
 // ── Spanish ─────────────────────────────────────────────────────────────────
 import es_common from '@/locales/es/common.json';
@@ -31,6 +32,7 @@ import es_ingredients from '@/locales/es/ingredients.json';
 import es_history from '@/locales/es/history.json';
 import es_scanner from '@/locales/es/scanner.json';
 import es_tour from '@/locales/es/tour.json';
+import es_journey from '@/locales/es/journey.json';
 
 // ── French ──────────────────────────────────────────────────────────────────
 import fr_common from '@/locales/fr/common.json';
@@ -46,6 +48,7 @@ import fr_ingredients from '@/locales/fr/ingredients.json';
 import fr_history from '@/locales/fr/history.json';
 import fr_scanner from '@/locales/fr/scanner.json';
 import fr_tour from '@/locales/fr/tour.json';
+import fr_journey from '@/locales/fr/journey.json';
 
 // ── German ──────────────────────────────────────────────────────────────────
 import de_common from '@/locales/de/common.json';
@@ -61,6 +64,7 @@ import de_ingredients from '@/locales/de/ingredients.json';
 import de_history from '@/locales/de/history.json';
 import de_scanner from '@/locales/de/scanner.json';
 import de_tour from '@/locales/de/tour.json';
+import de_journey from '@/locales/de/journey.json';
 
 // ── Italian ─────────────────────────────────────────────────────────────────
 import it_common from '@/locales/it/common.json';
@@ -76,6 +80,7 @@ import it_ingredients from '@/locales/it/ingredients.json';
 import it_history from '@/locales/it/history.json';
 import it_scanner from '@/locales/it/scanner.json';
 import it_tour from '@/locales/it/tour.json';
+import it_journey from '@/locales/it/journey.json';
 
 // ── Portuguese ──────────────────────────────────────────────────────────────
 import pt_common from '@/locales/pt/common.json';
@@ -91,6 +96,7 @@ import pt_ingredients from '@/locales/pt/ingredients.json';
 import pt_history from '@/locales/pt/history.json';
 import pt_scanner from '@/locales/pt/scanner.json';
 import pt_tour from '@/locales/pt/tour.json';
+import pt_journey from '@/locales/pt/journey.json';
 
 // ── Dutch ───────────────────────────────────────────────────────────────────
 import nl_common from '@/locales/nl/common.json';
@@ -106,6 +112,7 @@ import nl_ingredients from '@/locales/nl/ingredients.json';
 import nl_history from '@/locales/nl/history.json';
 import nl_scanner from '@/locales/nl/scanner.json';
 import nl_tour from '@/locales/nl/tour.json';
+import nl_journey from '@/locales/nl/journey.json';
 
 // ── Polish ──────────────────────────────────────────────────────────────────
 import pl_common from '@/locales/pl/common.json';
@@ -121,6 +128,7 @@ import pl_ingredients from '@/locales/pl/ingredients.json';
 import pl_history from '@/locales/pl/history.json';
 import pl_scanner from '@/locales/pl/scanner.json';
 import pl_tour from '@/locales/pl/tour.json';
+import pl_journey from '@/locales/pl/journey.json';
 
 // ── Japanese ────────────────────────────────────────────────────────────────
 import ja_common from '@/locales/ja/common.json';
@@ -136,6 +144,7 @@ import ja_ingredients from '@/locales/ja/ingredients.json';
 import ja_history from '@/locales/ja/history.json';
 import ja_scanner from '@/locales/ja/scanner.json';
 import ja_tour from '@/locales/ja/tour.json';
+import ja_journey from '@/locales/ja/journey.json';
 
 // ── Chinese (Simplified) ────────────────────────────────────────────────────
 import zh_common from '@/locales/zh/common.json';
@@ -151,6 +160,7 @@ import zh_ingredients from '@/locales/zh/ingredients.json';
 import zh_history from '@/locales/zh/history.json';
 import zh_scanner from '@/locales/zh/scanner.json';
 import zh_tour from '@/locales/zh/tour.json';
+import zh_journey from '@/locales/zh/journey.json';
 
 // ── Korean ──────────────────────────────────────────────────────────────────
 import ko_common from '@/locales/ko/common.json';
@@ -166,6 +176,7 @@ import ko_ingredients from '@/locales/ko/ingredients.json';
 import ko_history from '@/locales/ko/history.json';
 import ko_scanner from '@/locales/ko/scanner.json';
 import ko_tour from '@/locales/ko/tour.json';
+import ko_journey from '@/locales/ko/journey.json';
 
 // ── Arabic ──────────────────────────────────────────────────────────────────
 import ar_common from '@/locales/ar/common.json';
@@ -181,6 +192,7 @@ import ar_ingredients from '@/locales/ar/ingredients.json';
 import ar_history from '@/locales/ar/history.json';
 import ar_scanner from '@/locales/ar/scanner.json';
 import ar_tour from '@/locales/ar/tour.json';
+import ar_journey from '@/locales/ar/journey.json';
 
 // ── Detect device language ──────────────────────────────────────────────────
 const deviceLanguage = getLocales()[0]?.languageCode ?? 'en';
@@ -200,6 +212,7 @@ const ns = [
   'history',
   'scanner',
   'tour',
+  'journey',
 ] as const;
 
 // ── Helper to build a language resource bundle ──────────────────────────────
@@ -207,9 +220,9 @@ function bundle(
   common: object, profileOptions: object, auth: object, onboarding: object,
   dashboard: object, scan: object, menu: object, profile: object,
   flagReasons: object, ingredients: object, history: object, scanner: object,
-  tour: object,
+  tour: object, journey: object,
 ) {
-  return { common, profileOptions, auth, onboarding, dashboard, scan, menu, profile, flagReasons, ingredients, history, scanner, tour };
+  return { common, profileOptions, auth, onboarding, dashboard, scan, menu, profile, flagReasons, ingredients, history, scanner, tour, journey };
 }
 
 // ── Initialise i18next ──────────────────────────────────────────────────────
@@ -219,18 +232,18 @@ i18n.use(initReactI18next).init({
   defaultNS: 'common',
   ns: [...ns],
   resources: {
-    en: bundle(en_common, en_profileOptions, en_auth, en_onboarding, en_dashboard, en_scan, en_menu, en_profile, en_flagReasons, en_ingredients, en_history, en_scanner, en_tour),
-    es: bundle(es_common, es_profileOptions, es_auth, es_onboarding, es_dashboard, es_scan, es_menu, es_profile, es_flagReasons, es_ingredients, es_history, es_scanner, es_tour),
-    fr: bundle(fr_common, fr_profileOptions, fr_auth, fr_onboarding, fr_dashboard, fr_scan, fr_menu, fr_profile, fr_flagReasons, fr_ingredients, fr_history, fr_scanner, fr_tour),
-    de: bundle(de_common, de_profileOptions, de_auth, de_onboarding, de_dashboard, de_scan, de_menu, de_profile, de_flagReasons, de_ingredients, de_history, de_scanner, de_tour),
-    it: bundle(it_common, it_profileOptions, it_auth, it_onboarding, it_dashboard, it_scan, it_menu, it_profile, it_flagReasons, it_ingredients, it_history, it_scanner, it_tour),
-    pt: bundle(pt_common, pt_profileOptions, pt_auth, pt_onboarding, pt_dashboard, pt_scan, pt_menu, pt_profile, pt_flagReasons, pt_ingredients, pt_history, pt_scanner, pt_tour),
-    nl: bundle(nl_common, nl_profileOptions, nl_auth, nl_onboarding, nl_dashboard, nl_scan, nl_menu, nl_profile, nl_flagReasons, nl_ingredients, nl_history, nl_scanner, nl_tour),
-    pl: bundle(pl_common, pl_profileOptions, pl_auth, pl_onboarding, pl_dashboard, pl_scan, pl_menu, pl_profile, pl_flagReasons, pl_ingredients, pl_history, pl_scanner, pl_tour),
-    ja: bundle(ja_common, ja_profileOptions, ja_auth, ja_onboarding, ja_dashboard, ja_scan, ja_menu, ja_profile, ja_flagReasons, ja_ingredients, ja_history, ja_scanner, ja_tour),
-    zh: bundle(zh_common, zh_profileOptions, zh_auth, zh_onboarding, zh_dashboard, zh_scan, zh_menu, zh_profile, zh_flagReasons, zh_ingredients, zh_history, zh_scanner, zh_tour),
-    ko: bundle(ko_common, ko_profileOptions, ko_auth, ko_onboarding, ko_dashboard, ko_scan, ko_menu, ko_profile, ko_flagReasons, ko_ingredients, ko_history, ko_scanner, ko_tour),
-    ar: bundle(ar_common, ar_profileOptions, ar_auth, ar_onboarding, ar_dashboard, ar_scan, ar_menu, ar_profile, ar_flagReasons, ar_ingredients, ar_history, ar_scanner, ar_tour),
+    en: bundle(en_common, en_profileOptions, en_auth, en_onboarding, en_dashboard, en_scan, en_menu, en_profile, en_flagReasons, en_ingredients, en_history, en_scanner, en_tour, en_journey),
+    es: bundle(es_common, es_profileOptions, es_auth, es_onboarding, es_dashboard, es_scan, es_menu, es_profile, es_flagReasons, es_ingredients, es_history, es_scanner, es_tour, es_journey),
+    fr: bundle(fr_common, fr_profileOptions, fr_auth, fr_onboarding, fr_dashboard, fr_scan, fr_menu, fr_profile, fr_flagReasons, fr_ingredients, fr_history, fr_scanner, fr_tour, fr_journey),
+    de: bundle(de_common, de_profileOptions, de_auth, de_onboarding, de_dashboard, de_scan, de_menu, de_profile, de_flagReasons, de_ingredients, de_history, de_scanner, de_tour, de_journey),
+    it: bundle(it_common, it_profileOptions, it_auth, it_onboarding, it_dashboard, it_scan, it_menu, it_profile, it_flagReasons, it_ingredients, it_history, it_scanner, it_tour, it_journey),
+    pt: bundle(pt_common, pt_profileOptions, pt_auth, pt_onboarding, pt_dashboard, pt_scan, pt_menu, pt_profile, pt_flagReasons, pt_ingredients, pt_history, pt_scanner, pt_tour, pt_journey),
+    nl: bundle(nl_common, nl_profileOptions, nl_auth, nl_onboarding, nl_dashboard, nl_scan, nl_menu, nl_profile, nl_flagReasons, nl_ingredients, nl_history, nl_scanner, nl_tour, nl_journey),
+    pl: bundle(pl_common, pl_profileOptions, pl_auth, pl_onboarding, pl_dashboard, pl_scan, pl_menu, pl_profile, pl_flagReasons, pl_ingredients, pl_history, pl_scanner, pl_tour, pl_journey),
+    ja: bundle(ja_common, ja_profileOptions, ja_auth, ja_onboarding, ja_dashboard, ja_scan, ja_menu, ja_profile, ja_flagReasons, ja_ingredients, ja_history, ja_scanner, ja_tour, ja_journey),
+    zh: bundle(zh_common, zh_profileOptions, zh_auth, zh_onboarding, zh_dashboard, zh_scan, zh_menu, zh_profile, zh_flagReasons, zh_ingredients, zh_history, zh_scanner, zh_tour, zh_journey),
+    ko: bundle(ko_common, ko_profileOptions, ko_auth, ko_onboarding, ko_dashboard, ko_scan, ko_menu, ko_profile, ko_flagReasons, ko_ingredients, ko_history, ko_scanner, ko_tour, ko_journey),
+    ar: bundle(ar_common, ar_profileOptions, ar_auth, ar_onboarding, ar_dashboard, ar_scan, ar_menu, ar_profile, ar_flagReasons, ar_ingredients, ar_history, ar_scanner, ar_tour, ar_journey),
   },
   interpolation: {
     escapeValue: false, // React Native handles XSS

@@ -1,0 +1,26 @@
+{
+  "about": {
+    "title": "About You",
+    "subtitle": "Add a photo and tell us your age.",
+    "ageLabel": "Your age",
+    "agePlaceholder": "Enter your age",
+    "continue": "Continue",
+    "signOut": "Sign out"
+  },
+  "disclaimer": {
+    "header": "Just one more thing…",
+    "intro": "Bite Insight is designed to help you understand the ingredients and nutritional information in the food you eat.",
+    "body": "The insights shown in the app are based on publicly available data and general nutritional guidance. They are intended to help you make more informed food choices, but should not replace professional medical advice.",
+    "understand": "I understand the following:",
+    "tickAll": "Tick all",
+    "check1": "I understand that Bite Insight does not provide medical advice.",
+    "check2": "I understand that I should consult a qualified healthcare professional for medical or dietary advice.",
+    "check3": "I understand that nutritional information may vary between products and manufacturers.",
+    "check4": "I understand that Bite Insight does not diagnose, treat, cure or prevent any medical conditions.",
+    "legal": "By continuing you agree to our\nTerms of Service and Privacy Policy.",
+    "termsOfService": "Terms of Service",
+    "privacyPolicy": "Privacy Policy",
+    "back": "Back",
+    "finish": "Finish"
+  }
+}

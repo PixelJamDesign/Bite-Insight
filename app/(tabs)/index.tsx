@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -21,7 +21,6 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as SecureStore from 'expo-secure-store';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
@@ -169,18 +168,6 @@ export default function HomeDashboard() {
   }, [session]);
 
   useFocusEffect(useCallback(() => { fetchData(); }, [fetchData]));
-
-  // ── First-run: redirect to app tour if user hasn't seen it ────────────────
-  const tourRedirected = useRef(false);
-  useEffect(() => {
-    if (tourRedirected.current) return;
-    AsyncStorage.getItem('hasSeenAppTour').then((val) => {
-      if (val !== 'true' && !tourRedirected.current) {
-        tourRedirected.current = true;
-        router.replace('/app-tour');
-      }
-    });
-  }, []);
 
   // Derived — updates instantly when rateIngredient mutates profile state
   const flaggedCount = (profile?.flagged_ingredients ?? []).length;

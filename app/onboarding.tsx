@@ -1,7 +1,6 @@
 /**
- * Post-signup onboarding (steps 2–4, or 2–5 if health conditions selected).
- * Navigated to from the login screen after basic account creation.
- * Lives outside (auth) so the session→tabs redirect doesn't fire.
+ * Account creation journey (About You → Health → Nutrients → Allergies → Dietary).
+ * Part of the new customer journey flow. On finish, advances to the disclaimer step.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -15,26 +14,31 @@ import {
   StyleSheet,
   Modal,
   Pressable,
+  Image,
 } from 'react-native';
-import { router } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as ImagePicker from 'expo-image-picker';
 import InfoIcon from '@/assets/icons/info.svg';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '@/lib/supabase';
+import { supabase, getAvatarUrl, uploadAvatar } from '@/lib/supabase';
+import { useCachedAvatar } from '@/lib/useCachedAvatar';
 import { useAuth } from '@/lib/auth';
+import { useJourney } from '@/lib/journeyContext';
 import { Colors, Shadows } from '@/constants/theme';
 import { CONDITION_NUTRIENT_MAP } from '@/constants/conditionNutrientMap';
 import {
   HEALTH_CONDITION_KEYS, ALLERGY_KEYS, DIETARY_PREFERENCE_KEYS,
   HEALTH_CONDITION_LEGACY_MAP,
+  normalizeHealthCondition, normalizeAllergy, normalizeDietaryPreference,
 } from '@/constants/profileOptions';
 import type { NutrientWatchlistEntry } from '@/lib/types';
+import { CameraIcon, BirthdayIcon } from '@/components/MenuIcons';
 import Logo from '../assets/images/logo.svg';
 
 // ── Step types ────────────────────────────────────────────────────────────────
-type StepKey = 'health' | 'nutrients' | 'allergies' | 'dietary';
+type StepKey = 'about' | 'health' | 'nutrients' | 'allergies' | 'dietary';
 
 // ── Condition key helpers ──────────────────────────────────────────────────
 // CONDITION_NUTRIENT_MAP uses legacy English keys ("Diabetes") while the
@@ -133,19 +137,60 @@ function toggle(list: string[], item: string): string[] {
   return list.includes(item) ? list.filter(i => i !== item) : [...list, item];
 }
 
+function getInitials(name: string): string {
+  return name.trim().split(/\s+/).map(n => n[0] ?? '').join('').toUpperCase().slice(0, 2) || '?';
+}
+
 export default function OnboardingScreen() {
-  const { session } = useAuth();
+  const { session, setAvatarUrl: setContextAvatarUrl } = useAuth();
+  const { advanceTo } = useJourney();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation('onboarding');
+  const { t: tj } = useTranslation('journey');
+  const { t: tp } = useTranslation('profile');
   const { t: tpo } = useTranslation('profileOptions');
   const { t: tc } = useTranslation('common');
 
   // Onboarding position
   const [pos, setPos] = useState(0);
 
+  // About You step
+  const [fullName, setFullName] = useState('');
+  const [age, setAge] = useState('');
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
+  const [existingAvatar, setExistingAvatar] = useState<string | null>(null);
+  const cachedExistingAvatar = useCachedAvatar(existingAvatar);
+  const displayAvatar = avatarUri ?? cachedExistingAvatar;
+  const [focusedField, setFocusedField] = useState<string | null>(null);
+
   const [healthConditions, setHealthConditions] = useState<string[]>([]);
   const [allergies, setAllergies] = useState<string[]>([]);
   const [dietaryPrefs, setDietaryPrefs] = useState<string[]>([]);
+
+  // ── Load existing profile data (for resume after app closure) ──────────────
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    supabase
+      .from('profiles')
+      .select('full_name, avatar_url, health_conditions, allergies, dietary_preferences, age, nutrient_watchlist')
+      .eq('id', session.user.id)
+      .single()
+      .then(({ data }) => {
+        if (!data) return;
+        if (data.full_name) setFullName(data.full_name);
+        if (data.avatar_url) setExistingAvatar(getAvatarUrl(data.avatar_url));
+        if (data.age != null) setAge(String(data.age));
+        if (data.health_conditions) setHealthConditions(((data.health_conditions as string[]) ?? []).map(normalizeHealthCondition));
+        if (data.allergies) setAllergies(((data.allergies as string[]) ?? []).map(normalizeAllergy));
+        if (data.dietary_preferences) setDietaryPrefs(((data.dietary_preferences as string[]) ?? []).map(normalizeDietaryPreference));
+        const existing = (data.nutrient_watchlist as NutrientWatchlistEntry[] | null) ?? [];
+        if (existing.length > 0) {
+          const choices: Record<string, 'limit' | 'boost' | 'none'> = {};
+          for (const e of existing) choices[e.offKey] = e.direction;
+          setNutrientChoices(choices);
+        }
+      });
+  }, [session]);
 
   // ── Nutrient watchlist ──────────────────────────────────────────────────────
   const [nutrientChoices, setNutrientChoices] = useState<Record<string, 'limit' | 'boost' | 'none'>>({});
@@ -189,20 +234,25 @@ export default function OnboardingScreen() {
 
   // ── Dynamic step sequence ──────────────────────────────────────────────────
   const stepSequence: StepKey[] = useMemo(() => [
+    'about',
     'health',
     ...(showNutrientStep ? ['nutrients' as StepKey] : []),
     'allergies',
     'dietary',
   ], [showNutrientStep]);
 
-  const currentStepKey = stepSequence[pos] ?? 'health';
+  const currentStepKey = stepSequence[pos] ?? 'about';
   const isLastStep = pos === stepSequence.length - 1;
-  const totalSteps = stepSequence.length + 1; // +1 for signup step (done)
-  const overallStep = pos + 2; // step 1 is signup (done)
+  const totalSteps = stepSequence.length;
+  const overallStep = pos + 1;
 
-  const stepTitle = t(`step.${currentStepKey}`);
+  const stepTitle = currentStepKey === 'about'
+    ? tj('about.title')
+    : t(`step.${currentStepKey}`);
   const nextStepKey = pos < stepSequence.length - 1 ? stepSequence[pos + 1] : null;
-  const nextLabel = nextStepKey ? t(`step.${nextStepKey}`) : null;
+  const nextLabel = nextStepKey
+    ? (nextStepKey === 'about' ? tj('about.title') : t(`step.${nextStepKey}`))
+    : null;
 
   // Chip search
   const [chipSearch, setChipSearch]           = useState('');
@@ -217,14 +267,72 @@ export default function OnboardingScreen() {
     setChipSearchActive(false);
   }, [pos]);
 
+  // ── Avatar picker ──────────────────────────────────────────────────────────
+  function pickAvatar() {
+    Alert.alert(tp('editProfile.avatar.alertTitle'), tp('editProfile.avatar.alertMessage'), [
+      {
+        text: tp('editProfile.avatar.takePhoto'),
+        onPress: async () => {
+          const { status } = await ImagePicker.requestCameraPermissionsAsync();
+          if (status !== 'granted') {
+            Alert.alert(tp('editProfile.avatar.permissionTitle'), tp('editProfile.avatar.permissionMessage'));
+            return;
+          }
+          const result = await ImagePicker.launchCameraAsync({
+            allowsEditing: true, aspect: [1, 1], quality: 0.8,
+          });
+          if (!result.canceled) setAvatarUri(result.assets[0].uri);
+        },
+      },
+      {
+        text: tp('editProfile.avatar.chooseFromLibrary'),
+        onPress: async () => {
+          const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.8,
+          });
+          if (!result.canceled) setAvatarUri(result.assets[0].uri);
+        },
+      },
+      { text: tc('buttons.cancel'), style: 'cancel' },
+    ]);
+  }
+
+  // ── Save about step data to DB (so progress survives app closure) ──────────
+  async function saveAboutData() {
+    const userId = session?.user?.id;
+    if (!userId) return;
+
+    let newAvatarUrl: string | null = existingAvatar;
+    if (avatarUri) {
+      const uploaded = await uploadAvatar(userId, avatarUri);
+      if (uploaded) {
+        newAvatarUrl = uploaded;
+        setContextAvatarUrl(uploaded);
+      }
+    }
+
+    await supabase.from('profiles').update({
+      avatar_url: newAvatarUrl,
+      age: age.trim() ? parseInt(age.trim(), 10) : null,
+    }).eq('id', userId);
+  }
+
   // ── Navigation ───────────────────────────────────────────────────────────────
-  function handleNext() {
+  async function handleNext() {
+    // Save about data when leaving the about step
+    if (currentStepKey === 'about') {
+      await saveAboutData();
+    }
     setPos(p => p + 1);
   }
 
   function handleBack() {
-    if (pos === 0) router.replace('/(auth)/login');
-    else setPos(p => p - 1);
+    if (pos === 0) {
+      // Sign out from the journey
+      supabase.auth.signOut();
+    } else {
+      setPos(p => p - 1);
+    }
   }
 
   // ── Finish ────────────────────────────────────────────────────────────────────
@@ -247,17 +355,21 @@ export default function OnboardingScreen() {
         return;
       }
     }
+    try {
+      await advanceTo('disclaimer');
+    } catch {
+      Alert.alert('Error', 'Failed to advance. Please try again.');
+    }
     setSaving(false);
-    router.replace('/(tabs)/');
   }
 
   // ── Progress indicator ─────────────────────────────────────────────────────
   function renderProgress() {
-    const dots = Array.from({ length: totalSteps }, (_, i) => i + 1);
     return (
       <View style={styles.progressRow}>
         <View style={styles.progressDots}>
-          {dots.map((s) => {
+          {Array.from({ length: totalSteps }, (_, i) => {
+            const s = i + 1;
             if (s < overallStep) {
               return (
                 <View key={s} style={styles.stepDone}>
@@ -506,43 +618,99 @@ export default function OnboardingScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View style={currentStepKey === 'nutrients' ? styles.nutrientCard : styles.card}>
-          {currentStepKey === 'health' && renderChipHeader(
-            t('question.healthCondition'),
-            healthConditions.length,
-            t('count.condition', { count: healthConditions.length }),
-          )}
-          {currentStepKey === 'allergies' && renderChipHeader(
-            t('question.allergies'),
-            allergies.length,
-            t('count.allergy', { count: allergies.length }),
-          )}
-          {currentStepKey === 'dietary' && renderChipHeader(
-            t('question.dietaryPreferences'),
-            dietaryPrefs.length,
-            t('count.preference', { count: dietaryPrefs.length }),
-          )}
+        {/* ── Step: About You ── */}
+        {currentStepKey === 'about' && (
+          <>
+            <TouchableOpacity style={styles.avatarContainer} onPress={pickAvatar} activeOpacity={0.85}>
+              <View style={styles.avatarCircle}>
+                {displayAvatar ? (
+                  <Image source={{ uri: displayAvatar }} style={styles.avatarImage} />
+                ) : (
+                  <Text style={styles.avatarInitials}>{getInitials(fullName || session?.user?.user_metadata?.full_name || '')}</Text>
+                )}
+              </View>
+              <View style={styles.cameraBadge}>
+                <CameraIcon size={16} color="#fff" />
+              </View>
+            </TouchableOpacity>
 
-          {currentStepKey === 'health' && renderChips(HEALTH_CONDITION_KEYS, 'healthConditions', healthConditions, key =>
-            setHealthConditions(prev => toggle(prev, key))
-          )}
-          {currentStepKey === 'nutrients' && renderNutrientStep()}
-          {currentStepKey === 'allergies' && renderChips(ALLERGY_KEYS, 'allergies', allergies, key =>
-            setAllergies(prev => toggle(prev, key))
-          )}
-          {currentStepKey === 'dietary' && renderChips(DIETARY_PREFERENCE_KEYS, 'dietaryPreferences', dietaryPrefs, key =>
-            setDietaryPrefs(prev => toggle(prev, key))
-          )}
-        </View>
+            <View style={[styles.card, styles.cardWithAvatar]}>
+              <View style={styles.cardHeader}>
+                <Text style={styles.cardTitle}>{tj('about.title')}</Text>
+                <Text style={styles.cardSubtitle}>{tj('about.subtitle')}</Text>
+              </View>
 
-        {/* Skip link — available on every step */}
-        <TouchableOpacity
-          style={styles.skipBtn}
-          onPress={() => router.replace('/(tabs)/')}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.skipText}>{tc('buttons.skip')}</Text>
-        </TouchableOpacity>
+              <View style={styles.aboutFields}>
+                <View style={[styles.aboutInputRow, focusedField === 'age' && styles.aboutInputRowFocused]}>
+                  <BirthdayIcon size={20} color={Colors.primary} />
+                  <TextInput
+                    style={[styles.aboutInputField, age ? styles.aboutInputFieldBold : null]}
+                    placeholder={tj('about.agePlaceholder')}
+                    placeholderTextColor={Colors.secondary}
+                    selectionColor={Colors.primary}
+                    keyboardType="number-pad"
+                    value={age}
+                    onChangeText={setAge}
+                    onFocus={() => setFocusedField('age')}
+                    onBlur={() => setFocusedField(null)}
+                  />
+                  {age ? (
+                    <TouchableOpacity onPress={() => setAge('')} hitSlop={8}>
+                      <Ionicons name="close" size={18} color={`${Colors.primary}80`} />
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
+              </View>
+            </View>
+          </>
+        )}
+
+        {/* ── Steps: Health / Allergies / Dietary / Nutrients ── */}
+        {currentStepKey !== 'about' && (
+          <View style={currentStepKey === 'nutrients' ? styles.nutrientCard : styles.card}>
+            {currentStepKey === 'health' && renderChipHeader(
+              t('question.healthCondition'),
+              healthConditions.length,
+              t('count.condition', { count: healthConditions.length }),
+            )}
+            {currentStepKey === 'allergies' && renderChipHeader(
+              t('question.allergies'),
+              allergies.length,
+              t('count.allergy', { count: allergies.length }),
+            )}
+            {currentStepKey === 'dietary' && renderChipHeader(
+              t('question.dietaryPreferences'),
+              dietaryPrefs.length,
+              t('count.preference', { count: dietaryPrefs.length }),
+            )}
+
+            {currentStepKey === 'health' && renderChips(HEALTH_CONDITION_KEYS, 'healthConditions', healthConditions, key =>
+              setHealthConditions(prev => toggle(prev, key))
+            )}
+            {currentStepKey === 'nutrients' && renderNutrientStep()}
+            {currentStepKey === 'allergies' && renderChips(ALLERGY_KEYS, 'allergies', allergies, key =>
+              setAllergies(prev => toggle(prev, key))
+            )}
+            {currentStepKey === 'dietary' && renderChips(DIETARY_PREFERENCE_KEYS, 'dietaryPreferences', dietaryPrefs, key =>
+              setDietaryPrefs(prev => toggle(prev, key))
+            )}
+          </View>
+        )}
+
+        {/* Skip link — skips remaining health/allergies/diet, goes to disclaimer */}
+        {currentStepKey !== 'about' && (
+          <TouchableOpacity
+            style={styles.skipBtn}
+            onPress={async () => {
+              setSaving(true);
+              try { await advanceTo('disclaimer'); } catch { /* JourneyGuard handles */ }
+              setSaving(false);
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.skipText}>{tc('buttons.skip')}</Text>
+          </TouchableOpacity>
+        )}
 
         <View style={{ height: 120 }} />
       </ScrollView>
@@ -556,7 +724,7 @@ export default function OnboardingScreen() {
         />
         <View style={styles.footerButtons}>
           <TouchableOpacity style={styles.backBtn} onPress={handleBack} activeOpacity={0.8}>
-            <Text style={styles.backBtnText}>{pos === 0 ? tc('buttons.cancel') : tc('buttons.back')}</Text>
+            <Text style={styles.backBtnText}>{pos === 0 ? tj('about.signOut') : tc('buttons.back')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -569,7 +737,7 @@ export default function OnboardingScreen() {
               <ActivityIndicator color="#fff" />
             ) : (
               <Text style={styles.nextBtnText} numberOfLines={1} adjustsFontSizeToFit>
-                {isLastStep ? tc('buttons.finish') : t('progress.next', { label: nextLabel })}
+                {isLastStep ? tc('buttons.finish') : (currentStepKey === 'about' ? tj('about.continue') : t('progress.next', { label: nextLabel }))}
               </Text>
             )}
           </TouchableOpacity>
@@ -589,6 +757,98 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 8,
     paddingBottom: 12,
+  },
+
+  // ── About You step ──────────────────────────────────────────────────────────
+  avatarContainer: {
+    marginLeft: 16,
+    marginBottom: -60,
+    zIndex: 2,
+    width: 120,
+    height: 120,
+  },
+  avatarCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#3b9586',
+    borderWidth: 4,
+    borderColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    shadowColor: '#444770',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  avatarImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+  },
+  avatarInitials: {
+    fontSize: 36,
+    fontFamily: 'Figtree_700Bold',
+    fontWeight: '700',
+    color: '#fff',
+  },
+  cameraBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#00776F',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: '#fff',
+  },
+  cardWithAvatar: {
+    paddingTop: 80,
+  },
+  cardHeader: {
+    gap: 4,
+  },
+  cardSubtitle: {
+    fontSize: 16,
+    fontFamily: 'Figtree_300Light',
+    fontWeight: '300',
+    color: Colors.secondary,
+    lineHeight: 24,
+  },
+  aboutFields: {
+    gap: 10,
+  },
+  aboutInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: Colors.surface.secondary,
+    borderWidth: 1,
+    borderColor: '#aad4cd',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+  },
+  aboutInputRowFocused: {
+    borderWidth: 2,
+    borderColor: Colors.accent,
+    margin: -1,
+  },
+  aboutInputField: {
+    flex: 1,
+    fontSize: 16,
+    fontFamily: 'Figtree_300Light',
+    fontWeight: '300',
+    color: Colors.primary,
+  },
+  aboutInputFieldBold: {
+    fontFamily: 'Figtree_700Bold',
+    fontWeight: '700',
   },
   stepHeader: {
     paddingHorizontal: 24,

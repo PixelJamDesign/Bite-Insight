@@ -17,10 +17,17 @@ export interface NutrientWatchlistEntry {
   reason: string;        // "May worsen heart condition"
 }
 
+export type OnboardingStep =
+  | 'create_profile'
+  | 'disclaimer'
+  | 'app_tour'
+  | 'complete';
+
 export interface UserProfile {
   id: string;
   email: string;
   full_name: string | null;
+  display_name: string | null;
   avatar_url: string | null;
   dietary_preferences: DietaryTag[];
   // Collected during onboarding (requires columns in profiles table):
@@ -35,6 +42,7 @@ export interface UserProfile {
   disliked_ingredients: string[] | null;
   flagged_ingredients: string[] | null;
   nutrient_watchlist: NutrientWatchlistEntry[] | null;
+  onboarding_step: OnboardingStep;
   created_at: string;
 }
 

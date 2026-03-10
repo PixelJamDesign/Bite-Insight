@@ -19,15 +19,44 @@ import { MyPlanSheetProvider } from '@/lib/myPlanSheetContext';
 import { SubscriptionProvider } from '@/lib/subscriptionContext';
 import { ActiveFamilyProvider } from '@/lib/activeFamilyContext';
 import { RegionProvider } from '@/lib/regionContext';
+import { JourneyProvider, useJourney } from '@/lib/journeyContext';
+import type { OnboardingStep } from '@/lib/types';
 import { UpsellSheet } from '@/components/UpsellSheet';
 import { MyPlanSheet } from '@/components/MyPlanSheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 SplashScreen.preventAutoHideAsync();
 
+// ── Helpers ─────────────────────────────────────────────────────────────────
+
+/** Map an onboarding step to the route the user should be on. */
+function stepToRoute(step: OnboardingStep): string {
+  switch (step) {
+    case 'create_profile': return '/onboarding';
+    case 'disclaimer':     return '/disclaimer';
+    case 'app_tour':       return '/app-tour';
+    case 'complete':       return '/(tabs)';
+  }
+}
+
+/** Map an onboarding step to the expected first URL segment. */
+function stepToSegment(step: OnboardingStep): string {
+  switch (step) {
+    case 'create_profile': return 'onboarding';
+    case 'disclaimer':     return 'disclaimer';
+    case 'app_tour':       return 'app-tour';
+    case 'complete':       return '(tabs)';
+  }
+}
+
+const JOURNEY_SEGMENTS = new Set(['onboarding', 'disclaimer', 'app-tour']);
+
+// ── Auth Guard ──────────────────────────────────────────────────────────────
+
 function AuthGuard({ session }: { session: Session | null }) {
   const segments = useSegments();
   const navigationState = useRootNavigationState();
+  const { onboardingStep, loading: journeyLoading } = useJourney();
 
   // Wait until the navigator has mounted before redirecting
   if (!navigationState?.key) return null;
@@ -35,17 +64,54 @@ function AuthGuard({ session }: { session: Session | null }) {
   const inAuthGroup = segments[0] === '(auth)';
   const inResetPassword = segments[0] === 'reset-password';
 
-  // Allow the reset-password screen regardless of session state —
-  // the deep-link handler sets the session just before navigating here,
-  // but there's a render cycle gap we don't want to fight with.
+  // Allow the reset-password screen regardless of session state
   if (inResetPassword) return null;
 
+  // Not signed in → send to login
   if (!session && !inAuthGroup) {
     return <Redirect href="/(auth)/login" />;
   }
+
+  // Signed in + still on auth screens → route using journey step
   if (session && inAuthGroup) {
+    if (journeyLoading || !onboardingStep) return null; // wait for journey
+    return <Redirect href={stepToRoute(onboardingStep) as any} />;
+  }
+
+  return null;
+}
+
+// ── Journey Guard ───────────────────────────────────────────────────────────
+
+/** Enforces that authenticated users follow the journey flow. */
+function JourneyGuard() {
+  const { session } = useAuth();
+  const segments = useSegments();
+  const navigationState = useRootNavigationState();
+  const { onboardingStep, loading: journeyLoading } = useJourney();
+
+  if (!navigationState?.key || !session || journeyLoading || !onboardingStep) {
+    return null;
+  }
+
+  const currentSegment = segments[0] as string;
+
+  // Don't interfere with auth screens or reset-password — AuthGuard handles those
+  if (currentSegment === '(auth)' || currentSegment === 'reset-password') {
+    return null;
+  }
+
+  if (onboardingStep !== 'complete') {
+    // Journey not finished — redirect to the correct step if not already there
+    const expectedSegment = stepToSegment(onboardingStep);
+    if (currentSegment !== expectedSegment) {
+      return <Redirect href={stepToRoute(onboardingStep) as any} />;
+    }
+  } else if (JOURNEY_SEGMENTS.has(currentSegment)) {
+    // Journey complete but still on a journey screen — send to main app
     return <Redirect href="/(tabs)" />;
   }
+
   return null;
 }
 
@@ -88,15 +154,16 @@ function RootLayoutInner() {
   });
 
   const { session, loading } = useAuth();
+  const { loading: journeyLoading } = useJourney();
   const { contentOpacity } = useTransition();
 
   useEffect(() => {
-    if (fontsLoaded && !loading) {
+    if (fontsLoaded && !loading && !journeyLoading) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, loading]);
+  }, [fontsLoaded, loading, journeyLoading]);
 
-  if (!fontsLoaded || loading) {
+  if (!fontsLoaded || loading || journeyLoading) {
     return null;
   }
 
@@ -119,6 +186,7 @@ function RootLayoutInner() {
   return (
     <>
       <AuthGuard session={session} />
+      <JourneyGuard />
       <StatusBar style="dark" />
       <View style={{ flex: 1, backgroundColor: '#e2f1ee' }}>
         <Animated.View style={{ flex: 1, opacity: contentOpacity }}>
@@ -128,6 +196,7 @@ function RootLayoutInner() {
             <Stack.Screen name="scan-result" />
             <Stack.Screen name="edit-profile" />
             <Stack.Screen name="onboarding" />
+            <Stack.Screen name="disclaimer" />
             <Stack.Screen name="family-members" />
             <Stack.Screen name="add-family-member" />
             <Stack.Screen name="upgrade-success" />
@@ -148,19 +217,21 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SessionProvider>
-        <SubscriptionProvider>
-          <ActiveFamilyProvider>
-            <RegionProvider>
-              <UpsellSheetProvider>
-                <MyPlanSheetProvider>
-                  <TransitionProvider>
-                    <RootLayoutInner />
-                  </TransitionProvider>
-                </MyPlanSheetProvider>
-              </UpsellSheetProvider>
-            </RegionProvider>
-          </ActiveFamilyProvider>
-        </SubscriptionProvider>
+        <JourneyProvider>
+          <SubscriptionProvider>
+            <ActiveFamilyProvider>
+              <RegionProvider>
+                <UpsellSheetProvider>
+                  <MyPlanSheetProvider>
+                    <TransitionProvider>
+                      <RootLayoutInner />
+                    </TransitionProvider>
+                  </MyPlanSheetProvider>
+                </UpsellSheetProvider>
+              </RegionProvider>
+            </ActiveFamilyProvider>
+          </SubscriptionProvider>
+        </JourneyProvider>
       </SessionProvider>
     </GestureHandlerRootView>
   );
