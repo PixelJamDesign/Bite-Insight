@@ -83,7 +83,8 @@
   },
   "fullList": {
     "ingredients_one": "{{count}} ingredient",
-    "ingredients_other": "{{count}} ingredients"
+    "ingredients_other": "{{count}} ingredients",
+    "otherIngredients": "Other ingredients"
   },
   "ingredients": {
     "ingredient_one": "{{count}} ingredient",

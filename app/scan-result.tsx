@@ -2899,23 +2899,7 @@ export default function ScanResultScreen() {
     [ingredientsText],
   );
 
-  // Auto-expand all accordion nodes when tree first loads
-  useEffect(() => {
-    if (ingredientTree.length === 0) return;
-    const keys = new Set<string>();
-    ingredientTree.forEach((topNode, topIdx) => {
-      topNode.children.forEach((child, childIdx) => {
-        if (child.children.length > 0) {
-          const childKey = `${topIdx}-${childIdx}`;
-          keys.add(childKey);
-          child.children.forEach((sub, subIdx) => {
-            if (sub.children.length > 0) keys.add(`${childKey}-${subIdx}`);
-          });
-        }
-      });
-    });
-    setExpandedNodes(keys);
-  }, [ingredientTree]);
+  // Accordions start collapsed — user taps to expand
 
   // Build a map from ingredient name → category for status icons in Full List
   const categoryMap = useMemo(() => {
@@ -2976,15 +2960,15 @@ export default function ScanResultScreen() {
   }
 
   // Get category icon props for an ingredient name
-  function getCategoryIcon(name: string): { iconName: 'checkmark' | 'close'; color: string } {
+  function getCategoryIcon(name: string): { iconName: 'checkmark-sharp' | 'close-sharp'; color: string } {
     const cat = categoryMap.get(name.toLowerCase());
     if (cat === 'harmful' || cat === 'flagged') {
-      return { iconName: 'close', color: Colors.status.negative };
+      return { iconName: 'close-sharp', color: Colors.status.negative };
     }
     if (cat === 'ok') {
-      return { iconName: 'checkmark', color: Extra.poorOrange };
+      return { iconName: 'checkmark-sharp', color: Extra.poorOrange };
     }
-    return { iconName: 'checkmark', color: Extra.positiveGreen };
+    return { iconName: 'checkmark-sharp', color: Extra.positiveGreen };
   }
 
   // Build condition-aware nutrient thresholds from the active profile
@@ -3046,19 +3030,17 @@ export default function ScanResultScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      {/* Back button */}
-      <View style={styles.backRow}>
-        <TouchableOpacity style={styles.backBtn} onPress={safeBack} activeOpacity={0.7}>
-          <BigBackIcon width={32} height={32} />
-        </TouchableOpacity>
-      </View>
+      {/* ── Sticky Header (back, product info, nutri-score, tabs) ── */}
+      <View style={styles.stickyHeader}>
+        {/* Back button */}
+        <View style={styles.backRow}>
+          <TouchableOpacity style={styles.backBtn} onPress={safeBack} activeOpacity={0.7}>
+            <BigBackIcon width={32} height={32} />
+          </TouchableOpacity>
+        </View>
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* ── Product header ── */}
+        <View style={styles.stickyContent}>
+          {/* ── Product header ── */}
         <View style={styles.productHeader}>
           <View style={styles.productInfo}>
             {!!p.brand && <Text style={styles.brandName}>{sentenceCase(p.brand)}</Text>}
@@ -3152,7 +3134,16 @@ export default function ScanResultScreen() {
             pointerEvents="none"
           />
         </View>
+        </View>
+      </View>
 
+      {/* ── Scrollable tab content ── */}
+      <View style={{ flex: 1 }}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
         {/* ══════════════════════════════════════════════════════
             OVERVIEW TAB
         ══════════════════════════════════════════════════════ */}
@@ -3270,7 +3261,7 @@ export default function ScanResultScreen() {
                           ? t('flagged.subtitle', { reason: ing.personalReason.text })
                           : t('flagged.subtitleGeneric');
                         return (
-                          <View key={ing.id ?? `uf-${i}`} style={styles.ingRow}>
+                          <View key={`ov-uf-${ing.id ?? i}`} style={styles.ingRow}>
                             <View style={{ flex: 1 }}>
                               <Text style={styles.ingName} numberOfLines={2}>
                                 {sentenceCase(ing.text)}
@@ -3385,7 +3376,7 @@ export default function ScanResultScreen() {
                   </Text>
                   <View style={{ gap: 4 }}>
                     {categorised.harmful.map((ing, i) => (
-                      <View key={ing.id ?? `flag-${i}`} style={[styles.ingRow, (ing.depth ?? 0) > 0 && { paddingLeft: (ing.depth ?? 0) * 20 }]}>
+                      <View key={`ov-harm-${ing.id ?? i}`} style={[styles.ingRow, (ing.depth ?? 0) > 0 && { paddingLeft: (ing.depth ?? 0) * 20 }]}>
                         <Ionicons name="close" size={24} color={Colors.status.negative} />
                         <View style={{ flex: 1 }}>
                           <Text style={styles.ingName} numberOfLines={2}>
@@ -3813,37 +3804,24 @@ export default function ScanResultScreen() {
                 </View>
 
                 {/* ═══════ FULL LIST sub-tab ═══════ */}
-                {ingredientSubTab === 'fullList' && (
-                  <View style={{ gap: Spacing.xs }}>
-                    {ingredientTree.map((topNode, topIdx) => {
+                {ingredientSubTab === 'fullList' && (() => {
+                  const parents = ingredientTree.filter(n => n.children.length > 0);
+                  const orphans = ingredientTree.filter(n => n.children.length === 0);
+                  return (
+                  <View style={{ gap: Spacing.m }}>
+                    {/* ── Parent groups ── */}
+                    {parents.map((topNode, topIdx) => {
                       const cleaned = cleanTreeToken(topNode.text);
                       const label = cleaned.charAt(0).toUpperCase() + cleaned.slice(1).toLowerCase();
-                      const hasChildren = topNode.children.length > 0;
-                      const descendantCount = hasChildren ? countDescendants(topNode) : 0;
+                      const descendantCount = countDescendants(topNode);
 
-                      if (!hasChildren) {
-                        // Standalone leaf at top level — render as a single row
-                        const { iconName, color } = getCategoryIcon(label);
-                        return (
-                          <View key={`leaf-${topIdx}`} style={styles.fullListRow}>
-                            <View style={styles.fullListStatusIcon}>
-                              <Ionicons name={iconName} size={18} color={color} />
-                            </View>
-                            <Text style={styles.fullListIngName} numberOfLines={2}>
-                              {label}
-                            </Text>
-                          </View>
-                        );
-                      }
-
-                      // Parent with children — show header + card
                       return (
                         <View key={`parent-${topIdx}`} style={{ gap: Spacing.xs }}>
                           {/* Parent header: name + child count */}
                           <View style={styles.fullListHeader}>
                             <Text style={styles.fullListParentName}>{label}</Text>
                             <Text style={styles.fullListChildCount}>
-                              {t('fullList.ingredients', { count: descendantCount })}
+                              ({t('fullList.ingredients', { count: descendantCount })})
                             </Text>
                           </View>
 
@@ -3871,11 +3849,16 @@ export default function ScanResultScreen() {
                                     style={styles.fullListRow}
                                   >
                                     <View style={styles.fullListStatusIcon}>
-                                      <Ionicons name={childIconName} size={18} color={childColor} />
+                                      <Ionicons name={childIconName} size={20} color={childColor} />
                                     </View>
                                     <Text style={styles.fullListIngName} numberOfLines={2}>
                                       {childLabel}
                                     </Text>
+                                    {childHasChildren && (
+                                      <Text style={styles.fullListInlineCount}>
+                                        ({t('fullList.ingredients', { count: countDescendants(child) })})
+                                      </Text>
+                                    )}
                                     {isHarmfulOrFlagged && (
                                       <TouchableOpacity
                                         style={styles.fullListChevron}
@@ -3898,8 +3881,8 @@ export default function ScanResultScreen() {
                                         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                                       >
                                         <Ionicons
-                                          name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                                          size={16}
+                                          name={isExpanded ? 'chevron-up-sharp' : 'chevron-down-sharp'}
+                                          size={18}
                                           color={Colors.secondary}
                                         />
                                       </TouchableOpacity>
@@ -3924,13 +3907,18 @@ export default function ScanResultScreen() {
                                               onPress={subHasChildren ? () => toggleExpanded(subKey) : undefined}
                                               style={[styles.fullListRow, { paddingLeft: 21 }]}
                                             >
-                                              <Ionicons name="return-down-forward-outline" size={16} color={Colors.secondary} />
+                                              <Ionicons name="return-down-forward" size={18} color={Colors.secondary} />
                                               <View style={styles.fullListStatusIcon}>
-                                                <Ionicons name={subIcon} size={18} color={subColor} />
+                                                <Ionicons name={subIcon} size={20} color={subColor} />
                                               </View>
                                               <Text style={styles.fullListIngName} numberOfLines={2}>
                                                 {subLabel}
                                               </Text>
+                                              {subHasChildren && (
+                                                <Text style={styles.fullListInlineCount}>
+                                                  ({t('fullList.ingredients', { count: countDescendants(sub) })})
+                                                </Text>
+                                              )}
                                               {subHasChildren && (
                                                 <TouchableOpacity
                                                   style={styles.fullListChevron}
@@ -3938,8 +3926,8 @@ export default function ScanResultScreen() {
                                                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                                                 >
                                                   <Ionicons
-                                                    name={isSubExpanded ? 'chevron-up' : 'chevron-down'}
-                                                    size={16}
+                                                    name={isSubExpanded ? 'chevron-up-sharp' : 'chevron-down-sharp'}
+                                                    size={18}
                                                     color={Colors.secondary}
                                                   />
                                                 </TouchableOpacity>
@@ -3953,9 +3941,9 @@ export default function ScanResultScreen() {
                                               const { iconName: deepIcon, color: deepColor } = getCategoryIcon(deepLabel);
                                               return (
                                                 <View key={`${subKey}-${deepIdx}`} style={[styles.fullListRow, { paddingLeft: 65 }]}>
-                                                  <Ionicons name="return-down-forward-outline" size={16} color={Colors.secondary} />
+                                                  <Ionicons name="return-down-forward" size={18} color={Colors.secondary} />
                                                   <View style={styles.fullListStatusIcon}>
-                                                    <Ionicons name={deepIcon} size={18} color={deepColor} />
+                                                    <Ionicons name={deepIcon} size={20} color={deepColor} />
                                                   </View>
                                                   <Text style={styles.fullListIngName} numberOfLines={2}>
                                                     {deepLabel}
@@ -3975,8 +3963,41 @@ export default function ScanResultScreen() {
                         </View>
                       );
                     })}
+
+                    {/* ── Orphaned single ingredients collected at the end ── */}
+                    {orphans.length > 0 && (
+                      <View style={{ gap: Spacing.xs }}>
+                        <View style={styles.fullListHeader}>
+                          <Text style={styles.fullListParentName}>{t('fullList.otherIngredients')}</Text>
+                          <Text style={styles.fullListChildCount}>
+                            ({t('fullList.ingredients', { count: orphans.length })})
+                          </Text>
+                        </View>
+                        <View style={styles.fullListCard}>
+                          {orphans.map((node, idx) => {
+                            const cleaned = cleanTreeToken(node.text);
+                            const oLabel = cleaned.charAt(0).toUpperCase() + cleaned.slice(1).toLowerCase();
+                            const { iconName, color } = getCategoryIcon(oLabel);
+                            return (
+                              <View key={`orphan-${idx}`}>
+                                {idx > 0 && <View style={styles.fullListSeparator} />}
+                                <View style={styles.fullListRow}>
+                                  <View style={styles.fullListStatusIcon}>
+                                    <Ionicons name={iconName} size={20} color={color} />
+                                  </View>
+                                  <Text style={styles.fullListIngName} numberOfLines={2}>
+                                    {oLabel}
+                                  </Text>
+                                </View>
+                              </View>
+                            );
+                          })}
+                        </View>
+                      </View>
+                    )}
                   </View>
-                )}
+                  );
+                })()}
 
                 {/* ═══════ INSIGHT GROUPS sub-tab ═══════ */}
                 {ingredientSubTab === 'insightGroups' && (
@@ -4012,7 +4033,7 @@ export default function ScanResultScreen() {
                             ? t('flagged.subtitle', { reason: ing.personalReason.text })
                             : t('flagged.subtitleGeneric');
                           return (
-                            <View key={ing.id ?? `uf-${i}`} style={styles.ingRow}>
+                            <View key={`uf-${ing.id ?? i}`} style={styles.ingRow}>
                               <View style={{ flex: 1 }}>
                                 <Text style={styles.ingName} numberOfLines={2}>{sentenceCase(ing.text)}</Text>
                                 <Text style={styles.flaggedSubtitle}>{reason}</Text>
@@ -4044,7 +4065,7 @@ export default function ScanResultScreen() {
                         </Text>
                         <View style={{ gap: 2 }}>
                           {filteredCategorised.harmful.map((ing, i) => (
-                            <View key={ing.id ?? `flag-${i}`} style={styles.ingRow}>
+                            <View key={`harm-${ing.id ?? i}`} style={styles.ingRow}>
                               <Ionicons name="close" size={24} color={Colors.status.negative} />
                               <View style={{ flex: 1 }}>
                                 <Text style={styles.ingName} numberOfLines={2}>{sentenceCase(ing.text)}</Text>
@@ -4082,7 +4103,7 @@ export default function ScanResultScreen() {
                         </Text>
                         <View style={{ gap: 2 }}>
                           {filteredCategorised.ok.map((ing, i) => (
-                            <View key={ing.id ?? i} style={styles.ingRowSmall}>
+                            <View key={`ok-${ing.id ?? i}`} style={styles.ingRowSmall}>
                               <Ionicons name="checkmark" size={24} color={Extra.poorOrange} />
                               <Text style={styles.ingName} numberOfLines={2}>{sentenceCase(ing.text)}</Text>
                               <TouchableOpacity
@@ -4112,7 +4133,7 @@ export default function ScanResultScreen() {
                         </Text>
                         <View style={{ gap: 2 }}>
                           {filteredCategorised.safe.map((ing, i) => (
-                            <View key={ing.id ?? i} style={styles.ingRowSmall}>
+                            <View key={`safe-${ing.id ?? i}`} style={styles.ingRowSmall}>
                               <Ionicons name="checkmark" size={24} color={Extra.positiveGreen} />
                               <Text style={styles.ingName} numberOfLines={2}>{sentenceCase(ing.text)}</Text>
                             </View>
@@ -4203,7 +4224,14 @@ export default function ScanResultScreen() {
             </Text>
           </View>
         )}
-      </ScrollView>
+        </ScrollView>
+        {/* White gradient fade at top of scroll area */}
+        <LinearGradient
+          colors={['#ffffff', 'rgba(255,255,255,0)']}
+          style={styles.stickyGradient}
+          pointerEvents="none"
+        />
+      </View>
 
       <FamilySwitcherSheet
         visible={switcherVisible}
@@ -4241,6 +4269,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
 
+  // Sticky header (back, product info, nutri-score, tabs)
+  stickyHeader: {
+    backgroundColor: '#fff',
+    zIndex: 1,
+  },
+  stickyContent: {
+    paddingHorizontal: Spacing.m,
+    gap: Spacing.m,
+    paddingBottom: Spacing.xs,
+  },
+  stickyGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 24,
+    zIndex: 1,
+  },
+
   // Back button (Figma node 3263-6137 — plain icon, no circle bg)
   backRow: {
     paddingHorizontal: Spacing.s,
@@ -4258,8 +4305,8 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   scrollContent: {
     paddingHorizontal: Spacing.m,
+    paddingTop: Spacing.s,
     paddingBottom: 56,
-    gap: Spacing.m,
   },
 
   // Product header
@@ -5074,8 +5121,8 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   } as const,
   fullListStatusIcon: {
-    width: 18,
-    height: 18,
+    width: 20,
+    height: 20,
     alignItems: 'center',
     justifyContent: 'center',
   } as const,
@@ -5093,6 +5140,15 @@ const styles = StyleSheet.create({
     height: 20,
     alignItems: 'center',
     justifyContent: 'center',
+  } as const,
+  // Inline ingredient count for expandable child rows (right-aligned to match parent header)
+  fullListInlineCount: {
+    fontSize: 13,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
+    color: Colors.secondary,
+    letterSpacing: -0.13,
+    lineHeight: 19.5,
   } as const,
 
   // Empty / coming soon

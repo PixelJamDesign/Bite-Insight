@@ -328,6 +328,8 @@ export function cleanTreeToken(raw: string): string {
     .replace(/\d+([.,]\d+)?\s*%/g, '') // stray inline percentages
     .replace(/\*/g, '')                 // organic asterisks
     .replace(/[\[\]{}<>()]/g, '')       // stray brackets/parens
+    // Strip lead-in phrases from Open Food Facts (e.g. "In unknown quantities:", "Traces:")
+    .replace(/^(in (unknown|varying) quantities\s*:|traces(\s+of)?\s*:|may contain\s*:)\s*/i, '')
     .replace(/\s+/g, ' ')
     .trim();
 }
