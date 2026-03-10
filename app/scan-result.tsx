@@ -28,6 +28,7 @@ import { useActiveFamily } from '@/lib/activeFamilyContext';
 import { FamilySwitcherSheet } from '@/components/FamilySwitcherSheet';
 import { TickIcon, MenuFlaggedIcon } from '@/components/MenuIcons';
 import { NoImagePlaceholder } from '@/components/NoImagePlaceholder';
+import { useFadeIn } from '@/lib/useFadeIn';
 import {
   parseIngredientsText,
   parseIngredientsWithHierarchy,
@@ -2837,6 +2838,11 @@ export default function ScanResultScreen() {
   const hasNutrition =
     !fetchingOff && nutrientRows.some(({ raw }) => raw && parseFloat(raw) >= 0);
 
+  // Staggered fade-in for major content sections
+  const fadeProduct    = useFadeIn(true, 0);       // product header loads from route params
+  const fadeNutrition  = useFadeIn(!fetchingOff, 80);
+  const fadeIngredient = useFadeIn(!fetchingOff, 160);
+
   // Weight scaling: only applies in Custom mode (uses per-100g base values with weight multiplier).
   // Per-serving and Per-100g modes remain unscaled.
   const weightScale = (isCustomMode && customWeight !== 100) ? customWeight / 100 : 1;
@@ -3416,6 +3422,7 @@ export default function ScanResultScreen() {
             )}
 
             {/* Highlighted Nutritional Info (Figma node 3263-6129) */}
+            <Animated.View style={{ opacity: fadeNutrition.opacity, transform: [{ translateY: fadeNutrition.translateY }] }}>
             {hasNutrition && (
               <View style={styles.section}>
                 <View style={styles.sectionHeading}>
@@ -3549,6 +3556,8 @@ export default function ScanResultScreen() {
                 </View>
               </View>
             )}
+
+            </Animated.View>
 
             {/* Empty state */}
             {!fetchingOff && !hasNutrition && allergenList.length === 0 && categorised.harmful.length === 0 && categorised.userFlagged.length === 0 && (
@@ -3759,7 +3768,7 @@ export default function ScanResultScreen() {
             INGREDIENTS TAB — Sub-tabs: Full List + Insight Groups
         ══════════════════════════════════════════════════════ */}
         {activeTab === 'ingredients' && (
-          <View style={[styles.tabContent, { gap: Spacing.s }]}>
+          <Animated.View style={[styles.tabContent, { gap: Spacing.s, opacity: fadeIngredient.opacity, transform: [{ translateY: fadeIngredient.translateY }] }]}>
             {fetchingOff ? (
               <View style={styles.fetchingRow}>
                 <ActivityIndicator size="small" color={Colors.primary} />
@@ -4171,7 +4180,7 @@ export default function ScanResultScreen() {
                 </Text>
               </View>
             )}
-          </View>
+          </Animated.View>
         )}
 
         {/* ══════════════════════════════════════════════════════

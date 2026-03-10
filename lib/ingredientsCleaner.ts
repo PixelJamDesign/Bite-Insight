@@ -28,11 +28,14 @@ export type OffIngredient = {
  */
 function cleanToken(raw: string): string {
   return raw
+    .replace(/_/g, '')                   // Strip underscore allergen markers from OFF
     .replace(/\([^)]*\)/g, '')          // Remove parenthetical content e.g. (SOYA), (2%)
     .replace(/[()]/g, '')               // Strip any orphaned parens left after pair removal
     .replace(/\d+([.,]\d+)?\s*%/g, '')  // Remove inline percentages e.g. "2%", "33.4 %"
     .replace(/\*/g, '')                 // Asterisks often denote organic — not useful here
     .replace(/\b\d+([.,]\d+)?\b/g, '')  // Standalone numbers e.g. "33 4"
+    .replace(/^[\s.\-:•·]+/, '')        // Strip leading periods, bullets, dashes, colons
+    .replace(/^contains\s*:\s*/i, '')   // Strip "contains:" prefix from OFF sub-ingredients
     .replace(/\s+/g, ' ')              // Collapse whitespace
     .trim();
 }
@@ -52,12 +55,15 @@ function cleanToken(raw: string): string {
  * 3. Handle nested brackets and curly braces the same way.
  */
 function preprocessIngredientText(text: string): string {
+  // Strip underscore allergen markers from OFF (e.g. "_milk_" → "milk")
+  let s = text.replace(/_/g, '');
+
   // Strip trailing disclaimer sentences that follow the ingredient list.
   // These are separated from the last ingredient by a period or period-space.
   // Common patterns: "Produced from …", "May contain …", "Contains …",
   // "Manufactured in …", "Packaged in …", "Made in …", "Not a …",
   // "For allergen …", "See …", "Store …", "Best before …".
-  let s = text.replace(
+  s = s.replace(
     /\.\s*(produced|may contain|contains|manufactured|packaged|made|not a|for allergen|see |store |best before)\b[^,;]*/gi,
     '',
   );
@@ -102,6 +108,8 @@ export function parseIngredientsText(text: string): string[] {
  */
 export function cleanIngredientName(raw: string): string {
   let s = raw;
+  // Strip underscore allergen markers from OFF (e.g. "_milk_" → "milk")
+  s = s.replace(/_/g, '');
   // Strip trailing disclaimer text after a period
   s = s.replace(
     /\.\s*(produced|may contain|contains|manufactured|packaged|made|not a|for allergen|see |store |best before)\b.*/gi,
@@ -111,6 +119,10 @@ export function cleanIngredientName(raw: string): string {
   s = s.replace(/[\[\]{}<>]/g, ' ');
   // Remove trailing periods
   s = s.replace(/\.\s*$/, '');
+  // Strip leading periods, bullets, dashes, colons
+  s = s.replace(/^[\s.\-:•·]+/, '');
+  // Strip "contains:" prefix from OFF sub-ingredients
+  s = s.replace(/^contains\s*:\s*/i, '');
   // Clean token (parenthetical content, percentages, numbers, etc.)
   s = cleanToken(s);
   return s;
@@ -257,6 +269,7 @@ function isPercentageOrMarker(s: string, startPos: number): boolean {
  */
 export function parseIngredientTree(rawText: string): IngredientNode[] {
   let s = rawText
+    .replace(/_/g, '')  // strip underscore allergen markers from OFF
     .replace(
       /\.\s*(produced|may contain|contains|manufactured|packaged|made|not a|for allergen|see |store |best before)\b.*/gi,
       '',
@@ -325,11 +338,14 @@ export function parseIngredientTree(rawText: string): IngredientNode[] {
  */
 export function cleanTreeToken(raw: string): string {
   return raw
+    .replace(/_/g, '')                  // strip underscore allergen markers from OFF
     .replace(/\d+([.,]\d+)?\s*%/g, '') // stray inline percentages
     .replace(/\*/g, '')                 // organic asterisks
     .replace(/[\[\]{}<>()]/g, '')       // stray brackets/parens
     // Strip lead-in phrases from Open Food Facts (e.g. "In unknown quantities:", "Traces:")
     .replace(/^(in (unknown|varying) quantities\s*:|traces(\s+of)?\s*:|may contain\s*:)\s*/i, '')
+    .replace(/^[\s.\-:•·]+/, '')        // strip leading periods, bullets, dashes, colons
+    .replace(/^contains\s*:\s*/i, '')   // strip "contains:" prefix from OFF sub-ingredients
     .replace(/\s+/g, ' ')
     .trim();
 }

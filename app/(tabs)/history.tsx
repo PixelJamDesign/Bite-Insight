@@ -24,6 +24,7 @@ import { ScreenLayout } from '@/components/ScreenLayout';
 import { useTabBarSlide } from '@/lib/tabBarContext';
 import { NoImagePlaceholder } from '@/components/NoImagePlaceholder';
 import type { Scan } from '@/lib/types';
+import { useFadeIn } from '@/lib/useFadeIn';
 
 // ─── Nutriscore colours ────────────────────────────────────────────────────────
 const NUTRISCORE_COLORS: Record<string, string> = {
@@ -353,6 +354,9 @@ export default function HistoryScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Fade-in animations for content
+  const fadeContent = useFadeIn(!loading, 0);
+
   // Date tabs — last 7 days, built once on mount
   const dateTabs = useRef(buildDateTabs()).current;
   const todayKey = dateTabs[dateTabs.length - 1]?.key ?? '';
@@ -553,7 +557,7 @@ export default function HistoryScreen() {
         )}
 
         {/* ── Normal content ── */}
-        <View style={styles.contentInner}>
+        <Animated.View style={[styles.contentInner, { opacity: fadeContent.opacity, transform: [{ translateY: fadeContent.translateY }] }]}>
           {loading ? (
             <View style={styles.center}>
               <ActivityIndicator size="large" color={Colors.primary} />
@@ -584,7 +588,7 @@ export default function HistoryScreen() {
               }
             />
           )}
-        </View>
+        </Animated.View>
 
         {/* Calendar overlay — starts at the same Y as the date tabs */}
         {calVisible && (

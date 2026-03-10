@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, Modal, Platform, Dimensions, Image } from 'react-native';
-import { CameraView, useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
+import { CameraView, Camera, useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
@@ -39,7 +39,7 @@ export default function ScannerScreen() {
   // Tab bar: paddingTop(32) + pill(60) + paddingBottom(insets.bottom+8) + gap(8)
   const actionBarBottom = insets.bottom + 8 + 60 + 32 + 8;
 
-  /** Open photo library and attempt to scan a barcode from the selected image */
+  /** Open photo library and scan a barcode from the selected image */
   async function handleGalleryScan() {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -47,15 +47,31 @@ export default function ScannerScreen() {
         quality: 1,
       });
       if (result.canceled || !result.assets?.length) return;
-      // Static image barcode detection requires native modules not yet available
-      // in Expo managed workflow — show informative message for now
+
+      const uri = result.assets[0].uri;
+
+      // Scan barcodes from the static image using expo-camera
+      const barcodes = await Camera.scanFromURLAsync(uri, [
+        'ean13', 'ean8', 'upc_a', 'upc_e',
+        'code128', 'code39', 'qr',
+      ]);
+
+      if (barcodes.length > 0) {
+        // Use the first detected barcode and feed it through the normal scan flow
+        handleBarcodeScan(barcodes[0] as BarcodeScanningResult);
+      } else {
+        Alert.alert(
+          t('gallery.title'),
+          t('gallery.noBarcode'),
+          [{ text: tc('buttons.ok') }],
+        );
+      }
+    } catch {
       Alert.alert(
         t('gallery.title'),
-        t('gallery.description'),
+        t('gallery.scanError'),
         [{ text: tc('buttons.ok') }],
       );
-    } catch {
-      // Picker cancelled or failed — ignore silently
     }
   }
 

@@ -11,7 +11,9 @@ import {
   LayoutAnimation,
   Platform,
   UIManager,
+  Animated,
 } from 'react-native';
+import { useFadeIn } from '@/lib/useFadeIn';
 import { useTranslation } from 'react-i18next';
 
 if (Platform.OS === 'android') {
@@ -233,6 +235,12 @@ export default function HomeDashboard() {
   const firstName = displayName.split(' ')[0];
   const initials = getInitials(displayName, t('fallbackInitials'));
 
+  // Staggered fade-in animations for dashboard sections
+  const fadeGreeting = useFadeIn(!loading, 0);
+  const fadeInsight  = useFadeIn(!loading, 80);
+  const fadeStats    = useFadeIn(!loading, 160);
+  const fadeIngList  = useFadeIn(!loading, 240);
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -256,7 +264,7 @@ export default function HomeDashboard() {
         <View style={{ height: insets.top + 68 }} />
 
         {/* ── Greeting + Profile ── */}
-        <View style={styles.greetingRow}>
+        <Animated.View style={[styles.greetingRow, { opacity: fadeGreeting.opacity, transform: [{ translateY: fadeGreeting.translateY }] }]}>
           <View style={styles.avatarLarge}>
             {avatarUrl && !avatarLoadError ? (
               <Image
@@ -292,10 +300,11 @@ export default function HomeDashboard() {
               </View>
             )}
           </View>
-        </View>
+        </Animated.View>
 
         {/* ── Daily Insight ── */}
         {insight && !insightDismissed && (
+          <Animated.View style={{ opacity: fadeInsight.opacity, transform: [{ translateY: fadeInsight.translateY }] }}>
           <DailyInsightCard
             insight={insight}
             onDismiss={async () => {
@@ -312,10 +321,11 @@ export default function HomeDashboard() {
             healthConditions={profile?.health_conditions ?? []}
             allergies={profile?.allergies ?? []}
           />
+          </Animated.View>
         )}
 
         {/* ── Week in numbers ── */}
-        <View style={styles.statsSection}>
+        <Animated.View style={[styles.statsSection, { opacity: fadeStats.opacity, transform: [{ translateY: fadeStats.translateY }] }]}>
           <Text style={styles.sectionSubtitle}>{t('weekInNumbers')}</Text>
           <View style={styles.statsRow}>
             <StatPanel
@@ -332,12 +342,13 @@ export default function HomeDashboard() {
               onPress={() => router.push({ pathname: '/ingredient-preferences', params: { tab: 'flagged' } } as any)}
             />
           </View>
-        </View>
+        </Animated.View>
 
         {/* ── Upsell Banner ── */}
         <UpsellBanner />
 
         {/* ── Ingredient Preferences ── */}
+        <Animated.View style={{ opacity: fadeIngList.opacity, transform: [{ translateY: fadeIngList.translateY }] }}>
         {(() => {
           const displayedIngredients = allUnratedIngredients.slice(0, 4);
 
@@ -402,6 +413,7 @@ export default function HomeDashboard() {
             </View>
           );
         })()}
+        </Animated.View>
 
         <View style={{ height: 120 }} />
       </ScrollView>

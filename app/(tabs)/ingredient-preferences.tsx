@@ -29,6 +29,7 @@ import { MenuLikedIcon, MenuDislikedIcon, MenuFlaggedIcon, ActionSearchIcon, Act
 import { IngredientDetailModal } from '@/components/IngredientDetailModal';
 import { FlagReasonSheet } from '@/components/FlagReasonSheet';
 import { useTabBarSlide } from '@/lib/tabBarContext';
+import { useFadeIn } from '@/lib/useFadeIn';
 import type { Ingredient, DietaryTag } from '@/lib/types';
 
 type PreferenceTab = 'liked' | 'disliked' | 'flagged';
@@ -112,6 +113,8 @@ export default function IngredientPreferencesScreen() {
     allergies: string[];
     dietary_preferences: string[];
   }>({ health_conditions: [], allergies: [], dietary_preferences: [] });
+
+  const fadeContent = useFadeIn(!loading && items.length > 0, 0);
 
   function toIngredient(item: PreferenceItem): Ingredient {
     return {
@@ -542,7 +545,7 @@ export default function IngredientPreferencesScreen() {
         </View>
       ) : (
         // ── Ingredient list ──────────────────────────────────────────────────
-        <View style={styles.listOuter}>
+        <Animated.View style={[styles.listOuter, { opacity: fadeContent.opacity, transform: [{ translateY: fadeContent.translateY }] }]}>
           <ScrollView
             style={styles.scroll}
             contentContainerStyle={styles.scrollContent}
@@ -632,7 +635,7 @@ export default function IngredientPreferencesScreen() {
               </View>
             </View>
           )}
-        </View>
+        </Animated.View>
       )}
     </ScreenLayout>
 

@@ -22,7 +22,9 @@
   },
   "gallery": {
     "title": "Photo Scan",
-    "description": "Photo barcode scanning is coming soon. For now, please use the camera to scan barcodes directly."
+    "description": "Photo barcode scanning is coming soon. For now, please use the camera to scan barcodes directly.",
+    "noBarcode": "No barcode was detected in this image. Try a clearer photo with the barcode visible.",
+    "scanError": "Could not scan this image. Please try a different photo."
   },
   "permission": {
     "title": "Camera Access Required",
