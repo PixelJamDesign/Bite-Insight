@@ -18,6 +18,7 @@ import { UpsellSheetProvider } from '@/lib/upsellSheetContext';
 import { MyPlanSheetProvider } from '@/lib/myPlanSheetContext';
 import { SubscriptionProvider } from '@/lib/subscriptionContext';
 import { ActiveFamilyProvider } from '@/lib/activeFamilyContext';
+import { RegionProvider } from '@/lib/regionContext';
 import { UpsellSheet } from '@/components/UpsellSheet';
 import { MyPlanSheet } from '@/components/MyPlanSheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -149,13 +150,15 @@ export default function RootLayout() {
       <SessionProvider>
         <SubscriptionProvider>
           <ActiveFamilyProvider>
-            <UpsellSheetProvider>
-              <MyPlanSheetProvider>
-                <TransitionProvider>
-                  <RootLayoutInner />
-                </TransitionProvider>
-              </MyPlanSheetProvider>
-            </UpsellSheetProvider>
+            <RegionProvider>
+              <UpsellSheetProvider>
+                <MyPlanSheetProvider>
+                  <TransitionProvider>
+                    <RootLayoutInner />
+                  </TransitionProvider>
+                </MyPlanSheetProvider>
+              </UpsellSheetProvider>
+            </RegionProvider>
           </ActiveFamilyProvider>
         </SubscriptionProvider>
       </SessionProvider>

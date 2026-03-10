@@ -11,64 +11,13 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { useUpsellSheet } from '@/lib/upsellSheetContext';
+import { useRegion, REGIONS, FLAG_IMAGES, getOFFBaseUrl, PlusTag } from '@/lib/regionContext';
+import type { Region } from '@/lib/regionContext';
 import { Colors, Spacing, Shadows } from '@/constants/theme';
 import { ActionSearchIcon, ActionGalleryIcon, ActionChevronDownIcon, ActionCheckIcon } from '@/components/MenuIcons';
 import { getCachedProduct, cacheProduct } from '@/lib/productCache';
 import { getOfflineProduct } from '@/lib/offlineDatabase';
 import { WebBarcodeScanner } from '@/components/WebBarcodeScanner';
-
-// ── Region definitions for OFF database ──────────────────────────────────────
-type Region = { code: string; label: string; subdomain: string };
-
-const REGIONS: Region[] = [
-  { code: 'gb',    label: 'United Kingdom', subdomain: 'uk' },
-  { code: 'world', label: 'Global',         subdomain: 'world' },
-  { code: 'us',    label: 'United States',  subdomain: 'us' },
-  { code: 'it',    label: 'Italy',          subdomain: 'it' },
-  { code: 'de',    label: 'Germany',        subdomain: 'de' },
-  { code: 'es',    label: 'Spain',          subdomain: 'es' },
-  { code: 'fr',    label: 'France',         subdomain: 'fr' },
-];
-
-/** Flag icon images for each region */
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const FLAG_IMAGES: Record<string, any> = {
-  gb: require('@/assets/images/region_uk.webp'),
-  world: require('@/assets/images/region_global.webp'),
-  us: require('@/assets/images/region_usa.webp'),
-  it: require('@/assets/images/region_italy.webp'),
-  de: require('@/assets/images/region_germany.webp'),
-  es: require('@/assets/images/region_spain.webp'),
-  fr: require('@/assets/images/region_france.webp'),
-};
-
-/** Inline Plus+ badge for premium regions */
-function PlusTag() {
-  return (
-    <View style={pStyles.plusTag}>
-      <Text style={pStyles.plusText}>plus</Text>
-      <Text style={pStyles.plusStar}>⁺</Text>
-    </View>
-  );
-}
-
-/** Detect the user's default region from device locale */
-function getDefaultRegion(): Region {
-  try {
-    const locale = Intl.DateTimeFormat().resolvedOptions().locale;
-    const regionCode = locale.split('-').pop()?.toLowerCase() ?? '';
-    const match = REGIONS.find(r => r.code === regionCode);
-    if (match) return match;
-  } catch { /* fall through */ }
-  return REGIONS[0]; // World
-}
-
-// Returns the OFF base URL for the selected region.
-// Free users are locked to their device's regional database.
-// Plus+ subscribers can pick any region via the selector.
-function getOFFBaseUrl(region: Region): string {
-  return `https://${region.subdomain}.openfoodfacts.org`;
-}
 
 export default function ScannerScreen() {
   const { t } = useTranslation('scanner');
@@ -77,7 +26,7 @@ export default function ScannerScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanning, setScanning] = useState(true);
   const [processing, setProcessing] = useState(false);
-  const [selectedRegion, setSelectedRegion] = useState<Region>(getDefaultRegion);
+  const { selectedRegion, setSelectedRegion } = useRegion();
   const [regionPickerVisible, setRegionPickerVisible] = useState(false);
   const router = useRouter();
   const { session } = useAuth();
@@ -610,33 +559,6 @@ const FRAME_WIDTH = Math.min(450, SCREEN_WIDTH * 0.9);
 const FRAME_HEIGHT = FRAME_WIDTH * 0.6;
 const CORNER_SIZE = 36;
 const CORNER_THICKNESS = 4;
-
-// ── PlusTag badge styles ──────────────────────────────────────────────────────
-const pStyles = StyleSheet.create({
-  plusTag: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: Colors.primary, // #023432
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 4,
-  },
-  plusText: {
-    fontSize: 16,
-    fontFamily: 'Figtree_700Bold',
-    fontWeight: '700',
-    color: '#fff',
-    lineHeight: 17.6,
-    letterSpacing: -0.32,
-  },
-  plusStar: {
-    fontSize: 8,
-    fontFamily: 'Figtree_700Bold',
-    fontWeight: '700',
-    color: '#fff',
-    marginTop: -1,
-  },
-});
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },

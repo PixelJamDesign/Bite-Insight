@@ -24,52 +24,10 @@ import { sentenceCase } from '@/lib/text';
 import { safeBack } from '@/lib/safeBack';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { useUpsellSheet } from '@/lib/upsellSheetContext';
+import { useRegion, REGIONS, FLAG_IMAGES, PlusTag } from '@/lib/regionContext';
+import type { Region } from '@/lib/regionContext';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
-
-// ─── Region definitions (matches scanner) ────────────────────────────────────
-type Region = { code: string; label: string; subdomain: string };
-
-const REGIONS: Region[] = [
-  { code: 'gb',    label: 'United Kingdom', subdomain: 'uk' },
-  { code: 'world', label: 'Global',         subdomain: 'world' },
-  { code: 'us',    label: 'United States',  subdomain: 'us' },
-  { code: 'it',    label: 'Italy',          subdomain: 'it' },
-  { code: 'de',    label: 'Germany',        subdomain: 'de' },
-  { code: 'es',    label: 'Spain',          subdomain: 'es' },
-  { code: 'fr',    label: 'France',         subdomain: 'fr' },
-];
-
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const FLAG_IMAGES: Record<string, any> = {
-  gb: require('@/assets/images/region_uk.webp'),
-  world: require('@/assets/images/region_global.webp'),
-  us: require('@/assets/images/region_usa.webp'),
-  it: require('@/assets/images/region_italy.webp'),
-  de: require('@/assets/images/region_germany.webp'),
-  es: require('@/assets/images/region_spain.webp'),
-  fr: require('@/assets/images/region_france.webp'),
-};
-
-/** Inline Plus+ badge for premium regions */
-function PlusTag() {
-  return (
-    <View style={pStyles.plusTag}>
-      <Text style={pStyles.plusText}>plus</Text>
-      <Text style={pStyles.plusStar}>⁺</Text>
-    </View>
-  );
-}
-
-function getDefaultRegion(): Region {
-  try {
-    const locale = Intl.DateTimeFormat().resolvedOptions().locale;
-    const regionCode = locale.split('-').pop()?.toLowerCase() ?? '';
-    const match = REGIONS.find(r => r.code === regionCode);
-    if (match) return match;
-  } catch { /* fall through */ }
-  return REGIONS[0]; // UK default
-}
 
 // ─── Nutriscore colours ─────────────────────────────────────────────────────
 const NUTRISCORE_COLORS: Record<string, string> = {
@@ -91,9 +49,10 @@ interface SearchProduct {
   unique_scans_n?: number;
 }
 
-const DEBOUNCE_MS = 500;
-const PAGE_SIZE = 50; // Larger pool for better client-side filtering
+const DEBOUNCE_MS = 400;
+const PAGE_SIZE = 24;
 const SEARCH_FIELDS = 'code,product_name,brands,image_front_small_url,nutriscore_grade,completeness,unique_scans_n';
+const SEARCH_BASE = 'https://search.openfoodfacts.org/search';
 
 export default function FoodSearchScreen() {
   const { t } = useTranslation('scanner');
@@ -103,7 +62,7 @@ export default function FoodSearchScreen() {
   const { showUpsell } = useUpsellSheet();
   const { session } = useAuth();
 
-  const [selectedRegion, setSelectedRegion] = useState<Region>(getDefaultRegion);
+  const { selectedRegion, setSelectedRegion } = useRegion();
   const [regionPickerVisible, setRegionPickerVisible] = useState(false);
   const [query, setQuery] = useState('');
   const [submittedQuery, setSubmittedQuery] = useState('');
@@ -230,7 +189,7 @@ export default function FoodSearchScreen() {
     return score;
   }
 
-  /** Sort results by relevance — the CGI endpoint already handles filtering,
+  /** Sort results by relevance — the Search-A-Licious API handles text matching,
    *  so we only remove nameless products and re-rank client-side. */
   function processResults(products: SearchProduct[], searchTerm: string): SearchProduct[] {
     // Only remove products that are completely nameless
@@ -247,7 +206,32 @@ export default function FoodSearchScreen() {
     return scored.map((s) => s.product);
   }
 
-  /** Perform a fresh search against the Open Food Facts CGI search endpoint */
+  /** Build the Search-A-Licious query URL */
+  function buildSearchUrl(searchTerm: string, region: Region, page: number): string {
+    const params = new URLSearchParams({
+      q: searchTerm,
+      page: String(page),
+      page_size: String(PAGE_SIZE),
+      fields: SEARCH_FIELDS,
+    });
+    // Region filter — "world" means no filter
+    if (region.code !== 'world') {
+      params.set('countries_tags_en', region.label);
+    }
+    return `${SEARCH_BASE}?${params.toString()}`;
+  }
+
+  /** Normalise a product from the Search-A-Licious response.
+   *  brands comes back as string[] — join to a single string. */
+  function normaliseHit(hit: Record<string, unknown>): SearchProduct {
+    const brands = hit.brands;
+    return {
+      ...hit,
+      brands: Array.isArray(brands) ? brands.join(', ') : (brands as string) ?? '',
+    } as SearchProduct;
+  }
+
+  /** Perform a fresh search against the Search-A-Licious Elasticsearch API */
   async function performSearch(searchTerm: string, region: Region) {
     // Cancel any in-flight request
     if (abortRef.current) abortRef.current.abort();
@@ -262,9 +246,7 @@ export default function FoodSearchScreen() {
     currentTermRef.current = searchTerm;
 
     try {
-      // CGI search endpoint performs real Elasticsearch text search.
-      // The v2 /api/v2/search endpoint does NOT filter by search_terms.
-      const url = `https://${region.subdomain}.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(searchTerm)}&search_simple=1&action=process&json=1&page=1&page_size=${PAGE_SIZE}&fields=${SEARCH_FIELDS}`;
+      const url = buildSearchUrl(searchTerm, region, 1);
 
       const res = await fetch(url, {
         signal: controller.signal,
@@ -274,7 +256,8 @@ export default function FoodSearchScreen() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
 
-      const products: SearchProduct[] = data.products ?? [];
+      // Search-A-Licious returns results in `hits` (not `products`)
+      const products: SearchProduct[] = (data.hits ?? []).map(normaliseHit);
       const sorted = processResults(products, searchTerm);
 
       setResults(sorted);
@@ -304,7 +287,7 @@ export default function FoodSearchScreen() {
     const searchTerm = currentTermRef.current;
 
     try {
-      const url = `https://${region.subdomain}.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(searchTerm)}&search_simple=1&action=process&json=1&page=${nextPage}&page_size=${PAGE_SIZE}&fields=${SEARCH_FIELDS}`;
+      const url = buildSearchUrl(searchTerm, region, nextPage);
 
       const res = await fetch(url, {
         headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
@@ -312,7 +295,7 @@ export default function FoodSearchScreen() {
 
       if (!res.ok) throw new Error('Network error');
       const data = await res.json();
-      const products: SearchProduct[] = data.products ?? [];
+      const products: SearchProduct[] = (data.hits ?? []).map(normaliseHit);
 
       if (products.length === 0) {
         setHasMore(false);
@@ -627,33 +610,6 @@ export default function FoodSearchScreen() {
     </View>
   );
 }
-
-// ─── PlusTag badge styles ─────────────────────────────────────────────────────
-const pStyles = StyleSheet.create({
-  plusTag: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: Colors.primary,
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 4,
-  },
-  plusText: {
-    fontSize: 16,
-    fontFamily: 'Figtree_700Bold',
-    fontWeight: '700',
-    color: '#fff',
-    lineHeight: 17.6,
-    letterSpacing: -0.32,
-  },
-  plusStar: {
-    fontSize: 8,
-    fontFamily: 'Figtree_700Bold',
-    fontWeight: '700',
-    color: '#fff',
-    marginTop: -1,
-  },
-});
 
 // ─── Styles ─────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
