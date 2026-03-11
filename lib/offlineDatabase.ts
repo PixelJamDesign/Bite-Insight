@@ -69,23 +69,33 @@ const GITHUB_RELEASE_BASE =
   'https://github.com/PixelJamDesign/Bite-Insight/releases/latest/download';
 const MANIFEST_URL = `${GITHUB_RELEASE_BASE}/manifest.json`;
 
-// ── Paths ────────────────────────────────────────────────────────────────────
-const DB_DIR = FileSystem.documentDirectory!;
-const META_PATH = DB_DIR + 'offline_db_meta.json';
+// ── Paths (lazy — FileSystem.documentDirectory may be null at module load on Android) ──
+function getDbDir(): string {
+  const dir = FileSystem.documentDirectory;
+  if (!dir) throw new Error('FileSystem.documentDirectory is not available yet');
+  return dir;
+}
+function getMetaPath(): string {
+  return getDbDir() + 'offline_db_meta.json';
+}
 
 function dbFilename(region: RegionCode): string {
   return `offline_${region}_products.db`;
 }
 function dbPath(region: RegionCode): string {
-  return DB_DIR + dbFilename(region);
+  return getDbDir() + dbFilename(region);
 }
 function dbTmpPath(region: RegionCode): string {
   return dbPath(region) + '.tmp';
 }
 
 // Legacy path (pre-multi-region)
-const LEGACY_DB_PATH = DB_DIR + 'offline_uk_products.db';
-const LEGACY_META_PATH = DB_DIR + 'offline_db_meta.json';
+function getLegacyDbPath(): string {
+  return getDbDir() + 'offline_uk_products.db';
+}
+function getLegacyMetaPath(): string {
+  return getDbDir() + 'offline_db_meta.json';
+}
 
 // ── Module state ─────────────────────────────────────────────────────────────
 const _offlineDbs = new Map<RegionCode, SQLite.SQLiteDatabase>();
@@ -96,9 +106,9 @@ const _downloading = new Set<RegionCode>();
 
 async function readMetaMap(): Promise<LocalMetaMap> {
   try {
-    const info = await FileSystem.getInfoAsync(META_PATH);
+    const info = await FileSystem.getInfoAsync(getMetaPath());
     if (!info.exists) return {};
-    const raw = await FileSystem.readAsStringAsync(META_PATH);
+    const raw = await FileSystem.readAsStringAsync(getMetaPath());
     const parsed = JSON.parse(raw);
     // Backward compatibility: old flat format → migrate to keyed
     if (parsed && typeof parsed === 'object' && 'version' in parsed && !('gb' in parsed) && !('us' in parsed)) {
@@ -114,7 +124,7 @@ async function readMetaMap(): Promise<LocalMetaMap> {
 }
 
 async function writeMetaMap(map: LocalMetaMap): Promise<void> {
-  await FileSystem.writeAsStringAsync(META_PATH, JSON.stringify(map));
+  await FileSystem.writeAsStringAsync(getMetaPath(), JSON.stringify(map));
 }
 
 async function dbFileExists(region: RegionCode): Promise<boolean> {
@@ -148,19 +158,19 @@ async function cleanupTmpFile(region: RegionCode): Promise<void> {
 /** Migrate old offline_uk_products.db → offline_gb_products.db */
 async function migrateFromLegacy(): Promise<void> {
   try {
-    const info = await FileSystem.getInfoAsync(LEGACY_DB_PATH);
+    const info = await FileSystem.getInfoAsync(getLegacyDbPath());
     if (!info.exists) return;
 
     // Check if new gb file already exists
     const gbInfo = await FileSystem.getInfoAsync(dbPath('gb'));
     if (gbInfo.exists) {
       // Both exist — just delete the legacy one
-      await FileSystem.deleteAsync(LEGACY_DB_PATH, { idempotent: true });
+      await FileSystem.deleteAsync(getLegacyDbPath(), { idempotent: true });
       return;
     }
 
     // Rename legacy → gb
-    await FileSystem.moveAsync({ from: LEGACY_DB_PATH, to: dbPath('gb') });
+    await FileSystem.moveAsync({ from: getLegacyDbPath(), to: dbPath('gb') });
     console.log('[offlineDb] Migrated offline_uk_products.db → offline_gb_products.db');
   } catch {
     // Migration failed silently — not critical
@@ -182,10 +192,15 @@ function getUserRegionCode(): RegionCode | null {
 }
 
 // ── Initialization ───────────────────────────────────────────────────────────
-// Run migration + cleanup on module load
-migrateFromLegacy();
-for (const region of ALL_REGIONS) {
-  cleanupTmpFile(region);
+// Deferred init — FileSystem.documentDirectory may not be ready at module load on Android
+let _initDone = false;
+export async function ensureInitialized(): Promise<void> {
+  if (_initDone) return;
+  _initDone = true;
+  await migrateFromLegacy();
+  for (const region of ALL_REGIONS) {
+    await cleanupTmpFile(region);
+  }
 }
 
 // ── Public API ───────────────────────────────────────────────────────────────
@@ -203,6 +218,7 @@ export async function fetchGlobalManifest(): Promise<GlobalManifest | null> {
 
 /** Get region codes that have been downloaded to this device. */
 export async function getDownloadedRegions(): Promise<RegionCode[]> {
+  await ensureInitialized();
   const downloaded: RegionCode[] = [];
   for (const region of ALL_REGIONS) {
     if (await dbFileExists(region)) {
@@ -247,6 +263,7 @@ export async function startDownload(
   region: RegionCode,
   onProgress: (progress: number) => void,
 ): Promise<void> {
+  await ensureInitialized();
   if (_downloading.has(region)) return;
   _downloading.add(region);
 
@@ -336,6 +353,7 @@ export async function cancelDownload(region: RegionCode): Promise<void> {
 
 /** Delete a specific region's offline database. */
 export async function deleteOfflineDb(region: RegionCode): Promise<void> {
+  await ensureInitialized();
   await closeDb(region);
   await FileSystem.deleteAsync(dbPath(region), { idempotent: true });
 
@@ -347,11 +365,12 @@ export async function deleteOfflineDb(region: RegionCode): Promise<void> {
 
 /** Delete all offline databases. */
 export async function deleteAllOfflineDbs(): Promise<void> {
+  await ensureInitialized();
   for (const region of ALL_REGIONS) {
     await closeDb(region);
     await FileSystem.deleteAsync(dbPath(region), { idempotent: true });
   }
-  await FileSystem.deleteAsync(META_PATH, { idempotent: true });
+  await FileSystem.deleteAsync(getMetaPath(), { idempotent: true });
 }
 
 /**
@@ -360,6 +379,7 @@ export async function deleteAllOfflineDbs(): Promise<void> {
  * Returns null if no databases are downloaded or the barcode is not found.
  */
 export async function getOfflineProduct(barcode: string): Promise<CachedProduct | null> {
+  await ensureInitialized();
   const downloaded = await getDownloadedRegions();
   if (downloaded.length === 0) return null;
 
