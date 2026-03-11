@@ -7,7 +7,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import * as ImagePicker from 'expo-image-picker';
-import BarcodeScanning from '@react-native-ml-kit/barcode-scanning';
+
+// ML Kit barcode scanning — imported safely so the app doesn't crash if
+// the native module isn't linked yet (e.g. older EAS builds).
+let BarcodeScanning: { scan: (uri: string) => Promise<Array<{ value?: string; format?: string }>> } | null = null;
+try {
+  BarcodeScanning = require('@react-native-ml-kit/barcode-scanning').default;
+} catch {
+  // Native module not available — will fall back to expo-camera scanFromURLAsync
+}
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { useSubscription } from '@/lib/subscriptionContext';
@@ -41,9 +49,8 @@ export default function ScannerScreen() {
   const actionBarBottom = insets.bottom + 8 + 60 + 32 + 8;
 
   /** Open photo library and scan a barcode from the selected image.
-   *  Uses Google ML Kit via @react-native-ml-kit/barcode-scanning which
-   *  supports ALL barcode types (EAN-13, UPC, etc.) on both iOS and Android.
-   *  expo-camera's scanFromURLAsync only detects QR codes on iOS. */
+   *  Prefers Google ML Kit (all barcode types on iOS + Android).
+   *  Falls back to expo-camera scanFromURLAsync (QR-only on iOS). */
   async function handleGalleryScan() {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -54,25 +61,37 @@ export default function ScannerScreen() {
 
       const uri = result.assets[0].uri;
 
-      // Use ML Kit for reliable barcode detection from static images
-      const barcodes = await BarcodeScanning.scan(uri);
-
-      if (barcodes && barcodes.length > 0) {
-        const firstBarcode = barcodes[0];
-        // Map ML Kit result to the BarcodeScanningResult shape expected by handleBarcodeScan
-        handleBarcodeScan({
-          data: firstBarcode.value ?? '',
-          type: firstBarcode.format ?? 'unknown',
-          cornerPoints: [],
-          bounds: { origin: { x: 0, y: 0 }, size: { width: 0, height: 0 } },
-        } as BarcodeScanningResult);
+      // Try ML Kit first (supports all barcode types on both platforms)
+      if (BarcodeScanning) {
+        const barcodes = await BarcodeScanning.scan(uri);
+        if (barcodes && barcodes.length > 0) {
+          const firstBarcode = barcodes[0];
+          handleBarcodeScan({
+            data: firstBarcode.value ?? '',
+            type: firstBarcode.format ?? 'unknown',
+            cornerPoints: [],
+            bounds: { origin: { x: 0, y: 0 }, size: { width: 0, height: 0 } },
+          } as BarcodeScanningResult);
+          return;
+        }
       } else {
-        Alert.alert(
-          t('gallery.title'),
-          t('gallery.noBarcode'),
-          [{ text: tc('buttons.ok') }],
-        );
+        // Fallback: expo-camera scanFromURLAsync (QR-only on iOS, all types on Android)
+        const barcodes = await Camera.scanFromURLAsync(uri, [
+          'ean13', 'ean8', 'upc_a', 'upc_e',
+          'code128', 'code39', 'qr',
+        ]);
+        if (barcodes.length > 0) {
+          handleBarcodeScan(barcodes[0] as BarcodeScanningResult);
+          return;
+        }
       }
+
+      // No barcode found by either method
+      Alert.alert(
+        t('gallery.title'),
+        t('gallery.noBarcode'),
+        [{ text: tc('buttons.ok') }],
+      );
     } catch {
       Alert.alert(
         t('gallery.title'),
