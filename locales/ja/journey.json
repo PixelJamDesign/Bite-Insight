@@ -1,4 +1,9 @@
 {
+  "welcome": {
+    "greeting": "おはようございます",
+    "thanks": "Bite Insightをダウンロードいただきありがとうございます。",
+    "subtitle": "あなたが食べている食品の中身を本当に理解するお手伝いをします。"
+  },
   "about": {
     "title": "About You",
     "subtitle": "Add a photo and tell us your age.",

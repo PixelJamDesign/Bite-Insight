@@ -8,6 +8,8 @@
   "buttons": {
     "back": "Back",
     "cancel": "Cancel",
+    "next": "Next",
+    "skip": "Skip",
     "close": "Close",
     "done": "Done",
     "finish": "Finish",
@@ -16,8 +18,6 @@
     "apply": "Apply",
     "clear": "Clear",
     "ok": "OK",
-    "next": "Next: {{stepName}}",
-    "skip": "Skip for now, I'll set this up later",
     "editList": "Edit list",
     "deleteSelected": "Delete selected"
   },

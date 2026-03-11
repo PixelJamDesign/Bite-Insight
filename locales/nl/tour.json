@@ -13,6 +13,11 @@
       "section": "Navigatie",
       "title": "Dit is je tabnavigatie!",
       "subtitle": "Hier vind je al je snelle toegang."
+    },
+    "food_scanner": {
+      "section": "Food Scanner",
+      "title": "Het hart van onze app is de Food Scanner.",
+      "subtitle": "Het is echt zo simpel als op de Food Scanner tikken in de tabnavigatie en de barcode scannen."
     }
   },
   "progress": {

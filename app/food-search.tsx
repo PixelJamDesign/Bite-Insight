@@ -213,17 +213,18 @@ export default function FoodSearchScreen() {
 
   /** Build the Search-A-Licious query URL */
   function buildSearchUrl(searchTerm: string, region: Region, page: number): string {
-    // Region filter via Lucene syntax — "world" (empty countryTag) means no filter
-    const q = region.countryTag
-      ? `${searchTerm} AND countries_tags:"${region.countryTag}"`
-      : searchTerm;
-
     const params = new URLSearchParams({
-      q,
+      q: searchTerm,
       page: String(page),
       page_size: String(PAGE_SIZE),
       fields: SEARCH_FIELDS,
     });
+    // Use the dedicated `filter` parameter for country filtering — putting the
+    // Lucene AND clause inside `q` corrupts the text-matching (the engine splits
+    // the query terms and country tag together, reducing relevance to near zero).
+    if (region.countryTag) {
+      params.set('filter', `countries_tags:"${region.countryTag}"`);
+    }
     return `${SEARCH_BASE}?${params.toString()}`;
   }
 

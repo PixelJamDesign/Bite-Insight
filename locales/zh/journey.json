@@ -1,4 +1,9 @@
 {
+  "welcome": {
+    "greeting": "早上好",
+    "thanks": "感谢您下载 Bite Insight。",
+    "subtitle": "我们在这里帮助您了解您所吃食物中真正含有什么。"
+  },
   "about": {
     "title": "About You",
     "subtitle": "Add a photo and tell us your age.",

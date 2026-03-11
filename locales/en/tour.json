@@ -13,6 +13,11 @@
       "section": "Navigation",
       "title": "This is your tab navigation!",
       "subtitle": "This where all your 'quick-access' limits live."
+    },
+    "food_scanner": {
+      "section": "Food Scanner",
+      "title": "The heart of our app is the Food Scanner.",
+      "subtitle": "It really is as simple as tapping the food scanner in the tab nav and scanning the barcode."
     }
   },
   "progress": {

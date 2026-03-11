@@ -13,6 +13,11 @@
       "section": "التنقل",
       "title": "هذا هو شريط التنقل الخاص بك!",
       "subtitle": "هنا تجد جميع اختصاراتك السريعة."
+    },
+    "food_scanner": {
+      "section": "Food Scanner",
+      "title": "قلب تطبيقنا هو Food Scanner.",
+      "subtitle": "الأمر بسيط جداً: اضغط على Food Scanner في شريط التنقل وامسح الباركود."
     }
   },
   "progress": {

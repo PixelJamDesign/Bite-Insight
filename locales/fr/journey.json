@@ -1,4 +1,9 @@
 {
+  "welcome": {
+    "greeting": "Bonjour",
+    "thanks": "Merci d'avoir téléchargé Bite Insight.",
+    "subtitle": "Nous sommes là pour vous aider à comprendre ce que contiennent vraiment les aliments que vous mangez."
+  },
   "about": {
     "title": "About You",
     "subtitle": "Add a photo and tell us your age.",

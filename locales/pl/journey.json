@@ -1,4 +1,9 @@
 {
+  "welcome": {
+    "greeting": "Dzień dobry",
+    "thanks": "Dziękujemy za pobranie Bite Insight.",
+    "subtitle": "Jesteśmy tutaj, aby pomóc Ci zrozumieć, co naprawdę znajduje się w jedzeniu, które spożywasz."
+  },
   "about": {
     "title": "About You",
     "subtitle": "Add a photo and tell us your age.",

@@ -13,6 +13,11 @@
       "section": "Nawigacja",
       "title": "To jest twoja nawigacja zakładek!",
       "subtitle": "Tutaj znajdziesz wszystkie swoje skróty."
+    },
+    "food_scanner": {
+      "section": "Food Scanner",
+      "title": "Sercem naszej aplikacji jest Food Scanner.",
+      "subtitle": "To naprawdę proste: wystarczy dotknąć Food Scanner na pasku nawigacji i zeskanować kod kreskowy."
     }
   },
   "progress": {

@@ -11,25 +11,48 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import LottieView from 'lottie-react-native';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/auth';
 import { useJourney } from '@/lib/journeyContext';
 import { safeBack } from '@/lib/safeBack';
 import { Colors, Shadows } from '@/constants/theme';
 
+// ── Looping muted video player (hook-based, needs its own component) ────────
+function StepVideo({ source, style }: { source: any; style: any }) {
+  const player = useVideoPlayer(source, (p) => {
+    p.loop = true;
+    p.volume = 0;
+    p.play();
+  });
+  return (
+    <VideoView
+      player={player}
+      style={style}
+      contentFit="contain"
+      nativeControls={false}
+      allowsPictureInPicture={false}
+    />
+  );
+}
+
 // ── Step data (extensible — add more steps here) ────────────────────────────
 interface TourStep {
   key: string;
-  lottieSource: any;
+  videoSource: any;
   nextStepName?: string;
 }
 
 const TOUR_STEPS: TourStep[] = [
   {
     key: 'navigation',
-    lottieSource: require('@/assets/lottie/onboarding/tab-bar-nav.json'),
-    nextStepName: 'Health Conditions',
+    videoSource: require('@/assets/videos/onboarding/tab-bar-nav.mp4'),
+    nextStepName: 'Food Scanner',
+  },
+  {
+    key: 'food_scanner',
+    videoSource: require('@/assets/videos/onboarding/food-scanner.mp4'),
+    nextStepName: 'Personalised Insights',
   },
   // Future steps go here
 ];
@@ -57,8 +80,8 @@ export default function AppTourScreen() {
   // -2 = welcome (word-by-word), -1 = intro, 0+ = step index
   // On revisit, skip the greeting and jump straight to the first tour step
   const [currentIndex, setCurrentIndex] = useState(isRevisit ? 0 : -2);
-  // Prevent the Lottie key from changing on re-renders
-  const lottieKey = useRef(0);
+  // Prevent the video key from changing on re-renders
+  const videoKey = useRef(0);
   // Screen-level slide + fade for transitions
   const screenOpacity = useRef(new Animated.Value(1)).current;
   const screenTranslateX = useRef(new Animated.Value(0)).current;
@@ -160,8 +183,8 @@ export default function AppTourScreen() {
   const stepDotsTranslateY = useRef(new Animated.Value(14)).current;
   const stepTextOpacity = useRef(new Animated.Value(0)).current;
   const stepTextTranslateY = useRef(new Animated.Value(14)).current;
-  const stepLottieOpacity = useRef(new Animated.Value(0)).current;
-  const stepLottieTranslateY = useRef(new Animated.Value(20)).current;
+  const stepVideoOpacity = useRef(new Animated.Value(0)).current;
+  const stepVideoTranslateY = useRef(new Animated.Value(20)).current;
   const stepFooterOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -173,8 +196,8 @@ export default function AppTourScreen() {
     stepDotsTranslateY.setValue(14);
     stepTextOpacity.setValue(0);
     stepTextTranslateY.setValue(14);
-    stepLottieOpacity.setValue(0);
-    stepLottieTranslateY.setValue(20);
+    stepVideoOpacity.setValue(0);
+    stepVideoTranslateY.setValue(20);
     stepFooterOpacity.setValue(0);
 
     const makeEntrance = (opacity: Animated.Value, translateY: Animated.Value, delay: number, duration = 400) =>
@@ -187,7 +210,7 @@ export default function AppTourScreen() {
       makeEntrance(stepSectionOpacity, stepSectionTranslateY, 250),
       makeEntrance(stepDotsOpacity, stepDotsTranslateY, 380),
       makeEntrance(stepTextOpacity, stepTextTranslateY, 500),
-      makeEntrance(stepLottieOpacity, stepLottieTranslateY, 620, 500),
+      makeEntrance(stepVideoOpacity, stepVideoTranslateY, 620, 500),
       Animated.timing(stepFooterOpacity, { toValue: 1, duration: 400, delay: 700, useNativeDriver: true }),
     ]).start();
   }, [currentIndex]);
@@ -216,7 +239,7 @@ export default function AppTourScreen() {
       );
     }
     Animated.parallel(exitAnims).start(() => {
-      if (nextIndex >= 0) lottieKey.current += 1;
+      if (nextIndex >= 0) videoKey.current += 1;
       setCurrentIndex(nextIndex);
       // Reset for entrance: slide in from right
       screenTranslateX.setValue(40);
@@ -267,7 +290,7 @@ export default function AppTourScreen() {
   // ── Navigation ──────────────────────────────────────────────────────────────
   const handleNext = () => {
     if (currentIndex < TOUR_STEPS.length - 1) {
-      lottieKey.current += 1;
+      videoKey.current += 1;
       setCurrentIndex(currentIndex + 1);
     } else {
       completeTour();
@@ -436,15 +459,12 @@ export default function AppTourScreen() {
           </Text>
         </Animated.View>
 
-        {/* Lottie animation */}
-        <Animated.View style={[styles.lottieContainer, { opacity: stepLottieOpacity, transform: [{ translateY: stepLottieTranslateY }] }]}>
-          <LottieView
-            key={lottieKey.current}
-            source={step!.lottieSource}
-            autoPlay
-            loop
-            resizeMode="contain"
-            style={styles.lottie}
+        {/* Video animation */}
+        <Animated.View style={[styles.videoContainer, { opacity: stepVideoOpacity, transform: [{ translateY: stepVideoTranslateY }] }]}>
+          <StepVideo
+            key={videoKey.current}
+            source={step!.videoSource}
+            style={styles.video}
           />
         </Animated.View>
       </Animated.View>
@@ -703,11 +723,11 @@ const styles = StyleSheet.create({
     color: Colors.secondary,
     letterSpacing: 0,
   },
-  lottieContainer: {
+  videoContainer: {
     flex: 1,
     alignItems: 'center',
   },
-  lottie: {
+  video: {
     width: '100%',
     maxWidth: 480,
     height: '100%',

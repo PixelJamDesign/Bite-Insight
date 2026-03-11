@@ -39,9 +39,10 @@ import {
 import type { NutrientWatchlistEntry } from '@/lib/types';
 import { CameraIcon, PersonalIcon, EmailIcon, BirthdayIcon, TickIcon } from '@/components/MenuIcons';
 import Logo from '../assets/images/logo.svg';
+import FoodCarousel from '@/components/FoodCarousel';
 
 // ── Step types ────────────────────────────────────────────────────────────────
-type StepKey = 'about' | 'health' | 'nutrients' | 'allergies' | 'dietary';
+type StepKey = 'welcome' | 'about' | 'health' | 'nutrients' | 'allergies' | 'dietary';
 
 // ── Condition key helpers ──────────────────────────────────────────────────
 // CONDITION_NUTRIENT_MAP uses legacy English keys ("Diabetes") while the
@@ -237,6 +238,7 @@ export default function OnboardingScreen() {
 
   // ── Dynamic step sequence ──────────────────────────────────────────────────
   const stepSequence: StepKey[] = useMemo(() => [
+    'welcome',
     'about',
     'health',
     ...(showNutrientStep ? ['nutrients' as StepKey] : []),
@@ -249,12 +251,14 @@ export default function OnboardingScreen() {
   const totalSteps = stepSequence.length;
   const overallStep = pos + 1;
 
-  const stepTitle = currentStepKey === 'about'
-    ? tj('about.title')
-    : t(`step.${currentStepKey}`);
+  const stepTitle = currentStepKey === 'welcome'
+    ? ''
+    : currentStepKey === 'about'
+      ? tj('about.title')
+      : t(`step.${currentStepKey}`);
   const nextStepKey = pos < stepSequence.length - 1 ? stepSequence[pos + 1] : null;
   const nextLabel = nextStepKey
-    ? (nextStepKey === 'about' ? tj('about.title') : t(`step.${nextStepKey}`))
+    ? (nextStepKey === 'welcome' ? '' : nextStepKey === 'about' ? tj('about.title') : t(`step.${nextStepKey}`))
     : null;
 
   // ScrollView ref for resetting scroll position
@@ -443,8 +447,14 @@ export default function OnboardingScreen() {
   }
 
   function handleBack() {
-    if (pos === 0) {
-      // Sign out from the journey
+    if (currentStepKey === 'welcome') {
+      // Skip onboarding entirely — go to disclaimer
+      setSaving(true);
+      advanceTo('disclaimer').catch(() => {}).finally(() => setSaving(false));
+      return;
+    }
+    if (currentStepKey === 'about') {
+      // Sign out from the about step
       supabase.auth.signOut();
     } else {
       animateExit('backward', () => setPos(p => p - 1));
@@ -720,30 +730,53 @@ export default function OnboardingScreen() {
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        {/* Logo */}
-        <View style={styles.logoArea}>
-          <Logo width={141} height={36} />
-        </View>
-
-        {/* Step header — fades in before content */}
-        <Animated.View style={{ opacity: headerOpacity, transform: [{ translateY: headerTranslateY }] }}>
-          <View style={styles.stepHeader}>
-            <View style={styles.stepTitleRow}>
-              <Text style={styles.stepTitle}>{stepTitle}</Text>
-            </View>
-            {renderProgress()}
+        {/* Logo — hidden on welcome step */}
+        {currentStepKey !== 'welcome' && (
+          <View style={styles.logoArea}>
+            <Logo width={141} height={36} />
           </View>
-        </Animated.View>
+        )}
+
+        {/* Step header — hidden on welcome step */}
+        {currentStepKey !== 'welcome' && (
+          <Animated.View style={{ opacity: headerOpacity, transform: [{ translateY: headerTranslateY }] }}>
+            <View style={styles.stepHeader}>
+              <View style={styles.stepTitleRow}>
+                <Text style={styles.stepTitle}>{stepTitle}</Text>
+              </View>
+              {renderProgress()}
+            </View>
+          </Animated.View>
+        )}
 
         {/* Scrollable content */}
         <ScrollView
           ref={scrollRef}
           style={{ flex: 1 }}
-          contentContainerStyle={styles.scroll}
+          contentContainerStyle={currentStepKey === 'welcome' ? styles.welcomeScroll : styles.scroll}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
           <Animated.View style={{ opacity: contentOpacity, transform: [{ translateX: contentTranslateX }] }}>
+
+          {/* ── Step: Welcome ── */}
+          {currentStepKey === 'welcome' && (
+            <View style={styles.welcomeContainer}>
+              <View style={styles.welcomeTextBlock}>
+                <Text style={styles.welcomeGreeting}>{tj('welcome.greeting')}</Text>
+                <Text style={styles.welcomeName}>
+                  {session?.user?.user_metadata?.display_name
+                    || session?.user?.user_metadata?.full_name
+                    || session?.user?.email?.split('@')[0]
+                    || ''}
+                </Text>
+                <Text style={styles.welcomeTitle}>{tj('welcome.thanks')}</Text>
+                <Text style={styles.welcomeSubtitle}>{tj('welcome.subtitle')}</Text>
+              </View>
+              <FoodCarousel />
+            </View>
+          )}
+
           {/* ── Step: About You ── */}
           {currentStepKey === 'about' && (
             <>
@@ -879,7 +912,9 @@ export default function OnboardingScreen() {
           />
           <View style={[styles.footerButtons, { paddingBottom: insets.bottom + 12 }]}>
             <TouchableOpacity style={styles.backBtn} onPress={handleBack} activeOpacity={0.8}>
-              <Text style={styles.backBtnText}>{pos === 0 ? tj('about.signOut') : tc('buttons.back')}</Text>
+              <Text style={styles.backBtnText}>
+                {currentStepKey === 'welcome' ? tc('buttons.skip') : currentStepKey === 'about' ? tj('about.signOut') : tc('buttons.back')}
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -892,7 +927,7 @@ export default function OnboardingScreen() {
                 <ActivityIndicator color="#fff" />
               ) : (
                 <Text style={styles.nextBtnText} numberOfLines={1} adjustsFontSizeToFit>
-                  {isLastStep ? tc('buttons.finish') : t('progress.next', { label: nextLabel })}
+                  {isLastStep ? tc('buttons.finish') : currentStepKey === 'welcome' ? tc('buttons.next') : t('progress.next', { label: nextLabel })}
                 </Text>
               )}
             </TouchableOpacity>
@@ -959,6 +994,54 @@ const styles = StyleSheet.create({
   scroll: {
     paddingHorizontal: 24,
     paddingTop: 4,
+  },
+  welcomeScroll: {
+    paddingTop: 4,
+    flexGrow: 1,
+  },
+
+  // ── Welcome step ───────────────────────────────────────────────────────────
+  welcomeContainer: {
+    flex: 1,
+    gap: 20,
+    paddingTop: 80,
+  },
+  welcomeTextBlock: {
+    paddingHorizontal: 24,
+    gap: 24,
+  },
+  welcomeGreeting: {
+    fontSize: 24,
+    fontFamily: 'Figtree_300Light',
+    fontWeight: '300',
+    color: Colors.secondary,
+    letterSpacing: -1,
+    lineHeight: 36,
+  },
+  welcomeName: {
+    fontSize: 48,
+    fontFamily: 'Figtree_700Bold',
+    fontWeight: '700',
+    color: Colors.primary,
+    letterSpacing: -2,
+    lineHeight: 52,
+    marginTop: -20,
+  },
+  welcomeTitle: {
+    fontSize: 24,
+    fontFamily: 'Figtree_300Light',
+    fontWeight: '300',
+    color: Colors.secondary,
+    letterSpacing: -1,
+    lineHeight: 36,
+  },
+  welcomeSubtitle: {
+    fontSize: 18,
+    fontFamily: 'Figtree_300Light',
+    fontWeight: '300',
+    color: Colors.secondary,
+    letterSpacing: -0.5,
+    lineHeight: 30,
   },
 
   avatarContainer: {

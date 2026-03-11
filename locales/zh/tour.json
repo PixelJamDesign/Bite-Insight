@@ -13,6 +13,11 @@
       "section": "导航",
       "title": "这是你的标签导航！",
       "subtitle": "你的所有快捷访问都在这里。"
+    },
+    "food_scanner": {
+      "section": "Food Scanner",
+      "title": "我们应用的核心是 Food Scanner。",
+      "subtitle": "操作非常简单：点击标签导航中的 Food Scanner，扫描条形码即可。"
     }
   },
   "progress": {

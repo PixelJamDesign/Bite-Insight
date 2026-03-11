@@ -13,6 +13,11 @@
       "section": "Navigation",
       "title": "Das ist deine Tab-Navigation!",
       "subtitle": "Hier findest du alle deine Schnellzugriffe."
+    },
+    "food_scanner": {
+      "section": "Food Scanner",
+      "title": "Das Herzstück unserer App ist der Food Scanner.",
+      "subtitle": "Es ist wirklich so einfach: Tippe auf den Food Scanner in der Tab-Navigation und scanne den Barcode."
     }
   },
   "progress": {

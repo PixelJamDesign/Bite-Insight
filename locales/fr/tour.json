@@ -13,6 +13,11 @@
       "section": "Navigation",
       "title": "Voici votre barre de navigation !",
       "subtitle": "C'est ici que se trouvent tous vos accès rapides."
+    },
+    "food_scanner": {
+      "section": "Food Scanner",
+      "title": "Le cœur de notre application est le Food Scanner.",
+      "subtitle": "C'est aussi simple que d'appuyer sur le Food Scanner dans la barre de navigation et de scanner le code-barres."
     }
   },
   "progress": {

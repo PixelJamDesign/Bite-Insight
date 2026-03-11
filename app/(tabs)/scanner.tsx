@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import * as ImagePicker from 'expo-image-picker';
+import BarcodeScanning from '@react-native-ml-kit/barcode-scanning';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { useSubscription } from '@/lib/subscriptionContext';
@@ -39,7 +40,10 @@ export default function ScannerScreen() {
   // Tab bar: paddingTop(32) + pill(60) + paddingBottom(insets.bottom+8) + gap(8)
   const actionBarBottom = insets.bottom + 8 + 60 + 32 + 8;
 
-  /** Open photo library and scan a barcode from the selected image */
+  /** Open photo library and scan a barcode from the selected image.
+   *  Uses Google ML Kit via @react-native-ml-kit/barcode-scanning which
+   *  supports ALL barcode types (EAN-13, UPC, etc.) on both iOS and Android.
+   *  expo-camera's scanFromURLAsync only detects QR codes on iOS. */
   async function handleGalleryScan() {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -50,15 +54,18 @@ export default function ScannerScreen() {
 
       const uri = result.assets[0].uri;
 
-      // Scan barcodes from the static image using expo-camera
-      const barcodes = await Camera.scanFromURLAsync(uri, [
-        'ean13', 'ean8', 'upc_a', 'upc_e',
-        'code128', 'code39', 'qr',
-      ]);
+      // Use ML Kit for reliable barcode detection from static images
+      const barcodes = await BarcodeScanning.scan(uri);
 
-      if (barcodes.length > 0) {
-        // Use the first detected barcode and feed it through the normal scan flow
-        handleBarcodeScan(barcodes[0] as BarcodeScanningResult);
+      if (barcodes && barcodes.length > 0) {
+        const firstBarcode = barcodes[0];
+        // Map ML Kit result to the BarcodeScanningResult shape expected by handleBarcodeScan
+        handleBarcodeScan({
+          data: firstBarcode.value ?? '',
+          type: firstBarcode.format ?? 'unknown',
+          cornerPoints: [],
+          bounds: { origin: { x: 0, y: 0 }, size: { width: 0, height: 0 } },
+        } as BarcodeScanningResult);
       } else {
         Alert.alert(
           t('gallery.title'),

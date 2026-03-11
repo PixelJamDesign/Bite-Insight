@@ -24,6 +24,7 @@ type ServingToggleProps = {
   driMode: DriMode;
   setDriMode: (m: DriMode) => void;
   servingLabel: string | null;
+  baseUnit?: string;
   t: (key: string) => string;
 };
 
@@ -34,6 +35,7 @@ export function ServingToggle({
   driMode,
   setDriMode,
   servingLabel,
+  baseUnit = 'g',
   t,
 }: ServingToggleProps) {
   return (
@@ -57,7 +59,7 @@ export function ServingToggle({
             >
               {mode === 'serving'
                 ? servingLabel || t('toggle.perServing')
-                : t('toggle.per100g')}
+                : `Per 100${baseUnit}`}
             </Text>
             {mode === '100g' && effectiveServingMode === '100g' && (
               <Ionicons name="chevron-down" size={10} color={Colors.primary} style={{ marginLeft: 2 }} />
@@ -97,6 +99,7 @@ type WeightStepperProps = {
   setCustomWeight: React.Dispatch<React.SetStateAction<number>>;
   editingWeight: boolean;
   setEditingWeight: (v: boolean) => void;
+  baseUnit?: string;
 };
 
 export function WeightStepper({
@@ -104,6 +107,7 @@ export function WeightStepper({
   setCustomWeight,
   editingWeight,
   setEditingWeight,
+  baseUnit = 'g',
 }: WeightStepperProps) {
   return (
     <View style={s.weightStepper}>
@@ -134,7 +138,7 @@ export function WeightStepper({
         />
       ) : (
         <TouchableOpacity onPress={() => setEditingWeight(true)} activeOpacity={0.7}>
-          <Text style={s.weightValueText}>{customWeight}g</Text>
+          <Text style={s.weightValueText}>{customWeight}{baseUnit}</Text>
         </TouchableOpacity>
       )}
       <TouchableOpacity

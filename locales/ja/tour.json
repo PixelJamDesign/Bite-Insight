@@ -13,6 +13,11 @@
       "section": "ナビゲーション",
       "title": "これがタブナビゲーションです！",
       "subtitle": "よく使う機能にすばやくアクセスできます。"
+    },
+    "food_scanner": {
+      "section": "Food Scanner",
+      "title": "アプリの中心機能はFood Scannerです。",
+      "subtitle": "タブナビゲーションのFood Scannerをタップしてバーコードをスキャンするだけです。"
     }
   },
   "progress": {

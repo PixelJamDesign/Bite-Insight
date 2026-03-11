@@ -441,7 +441,7 @@ const Extra = {
   goodLime: '#b8d828',
   okYellow: '#F5B811',
   poorOrange: '#ff8736',
-  highRed: '#ff7779',
+  highRed: '#ff3f42',
   strokeSecondary: '#aad4cd',
   flaggedOrange: '#ff8736',
   flaggedOrangeBadge: '#ff7824',
@@ -1225,16 +1225,26 @@ export default function ScanResultScreen() {
   const servingIs100g = /\b100\s*(g|ml)\b/i.test(servingSize);
   // Only show the per-100g tab when serving differs from 100g
   const showBothModes = hasServingData && !servingIs100g;
-  // Clean serving label, e.g. "(30 g)" → "30g", "1 serving (63g)" → "63g"
-  const servingLabelRaw = servingSize
-    .replace(/^\(|\)$/g, '')
-    .trim()
-    // Strip redundant "1 serving" / "1 portion" (with optional surrounding parens)
-    .replace(/\(?\s*1\s*(?:serving|portion)\s*\)?\s*/gi, '')
-    .replace(/(\d)\s+(g|mg|kg|ml|l|oz|fl)\b/gi, '$1$2')
-    .replace(/^\(|\)$/g, '')   // clean up any leftover outer parens
-    .trim();
-  const servingLabel = servingLabelRaw ? `Per Serving (${servingLabelRaw})` : '';
+  // Extract just the measurement from serving size strings like:
+  //   "1 bottle (500ml)" → "500ml"
+  //   "1 bar (45g)"      → "45g"
+  //   "2 biscuits (30g)" → "30g"
+  //   "30 g"             → "30g"
+  //   "(63g)"            → "63g"
+  const measurementMatch = servingSize.match(/(\d+(?:\.\d+)?)\s*(g|mg|kg|ml|cl|l|oz|fl\s*oz)\b/i);
+  const servingMeasurement = measurementMatch
+    ? `${measurementMatch[1]}${measurementMatch[2].replace(/\s/g, '').toLowerCase()}`
+    : '';
+  // Show "Per Serving (500ml)" when we extracted a measurement,
+  // plain "Per Serving" if we couldn't parse one.
+  const servingLabel = servingMeasurement
+    ? `Per Serving (${servingMeasurement})`
+    : 'Per Serving';
+
+  // Detect liquid products — use ml/l units instead of g
+  const isLiquid = /\b(ml|cl|litre|liter|fl\s*oz)\b/i.test(quantity + ' ' + servingSize);
+  const baseUnit = isLiquid ? 'ml' : 'g';
+
   // Available modes for the toggle (show serving only when data exists + differs from 100g)
   const servingModes: ServingMode[] = showBothModes ? ['serving', '100g'] : ['100g'];
   // If we only have one mode, force it
@@ -1782,16 +1792,11 @@ export default function ScanResultScreen() {
                           </View>
                           <View style={styles.nwRowRight}>
                             <Text style={styles.nwValue}>
-                              {Number(alert.value.toFixed(2))}{alert.unit}/100g
+                              {Number(alert.value.toFixed(2))}{alert.unit}/100{baseUnit}
                             </Text>
-                            <View style={styles.nwRatingWrap}>
-                              {isGood
-                                ? <TickIcon color={sev.color} size={14} strokeWidth={3} />
-                                : <Ionicons name="close" size={16} color={sev.color} />}
-                              <Text style={[styles.nwRating, { color: sev.color }]}>
-                                {tc(`ratings.${sev.rating}`)}
-                              </Text>
-                            </View>
+                            <Text style={[styles.nwRating, { color: sev.color }]}>
+                              {tc(`ratings.${sev.rating}`)}
+                            </Text>
                           </View>
                         </View>
                       );
@@ -1817,16 +1822,11 @@ export default function ScanResultScreen() {
                           </View>
                           <View style={styles.nwRowRight}>
                             <Text style={styles.nwValue}>
-                              {Number(alert.value.toFixed(2))}{alert.unit}/100g
+                              {Number(alert.value.toFixed(2))}{alert.unit}/100{baseUnit}
                             </Text>
-                            <View style={styles.nwRatingWrap}>
-                              {isGood
-                                ? <TickIcon color={sev.color} size={14} strokeWidth={3} />
-                                : <Ionicons name="close" size={16} color={sev.color} />}
-                              <Text style={[styles.nwRating, { color: sev.color }]}>
-                                {tc(`ratings.${sev.rating}`)}
-                              </Text>
-                            </View>
+                            <Text style={[styles.nwRating, { color: sev.color }]}>
+                              {tc(`ratings.${sev.rating}`)}
+                            </Text>
                           </View>
                         </View>
                       );
@@ -1925,6 +1925,7 @@ export default function ScanResultScreen() {
                   driMode={driMode}
                   setDriMode={setDriMode}
                   servingLabel={servingLabel}
+                  baseUnit={baseUnit}
                   t={t}
                 />
 
@@ -1935,6 +1936,7 @@ export default function ScanResultScreen() {
                     setCustomWeight={setCustomWeight}
                     editingWeight={editingWeight}
                     setEditingWeight={setEditingWeight}
+                    baseUnit={baseUnit}
                   />
                 )}
 
@@ -2004,6 +2006,7 @@ export default function ScanResultScreen() {
                 driMode={driMode}
                 setDriMode={setDriMode}
                 servingLabel={servingLabel}
+                baseUnit={baseUnit}
                 t={t}
               />
 
@@ -2014,6 +2017,7 @@ export default function ScanResultScreen() {
                   setCustomWeight={setCustomWeight}
                   editingWeight={editingWeight}
                   setEditingWeight={setEditingWeight}
+                  baseUnit={baseUnit}
                 />
               )}
 
@@ -2092,16 +2096,11 @@ export default function ScanResultScreen() {
                           </View>
                           <View style={styles.nwRowRight}>
                             <Text style={styles.nwValue}>
-                              {Number(alert.value.toFixed(2))}{alert.unit}/100g
+                              {Number(alert.value.toFixed(2))}{alert.unit}/100{baseUnit}
                             </Text>
-                            <View style={styles.nwRatingWrap}>
-                              {isGood
-                                ? <TickIcon color={sev.color} size={14} strokeWidth={3} />
-                                : <Ionicons name="close" size={16} color={sev.color} />}
-                              <Text style={[styles.nwRating, { color: sev.color }]}>
-                                {tc(`ratings.${sev.rating}`)}
-                              </Text>
-                            </View>
+                            <Text style={[styles.nwRating, { color: sev.color }]}>
+                              {tc(`ratings.${sev.rating}`)}
+                            </Text>
                           </View>
                         </View>
                       );
@@ -2127,16 +2126,11 @@ export default function ScanResultScreen() {
                           </View>
                           <View style={styles.nwRowRight}>
                             <Text style={styles.nwValue}>
-                              {Number(alert.value.toFixed(2))}{alert.unit}/100g
+                              {Number(alert.value.toFixed(2))}{alert.unit}/100{baseUnit}
                             </Text>
-                            <View style={styles.nwRatingWrap}>
-                              {isGood
-                                ? <TickIcon color={sev.color} size={14} strokeWidth={3} />
-                                : <Ionicons name="close" size={16} color={sev.color} />}
-                              <Text style={[styles.nwRating, { color: sev.color }]}>
-                                {tc(`ratings.${sev.rating}`)}
-                              </Text>
-                            </View>
+                            <Text style={[styles.nwRating, { color: sev.color }]}>
+                              {tc(`ratings.${sev.rating}`)}
+                            </Text>
                           </View>
                         </View>
                       );
@@ -3167,18 +3161,20 @@ const styles = StyleSheet.create({
   nwRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     backgroundColor: '#f5fbfb',
-    borderRadius: Radius.m,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#aad4cd',
-    padding: Spacing.s,
+    paddingLeft: 12,
+    paddingRight: Spacing.s,
+    paddingVertical: 12,
     gap: Spacing.s,
   },
   nwRowLeft: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 4,
   },
   nwNutrient: {
     fontSize: 16,
@@ -3190,8 +3186,9 @@ const styles = StyleSheet.create({
   },
   nwRowRight: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: Spacing.xs,
+    alignItems: 'baseline',
+    gap: Spacing.s,
+    flexShrink: 0,
   },
   nwValue: {
     fontSize: 16,
@@ -3435,9 +3432,11 @@ const styles = StyleSheet.create({
   fullListHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'baseline',
+    alignItems: 'flex-start',
+    gap: Spacing.s,
   } as const,
   fullListParentName: {
+    flex: 1,
     fontSize: 18,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
