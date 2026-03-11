@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   TextInput,
   Alert,
+  Animated,
 } from 'react-native';
 import { useFocusEffect, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,6 +20,7 @@ import { useAuth } from '@/lib/auth';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { useUpsellSheet } from '@/lib/upsellSheetContext';
 import { Colors } from '@/constants/theme';
+import { usePageTransition } from '@/lib/usePageTransition';
 import { ScreenLayout } from '@/components/ScreenLayout';
 import { ActionSearchIcon, ActionPenIcon } from '@/components/MenuIcons';
 import { CachedAvatar } from '@/components/CachedAvatar';
@@ -110,6 +112,9 @@ export default function FamilyMembersScreen() {
   const { session } = useAuth();
   const { isPlus } = useSubscription();
   const { showUpsell } = useUpsellSheet();
+
+  // Page-level entrance/exit animation
+  const { opacity: pageOpacity, translateX: pageTranslateX } = usePageTransition();
 
   const [profiles, setProfiles] = useState<FamilyProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -327,7 +332,7 @@ export default function FamilyMembersScreen() {
 
   // ── Render ─────────────────────────────────────────────────────────────────────
   return (
-    <>
+    <Animated.View style={{ flex: 1, opacity: pageOpacity, transform: [{ translateX: pageTranslateX }] }}>
       <ScreenLayout title="My Family" headerExtension={headerExtension}>
         {loading ? (
           <View style={styles.center}>
@@ -436,7 +441,7 @@ export default function FamilyMembersScreen() {
           </View>
         )}
       </ScreenLayout>
-    </>
+    </Animated.View>
   );
 }
 

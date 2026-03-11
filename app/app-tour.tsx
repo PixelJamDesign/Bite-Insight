@@ -15,6 +15,7 @@ import LottieView from 'lottie-react-native';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/auth';
 import { useJourney } from '@/lib/journeyContext';
+import { safeBack } from '@/lib/safeBack';
 import { Colors, Shadows } from '@/constants/theme';
 
 // ── Step data (extensible — add more steps here) ────────────────────────────
@@ -48,14 +49,21 @@ export default function AppTourScreen() {
   const { t: tc } = useTranslation('common');
   const { t } = useTranslation('tour');
   const { session } = useAuth();
-  const { advanceTo } = useJourney();
+  const { onboardingStep, advanceTo } = useJourney();
+
+  // When re-visiting from the menu, the journey is already complete
+  const isRevisit = onboardingStep === 'complete';
 
   // -2 = welcome (word-by-word), -1 = intro, 0+ = step index
-  const [currentIndex, setCurrentIndex] = useState(-2);
+  // On revisit, skip the greeting and jump straight to the first tour step
+  const [currentIndex, setCurrentIndex] = useState(isRevisit ? 0 : -2);
   // Prevent the Lottie key from changing on re-renders
   const lottieKey = useRef(0);
-  // Screen-level fade for transitions
+  // Screen-level slide + fade for transitions
   const screenOpacity = useRef(new Animated.Value(1)).current;
+  const screenTranslateX = useRef(new Animated.Value(0)).current;
+  // Greeting fades out when transitioning to step view (hidden on revisit)
+  const greetingOpacity = useRef(new Animated.Value(isRevisit ? 0 : 1)).current;
 
   const fullName = session?.user?.user_metadata?.full_name as string | undefined;
   const firstName = fullName?.split(' ')[0] ?? '';
@@ -145,27 +153,93 @@ export default function AppTourScreen() {
     ]).start();
   }, [currentIndex]);
 
-  // ── Fade transition helper ──────────────────────────────────────────────────
+  // ── Step entrance animations ─────────────────────────────────────────────
+  const stepSectionOpacity = useRef(new Animated.Value(0)).current;
+  const stepSectionTranslateY = useRef(new Animated.Value(14)).current;
+  const stepDotsOpacity = useRef(new Animated.Value(0)).current;
+  const stepDotsTranslateY = useRef(new Animated.Value(14)).current;
+  const stepTextOpacity = useRef(new Animated.Value(0)).current;
+  const stepTextTranslateY = useRef(new Animated.Value(14)).current;
+  const stepLottieOpacity = useRef(new Animated.Value(0)).current;
+  const stepLottieTranslateY = useRef(new Animated.Value(20)).current;
+  const stepFooterOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (currentIndex < 0) return;
+    // Reset step anims for fresh entrance
+    stepSectionOpacity.setValue(0);
+    stepSectionTranslateY.setValue(14);
+    stepDotsOpacity.setValue(0);
+    stepDotsTranslateY.setValue(14);
+    stepTextOpacity.setValue(0);
+    stepTextTranslateY.setValue(14);
+    stepLottieOpacity.setValue(0);
+    stepLottieTranslateY.setValue(20);
+    stepFooterOpacity.setValue(0);
+
+    const makeEntrance = (opacity: Animated.Value, translateY: Animated.Value, delay: number, duration = 400) =>
+      Animated.parallel([
+        Animated.timing(opacity, { toValue: 1, duration, delay, useNativeDriver: true }),
+        Animated.timing(translateY, { toValue: 0, duration, delay, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      ]);
+
+    Animated.parallel([
+      makeEntrance(stepSectionOpacity, stepSectionTranslateY, 250),
+      makeEntrance(stepDotsOpacity, stepDotsTranslateY, 380),
+      makeEntrance(stepTextOpacity, stepTextTranslateY, 500),
+      makeEntrance(stepLottieOpacity, stepLottieTranslateY, 620, 500),
+      Animated.timing(stepFooterOpacity, { toValue: 1, duration: 400, delay: 700, useNativeDriver: true }),
+    ]).start();
+  }, [currentIndex]);
+
+  // ── Slide + fade transition helper ────────────────────────────────────────
+  const isTransitioning = useRef(false);
+
   const fadeToIndex = (nextIndex: number) => {
-    Animated.timing(screenOpacity, {
-      toValue: 0,
-      duration: 300,
-      easing: Easing.in(Easing.quad),
-      useNativeDriver: true,
-    }).start(() => {
+    if (isTransitioning.current) return;
+    isTransitioning.current = true;
+
+    const exitAnims = [
+      Animated.timing(screenOpacity, {
+        toValue: 0, duration: 800, easing: Easing.in(Easing.cubic), useNativeDriver: true,
+      }),
+      Animated.timing(screenTranslateX, {
+        toValue: -40, duration: 800, easing: Easing.in(Easing.cubic), useNativeDriver: true,
+      }),
+    ];
+    // Fade greeting out when leaving intro for the step view
+    if (nextIndex >= 0) {
+      exitAnims.push(
+        Animated.timing(greetingOpacity, {
+          toValue: 0, duration: 800, easing: Easing.in(Easing.cubic), useNativeDriver: true,
+        }),
+      );
+    }
+    Animated.parallel(exitAnims).start(() => {
       if (nextIndex >= 0) lottieKey.current += 1;
       setCurrentIndex(nextIndex);
-      Animated.timing(screenOpacity, {
-        toValue: 1,
-        duration: 400,
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: true,
-      }).start();
+      // Reset for entrance: slide in from right
+      screenTranslateX.setValue(40);
+      Animated.parallel([
+        Animated.timing(screenOpacity, {
+          toValue: 1, duration: 800, easing: Easing.out(Easing.cubic), useNativeDriver: true,
+        }),
+        Animated.timing(screenTranslateX, {
+          toValue: 0, duration: 800, easing: Easing.out(Easing.cubic), useNativeDriver: true,
+        }),
+      ]).start(() => {
+        isTransitioning.current = false;
+      });
     });
   };
 
   // ── Completion ──────────────────────────────────────────────────────────────
   const completeTour = async () => {
+    if (isRevisit) {
+      // Re-visiting from menu — just navigate back
+      safeBack();
+      return;
+    }
     try {
       await advanceTo('complete');
     } catch {
@@ -175,6 +249,11 @@ export default function AppTourScreen() {
 
   // ── Skip confirmation ───────────────────────────────────────────────────────
   const handleSkip = () => {
+    if (isRevisit) {
+      // Re-visiting from menu — no confirmation needed, just go back
+      safeBack();
+      return;
+    }
     Alert.alert(
       t('skip.title'),
       t('skip.message'),
@@ -207,123 +286,107 @@ export default function AppTourScreen() {
   const step = currentIndex >= 0 ? TOUR_STEPS[currentIndex] : null;
 
   // ══════════════════════════════════════════════════════════════════════════════
-  // WELCOME VIEW — word-by-word fade
+  // WELCOME (-2) & INTRO (-1) — shared layout with persistent greeting
   // ══════════════════════════════════════════════════════════════════════════════
-  if (currentIndex === -2) {
+  if (currentIndex <= -1) {
     let wordIdx = 0;
+    const isWelcome = currentIndex === -2;
+
     return (
-      <View style={[styles.container, styles.welcomeContainer]}>
-        <Animated.View style={[styles.fadeContent, { opacity: screenOpacity }]}>
-          {/* Greeting */}
-          <View style={styles.introGreeting}>
-            <View style={styles.greetingWrap}>
-              <Text style={styles.greetingLabel}>{greeting}</Text>
-              <Text style={styles.greetingName}>{firstName || ''}</Text>
-            </View>
-          </View>
-
-          {/* Word-by-word text */}
-          <View style={styles.welcomeTextWrap}>
-            <View style={styles.welcomeWordRow}>
-              {welcomeLine1.split(' ').map((word, i) => {
-                const idx = wordIdx++;
-                return (
-                  <Animated.Text key={`l1-${i}`} style={[styles.welcomeLine1, { opacity: wordAnims[idx] }]}>
-                    {word}{' '}
-                  </Animated.Text>
-                );
-              })}
-            </View>
-            {/* Skip the '\n' separator */}
-            {(() => { wordIdx++; return null; })()}
-            <View style={styles.welcomeWordRow}>
-              {welcomeLine2.split(' ').map((word, i) => {
-                const idx = wordIdx++;
-                return (
-                  <Animated.Text key={`l2-${i}`} style={[styles.welcomeLine2, { opacity: wordAnims[idx] }]}>
-                    {word}{' '}
-                  </Animated.Text>
-                );
-              })}
-            </View>
+      <View style={[styles.container, isWelcome ? styles.welcomeContainer : styles.introContainer]}>
+        {/* Greeting — stays on screen across welcome ↔ intro, fades out before steps */}
+        <Animated.View style={[styles.introGreeting, { opacity: greetingOpacity }]}>
+          <View style={styles.greetingWrap}>
+            <Text style={styles.greetingLabel}>{greeting}</Text>
+            <Text style={styles.greetingName}>{firstName || ''}</Text>
           </View>
         </Animated.View>
 
-        {/* Footer buttons — fade in after words finish, always on top of bg */}
-        <Animated.View style={[styles.welcomeFooter, { opacity: welcomeFooterOpacity }]}>
-          <View style={styles.footerRow}>
-            <TouchableOpacity style={styles.skipBtn} onPress={handleSkip} activeOpacity={0.85}>
-              <Text style={styles.skipBtnText}>{t('buttons.skip')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.nextBtn} onPress={handleWelcomeNext} activeOpacity={0.85}>
-              <Text style={styles.nextBtnText}>{t('buttons.next')}</Text>
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
-      </View>
-    );
-  }
-
-  // ══════════════════════════════════════════════════════════════════════════════
-  // INTRO VIEW
-  // ══════════════════════════════════════════════════════════════════════════════
-  if (currentIndex === -1) {
-    return (
-      <View style={[styles.container, styles.introContainer]}>
-        <Animated.View style={[styles.fadeContent, { opacity: screenOpacity }]}>
-          {/* Greeting */}
-          <View style={styles.introGreeting}>
-            <View style={styles.greetingWrap}>
-              <Text style={styles.greetingLabel}>
-                {greeting}
-              </Text>
-              <Text style={styles.greetingName}>
-                {firstName || ''}
-              </Text>
+        {/* Content — only this part fades between welcome and intro */}
+        <Animated.View style={[styles.fadeContent, { opacity: screenOpacity, transform: [{ translateX: screenTranslateX }] }]}>
+          {isWelcome ? (
+            /* ── Welcome: word-by-word text ── */
+            <View style={styles.welcomeTextWrap}>
+              <View style={styles.welcomeWordRow}>
+                {welcomeLine1.split(' ').map((word, i) => {
+                  const idx = wordIdx++;
+                  return (
+                    <Animated.Text key={`l1-${i}`} style={[styles.welcomeLine1, { opacity: wordAnims[idx] }]}>
+                      {word}{' '}
+                    </Animated.Text>
+                  );
+                })}
+              </View>
+              {/* Skip the '\n' separator */}
+              {(() => { wordIdx++; return null; })()}
+              <View style={styles.welcomeWordRow}>
+                {welcomeLine2.split(' ').map((word, i) => {
+                  const idx = wordIdx++;
+                  return (
+                    <Animated.Text key={`l2-${i}`} style={[styles.welcomeLine2, { opacity: wordAnims[idx] }]}>
+                      {word}{' '}
+                    </Animated.Text>
+                  );
+                })}
+              </View>
             </View>
-          </View>
+          ) : (
+            /* ── Intro: card + hero image ── */
+            <>
+              <Animated.View
+                style={[
+                  styles.introCard,
+                  { opacity: cardOpacity, transform: [{ translateY: cardTranslateY }] },
+                ]}
+              >
+                <Text style={styles.introCardTitle}>{t('intro.cardTitle')}</Text>
+                <Text style={styles.introCardBody}>{t('intro.cardBody')}</Text>
+              </Animated.View>
 
-          {/* Card — fades in first */}
-          <Animated.View
-            style={[
-              styles.introCard,
-              { opacity: cardOpacity, transform: [{ translateY: cardTranslateY }] },
-            ]}
-          >
-            <Text style={styles.introCardTitle}>{t('intro.cardTitle')}</Text>
-            <Text style={styles.introCardBody}>{t('intro.cardBody')}</Text>
+              <Animated.View
+                style={[
+                  styles.heroWrap,
+                  { opacity: heroOpacity, transform: [{ translateY: heroTranslateY }] },
+                ]}
+              >
+                <Image
+                  source={require('@/assets/images/hands.webp')}
+                  style={styles.heroImage}
+                  resizeMode="contain"
+                />
+              </Animated.View>
+            </>
+          )}
+        </Animated.View>
+
+        {/* Footer — welcome fades in after words; intro uses gradient */}
+        {isWelcome ? (
+          <Animated.View style={[styles.welcomeFooter, { opacity: welcomeFooterOpacity }]}>
+            <View style={styles.footerRow}>
+              <TouchableOpacity style={styles.skipBtn} onPress={handleSkip} activeOpacity={0.85}>
+                <Text style={styles.skipBtnText}>{t('buttons.skip')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.nextBtn} onPress={handleWelcomeNext} activeOpacity={0.85}>
+                <Text style={styles.nextBtnText}>{t('buttons.next')}</Text>
+              </TouchableOpacity>
+            </View>
           </Animated.View>
-
-          {/* Hero image — slides up after card */}
-          <Animated.View
-            style={[
-              styles.heroWrap,
-              { opacity: heroOpacity, transform: [{ translateY: heroTranslateY }] },
-            ]}
+        ) : (
+          <LinearGradient
+            colors={['rgba(226,241,238,0)', '#e2f1ee']}
+            locations={[0, 0.45]}
+            style={styles.introFooterGradient}
           >
-            <Image
-              source={require('@/assets/images/hands.webp')}
-              style={styles.heroImage}
-              resizeMode="contain"
-            />
-          </Animated.View>
-        </Animated.View>
-
-        {/* Footer buttons — always visible */}
-        <LinearGradient
-          colors={['rgba(226,241,238,0)', '#e2f1ee']}
-          locations={[0, 0.45]}
-          style={styles.introFooterGradient}
-        >
-          <View style={styles.footerRow}>
-            <TouchableOpacity style={styles.skipBtn} onPress={handleSkip} activeOpacity={0.85}>
-              <Text style={styles.skipBtnText}>{t('buttons.skip')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.nextBtn} onPress={handleBegin} activeOpacity={0.85}>
-              <Text style={styles.nextBtnText}>{t('buttons.next')}</Text>
-            </TouchableOpacity>
-          </View>
-        </LinearGradient>
+            <View style={styles.footerRow}>
+              <TouchableOpacity style={styles.skipBtn} onPress={handleSkip} activeOpacity={0.85}>
+                <Text style={styles.skipBtnText}>{t('buttons.skip')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.nextBtn} onPress={handleBegin} activeOpacity={0.85}>
+                <Text style={styles.nextBtnText}>{t('buttons.next')}</Text>
+              </TouchableOpacity>
+            </View>
+          </LinearGradient>
+        )}
       </View>
     );
   }
@@ -333,16 +396,16 @@ export default function AppTourScreen() {
   // ══════════════════════════════════════════════════════════════════════════════
   return (
     <View style={[styles.container, { paddingTop: 120 }]}>
-      <Animated.View style={[styles.fadeContent, { opacity: screenOpacity }]}>
+      <Animated.View style={[styles.fadeContent, { opacity: screenOpacity, transform: [{ translateX: screenTranslateX }] }]}>
         {/* Section title */}
-        <View style={styles.stepHeader}>
+        <Animated.View style={[styles.stepHeader, { opacity: stepSectionOpacity, transform: [{ translateY: stepSectionTranslateY }] }]}>
           <Text style={styles.sectionTitle}>
             {t(`steps.${step!.key}.section`)}
           </Text>
-        </View>
+        </Animated.View>
 
         {/* Progress dots + next label */}
-        <View style={styles.progressRow}>
+        <Animated.View style={[styles.progressRow, { opacity: stepDotsOpacity, transform: [{ translateY: stepDotsTranslateY }] }]}>
           <View style={styles.progressInner}>
             <View style={styles.dotsRow}>
               {Array.from({ length: TOTAL_DOTS }).map((_, i) => (
@@ -361,20 +424,20 @@ export default function AppTourScreen() {
               {t('progress.next', { stepName: step.nextStepName })}
             </Text>
           )}
-        </View>
+        </Animated.View>
 
         {/* Step content */}
-        <View style={styles.stepContent}>
+        <Animated.View style={[styles.stepContent, { opacity: stepTextOpacity, transform: [{ translateY: stepTextTranslateY }] }]}>
           <Text style={styles.stepTitle}>
             {t(`steps.${step!.key}.title`)}
           </Text>
           <Text style={styles.stepSubtitle}>
             {t(`steps.${step!.key}.subtitle`)}
           </Text>
-        </View>
+        </Animated.View>
 
         {/* Lottie animation */}
-        <View style={styles.lottieContainer}>
+        <Animated.View style={[styles.lottieContainer, { opacity: stepLottieOpacity, transform: [{ translateY: stepLottieTranslateY }] }]}>
           <LottieView
             key={lottieKey.current}
             source={step!.lottieSource}
@@ -383,26 +446,28 @@ export default function AppTourScreen() {
             resizeMode="contain"
             style={styles.lottie}
           />
-        </View>
+        </Animated.View>
       </Animated.View>
 
-      {/* Footer buttons — always visible */}
-      <LinearGradient
-        colors={['rgba(226,241,238,0)', '#e2f1ee']}
-        locations={[0, 0.45]}
-        style={styles.stepFooterGradient}
-      >
-        <View style={styles.footerRow}>
-          <TouchableOpacity style={styles.skipBtn} onPress={handleSkip} activeOpacity={0.85}>
-            <Text style={styles.skipBtnText}>{t('buttons.skip')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.nextBtn} onPress={handleNext} activeOpacity={0.85}>
-            <Text style={styles.nextBtnText}>
-              {isLastStep ? t('buttons.finish') : t('buttons.next')}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </LinearGradient>
+      {/* Footer buttons — fade in last */}
+      <Animated.View style={{ opacity: stepFooterOpacity }}>
+        <LinearGradient
+          colors={['rgba(226,241,238,0)', '#e2f1ee']}
+          locations={[0, 0.45]}
+          style={styles.stepFooterGradient}
+        >
+          <View style={styles.footerRow}>
+            <TouchableOpacity style={styles.skipBtn} onPress={handleSkip} activeOpacity={0.85}>
+              <Text style={styles.skipBtnText}>{t('buttons.skip')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.nextBtn} onPress={handleNext} activeOpacity={0.85}>
+              <Text style={styles.nextBtnText}>
+                {isLastStep ? t('buttons.finish') : t('buttons.next')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </LinearGradient>
+      </Animated.View>
     </View>
   );
 }

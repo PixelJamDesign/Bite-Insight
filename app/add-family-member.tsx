@@ -12,6 +12,7 @@ import {
   StyleSheet,
   Image,
   Animated,
+  Easing,
   Modal,
   Pressable,
 } from 'react-native';
@@ -279,6 +280,54 @@ export default function AddFamilyMemberScreen() {
     });
   }, [uniqueNutrients]);
 
+  // ── Content slide transition (same pattern as onboarding/edit-profile) ──
+  const scrollRef = useRef<ScrollView>(null);
+  const contentOpacity = useRef(new Animated.Value(0)).current;
+  const contentTranslateX = useRef(new Animated.Value(40)).current;
+  const slideDirectionRef = useRef<'forward' | 'backward'>('forward');
+  const isTransitioning = useRef(false);
+
+  // Enter animation — fires on mount and on step change
+  useEffect(() => {
+    setChipSearch('');
+    setChipSearchActive(false);
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+
+    const slideFrom = slideDirectionRef.current === 'forward' ? 40 : -40;
+    contentOpacity.setValue(0);
+    contentTranslateX.setValue(slideFrom);
+
+    Animated.parallel([
+      Animated.timing(contentOpacity, {
+        toValue: 1, duration: 800, easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(contentTranslateX, {
+        toValue: 0, duration: 800, easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start(() => { isTransitioning.current = false; });
+  }, [step]);
+
+  // Exit animation helper
+  function animateExit(direction: 'forward' | 'backward', onComplete: () => void) {
+    if (isTransitioning.current) return;
+    isTransitioning.current = true;
+    slideDirectionRef.current = direction;
+
+    const slideTo = direction === 'forward' ? -40 : 40;
+    Animated.parallel([
+      Animated.timing(contentOpacity, {
+        toValue: 0, duration: 800, easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(contentTranslateX, {
+        toValue: slideTo, duration: 800, easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start(() => onComplete());
+  }
+
   // Step progress animation (5 dots max to support optional nutrient step)
   const stepAnim    = useRef(new Animated.Value(1)).current;
   const dotPops     = useRef([0, 1, 2, 3, 4].map(() => new Animated.Value(1))).current;
@@ -315,11 +364,7 @@ export default function AddFamilyMemberScreen() {
     }
   }, [step]);
 
-  // Reset chip search on step change
-  useEffect(() => {
-    setChipSearch('');
-    setChipSearchActive(false);
-  }, [step]);
+  // (chip search reset is now handled in the content slide useEffect above)
 
   // ── Avatar picker ──────────────────────────────────────────────────────────
   function pickAvatar() {
@@ -362,12 +407,12 @@ export default function AddFamilyMemberScreen() {
       Alert.alert(tp('familyMember.alert.nameRequiredTitle'), tp('familyMember.alert.nameRequiredMessage'));
       return;
     }
-    setStep(s => Math.min(s + 1, totalSteps));
+    animateExit('forward', () => setStep(s => Math.min(s + 1, totalSteps)));
   }
 
   function handleBack() {
-    if (step === 1) safeBack();
-    else setStep(s => s - 1);
+    if (step === 1) animateExit('backward', () => safeBack());
+    else animateExit('backward', () => setStep(s => s - 1));
   }
 
   // ── Save / Finish ─────────────────────────────────────────────────────────
@@ -399,7 +444,7 @@ export default function AddFamilyMemberScreen() {
 
     setSaving(false);
     if (error) Alert.alert(tc('alert.saveFailedTitle'), error.message);
-    else safeBack();
+    else animateExit('forward', () => safeBack());
   }
 
   // ── Progress indicator ────────────────────────────────────────────────────
@@ -666,11 +711,13 @@ export default function AddFamilyMemberScreen() {
 
         {/* Scrollable content */}
         <ScrollView
+          ref={scrollRef}
           style={{ flex: 1 }}
           contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
+          <Animated.View style={{ opacity: contentOpacity, transform: [{ translateX: contentTranslateX }] }}>
           {/* ── Step: About them ── */}
           {currentStepKey === 'about' && (
             <>
@@ -794,6 +841,7 @@ export default function AddFamilyMemberScreen() {
           )}
 
           <View style={{ height: 120 }} />
+          </Animated.View>
         </ScrollView>
 
         {/* ── Footer ── */}

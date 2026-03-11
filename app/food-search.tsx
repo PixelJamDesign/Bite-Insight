@@ -11,6 +11,7 @@ import {
   Modal,
   Platform,
   Image as RNImage,
+  Animated,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { BlurView } from 'expo-blur';
@@ -22,6 +23,7 @@ import { ActionSearchIcon, ActionChevronDownIcon, ActionCheckIcon, MenuArrowLeft
 import { NoImagePlaceholder } from '@/components/NoImagePlaceholder';
 import { sentenceCase } from '@/lib/text';
 import { safeBack } from '@/lib/safeBack';
+import { usePageTransition } from '@/lib/usePageTransition';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { useUpsellSheet } from '@/lib/upsellSheetContext';
 import { useRegion, REGIONS, FLAG_IMAGES, PlusTag } from '@/lib/regionContext';
@@ -61,6 +63,9 @@ export default function FoodSearchScreen() {
   const { isPlus } = useSubscription();
   const { showUpsell } = useUpsellSheet();
   const { session } = useAuth();
+
+  // Page-level entrance/exit animation
+  const { opacity: pageOpacity, translateX: pageTranslateX, animateExit: pageExit } = usePageTransition();
 
   const { selectedRegion, setSelectedRegion } = useRegion();
   const [regionPickerVisible, setRegionPickerVisible] = useState(false);
@@ -208,16 +213,17 @@ export default function FoodSearchScreen() {
 
   /** Build the Search-A-Licious query URL */
   function buildSearchUrl(searchTerm: string, region: Region, page: number): string {
+    // Region filter via Lucene syntax — "world" (empty countryTag) means no filter
+    const q = region.countryTag
+      ? `${searchTerm} AND countries_tags:"${region.countryTag}"`
+      : searchTerm;
+
     const params = new URLSearchParams({
-      q: searchTerm,
+      q,
       page: String(page),
       page_size: String(PAGE_SIZE),
       fields: SEARCH_FIELDS,
     });
-    // Region filter — "world" means no filter
-    if (region.code !== 'world') {
-      params.set('countries_tags_en', region.label);
-    }
     return `${SEARCH_BASE}?${params.toString()}`;
   }
 
@@ -467,12 +473,17 @@ export default function FoodSearchScreen() {
     inputRef.current?.focus();
   }
 
+  function handleBack() {
+    pageExit(() => safeBack());
+  }
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <Animated.View style={{ flex: 1, opacity: pageOpacity, transform: [{ translateX: pageTranslateX }] }}>
       {/* Fixed header — stays outside FlatList so TextInput doesn't remount */}
       <View style={styles.headerContent}>
         {/* Back button */}
-        <TouchableOpacity style={styles.backRow} onPress={safeBack} activeOpacity={0.7}>
+        <TouchableOpacity style={styles.backRow} onPress={handleBack} activeOpacity={0.7}>
           <MenuArrowLeftIcon color={Colors.secondary} size={16} />
           <Text style={styles.backText}>{t('search.back')}</Text>
         </TouchableOpacity>
@@ -607,6 +618,7 @@ export default function FoodSearchScreen() {
           </View>
         </View>
       </Modal>
+      </Animated.View>
     </View>
   );
 }
@@ -680,7 +692,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
     letterSpacing: -0.32,
-    lineHeight: 24,
     padding: 0,
   },
   clearBtn: {

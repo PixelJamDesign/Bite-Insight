@@ -4,17 +4,13 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   View,
   Text,
-  TextInput,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
   Image,
   ActivityIndicator,
   Platform,
-  Modal,
   Animated,
-  Easing,
-  Dimensions,
   LayoutAnimation,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -28,7 +24,16 @@ import { useActiveFamily } from '@/lib/activeFamilyContext';
 import { FamilySwitcherSheet } from '@/components/FamilySwitcherSheet';
 import { TickIcon, MenuFlaggedIcon } from '@/components/MenuIcons';
 import { NoImagePlaceholder } from '@/components/NoImagePlaceholder';
+import {
+  FlaggedIngredientSheet,
+  IngredientInfoSheet,
+  InsightDetailSheet,
+  type OffIngredient,
+  type FlaggedIngredient,
+} from '@/components/ScanResultSheets';
+import { ServingToggle, WeightStepper, type ServingMode, type DriMode } from '@/components/NutritionControls';
 import { useFadeIn } from '@/lib/useFadeIn';
+import { usePageTransition } from '@/lib/usePageTransition';
 import {
   parseIngredientsText,
   parseIngredientsWithHierarchy,
@@ -42,6 +47,12 @@ import {
 } from '@/lib/ingredientsCleaner';
 import type { IngredientNode } from '@/lib/ingredientsCleaner';
 import { safeBack } from '@/lib/safeBack';
+import { ALLERGY_KEYWORDS, type AllergyEntry } from '@/lib/allergenKeywords';
+import { getSubstitutes, type FlagReason } from '@/lib/ingredientSubstitutes';
+import {
+  type NutrientKey, type Threshold, DRI, NUTRIENT_LABELS, NUTRIENT_UNITS,
+  DEFAULT_THRESHOLDS, CONDITION_OVERRIDES, buildThresholds, getRating, fmtVal, fmtDri,
+} from '@/lib/nutrientRatings';
 import SwitchIcon from '@/assets/icons/switch.svg';
 import InfoIcon from '@/assets/icons/info.svg';
 import BigBackIcon from '@/assets/icons/big_back.svg';
@@ -480,26 +491,51 @@ function getNutrientSeverityColor(
   value: number,
   direction: 'limit' | 'boost',
 ): string {
-  const t = MICRO_THRESHOLDS[offKey];
-  if (!t) {
-    return direction === 'limit' ? SEV_POOR : SEV_GOOD;
-  }
-  const [a, b, c, d] = t;
+  return getNutrientSeverity(offKey, value, direction).color;
+}
 
-  if (direction === 'limit') {
-    // Lower = better for user
-    if (value < a) return SEV_AMAZING;
-    if (value < b) return SEV_GOOD;
-    if (value < c) return SEV_OK;
-    if (value < d) return SEV_POOR;
-    return SEV_BAD;
+/** Amount-level rating keys (describes how much is in the product). */
+type AmountRating = 'low' | 'moderate' | 'high' | 'veryHigh';
+
+/** Return traffic-light colour AND an amount-level rating for a micronutrient. */
+function getNutrientSeverity(
+  offKey: string,
+  value: number,
+  direction: 'limit' | 'boost',
+): { color: string; rating: AmountRating } {
+  const th = MICRO_THRESHOLDS[offKey];
+  if (!th) {
+    // No thresholds → assume moderate
+    return {
+      color: direction === 'limit' ? SEV_POOR : SEV_GOOD,
+      rating: 'moderate',
+    };
   }
-  // boost: higher = better for user
-  if (value >= d) return SEV_AMAZING;
-  if (value >= c) return SEV_GOOD;
-  if (value >= b) return SEV_OK;
-  if (value >= a) return SEV_POOR;
-  return SEV_BAD;
+  const [a, b, c, d] = th;
+
+  // Determine the amount level (independent of direction)
+  let rating: AmountRating;
+  if (value < a)      rating = 'low';
+  else if (value < b) rating = 'low';
+  else if (value < c) rating = 'moderate';
+  else if (value < d) rating = 'high';
+  else                rating = 'veryHigh';
+
+  // Colour depends on direction: for "limit" low is good; for "boost" high is good
+  let color: string;
+  if (direction === 'limit') {
+    if (value < a)      color = SEV_AMAZING;
+    else if (value < b) color = SEV_GOOD;
+    else if (value < c) color = SEV_OK;
+    else                color = SEV_BAD;   // high / veryHigh → danger red
+  } else {
+    if (value >= d)      color = SEV_AMAZING;
+    else if (value >= c) color = SEV_GOOD;
+    else if (value >= b) color = SEV_OK;
+    else                 color = SEV_BAD;  // low → danger red (matches "High" for limit)
+  }
+
+  return { color, rating };
 }
 
 // ── Nutri-score helpers ───────────────────────────────────────────────────────
@@ -543,269 +579,6 @@ const DIETARY_LABELS: Record<DietaryTag, string> = {
 };
 
 
-// ── DRI reference values (EU / WHO adult) ─────────────────────────────────────
-const DRI: Record<string, number> = {
-  energyKcal: 2000,
-  fat: 70,
-  saturatedFat: 20,
-  carbs: 260,
-  sugars: 90,
-  fiber: 25,
-  proteins: 50,
-  salt: 6,
-};
-
-// ── Nutrient rows config ──────────────────────────────────────────────────────
-type NutrientKey =
-  | 'energyKcal'
-  | 'fat'
-  | 'saturatedFat'
-  | 'carbs'
-  | 'sugars'
-  | 'fiber'
-  | 'proteins'
-  | 'netCarbs'
-  | 'salt';
-
-const NUTRIENT_LABELS: Record<NutrientKey, string> = {
-  energyKcal: 'Calories',
-  fat: 'Fat',
-  saturatedFat: 'Saturated Fat',
-  carbs: 'Carbohydrates',
-  sugars: 'Sugars',
-  fiber: 'Fibre',
-  proteins: 'Protein',
-  netCarbs: 'Net Carbs',
-  salt: 'Salt',
-};
-
-
-const NUTRIENT_UNITS: Record<NutrientKey, string> = {
-  energyKcal: 'kcal',
-  fat: 'g',
-  saturatedFat: 'g',
-  carbs: 'g',
-  sugars: 'g',
-  fiber: 'g',
-  proteins: 'g',
-  netCarbs: 'g',
-  salt: 'g',
-};
-
-// Nutrient rating thresholds — { low, moderate }.
-// "inverted" nutrients (fiber, proteins) treat higher values as better.
-type Threshold = {
-  low: number;
-  moderate: number;
-  inverted?: boolean;
-  labels?: [string, string, string]; // [low, moderate, high] label overrides
-};
-
-const DEFAULT_THRESHOLDS: Record<NutrientKey, Threshold> = {
-  energyKcal:  { low: 100,  moderate: 300 },
-  fat:         { low: 3,    moderate: 17.5 },
-  saturatedFat:{ low: 3,    moderate: 17.5 },
-  carbs:       { low: 5,    moderate: 22.5 },
-  sugars:      { low: 5,    moderate: 22.5 },
-  netCarbs:    { low: 5,    moderate: 22.5 },
-  fiber:       { low: 3,    moderate: 6,   inverted: true },
-  proteins:    { low: 5,    moderate: 10,  inverted: true, labels: ['Low', 'Moderate', 'Good'] },
-  salt:        { low: 0.3,  moderate: 1.5 },
-};
-
-// Condition-specific threshold overrides.
-// Each entry provides partial overrides that are merged on top of defaults.
-// Keys must match the health_conditions / allergies / dietary_preferences strings stored in profiles.
-const CONDITION_OVERRIDES: Record<string, Partial<Record<NutrientKey, Partial<Threshold>>>> = {
-  // ── Health conditions ──
-  'Diabetes': {
-    sugars:    { low: 2,   moderate: 5 },
-    carbs:     { low: 3,   moderate: 15 },
-    netCarbs:  { low: 3,   moderate: 15 },
-    fiber:     { low: 5,   moderate: 10, inverted: true },
-  },
-  'Heart Disease': {
-    fat:         { low: 2,   moderate: 10 },
-    saturatedFat:{ low: 1.5, moderate: 5 },
-    salt:        { low: 0.2, moderate: 0.8 },
-    fiber:       { low: 5,   moderate: 10, inverted: true },
-  },
-  'High Cholesterol': {
-    fat:         { low: 2,   moderate: 10 },
-    saturatedFat:{ low: 1.5, moderate: 5 },
-    fiber:       { low: 5,   moderate: 10, inverted: true },
-  },
-  'Hypertension': {
-    salt: { low: 0.1, moderate: 0.6 },
-  },
-  'IBS': {
-    fiber: { low: 1.5, moderate: 3, inverted: true },
-  },
-  "Chron's Disease": {
-    fiber: { low: 1.5, moderate: 3, inverted: true },
-    fat:   { low: 2,   moderate: 10 },
-  },
-  'Ulcerative Colitis': {
-    fiber: { low: 1.5, moderate: 3, inverted: true },
-    fat:   { low: 2,   moderate: 10 },
-  },
-  'SIBO': {
-    fiber:  { low: 1.5, moderate: 3, inverted: true },
-    sugars: { low: 2,   moderate: 5 },
-  },
-  'Leaky Gut Syndrome': {
-    sugars: { low: 2,  moderate: 8 },
-    fiber:  { low: 2,  moderate: 5, inverted: true },
-  },
-  'GERD / Acid Reflux': {
-    fat:         { low: 2,   moderate: 10 },
-    saturatedFat:{ low: 1.5, moderate: 5 },
-  },
-  'Metabolic Syndrome': {
-    sugars:   { low: 2,   moderate: 5 },
-    carbs:    { low: 3,   moderate: 15 },
-    netCarbs: { low: 3,   moderate: 15 },
-    fat:      { low: 2,   moderate: 10 },
-    salt:     { low: 0.1, moderate: 0.6 },
-  },
-  'PCOS': {
-    sugars:   { low: 2,   moderate: 5 },
-    carbs:    { low: 3,   moderate: 15 },
-    netCarbs: { low: 3,   moderate: 15 },
-  },
-  'Eczema / Psoriasis': {
-    sugars: { low: 3, moderate: 10 },
-  },
-  'Migraine / Chronic Headaches': {
-    sugars: { low: 3, moderate: 10 },
-    salt:   { low: 0.2, moderate: 0.8 },
-  },
-  'Lupus': {
-    salt:        { low: 0.2, moderate: 0.8 },
-    saturatedFat:{ low: 1.5, moderate: 5 },
-  },
-  'Rheumatoid Arthritis': {
-    saturatedFat:{ low: 1.5, moderate: 5 },
-    sugars:      { low: 3,   moderate: 10 },
-  },
-  'Multiple Sclerosis': {
-    saturatedFat:{ low: 1.5, moderate: 5 },
-  },
-  'ME / Chronic Fatigue': {
-    sugars: { low: 3, moderate: 10 },
-  },
-  'ADHD': {
-    sugars: { low: 3, moderate: 10 },
-  },
-  'Autism': {
-    sugars: { low: 3, moderate: 10 },
-  },
-
-  // ── Allergies / intolerances ──
-  'Fructose Intolerance': {
-    sugars: { low: 1, moderate: 3 },
-  },
-
-  // ── Dietary preferences (keyed by DIETARY_LABELS display string) ──
-  'Diabetic': {
-    sugars:    { low: 2,   moderate: 5 },
-    carbs:     { low: 3,   moderate: 15 },
-    netCarbs:  { low: 3,   moderate: 15 },
-    fiber:     { low: 5,   moderate: 10, inverted: true },
-  },
-  'Keto': {
-    carbs:    { low: 2,  moderate: 8 },
-    netCarbs: { low: 2,  moderate: 8 },
-    sugars:   { low: 1,  moderate: 3 },
-    fat:      { low: 10, moderate: 25, inverted: true, labels: ['Low', 'Moderate', 'Good'] },
-  },
-  'High-Protein / Fitness': {
-    proteins: { low: 10, moderate: 20, inverted: true, labels: ['Low', 'Moderate', 'Good'] },
-  },
-  'Weight Loss': {
-    energyKcal:  { low: 80,  moderate: 200 },
-    sugars:      { low: 3,   moderate: 10 },
-    fat:         { low: 2,   moderate: 10 },
-    saturatedFat:{ low: 1.5, moderate: 5 },
-  },
-  'Post-Bariatric Surgery': {
-    energyKcal: { low: 60,  moderate: 150 },
-    sugars:     { low: 2,   moderate: 5 },
-    fat:        { low: 2,   moderate: 8 },
-    proteins:   { low: 10,  moderate: 20, inverted: true, labels: ['Low', 'Moderate', 'Good'] },
-  },
-  'FODMAP Diet': {
-    fiber:  { low: 1.5, moderate: 3, inverted: true },
-    sugars: { low: 1,   moderate: 3 },
-  },
-};
-
-// Merge defaults with the strictest (lowest) threshold from all active conditions.
-function buildThresholds(
-  conditions: string[],
-  allergies: string[],
-  preferences: string[],
-): Record<NutrientKey, Threshold> {
-  const all = [...conditions, ...allergies, ...preferences];
-  if (all.length === 0) return DEFAULT_THRESHOLDS;
-
-  const merged = { ...DEFAULT_THRESHOLDS };
-  for (const key of Object.keys(merged) as NutrientKey[]) {
-    merged[key] = { ...merged[key] };
-  }
-
-  for (const tag of all) {
-    const overrides = CONDITION_OVERRIDES[tag];
-    if (!overrides) continue;
-    for (const [nutrient, patch] of Object.entries(overrides) as [NutrientKey, Partial<Threshold>][]) {
-      const current = merged[nutrient];
-      // Use the strictest (lowest) threshold across all conditions
-      if (patch.low != null && patch.low < current.low) current.low = patch.low;
-      if (patch.moderate != null && patch.moderate < current.moderate) current.moderate = patch.moderate;
-      if (patch.inverted != null) current.inverted = patch.inverted;
-      if (patch.labels) current.labels = patch.labels;
-    }
-  }
-
-  return merged;
-}
-
-function getRating(
-  key: NutrientKey,
-  value: number,
-  thresholds: Record<NutrientKey, Threshold>,
-): { label: string; color: string } {
-  const t = thresholds[key];
-  const [lowLabel, modLabel, highLabel] = t.labels ?? ['Low', 'Moderate', 'High'];
-
-  if (t.inverted) {
-    if (value >= t.moderate) return { label: highLabel, color: Extra.positiveGreen };
-    if (value >= t.low)      return { label: modLabel,  color: Extra.poorOrange };
-    return { label: lowLabel, color: Colors.status.negative };
-  }
-
-  if (value <= t.low)      return { label: lowLabel,  color: Extra.positiveGreen };
-  if (value <= t.moderate)  return { label: modLabel,  color: Extra.poorOrange };
-  return { label: highLabel, color: Colors.status.negative };
-}
-
-function fmtVal(raw: string | undefined, unit: string): string {
-  if (!raw) return '-';
-  const num = parseFloat(raw);
-  if (isNaN(num)) return '-';
-  if (unit === 'kcal') return `${Math.round(num)}${unit}`;
-  if (num < 0.1) return `<0.1${unit}`;
-  if (num < 10) return `${num.toFixed(1)}${unit}`;
-  return `${Math.round(num)}${unit}`;
-}
-
-function fmtDri(rawStr: string | undefined, key: NutrientKey): string {
-  if (!rawStr || !(key in DRI)) return '-';
-  const val = parseFloat(rawStr);
-  if (isNaN(val)) return '-';
-  return `${Math.round((val / DRI[key]) * 100)}%`;
-}
-
 function getInitials(name: string | null, email: string): string {
   if (name && name.trim()) {
     const parts = name.trim().split(/\s+/);
@@ -820,25 +593,7 @@ function sentenceCase(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 }
 
-// ── OFF structured ingredient ─────────────────────────────────────────────────
-type OffIngredient = {
-  id?: string;
-  text: string;
-  vegan?: string;      // "yes" | "no" | "maybe"
-  vegetarian?: string; // "yes" | "no" | "maybe"
-  percent_estimate?: number;
-  percent?: number;
-  ingredients?: OffIngredient[];  // sub-ingredients from OFF JSON
-  depth?: number;                 // hierarchy depth (0 = top-level)
-};
-
-type FlagReason = 'vegan' | 'vegetarian' | 'user_flagged';
-type MatchSource = 'ingredient' | 'product-name' | 'category';
-type FlaggedIngredient = OffIngredient & {
-  flagReason: FlagReason;
-  personalReason?: { category: string; text: string };
-  matchSource?: MatchSource;
-};
+// OffIngredient, FlaggedIngredient imported from @/components/ScanResultSheets
 
 type IngredientCategory = {
   harmful: FlaggedIngredient[];
@@ -1006,1345 +761,8 @@ function categoriseIngredients(
   return { harmful, userFlagged, ok, safe };
 }
 
-// ── Allergen keyword mapping ─────────────────────────────────────────────────
-// Maps each profile allergy label → the data needed to detect it in OFF data.
-//   tags:           OFF allergens_tags values (after stripping "en:" and replacing "-" with " ")
-//   keywords:       derivative ingredient names to match in raw ingredients text
-//   ingredientIds:  OFF structured ingredient IDs (lowercase, with "en:" prefix)
-type AllergyEntry = {
-  tags: string[];
-  keywords: string[];
-  ingredientIds: string[];
-};
-
-const ALLERGY_KEYWORDS: Record<string, AllergyEntry> = {
-  'Egg Allergy': {
-    tags: ['eggs', 'egg'],
-    keywords: [
-      'egg white', 'egg yolk', 'egg powder', 'dried egg', 'whole egg',
-      'pasteurised egg', 'pasteurized egg', 'free range egg',
-      'albumin', 'albumen', 'globulin', 'lysozyme', 'ovomucin',
-      'ovomucoid', 'ovovitellin', 'ovalbumin', 'livetin',
-      'meringue', 'mayonnaise', 'aioli', 'eggnog',
-      'lecithin', 'emulsifier e322',
-    ],
-    ingredientIds: [
-      'en:egg', 'en:eggs', 'en:egg-white', 'en:egg-yolk', 'en:egg-powder',
-      'en:whole-egg', 'en:dried-egg', 'en:pasteurised-egg', 'en:pasteurized-egg',
-      'en:free-range-egg', 'en:free-range-eggs', 'en:liquid-egg',
-      'en:egg-white-powder', 'en:egg-yolk-powder',
-    ],
-  },
-  'Fructose Intolerance': {
-    tags: ['fructose'],
-    keywords: [
-      'fructose', 'high fructose corn syrup', 'hfcs', 'fructose syrup',
-      'fructose glucose syrup', 'glucose fructose syrup',
-      'agave', 'agave syrup', 'agave nectar',
-      'honey', 'apple juice concentrate', 'pear juice concentrate',
-      'fruit juice concentrate', 'invert sugar', 'sorbitol',
-    ],
-    ingredientIds: [
-      'en:fructose', 'en:high-fructose-corn-syrup', 'en:fructose-syrup',
-      'en:fructose-glucose-syrup', 'en:glucose-fructose-syrup',
-      'en:agave-syrup', 'en:honey', 'en:invert-sugar', 'en:sorbitol',
-    ],
-  },
-  'Gluten Intolerance': {
-    tags: ['gluten', 'wheat', 'barley', 'rye', 'oats', 'cereals containing gluten', 'cereals'],
-    keywords: [
-      'gluten', 'wheat', 'wheat flour', 'wheat starch', 'wheat protein',
-      'wheat germ', 'wheat bran', 'durum wheat', 'semolina',
-      'barley', 'barley malt', 'malt extract', 'malt vinegar', 'malt flavouring',
-      'rye', 'rye flour',
-      'oats', 'oat flour', 'oat fibre', 'oat fiber',
-      'spelt', 'spelt flour', 'kamut', 'triticale', 'einkorn', 'emmer',
-      'couscous', 'bulgur', 'seitan',
-      'modified starch', 'hydrolysed wheat protein', 'hydrolyzed wheat protein',
-    ],
-    ingredientIds: [
-      'en:gluten', 'en:wheat', 'en:wheat-flour', 'en:wheat-starch',
-      'en:durum-wheat', 'en:durum-wheat-semolina', 'en:semolina',
-      'en:barley', 'en:barley-malt', 'en:barley-malt-extract',
-      'en:malt-extract', 'en:malt-vinegar',
-      'en:rye', 'en:rye-flour', 'en:oats', 'en:oat-flour', 'en:oat-fibre',
-      'en:spelt', 'en:spelt-flour', 'en:kamut', 'en:triticale',
-      'en:bulgur', 'en:couscous', 'en:seitan',
-    ],
-  },
-  'Histamine Intolerance': {
-    tags: ['histamine'],
-    keywords: [
-      'histamine', 'fermented', 'aged cheese', 'parmesan',
-      'sauerkraut', 'kimchi', 'vinegar', 'wine vinegar', 'balsamic vinegar',
-      'soy sauce', 'fish sauce', 'anchovy', 'anchovies',
-      'tomato paste', 'tomato puree', 'yeast extract', 'autolyzed yeast',
-    ],
-    ingredientIds: [
-      'en:vinegar', 'en:wine-vinegar', 'en:balsamic-vinegar',
-      'en:soy-sauce', 'en:fish-sauce', 'en:anchovy', 'en:anchovies',
-      'en:yeast-extract', 'en:tomato-paste', 'en:tomato-puree',
-      'en:sauerkraut', 'en:parmesan',
-    ],
-  },
-  'Lactose Intolerance': {
-    tags: ['milk', 'dairy', 'lactose'],
-    keywords: [
-      'milk', 'lactose', 'whole milk', 'skimmed milk', 'skim milk',
-      'semi skimmed milk', 'milk powder', 'dried milk', 'milk solids',
-      'milk protein', 'milk fat', 'condensed milk', 'evaporated milk',
-      'buttermilk', 'cream', 'sour cream', 'double cream', 'single cream',
-      'whipping cream', 'clotted cream',
-      'butter', 'butter oil', 'butterfat', 'ghee',
-      'cheese', 'cheddar', 'mozzarella', 'parmesan', 'gouda', 'brie',
-      'camembert', 'feta', 'ricotta', 'mascarpone', 'cream cheese',
-      'whey', 'whey powder', 'whey protein', 'whey permeate',
-      'casein', 'caseinate', 'sodium caseinate', 'calcium caseinate',
-      'lactalbumin', 'lactoglobulin', 'lactoferrin',
-      'yoghurt', 'yogurt', 'kefir', 'quark', 'fromage frais',
-      'ice cream', 'custard',
-      'curds',
-    ],
-    ingredientIds: [
-      'en:milk', 'en:whole-milk', 'en:skimmed-milk', 'en:semi-skimmed-milk',
-      'en:milk-powder', 'en:skimmed-milk-powder', 'en:whole-milk-powder',
-      'en:dried-milk', 'en:milk-solids', 'en:milk-protein', 'en:milk-fat',
-      'en:condensed-milk', 'en:sweetened-condensed-milk', 'en:evaporated-milk',
-      'en:buttermilk', 'en:cream', 'en:sour-cream', 'en:whipping-cream',
-      'en:butter', 'en:butter-oil', 'en:butterfat', 'en:ghee',
-      'en:cheese', 'en:cheddar', 'en:mozzarella', 'en:parmesan',
-      'en:whey', 'en:whey-powder', 'en:whey-protein',
-      'en:casein', 'en:caseinate', 'en:sodium-caseinate',
-      'en:yogurt', 'en:yoghurt', 'en:kefir',
-      'en:lactose', 'en:cream-cheese', 'en:mascarpone', 'en:ricotta',
-    ],
-  },
-  'MSG Sensitivity': {
-    tags: ['msg', 'monosodium glutamate'],
-    keywords: [
-      'monosodium glutamate', 'msg', 'glutamate', 'glutamic acid',
-      'sodium glutamate', 'e621',
-      'hydrolysed vegetable protein', 'hydrolyzed vegetable protein',
-      'hydrolysed protein', 'hydrolyzed protein',
-      'autolyzed yeast', 'autolysed yeast', 'yeast extract',
-      'calcium glutamate', 'e623', 'monopotassium glutamate', 'e622',
-    ],
-    ingredientIds: [
-      'en:monosodium-glutamate', 'en:e621', 'en:glutamic-acid',
-      'en:yeast-extract', 'en:hydrolysed-vegetable-protein',
-      'en:hydrolyzed-vegetable-protein',
-    ],
-  },
-  'Peanut Allergy': {
-    tags: ['peanuts', 'peanut'],
-    keywords: [
-      'peanut', 'peanuts', 'peanut oil', 'peanut butter', 'peanut flour',
-      'peanut paste', 'groundnut', 'groundnuts', 'groundnut oil',
-      'arachis oil', 'arachis hypogaea', 'monkey nuts',
-      'beer nuts', 'earth nuts',
-    ],
-    ingredientIds: [
-      'en:peanut', 'en:peanuts', 'en:peanut-oil', 'en:peanut-butter',
-      'en:peanut-flour', 'en:peanut-paste', 'en:groundnut', 'en:groundnut-oil',
-      'en:roasted-peanuts',
-    ],
-  },
-  'Salicylate Sensitivity': {
-    tags: ['salicylate', 'salicylates'],
-    keywords: [
-      'salicylate', 'salicylates', 'salicylic acid',
-      'aspirin', 'acetylsalicylic acid',
-      'methyl salicylate', 'wintergreen',
-    ],
-    ingredientIds: [
-      'en:salicylic-acid',
-    ],
-  },
-  'Sesame Allergy': {
-    tags: ['sesame seeds', 'sesame'],
-    keywords: [
-      'sesame', 'sesame seeds', 'sesame oil', 'sesame paste', 'sesame flour',
-      'tahini', 'tahina', 'halvah', 'halva', 'hummus', 'houmous',
-      'gomashio', 'gomasio',
-      'sesame seed oil', 'toasted sesame',
-    ],
-    ingredientIds: [
-      'en:sesame', 'en:sesame-seeds', 'en:sesame-oil', 'en:sesame-paste',
-      'en:tahini', 'en:toasted-sesame-seeds', 'en:sesame-seed-oil',
-      'en:hulled-sesame-seeds',
-    ],
-  },
-  'Shellfish Allergy': {
-    tags: ['crustaceans', 'molluscs', 'shellfish'],
-    keywords: [
-      'shellfish', 'crustacean', 'crustaceans', 'mollusc', 'molluscs',
-      'mollusk', 'mollusks',
-      'shrimp', 'shrimps', 'prawn', 'prawns', 'crab', 'lobster',
-      'crayfish', 'crawfish', 'langoustine', 'scampi', 'krill',
-      'mussel', 'mussels', 'clam', 'clams', 'oyster', 'oysters',
-      'scallop', 'scallops', 'squid', 'calamari', 'octopus',
-      'snail', 'escargot', 'abalone', 'whelk', 'cockle', 'cockles',
-      'cuttlefish',
-      'chitin', 'chitosan', 'glucosamine',
-      'shrimp paste', 'fish sauce', 'oyster sauce',
-    ],
-    ingredientIds: [
-      'en:crustaceans', 'en:molluscs', 'en:shrimp', 'en:prawns', 'en:prawn',
-      'en:crab', 'en:lobster', 'en:crayfish', 'en:langoustine',
-      'en:mussel', 'en:mussels', 'en:clam', 'en:clams',
-      'en:oyster', 'en:oysters', 'en:scallop', 'en:scallops',
-      'en:squid', 'en:calamari', 'en:octopus', 'en:cuttlefish',
-      'en:oyster-sauce', 'en:fish-sauce', 'en:shrimp-paste',
-    ],
-  },
-  'Soy Allergy': {
-    tags: ['soybeans', 'soy', 'soya'],
-    keywords: [
-      'soy', 'soya', 'soybeans', 'soybean', 'soya bean', 'soya beans',
-      'soy sauce', 'soya sauce', 'shoyu', 'tamari',
-      'soy lecithin', 'soya lecithin', 'soy protein', 'soya protein',
-      'soy flour', 'soya flour', 'soy oil', 'soybean oil', 'soya oil',
-      'soy milk', 'soya milk',
-      'tofu', 'tempeh', 'miso', 'natto', 'edamame',
-      'textured vegetable protein', 'tvp',
-      'hydrolysed soy protein', 'hydrolyzed soy protein',
-      'soy concentrate', 'soy isolate', 'soy fibre', 'soy fiber',
-      'e322', 'e426',
-    ],
-    ingredientIds: [
-      'en:soy', 'en:soya', 'en:soybeans', 'en:soybean', 'en:soya-beans',
-      'en:soy-sauce', 'en:soya-sauce', 'en:tamari',
-      'en:soy-lecithin', 'en:soya-lecithin', 'en:e322',
-      'en:soy-protein', 'en:soya-protein', 'en:soy-flour', 'en:soya-flour',
-      'en:soybean-oil', 'en:soy-oil', 'en:soya-oil',
-      'en:tofu', 'en:tempeh', 'en:miso', 'en:edamame',
-    ],
-  },
-  'Sulphite Sensitivity': {
-    tags: [
-      'sulphur dioxide and sulphites', 'sulphur dioxide', 'sulphites',
-      'sulfur dioxide', 'sulfites',
-    ],
-    keywords: [
-      'sulphite', 'sulphites', 'sulfite', 'sulfites',
-      'sulphur dioxide', 'sulfur dioxide',
-      'sodium sulphite', 'sodium sulfite', 'sodium bisulphite', 'sodium bisulfite',
-      'sodium metabisulphite', 'sodium metabisulfite',
-      'potassium bisulphite', 'potassium bisulfite',
-      'potassium metabisulphite', 'potassium metabisulfite',
-      'calcium sulphite', 'calcium sulfite',
-      'e220', 'e221', 'e222', 'e223', 'e224', 'e225', 'e226', 'e227', 'e228',
-    ],
-    ingredientIds: [
-      'en:sulphur-dioxide', 'en:sulfur-dioxide', 'en:sulphites', 'en:sulfites',
-      'en:sodium-metabisulphite', 'en:sodium-metabisulfite',
-      'en:potassium-metabisulphite', 'en:potassium-metabisulfite',
-      'en:e220', 'en:e221', 'en:e222', 'en:e223', 'en:e224',
-      'en:e225', 'en:e226', 'en:e227', 'en:e228',
-    ],
-  },
-  'Tree Nut Allergy': {
-    tags: ['nuts', 'tree nuts'],
-    keywords: [
-      'tree nut', 'tree nuts',
-      'almond', 'almonds', 'almond oil', 'almond flour', 'almond milk',
-      'almond butter', 'almond paste', 'marzipan', 'frangipane',
-      'walnut', 'walnuts', 'walnut oil',
-      'cashew', 'cashews', 'cashew nut', 'cashew butter',
-      'pecan', 'pecans', 'pecan nut',
-      'pistachio', 'pistachios', 'pistachio nut',
-      'hazelnut', 'hazelnuts', 'hazel nut', 'filbert', 'filberts',
-      'hazelnut oil', 'hazelnut paste', 'praline', 'gianduja', 'nutella',
-      'macadamia', 'macadamia nut', 'macadamia nuts',
-      'brazil nut', 'brazil nuts',
-      'pine nut', 'pine nuts', 'pignoli', 'pinon',
-      'chestnut', 'chestnuts',
-      'coconut',
-      'mixed nuts', 'nut mix',
-    ],
-    ingredientIds: [
-      'en:nuts', 'en:tree-nuts',
-      'en:almond', 'en:almonds', 'en:almond-oil', 'en:almond-flour',
-      'en:almond-paste', 'en:almond-butter', 'en:marzipan',
-      'en:walnut', 'en:walnuts', 'en:walnut-oil',
-      'en:cashew', 'en:cashews', 'en:cashew-nut', 'en:cashew-nuts',
-      'en:pecan', 'en:pecans', 'en:pecan-nut',
-      'en:pistachio', 'en:pistachios', 'en:pistachio-nut',
-      'en:hazelnut', 'en:hazelnuts', 'en:hazelnut-oil', 'en:hazelnut-paste',
-      'en:macadamia', 'en:macadamia-nut', 'en:macadamia-nuts',
-      'en:brazil-nut', 'en:brazil-nuts',
-      'en:pine-nut', 'en:pine-nuts',
-      'en:chestnut', 'en:chestnuts', 'en:coconut',
-      'en:praline',
-    ],
-  },
-  // ── EU14 additions (not in original list) ──
-  'Fish Allergy': {
-    tags: ['fish'],
-    keywords: [
-      'fish', 'cod', 'salmon', 'tuna', 'trout', 'haddock', 'halibut',
-      'mackerel', 'sardine', 'sardines', 'anchovy', 'anchovies',
-      'herring', 'plaice', 'sole', 'bass', 'bream', 'pike', 'perch',
-      'swordfish', 'pollock', 'pollack', 'tilapia', 'catfish', 'snapper',
-      'fish oil', 'fish sauce', 'fish paste', 'fish stock', 'fish extract',
-      'fish gelatin', 'fish gelatine', 'isinglass',
-      'omega 3', 'omega-3',
-      'worcestershire sauce',
-      'surimi', 'fish finger', 'fish cake',
-    ],
-    ingredientIds: [
-      'en:fish', 'en:cod', 'en:salmon', 'en:tuna', 'en:trout',
-      'en:haddock', 'en:halibut', 'en:mackerel', 'en:sardine', 'en:sardines',
-      'en:anchovy', 'en:anchovies', 'en:herring', 'en:pollock',
-      'en:fish-oil', 'en:fish-sauce', 'en:fish-stock', 'en:fish-extract',
-      'en:fish-gelatin', 'en:fish-gelatine', 'en:isinglass',
-      'en:surimi', 'en:tilapia',
-    ],
-  },
-  'Celery Allergy': {
-    tags: ['celery'],
-    keywords: [
-      'celery', 'celeriac', 'celery seed', 'celery seeds', 'celery salt',
-      'celery powder', 'celery leaf', 'celery stalk', 'celery root',
-      'celery extract', 'celery juice',
-    ],
-    ingredientIds: [
-      'en:celery', 'en:celeriac', 'en:celery-seed', 'en:celery-seeds',
-      'en:celery-salt', 'en:celery-powder', 'en:celery-extract',
-    ],
-  },
-  'Mustard Allergy': {
-    tags: ['mustard'],
-    keywords: [
-      'mustard', 'mustard seed', 'mustard seeds', 'mustard powder',
-      'mustard flour', 'mustard oil', 'mustard paste',
-      'dijon mustard', 'english mustard', 'french mustard',
-      'wholegrain mustard', 'yellow mustard', 'brown mustard',
-    ],
-    ingredientIds: [
-      'en:mustard', 'en:mustard-seed', 'en:mustard-seeds',
-      'en:mustard-powder', 'en:mustard-flour', 'en:mustard-oil',
-      'en:dijon-mustard',
-    ],
-  },
-  'Lupin Allergy': {
-    tags: ['lupin', 'lupine'],
-    keywords: [
-      'lupin', 'lupine', 'lupin flour', 'lupin seed', 'lupin seeds',
-      'lupin protein', 'lupin fibre', 'lupin fiber',
-      'lupini beans', 'lupini',
-    ],
-    ingredientIds: [
-      'en:lupin', 'en:lupine', 'en:lupin-flour', 'en:lupin-seeds',
-      'en:lupin-protein', 'en:lupini-beans',
-    ],
-  },
-};
-
 type ImpactKey = 'low' | 'moderate' | 'high' | 'veryHigh';
 type ImpactResult = { label: string; color: string; iconKey: ImpactKey };
-
-// ── Reason messages for flagged ingredients ──────────────────────────────────
-const FLAG_REASON_TEXT: Record<FlagReason, { title: string; body: string }> = {
-  vegan: {
-    title: 'Not vegan',
-    body: 'This ingredient is not vegan, which conflicts with your dietary preferences.',
-  },
-  vegetarian: {
-    title: 'Not vegetarian',
-    body: 'This ingredient is not vegetarian, which conflicts with your dietary preferences.',
-  },
-  user_flagged: {
-    title: 'Personally flagged',
-    body: 'You\'ve flagged this ingredient. It will be highlighted whenever it appears in products you scan.',
-  },
-};
-
-const SCREEN_HEIGHT = Dimensions.get('window').height;
-
-// ── Substitute ingredient mapping ────────────────────────────────────────────
-// Covers dietary preferences, allergens, and health conditions.
-// getSubstitutes checks the ingredient against ALL maps relevant to the
-// active profile and returns the first match.
-
-const DIETARY_SUBSTITUTES: Record<string, Record<string, string[]>> = {
-  vegan: {
-    milk: ['Oat milk', 'Almond milk', 'Soy milk', 'Coconut milk'],
-    cream: ['Coconut cream', 'Cashew cream', 'Oat cream'],
-    butter: ['Vegan butter', 'Coconut oil', 'Olive oil'],
-    cheese: ['Nutritional yeast', 'Cashew cheese', 'Vegan cheese'],
-    egg: ['Flax egg', 'Chia egg', 'Aquafaba', 'Silken tofu'],
-    honey: ['Maple syrup', 'Agave nectar', 'Date syrup'],
-    gelatin: ['Agar-agar', 'Pectin', 'Carrageenan'],
-    gelatine: ['Agar-agar', 'Pectin', 'Carrageenan'],
-    whey: ['Pea protein', 'Soy protein', 'Rice protein'],
-    casein: ['Pea protein', 'Soy protein', 'Rice protein'],
-    lard: ['Coconut oil', 'Vegetable shortening', 'Olive oil'],
-    tallow: ['Coconut oil', 'Vegetable shortening'],
-    yoghurt: ['Coconut yoghurt', 'Soy yoghurt', 'Oat yoghurt'],
-    yogurt: ['Coconut yoghurt', 'Soy yoghurt', 'Oat yoghurt'],
-    lactose: ['Oat milk', 'Almond milk', 'Soy milk'],
-    shellac: ['Zein coating', 'Carnauba wax'],
-    beeswax: ['Candelilla wax', 'Carnauba wax'],
-    carmine: ['Beetroot powder', 'Paprika extract'],
-    cochineal: ['Beetroot powder', 'Paprika extract'],
-    'l-cysteine': ['Synthetic L-cysteine', 'Fermented L-cysteine'],
-    anchov: ['Capers', 'Seaweed flakes', 'Miso paste'],
-  },
-  vegetarian: {
-    gelatin: ['Agar-agar', 'Pectin', 'Carrageenan'],
-    gelatine: ['Agar-agar', 'Pectin', 'Carrageenan'],
-    lard: ['Butter', 'Coconut oil', 'Vegetable shortening'],
-    tallow: ['Butter', 'Coconut oil'],
-    anchov: ['Capers', 'Miso paste', 'Soy sauce'],
-    rennet: ['Vegetarian rennet', 'Microbial rennet'],
-    carmine: ['Beetroot powder', 'Paprika extract'],
-    cochineal: ['Beetroot powder', 'Paprika extract'],
-    shellac: ['Zein coating', 'Carnauba wax'],
-    'l-cysteine': ['Synthetic L-cysteine', 'Fermented L-cysteine'],
-    isinglass: ['Bentonite', 'Irish moss'],
-  },
-};
-
-const ALLERGEN_SUBSTITUTES: Record<string, Record<string, string[]>> = {
-  'Egg Allergy': {
-    egg: ['Flax egg', 'Chia egg', 'Aquafaba', 'Applesauce'],
-  },
-  'Lactose Intolerance': {
-    milk: ['Lactose-free milk', 'Oat milk', 'Almond milk'],
-    cream: ['Lactose-free cream', 'Coconut cream'],
-    cheese: ['Lactose-free cheese', 'Aged hard cheese'],
-    yoghurt: ['Lactose-free yoghurt', 'Coconut yoghurt'],
-    yogurt: ['Lactose-free yoghurt', 'Coconut yoghurt'],
-    butter: ['Ghee', 'Olive oil', 'Coconut oil'],
-    lactose: ['Lactose-free milk', 'Oat milk'],
-    whey: ['Pea protein', 'Rice protein'],
-  },
-  'Gluten Intolerance': {
-    wheat: ['Rice flour', 'Almond flour', 'Oat flour'],
-    flour: ['Rice flour', 'Almond flour', 'Coconut flour'],
-    barley: ['Quinoa', 'Buckwheat', 'Millet'],
-    rye: ['Buckwheat flour', 'Rice flour'],
-    semolina: ['Corn semolina', 'Rice flour'],
-    couscous: ['Quinoa', 'Cauliflower rice'],
-    breadcrumb: ['Gluten-free breadcrumbs', 'Ground almonds'],
-    pasta: ['Rice pasta', 'Lentil pasta', 'Buckwheat noodles'],
-    gluten: ['Rice flour', 'Almond flour', 'Tapioca starch'],
-  },
-  'Peanut Allergy': {
-    peanut: ['Sunflower seed butter', 'Tahini', 'Almond butter'],
-  },
-  'Tree Nut Allergy': {
-    almond: ['Sunflower seeds', 'Pumpkin seeds', 'Oat flour'],
-    walnut: ['Sunflower seeds', 'Pumpkin seeds'],
-    cashew: ['Sunflower seeds', 'Hemp seeds'],
-    hazelnut: ['Sunflower seeds', 'Toasted coconut'],
-    pistachio: ['Pumpkin seeds', 'Sunflower seeds'],
-    pecan: ['Sunflower seeds', 'Toasted coconut'],
-    macadamia: ['Coconut', 'Sunflower seeds'],
-    nut: ['Sunflower seeds', 'Pumpkin seeds', 'Hemp seeds'],
-  },
-  'Soy Allergy': {
-    soy: ['Coconut aminos', 'Fish sauce', 'Chickpea miso'],
-    tofu: ['Chickpea tofu', 'Paneer', 'Tempeh-style grain cake'],
-    soya: ['Coconut aminos', 'Sunflower lecithin'],
-    lecithin: ['Sunflower lecithin'],
-    edamame: ['Broad beans', 'Lima beans'],
-  },
-  'Sesame Allergy': {
-    sesame: ['Sunflower seed butter', 'Poppy seeds', 'Hemp seeds'],
-    tahini: ['Sunflower seed butter'],
-  },
-  'Shellfish Allergy': {
-    shrimp: ['Hearts of palm', 'King oyster mushroom'],
-    prawn: ['Hearts of palm', 'King oyster mushroom'],
-    crab: ['Hearts of palm', 'Artichoke hearts'],
-    lobster: ['Hearts of palm', 'King oyster mushroom'],
-    shellfish: ['White fish', 'Hearts of palm'],
-  },
-  'Fish Allergy': {
-    fish: ['Seaweed', 'Mushroom', 'Jackfruit'],
-    anchov: ['Capers', 'Seaweed flakes', 'Miso paste'],
-    sardine: ['Seaweed', 'Mushroom'],
-    tuna: ['Chickpeas', 'Jackfruit'],
-    salmon: ['Carrots', 'Beetroot', 'Jackfruit'],
-    cod: ['Tofu', 'Banana blossom'],
-  },
-  'Celery Allergy': {
-    celery: ['Fennel', 'Cucumber', 'Bok choy'],
-    celeriac: ['Parsnip', 'Turnip'],
-  },
-  'Mustard Allergy': {
-    mustard: ['Horseradish', 'Wasabi', 'Turmeric'],
-  },
-  'Lupin Allergy': {
-    lupin: ['Chickpea flour', 'Soy flour'],
-  },
-  'Sulphite Sensitivity': {
-    sulphite: ['Citric acid', 'Ascorbic acid'],
-    sulfite: ['Citric acid', 'Ascorbic acid'],
-    'sulphur dioxide': ['Citric acid', 'Ascorbic acid'],
-  },
-  'Fructose Intolerance': {
-    fructose: ['Glucose', 'Dextrose', 'Rice malt syrup'],
-    'high fructose': ['Glucose syrup', 'Rice malt syrup'],
-    'fruit juice': ['Glucose syrup', 'Maple syrup'],
-    honey: ['Rice malt syrup', 'Maple syrup'],
-    agave: ['Rice malt syrup', 'Glucose syrup'],
-  },
-  'Histamine Intolerance': {
-    vinegar: ['Citric acid', 'Lemon juice'],
-    tomato: ['Beetroot', 'Pumpkin puree'],
-    fermented: ['Fresh alternatives', 'Unfermented options'],
-  },
-  'MSG Sensitivity': {
-    'monosodium glutamate': ['Herbs', 'Spices', 'Nutritional yeast'],
-    msg: ['Herbs', 'Spices', 'Mushroom powder'],
-    glutamate: ['Herbs', 'Spices', 'Coconut aminos'],
-  },
-  'Salicylate Sensitivity': {
-    salicylate: ['Peeled pears', 'Iceberg lettuce'],
-  },
-};
-
-const CONDITION_SUBSTITUTES: Record<string, Record<string, string[]>> = {
-  'Diabetes': {
-    sugar: ['Stevia', 'Erythritol', 'Monk fruit sweetener'],
-    glucose: ['Stevia', 'Erythritol', 'Monk fruit sweetener'],
-    fructose: ['Stevia', 'Erythritol', 'Monk fruit sweetener'],
-    dextrose: ['Stevia', 'Erythritol'],
-    sucrose: ['Stevia', 'Erythritol', 'Monk fruit sweetener'],
-    maltose: ['Stevia', 'Monk fruit sweetener'],
-    'corn syrup': ['Stevia', 'Monk fruit sweetener'],
-    honey: ['Stevia', 'Monk fruit sweetener', 'Erythritol'],
-    'white flour': ['Almond flour', 'Coconut flour', 'Lupin flour'],
-    'white rice': ['Cauliflower rice', 'Brown rice', 'Quinoa'],
-    potato: ['Cauliflower', 'Turnip', 'Celeriac'],
-  },
-  'IBS': {
-    onion: ['Chives', 'Green part of spring onion', 'Asafoetida'],
-    garlic: ['Garlic-infused oil', 'Asafoetida', 'Chives'],
-    wheat: ['Oats', 'Rice', 'Quinoa'],
-    lactose: ['Lactose-free milk', 'Oat milk'],
-    milk: ['Lactose-free milk', 'Oat milk'],
-    apple: ['Blueberries', 'Strawberries', 'Grapes'],
-    sorbitol: ['Stevia', 'Maple syrup'],
-    mannitol: ['Stevia', 'Maple syrup'],
-    inulin: ['Psyllium husk', 'Oat bran'],
-    chicory: ['Psyllium husk', 'Oat bran'],
-  },
-  "Chron's Disease": {
-    'whole grain': ['White rice', 'White bread', 'Refined pasta'],
-    bran: ['White bread', 'Refined oats'],
-    seed: ['Smooth nut butter', 'Peeled fruit'],
-    popcorn: ['Rice cakes', 'Pretzels'],
-  },
-  'Ulcerative Colitis': {
-    'whole grain': ['White rice', 'Refined pasta'],
-    seed: ['Smooth nut butter', 'Peeled fruit'],
-    spice: ['Mild herbs', 'Turmeric', 'Ginger'],
-  },
-  'GERD / Acid Reflux': {
-    tomato: ['Pumpkin puree', 'Butternut squash'],
-    citrus: ['Banana', 'Melon', 'Papaya'],
-    chocolate: ['Carob', 'Vanilla'],
-    mint: ['Basil', 'Ginger'],
-    vinegar: ['Lemon juice (small amounts)'],
-    coffee: ['Low-acid coffee', 'Chicory root tea'],
-  },
-  'High Cholesterol': {
-    butter: ['Olive oil', 'Avocado oil', 'Plant sterol spread'],
-    lard: ['Olive oil', 'Avocado oil'],
-    'palm oil': ['Olive oil', 'Rapeseed oil'],
-    'coconut oil': ['Olive oil', 'Avocado oil'],
-    cream: ['Low-fat yoghurt', 'Cashew cream'],
-  },
-  'Hypertension': {
-    salt: ['Herbs', 'Spices', 'Lemon juice', 'Garlic'],
-    sodium: ['Potassium salt', 'Herbs', 'Spices'],
-    'soy sauce': ['Coconut aminos', 'Low-sodium soy sauce'],
-    bacon: ['Turkey bacon', 'Mushroom bacon'],
-  },
-  'Heart Disease': {
-    butter: ['Olive oil', 'Avocado oil'],
-    lard: ['Olive oil', 'Rapeseed oil'],
-    'palm oil': ['Olive oil', 'Rapeseed oil'],
-    cream: ['Low-fat yoghurt', 'Oat cream'],
-    salt: ['Herbs', 'Spices', 'Lemon juice'],
-  },
-  'PCOS': {
-    sugar: ['Stevia', 'Monk fruit sweetener', 'Cinnamon'],
-    'white flour': ['Almond flour', 'Coconut flour'],
-    'white rice': ['Quinoa', 'Brown rice', 'Cauliflower rice'],
-  },
-  'Metabolic Syndrome': {
-    sugar: ['Stevia', 'Erythritol', 'Monk fruit sweetener'],
-    'white flour': ['Almond flour', 'Oat flour'],
-    'corn syrup': ['Stevia', 'Monk fruit sweetener'],
-  },
-  'Eczema / Psoriasis': {
-    'artificial colour': ['Beetroot powder', 'Turmeric', 'Spirulina'],
-    'artificial flavor': ['Natural vanilla', 'Herbs', 'Spices'],
-  },
-  'Migraine / Chronic Headaches': {
-    msg: ['Herbs', 'Spices', 'Mushroom powder'],
-    'monosodium glutamate': ['Herbs', 'Spices'],
-    aspartame: ['Stevia', 'Monk fruit sweetener'],
-    nitrate: ['Uncured meat', 'Fresh meat'],
-    nitrite: ['Uncured meat', 'Fresh meat'],
-  },
-  'ADHD': {
-    'artificial colour': ['Beetroot powder', 'Turmeric', 'Spirulina'],
-    'artificial flavor': ['Natural flavourings', 'Herbs'],
-    'sodium benzoate': ['Citric acid', 'Ascorbic acid'],
-  },
-  'SIBO': {
-    onion: ['Chives', 'Garlic-infused oil', 'Asafoetida'],
-    garlic: ['Garlic-infused oil', 'Asafoetida'],
-    wheat: ['Rice', 'Quinoa', 'Oats'],
-    lactose: ['Lactose-free milk', 'Oat milk'],
-    milk: ['Lactose-free milk', 'Almond milk'],
-  },
-  'Leaky Gut Syndrome': {
-    gluten: ['Rice flour', 'Almond flour', 'Coconut flour'],
-    wheat: ['Rice', 'Quinoa', 'Buckwheat'],
-    sugar: ['Stevia', 'Raw honey (small amounts)'],
-  },
-  'Rheumatoid Arthritis': {
-    sugar: ['Stevia', 'Monk fruit sweetener'],
-  },
-  'Lupus': {
-    salt: ['Herbs', 'Spices', 'Lemon juice'],
-  },
-};
-
-function getSubstitutes(
-  ingredientText: string,
-  flagReason: FlagReason,
-  conditions: string[],
-  allergies: string[],
-): string[] {
-  const lower = ingredientText.toLowerCase();
-
-  const findMatch = (map: Record<string, string[]>): string[] | null => {
-    for (const [keyword, subs] of Object.entries(map)) {
-      if (lower.includes(keyword)) return subs;
-    }
-    return null;
-  };
-
-  // 1. Dietary preference substitutes (from flag reason)
-  if (flagReason === 'vegan' || flagReason === 'vegetarian') {
-    const dietMap = DIETARY_SUBSTITUTES[flagReason];
-    if (dietMap) {
-      const match = findMatch(dietMap);
-      if (match) return match;
-    }
-  }
-
-  // 2. Allergen-based substitutes
-  for (const allergy of allergies) {
-    const allergyMap = ALLERGEN_SUBSTITUTES[allergy];
-    if (allergyMap) {
-      const match = findMatch(allergyMap);
-      if (match) return match;
-    }
-  }
-
-  // 3. Condition-based substitutes
-  for (const condition of conditions) {
-    const condMap = CONDITION_SUBSTITUTES[condition];
-    if (condMap) {
-      const match = findMatch(condMap);
-      if (match) return match;
-    }
-  }
-
-  return [];
-}
-
-function FlaggedIngredientSheet({
-  ingredient,
-  onClose,
-  conditions,
-  allergies,
-}: {
-  ingredient: FlaggedIngredient | null;
-  onClose: () => void;
-  conditions: string[];
-  allergies: string[];
-}) {
-  const { t } = useTranslation('scan');
-  const insets = useSafeAreaInsets();
-  const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
-  const backdropAnim = useRef(new Animated.Value(0)).current;
-  const [mounted, setMounted] = useState(false);
-  const lastIngRef = useRef<FlaggedIngredient | null>(null);
-  if (ingredient) lastIngRef.current = ingredient;
-  const display = ingredient ?? lastIngRef.current;
-
-  useEffect(() => {
-    if (ingredient) {
-      setMounted(true);
-      slideAnim.setValue(SCREEN_HEIGHT);
-      backdropAnim.setValue(0);
-      Animated.parallel([
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 320,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.timing(backdropAnim, {
-          toValue: 1,
-          duration: 260,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else if (mounted) {
-      Animated.parallel([
-        Animated.timing(slideAnim, {
-          toValue: SCREEN_HEIGHT,
-          duration: 250,
-          easing: Easing.in(Easing.quad),
-          useNativeDriver: true,
-        }),
-        Animated.timing(backdropAnim, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]).start(() => setMounted(false));
-    }
-  }, [ingredient]);
-
-  if (!mounted || !display) return null;
-
-  // Translated flag reason text
-  const FLAG_REASON_TEXT_LOCAL: Record<FlagReason, { title: string; body: string }> = {
-    vegan: { title: t('flagReason.veganTitle'), body: t('flagReason.veganBody') },
-    vegetarian: { title: t('flagReason.vegetarianTitle'), body: t('flagReason.vegetarianBody') },
-    user_flagged: { title: t('flagReason.userFlaggedTitle'), body: t('flagReason.userFlaggedBody') },
-  };
-
-  // Show personal reason if available, otherwise fall back to generic text
-  const reason = display.personalReason
-    ? {
-        title: display.personalReason.text,
-        body: t('flagReason.personalBody', { category: display.personalReason.category }),
-      }
-    : FLAG_REASON_TEXT_LOCAL[display.flagReason as FlagReason];
-  const substitutes = getSubstitutes(display.text, display.flagReason as FlagReason, conditions, allergies);
-
-  return (
-    <Modal
-      visible={mounted}
-      transparent
-      animationType="none"
-      onRequestClose={onClose}
-      statusBarTranslucent
-    >
-      <Animated.View
-        style={[flaggedSheetStyles.backdrop, { opacity: backdropAnim }]}
-        pointerEvents="box-none"
-      >
-        <TouchableOpacity
-          style={StyleSheet.absoluteFill}
-          onPress={onClose}
-          activeOpacity={1}
-        />
-      </Animated.View>
-
-      <Animated.View
-        style={[
-          flaggedSheetStyles.sheet,
-          {
-            transform: [{ translateY: slideAnim }],
-            paddingBottom: insets.bottom + 24,
-          },
-        ]}
-      >
-        <View style={flaggedSheetStyles.handle} />
-
-        <TouchableOpacity
-          style={flaggedSheetStyles.closeBtn}
-          onPress={onClose}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="close" size={22} color={Colors.primary} />
-        </TouchableOpacity>
-
-        <View style={flaggedSheetStyles.content}>
-          <View style={flaggedSheetStyles.iconCircle}>
-            <Ionicons name="warning" size={24} color={Colors.status.negative} />
-          </View>
-          <Text style={flaggedSheetStyles.ingredientName}>
-            {display.text.charAt(0).toUpperCase() + display.text.slice(1)}
-          </Text>
-          <View style={flaggedSheetStyles.descriptionBox}>
-            <Text style={flaggedSheetStyles.reasonTitle}>{reason.title}</Text>
-            <Text style={flaggedSheetStyles.reasonBody}>{reason.body}</Text>
-          </View>
-
-          {substitutes.length > 0 && (
-            <View style={flaggedSheetStyles.substituteCard}>
-              <Text style={flaggedSheetStyles.substituteTitle}>
-                {t('flaggedSheet.substitutesTitle')}
-              </Text>
-              <View style={flaggedSheetStyles.substituteList}>
-                {substitutes.map((sub) => (
-                  <View key={sub} style={flaggedSheetStyles.substituteRow}>
-                    <View style={flaggedSheetStyles.substituteIconWrap}>
-                      <TickIcon size={14} color={Colors.secondary} strokeWidth={2} />
-                    </View>
-                    <Text style={flaggedSheetStyles.substituteText}>{sub}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
-        </View>
-      </Animated.View>
-    </Modal>
-  );
-}
-
-const flaggedSheetStyles = StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(2, 52, 50, 0.45)',
-  },
-  sheet: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    minHeight: SCREEN_HEIGHT * 0.45,
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingHorizontal: 24,
-    paddingTop: 12,
-  },
-  handle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: Colors.stroke.primary,
-    alignSelf: 'center',
-    marginBottom: 16,
-  },
-  closeBtn: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  content: {
-    alignItems: 'center',
-    gap: 12,
-    paddingBottom: 8,
-    flex: 1,
-    justifyContent: 'center',
-  },
-  iconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255,63,66,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ingredientName: {
-    fontSize: 20,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
-    letterSpacing: -0.4,
-    textAlign: 'center',
-  },
-  reasonTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.secondary,
-    textAlign: 'center',
-  },
-  descriptionBox: {
-    backgroundColor: Colors.background,
-    borderRadius: 8,
-    padding: 24,
-    width: '100%',
-    gap: 8,
-    alignItems: 'center',
-  },
-  reasonBody: {
-    fontSize: 15,
-    fontWeight: '300',
-    fontFamily: 'Figtree_300Light',
-    color: Colors.primary,
-    lineHeight: 22,
-    textAlign: 'center',
-  },
-  // ── Substitute list ──
-  substituteCard: {
-    width: '100%',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#aad4cd',
-    paddingVertical: 24,
-    paddingHorizontal: 16,
-    gap: 16,
-  },
-  substituteTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.secondary,
-    letterSpacing: -0.32,
-    lineHeight: 18,
-  },
-  substituteList: {
-    gap: 2,
-  },
-  substituteRow: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 4,
-  },
-  substituteIconWrap: {
-    width: 20,
-    height: 20,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-  },
-  substituteText: {
-    fontSize: 13,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: '#00342c',
-    letterSpacing: -0.26,
-    lineHeight: 16,
-  },
-});
-
-// ── Common food additive / ingredient descriptions ──────────────────────────
-// TODO: i18n — These 50+ additive descriptions should be moved to a dedicated
-// translation file (e.g. locales/en/additives.json) in a future pass.
-// Covers E-numbers and hard-to-read ingredient names. Keyed by lowercase name
-// or OFF id (e.g. "en:e476"). Looked up by exact match, then by E-number
-// extraction, then by substring.
-const ADDITIVE_DESCRIPTIONS: Record<string, { what: string; why: string }> = {
-  'en:e322': { what: 'Lecithin, a natural emulsifier usually derived from soy or sunflower seeds.', why: 'It helps blend ingredients that normally don\'t mix (like oil and water). Widely used and considered safe.' },
-  'en:e322i': { what: 'Lecithin, a natural emulsifier usually derived from soy or sunflower seeds.', why: 'It helps blend ingredients that normally don\'t mix (like oil and water). Widely used and considered safe.' },
-  'en:e330': { what: 'Citric acid, a natural acid found in citrus fruits like lemons and oranges.', why: 'Used as a preservative and flavour enhancer. It occurs naturally in many foods and is considered safe.' },
-  'en:e331': { what: 'Sodium citrate, the sodium salt of citric acid.', why: 'Used as a flavour enhancer and acidity regulator. Found naturally in citrus fruits and considered safe.' },
-  'en:e339': { what: 'Sodium phosphate, a mineral salt used in food processing.', why: 'Acts as an emulsifier and moisture retainer. Safe in normal food amounts, though excessive phosphate intake should be monitored.' },
-  'en:e412': { what: 'Guar gum, a natural thickener extracted from guar beans.', why: 'Used to thicken and stabilise foods. It\'s a soluble fibre and generally well tolerated.' },
-  'en:e414': { what: 'Gum arabic, a natural gum from acacia trees.', why: 'Used as a stabiliser and emulsifier. It\'s a natural plant-based ingredient and considered safe.' },
-  'en:e415': { what: 'Xanthan gum, a thickener produced by bacterial fermentation.', why: 'Widely used in sauces, dressings and gluten-free baking. Considered safe and is a common kitchen ingredient.' },
-  'en:e440': { what: 'Pectin, a natural gelling agent found in fruit.', why: 'Used to set jams and jellies. It\'s a natural plant fibre and perfectly safe.' },
-  'en:e450': { what: 'Diphosphates, mineral salts used as raising agents.', why: 'Commonly found in baking powder. Safe in normal food amounts.' },
-  'en:e460': { what: 'Cellulose, plant fibre, the main structural component of plant cell walls.', why: 'Used as a bulking agent and anti-caking agent. It\'s indigestible fibre and safe to consume.' },
-  'en:e466': { what: 'Carboxymethyl cellulose, a modified plant fibre used as a thickener.', why: 'Used to improve texture in sauces and ice cream. Generally recognised as safe.' },
-  'en:e471': { what: 'Mono- and diglycerides of fatty acids, emulsifiers derived from plant or animal fats.', why: 'Used to help ingredients mix smoothly. Very common in bread, ice cream and margarine.' },
-  'en:e472e': { what: 'DATEM (diacetyl tartaric acid esters), an emulsifier used in baking.', why: 'Strengthens dough and improves bread texture. Considered safe.' },
-  'en:e476': { what: 'Polyglycerol polyricinoleate (PGPR), an emulsifier made from castor oil and glycerol.', why: 'Used in chocolate to improve flow and reduce the amount of cocoa butter needed. Approved as safe by food authorities worldwide.' },
-  'en:e500': { what: 'Sodium bicarbonate, also known as baking soda.', why: 'A common household ingredient used as a raising agent. Perfectly safe.' },
-  'en:e501': { what: 'Potassium carbonate, a mineral salt used as a raising agent.', why: 'Similar to baking soda. Used in baking and considered safe.' },
-  'en:e503': { what: 'Ammonium carbonate, a traditional raising agent.', why: 'Used in flat baked goods like cookies. Breaks down completely during baking.' },
-  'en:e507': { what: 'Hydrochloric acid, a mineral acid used for pH adjustment.', why: 'Used in tiny amounts to regulate acidity. Naturally present in your stomach.' },
-  'en:e509': { what: 'Calcium chloride, a mineral salt.', why: 'Used as a firming agent in canned vegetables and cheese-making. Considered safe.' },
-  'en:e516': { what: 'Calcium sulphate, a mineral used in food processing.', why: 'Used in tofu-making and as a dough conditioner. A natural mineral and considered safe.' },
-  'en:e551': { what: 'Silicon dioxide, a natural mineral (silica).', why: 'Used as an anti-caking agent to keep powders flowing freely. Found naturally in many foods.' },
-  'en:e621': { what: 'Monosodium glutamate (MSG), a flavour enhancer.', why: 'Adds savoury/umami flavour. Glutamate occurs naturally in tomatoes, parmesan cheese and mushrooms. Generally considered safe, though some people report sensitivity.' },
-  'en:e901': { what: 'Beeswax, a natural wax produced by honeybees.', why: 'Used as a glazing agent on sweets and fruit. Natural and safe (not suitable for vegans).' },
-  'en:e903': { what: 'Carnauba wax, a natural plant wax from Brazilian palm leaves.', why: 'Used as a coating/glazing agent. Plant-based and considered safe.' },
-  'en:e904': { what: 'Shellac, a natural resin secreted by lac insects.', why: 'Used as a glazing agent on sweets and pills. Considered safe (not suitable for vegans).' },
-  'en:e950': { what: 'Acesulfame K, an artificial sweetener.', why: 'About 200x sweeter than sugar with zero calories. Approved by food safety authorities, though some prefer to avoid artificial sweeteners.' },
-  'en:e951': { what: 'Aspartame, an artificial sweetener.', why: 'One of the most studied food additives. Approved as safe, though people with PKU (phenylketonuria) should avoid it.' },
-  'en:e955': { what: 'Sucralose, an artificial sweetener made from sugar.', why: 'About 600x sweeter than sugar with zero calories. Widely approved as safe.' },
-  'en:e960': { what: 'Steviol glycosides (Stevia), a natural sweetener from the stevia plant.', why: 'A plant-based, zero-calorie sweetener. Considered safe and a popular sugar alternative.' },
-  'en:e965': { what: 'Maltitol, a sugar alcohol used as a sweetener.', why: 'Lower calorie than sugar with less impact on blood glucose. May cause digestive discomfort in large amounts.' },
-  // Common non-E-number ingredient names
-  'polyglycerol polyricinoleate': { what: 'An emulsifier (also known as E476 or PGPR) made from castor oil and glycerol.', why: 'Used in chocolate to improve flow and reduce cocoa butter. Approved as safe worldwide.' },
-  'soy lecithin': { what: 'A natural emulsifier extracted from soybeans.', why: 'One of the most common food additives. Helps blend oil and water. Safe unless you have a soy allergy.' },
-  'soya lecithin': { what: 'A natural emulsifier extracted from soybeans.', why: 'One of the most common food additives. Helps blend oil and water. Safe unless you have a soy allergy.' },
-  'sunflower lecithin': { what: 'A natural emulsifier extracted from sunflower seeds.', why: 'Allergen-friendly alternative to soy lecithin. Considered safe.' },
-  'xanthan gum': { what: 'A thickener produced by bacterial fermentation of sugar.', why: 'Widely used in sauces, dressings and gluten-free baking. Considered safe.' },
-  'guar gum': { what: 'A natural thickener extracted from guar beans.', why: 'Used to thicken and stabilise foods. It\'s a soluble fibre and generally well tolerated.' },
-  'carrageenan': { what: 'A thickener and stabiliser extracted from red seaweed.', why: 'Used in dairy products and plant milks. Generally recognised as safe, though some studies suggest it may irritate sensitive guts.' },
-  'maltodextrin': { what: 'A starch-derived carbohydrate used as a thickener or filler.', why: 'Has a high glycemic index but is used in small amounts. Considered safe as a food additive.' },
-  'sodium benzoate': { what: 'A preservative, the sodium salt of benzoic acid, which occurs naturally in berries.', why: 'Prevents mould and bacterial growth. Safe at approved levels.' },
-  'potassium sorbate': { what: 'A preservative, the potassium salt of sorbic acid.', why: 'Prevents mould and yeast growth. Widely used and considered safe.' },
-  'calcium carbonate': { what: 'Chalk, a natural mineral and a source of calcium.', why: 'Used as a colour (white), acidity regulator and calcium supplement. Perfectly safe.' },
-  'mono- and diglycerides of fatty acids': { what: 'Emulsifiers derived from plant or animal fats (also known as E471).', why: 'Used to help ingredients mix smoothly. Very common in processed foods and considered safe.' },
-  'tbhq': { what: 'Tert-butylhydroquinone, a synthetic antioxidant.', why: 'Used in small amounts to prevent fats from going rancid. Approved as safe at regulated levels.' },
-  'pgpr': { what: 'Polyglycerol polyricinoleate (E476), an emulsifier.', why: 'Used in chocolate to improve texture. Approved as safe worldwide.' },
-  'ascorbic acid': { what: 'Vitamin C, an essential nutrient.', why: 'Used as an antioxidant and preservative. It\'s simply vitamin C and perfectly safe.' },
-  'tocopherol': { what: 'Vitamin E, a natural antioxidant.', why: 'Used to prevent fats from going rancid. It\'s an essential vitamin and safe.' },
-  'sodium bicarbonate': { what: 'Baking soda, a common raising agent.', why: 'Used in baking to help doughs rise. A household staple and perfectly safe.' },
-  'citric acid': { what: 'A natural acid found in citrus fruits like lemons and oranges.', why: 'Used as a preservative and flavour enhancer. Occurs naturally in many foods and is safe.' },
-  'malic acid': { what: 'A natural acid found in apples and other fruits.', why: 'Used as a flavour enhancer to add tartness. Natural and safe.' },
-  'lactic acid': { what: 'A natural acid produced during fermentation.', why: 'Found in yoghurt, sauerkraut and sourdough. Natural and safe.' },
-  'pectin': { what: 'A natural gelling agent found in fruit (especially apples and citrus peel).', why: 'Used to set jams and jellies. It\'s a natural plant fibre and perfectly safe.' },
-  'inulin': { what: 'A natural prebiotic fibre found in chicory root.', why: 'Supports gut health by feeding beneficial bacteria. Generally safe, though large amounts can cause bloating.' },
-};
-
-/**
- * Look up a plain-English description for an ingredient.
- * Tries: OFF id → lowercase name → E-number extraction.
- */
-function getAdditiveDescription(ing: OffIngredient): { what: string; why: string } | null {
-  const id = (ing.id ?? '').toLowerCase();
-  if (ADDITIVE_DESCRIPTIONS[id]) return ADDITIVE_DESCRIPTIONS[id];
-
-  const name = ing.text.toLowerCase().trim();
-  if (ADDITIVE_DESCRIPTIONS[name]) return ADDITIVE_DESCRIPTIONS[name];
-
-  // Try extracting an E-number from the id (e.g. "en:e476i" → "en:e476")
-  const eMatch = id.match(/^(en:e\d+)/);
-  if (eMatch && ADDITIVE_DESCRIPTIONS[eMatch[1]]) return ADDITIVE_DESCRIPTIONS[eMatch[1]];
-
-  return null;
-}
-
-// ── Ingredient Info Sheet (for OK / Safe ingredients) ────────────────────────
-function IngredientInfoSheet({
-  ingredient,
-  category,
-  onClose,
-}: {
-  ingredient: OffIngredient | null;
-  category: 'ok' | 'safe';
-  onClose: () => void;
-}) {
-  const { t } = useTranslation('scan');
-  const insets = useSafeAreaInsets();
-  const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
-  const backdropAnim = useRef(new Animated.Value(0)).current;
-  const [mounted, setMounted] = useState(false);
-  const lastRef = useRef<OffIngredient | null>(null);
-  if (ingredient) lastRef.current = ingredient;
-  const display = ingredient ?? lastRef.current;
-
-  useEffect(() => {
-    if (ingredient) {
-      setMounted(true);
-      slideAnim.setValue(SCREEN_HEIGHT);
-      backdropAnim.setValue(0);
-      Animated.parallel([
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 320,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.timing(backdropAnim, {
-          toValue: 1,
-          duration: 260,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else if (mounted) {
-      Animated.parallel([
-        Animated.timing(slideAnim, {
-          toValue: SCREEN_HEIGHT,
-          duration: 250,
-          easing: Easing.in(Easing.quad),
-          useNativeDriver: true,
-        }),
-        Animated.timing(backdropAnim, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]).start(() => setMounted(false));
-    }
-  }, [ingredient]);
-
-  if (!mounted || !display) return null;
-
-  const desc = getAdditiveDescription(display);
-  const iconColor = category === 'ok' ? Extra.poorOrange : Extra.positiveGreen;
-  const iconName = category === 'ok' ? 'alert-circle' : 'checkmark-circle';
-  const categoryLabel = category === 'ok' ? t('ingredientSheet.categoryOk') : t('ingredientSheet.categorySafe');
-
-  return (
-    <Modal
-      visible={mounted}
-      transparent
-      animationType="none"
-      onRequestClose={onClose}
-      statusBarTranslucent
-    >
-      <Animated.View
-        style={[flaggedSheetStyles.backdrop, { opacity: backdropAnim }]}
-        pointerEvents="box-none"
-      >
-        <TouchableOpacity
-          style={StyleSheet.absoluteFill}
-          onPress={onClose}
-          activeOpacity={1}
-        />
-      </Animated.View>
-
-      <Animated.View
-        style={[
-          flaggedSheetStyles.sheet,
-          {
-            transform: [{ translateY: slideAnim }],
-            paddingBottom: insets.bottom + 24,
-          },
-        ]}
-      >
-        <View style={flaggedSheetStyles.handle} />
-
-        <TouchableOpacity
-          style={flaggedSheetStyles.closeBtn}
-          onPress={onClose}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="close" size={22} color={Colors.primary} />
-        </TouchableOpacity>
-
-        <View style={flaggedSheetStyles.content}>
-          <View style={[flaggedSheetStyles.iconCircle, { backgroundColor: `${iconColor}18` }]}>
-            <Ionicons name={iconName} size={24} color={iconColor} />
-          </View>
-          <Text style={flaggedSheetStyles.ingredientName}>
-            {display.text.charAt(0).toUpperCase() + display.text.slice(1)}
-          </Text>
-          <View style={flaggedSheetStyles.descriptionBox}>
-            <Text style={flaggedSheetStyles.reasonTitle}>
-              {t('ingredientSheet.classifiedAs', { category: categoryLabel })}
-            </Text>
-            {desc ? (
-              <>
-                <Text style={flaggedSheetStyles.reasonBody}>{desc.what}</Text>
-                <Text style={flaggedSheetStyles.reasonBody}>{desc.why}</Text>
-              </>
-            ) : (
-              <>
-                <Text style={flaggedSheetStyles.reasonBody}>
-                  {t('ingredientSheet.defaultAdditiveLine1')}
-                </Text>
-                <Text style={flaggedSheetStyles.reasonBody}>
-                  {t('ingredientSheet.defaultAdditiveLine2')}
-                </Text>
-              </>
-            )}
-          </View>
-        </View>
-      </Animated.View>
-    </Modal>
-  );
-}
-
-// ── Insight explanation text ─────────────────────────────────────────────────
-const INSIGHT_EXPLANATIONS: Record<InsightKey, string> = {
-  glycemic:        'Glycemic impact estimates how quickly this product may raise blood sugar based on its sugar, carbohydrate and fibre content. This is especially relevant for managing diabetes, PCOS and metabolic conditions.',
-  sodium:          'Sodium levels indicate the salt content of this product. High sodium intake is linked to elevated blood pressure and increased cardiovascular risk.',
-  saturatedFat:    'Saturated fat content is associated with raised cholesterol and heart disease risk when consumed in excess.',
-  sugar:           'Sugar load reflects the total sugar content per serving. High sugar intake can affect blood glucose control, energy levels and long-term metabolic health.',
-  fiber:           'Fibre content matters for digestive conditions. While fibre is generally beneficial, high-fibre foods can aggravate symptoms in IBS, Crohn\'s disease and other gut conditions.',
-  protein:         'Protein content is important for muscle repair, satiety and post-surgical recovery. Higher protein is generally preferred for fitness and weight management goals.',
-  calorie:         'Calorie density measures the energy content per 100g. Monitoring calorie intake supports weight management and post-bariatric dietary goals.',
-  inflammatoryFat: 'Inflammatory fat is a proxy based on saturated fat content, which can promote inflammation relevant to autoimmune and inflammatory conditions.',
-  digestiveLoad:   'Digestive load combines fat and fibre content to estimate how demanding this product is on your digestive system. High values may trigger symptoms in GERD, IBS and other gut conditions.',
-  carbLoad:        'Carb load reflects the total carbohydrate content. This is key for low-carb, keto and diabetic diets where carbohydrate restriction is central.',
-  additives:       'Additive count tracks the number of food additives (E-numbers) in this product. Some additives are associated with sensitivities, behavioural effects in children, and digestive discomfort.',
-};
-
-// ── Insight detail bottom sheet ─────────────────────────────────────────────
-function InsightDetailSheet({
-  insight,
-  onClose,
-}: {
-  insight: { def: InsightDef; result: ImpactResult } | null;
-  onClose: () => void;
-}) {
-  const { t } = useTranslation('scan');
-  const insets = useSafeAreaInsets();
-  const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
-  const backdropAnim = useRef(new Animated.Value(0)).current;
-  const [mounted, setMounted] = useState(false);
-  const lastRef = useRef<{ def: InsightDef; result: ImpactResult } | null>(null);
-  if (insight) lastRef.current = insight;
-  const display = insight ?? lastRef.current;
-
-  useEffect(() => {
-    if (insight) {
-      setMounted(true);
-      slideAnim.setValue(SCREEN_HEIGHT);
-      backdropAnim.setValue(0);
-      Animated.parallel([
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 320,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.timing(backdropAnim, {
-          toValue: 1,
-          duration: 260,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else if (mounted) {
-      Animated.parallel([
-        Animated.timing(slideAnim, {
-          toValue: SCREEN_HEIGHT,
-          duration: 250,
-          easing: Easing.in(Easing.quad),
-          useNativeDriver: true,
-        }),
-        Animated.timing(backdropAnim, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]).start(() => setMounted(false));
-    }
-  }, [insight]);
-
-  if (!mounted || !display) return null;
-
-  const { def, result } = display;
-  const Icon = def.icons[result.iconKey];
-  const explanation = t(`insightExplanation.${def.key}`, INSIGHT_EXPLANATIONS[def.key] ?? '');
-
-  return (
-    <Modal
-      visible={mounted}
-      transparent
-      animationType="none"
-      onRequestClose={onClose}
-      statusBarTranslucent
-    >
-      <Animated.View
-        style={[insightSheetStyles.backdrop, { opacity: backdropAnim }]}
-        pointerEvents="box-none"
-      >
-        <TouchableOpacity
-          style={StyleSheet.absoluteFill}
-          onPress={onClose}
-          activeOpacity={1}
-        />
-      </Animated.View>
-
-      <Animated.View
-        style={[
-          insightSheetStyles.sheet,
-          {
-            transform: [{ translateY: slideAnim }],
-            paddingBottom: insets.bottom + 24,
-          },
-        ]}
-      >
-        <View style={insightSheetStyles.handle} />
-
-        <TouchableOpacity
-          style={insightSheetStyles.closeBtn}
-          onPress={onClose}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="close" size={22} color={Colors.primary} />
-        </TouchableOpacity>
-
-        <View style={insightSheetStyles.content}>
-          <Icon width={def.iconWidth * 1.4} height={def.iconHeight * 1.4} />
-          <Text style={insightSheetStyles.label}>{def.label}</Text>
-          <View style={[insightSheetStyles.pill, { backgroundColor: result.color }]}>
-            <Text style={insightSheetStyles.pillText}>{result.label}</Text>
-          </View>
-          <View style={insightSheetStyles.descriptionBox}>
-            <Text style={insightSheetStyles.explanation}>{explanation}</Text>
-          </View>
-        </View>
-      </Animated.View>
-    </Modal>
-  );
-}
-
-const insightSheetStyles = StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(2, 52, 50, 0.45)',
-  },
-  sheet: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    minHeight: SCREEN_HEIGHT * 0.45,
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingHorizontal: 24,
-    paddingTop: 12,
-  },
-  handle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: Colors.stroke.primary,
-    alignSelf: 'center',
-    marginBottom: 16,
-  },
-  closeBtn: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  content: {
-    alignItems: 'center',
-    gap: 12,
-    paddingBottom: 8,
-    flex: 1,
-    justifyContent: 'center',
-  },
-  label: {
-    fontSize: 20,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
-    letterSpacing: -0.4,
-  },
-  pill: {
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 4,
-  },
-  pillText: {
-    fontSize: 14,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: '#fff',
-  },
-  descriptionBox: {
-    backgroundColor: Colors.background,
-    borderRadius: 8,
-    padding: 24,
-    margin: 12,
-    width: '100%',
-  },
-  explanation: {
-    fontSize: 15,
-    fontWeight: '300',
-    fontFamily: 'Figtree_300Light',
-    color: Colors.primary,
-    lineHeight: 22,
-    textAlign: 'center',
-  },
-});
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 export default function ScanResultScreen() {
@@ -2353,6 +771,9 @@ export default function ScanResultScreen() {
   const { t } = useTranslation('scan');
   const { t: tc } = useTranslation('common');
   const { t: tpo } = useTranslation('profileOptions');
+
+  // Page-level entrance/exit animation
+  const { opacity: pageOpacity, translateX: pageTranslateX, animateExit: pageExit } = usePageTransition();
 
   const p = useLocalSearchParams<{
     scanId: string;
@@ -2504,9 +925,7 @@ export default function ScanResultScreen() {
   const [fetchingOff, setFetchingOff] = useState(false);
 
   // Nutrition tab toggles
-  type ServingMode = 'serving' | '100g' | 'custom';
-  type DriMode = 'value' | 'dri';
-  const [servingMode, setServingMode] = useState<ServingMode>('serving');
+  const [servingMode, setServingMode] = useState<ServingMode>('100g');
   const [driMode, setDriMode] = useState<DriMode>('value');
   const [customWeight, setCustomWeight] = useState(100);
   const [editingWeight, setEditingWeight] = useState(false);
@@ -2806,19 +1225,26 @@ export default function ScanResultScreen() {
   const servingIs100g = /\b100\s*(g|ml)\b/i.test(servingSize);
   // Only show the per-100g tab when serving differs from 100g
   const showBothModes = hasServingData && !servingIs100g;
-  // Clean serving label, e.g. "(30 g)" → "30g", "15g" → "15g"
-  const servingLabelRaw = servingSize.replace(/^\(|\)$/g, '').trim().replace(/(\d)\s+(g|mg|kg|ml|l|oz|fl)\b/gi, '$1$2');
+  // Clean serving label, e.g. "(30 g)" → "30g", "1 serving (63g)" → "63g"
+  const servingLabelRaw = servingSize
+    .replace(/^\(|\)$/g, '')
+    .trim()
+    // Strip redundant "1 serving" / "1 portion" (with optional surrounding parens)
+    .replace(/\(?\s*1\s*(?:serving|portion)\s*\)?\s*/gi, '')
+    .replace(/(\d)\s+(g|mg|kg|ml|l|oz|fl)\b/gi, '$1$2')
+    .replace(/^\(|\)$/g, '')   // clean up any leftover outer parens
+    .trim();
   const servingLabel = servingLabelRaw ? `Per Serving (${servingLabelRaw})` : '';
-  // Available modes for the toggle (always show custom; show serving only when data exists)
-  const servingModes: ServingMode[] = showBothModes ? ['serving', '100g', 'custom'] : ['100g', 'custom'];
-  // If we only have one mode, force it; custom uses 100g base values with weight scaling
-  const effectiveServingMode: ServingMode = showBothModes ? servingMode : (servingMode === 'serving' ? '100g' : servingMode);
+  // Available modes for the toggle (show serving only when data exists + differs from 100g)
+  const servingModes: ServingMode[] = showBothModes ? ['serving', '100g'] : ['100g'];
+  // If we only have one mode, force it
+  const effectiveServingMode: ServingMode = showBothModes ? servingMode : '100g';
 
   // All nutrient rows in display order (matches Figma Macro Stack)
   // Switches between per-100g and per-serving based on the active toggle.
   // Falls back to 100g if no serving data is available.
   const useServing = effectiveServingMode === 'serving' && hasServingData;
-  const isCustomMode = effectiveServingMode === 'custom';
+  const is100gMode = effectiveServingMode === '100g';
   const nutrientRows: { key: NutrientKey; raw: string | undefined }[] = [
     { key: 'energyKcal', raw: useServing ? rawEnergyKcalServing : rawEnergyKcal },
     { key: 'fat', raw: useServing ? rawFatServing : rawFat },
@@ -2843,9 +1269,9 @@ export default function ScanResultScreen() {
   const fadeNutrition  = useFadeIn(!fetchingOff, 80);
   const fadeIngredient = useFadeIn(!fetchingOff, 160);
 
-  // Weight scaling: only applies in Custom mode (uses per-100g base values with weight multiplier).
-  // Per-serving and Per-100g modes remain unscaled.
-  const weightScale = (isCustomMode && customWeight !== 100) ? customWeight / 100 : 1;
+  // Weight scaling: applies in 100g mode when user adjusts the weight via stepper.
+  // Per-serving mode remains unscaled.
+  const weightScale = (is100gMode && customWeight !== 100) ? customWeight / 100 : 1;
 
   /** Scale a raw nutrient string by the current weight factor */
   function scaleRaw(raw: string | undefined): string | undefined {
@@ -3034,13 +1460,18 @@ export default function ScanResultScreen() {
     INSIGHT_DEFS_T,
   );
 
+  function handleBack() {
+    pageExit(() => safeBack());
+  }
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <Animated.View style={{ flex: 1, opacity: pageOpacity, transform: [{ translateX: pageTranslateX }] }}>
       {/* ── Sticky Header (back, product info, nutri-score, tabs) ── */}
       <View style={styles.stickyHeader}>
         {/* Back button */}
         <View style={styles.backRow}>
-          <TouchableOpacity style={styles.backBtn} onPress={safeBack} activeOpacity={0.7}>
+          <TouchableOpacity style={styles.backBtn} onPress={handleBack} activeOpacity={0.7}>
             <BigBackIcon width={32} height={32} />
           </TouchableOpacity>
         </View>
@@ -3323,28 +1754,85 @@ export default function ScanResultScreen() {
               </View>
             )}
 
-            {/* ── Nutrient Watch (own section for consistent gap) ── */}
+            {/* ── Nutrient Watch (Figma node 3263-5807) ── */}
             {watchlistAlerts.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeading}>
                   <Text style={styles.sectionTitle}>{t('section.nutrientWatch')}</Text>
+                  <Text style={styles.sectionSubtitle}>
+                    {t('section.nutrientWatchlistSubtitle')}
+                  </Text>
                 </View>
-                {watchlistAlerts.map((alert) => {
-                  const sevColor = getNutrientSeverityColor(alert.offKey, alert.value, alert.direction);
-                  return (
-                    <View key={alert.offKey} style={styles.nutrientAlertRow}>
-                      <View style={styles.nutrientAlertNameRow}>
-                        <View style={[styles.nutrientAlertDot, { backgroundColor: sevColor }]} />
-                        <Text style={styles.nutrientAlertName}>
-                          {alert.nutrient}: {Number(alert.value.toFixed(2))}{alert.unit}/100g
-                        </Text>
+                {/* Limit group */}
+                {watchlistAlerts.some((a) => a.direction === 'limit') && (
+                  <View style={styles.nwGroup}>
+                    <View style={styles.nwGroupHeader}>
+                      <View style={[styles.nwArrow, { backgroundColor: Colors.status.negative }]}>
+                        <Ionicons name="arrow-down" size={16} color="#fff" />
                       </View>
-                      <Text style={[styles.nutrientAlertReason, { color: sevColor }]}>
-                        {alert.direction === 'limit' ? tc('nutrientDirections.limit') : tc('nutrientDirections.boost')} · {alert.source}
-                      </Text>
+                      <Text style={styles.nwGroupTitle}>{tc('nutrientDirections.limit')}</Text>
                     </View>
-                  );
-                })}
+                    {watchlistAlerts.filter((a) => a.direction === 'limit').map((alert) => {
+                      const sev = getNutrientSeverity(alert.offKey, alert.value, alert.direction);
+                      const isGood = sev.color === SEV_AMAZING || sev.color === SEV_GOOD;
+                      return (
+                        <View key={alert.offKey} style={styles.nwRow}>
+                          <View style={styles.nwRowLeft}>
+                            <Text style={styles.nwNutrient}>{alert.nutrient}</Text>
+                          </View>
+                          <View style={styles.nwRowRight}>
+                            <Text style={styles.nwValue}>
+                              {Number(alert.value.toFixed(2))}{alert.unit}/100g
+                            </Text>
+                            <View style={styles.nwRatingWrap}>
+                              {isGood
+                                ? <TickIcon color={sev.color} size={14} strokeWidth={3} />
+                                : <Ionicons name="close" size={16} color={sev.color} />}
+                              <Text style={[styles.nwRating, { color: sev.color }]}>
+                                {tc(`ratings.${sev.rating}`)}
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
+                {/* Increase group */}
+                {watchlistAlerts.some((a) => a.direction === 'boost') && (
+                  <View style={styles.nwGroup}>
+                    <View style={styles.nwGroupHeader}>
+                      <View style={[styles.nwArrow, { backgroundColor: Colors.status.positive }]}>
+                        <Ionicons name="arrow-up" size={16} color="#fff" />
+                      </View>
+                      <Text style={styles.nwGroupTitle}>{tc('nutrientDirections.increase')}</Text>
+                    </View>
+                    {watchlistAlerts.filter((a) => a.direction === 'boost').map((alert) => {
+                      const sev = getNutrientSeverity(alert.offKey, alert.value, alert.direction);
+                      const isGood = sev.color === SEV_AMAZING || sev.color === SEV_GOOD;
+                      return (
+                        <View key={alert.offKey} style={styles.nwRow}>
+                          <View style={styles.nwRowLeft}>
+                            <Text style={styles.nwNutrient}>{alert.nutrient}</Text>
+                          </View>
+                          <View style={styles.nwRowRight}>
+                            <Text style={styles.nwValue}>
+                              {Number(alert.value.toFixed(2))}{alert.unit}/100g
+                            </Text>
+                            <View style={styles.nwRatingWrap}>
+                              {isGood
+                                ? <TickIcon color={sev.color} size={14} strokeWidth={3} />
+                                : <Ionicons name="close" size={16} color={sev.color} />}
+                              <Text style={[styles.nwRating, { color: sev.color }]}>
+                                {tc(`ratings.${sev.rating}`)}
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
               </View>
             )}
 
@@ -3429,99 +1917,25 @@ export default function ScanResultScreen() {
                   <Text style={styles.sectionTitle}>{t('section.highlightedNutrition')}</Text>
                 </View>
 
-                {/* Toggle controls (Figma node 3164-4264) */}
-                <View style={styles.toggleControls}>
-                  <View style={styles.toggleRowCompact}>
-                    {servingModes.map((mode) => (
-                      <TouchableOpacity
-                        key={mode}
-                        style={[
-                          styles.overviewToggle,
-                          effectiveServingMode === mode && styles.overviewToggleActive,
-                        ]}
-                        onPress={() => setServingMode(mode)}
-                        activeOpacity={0.75}
-                      >
-                        <Text
-                          style={[
-                            styles.overviewToggleText,
-                            effectiveServingMode === mode && styles.overviewToggleTextActive,
-                          ]}
-                        >
-                          {mode === 'serving'
-                            ? servingLabel || t('toggle.perServing')
-                            : mode === 'custom'
-                              ? t('toggle.custom', { defaultValue: 'Custom' })
-                              : t('toggle.per100g')}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                  <View style={styles.toggleRowCompact}>
-                    {(['value', 'dri'] as DriMode[]).map((mode) => (
-                      <TouchableOpacity
-                        key={mode}
-                        style={[
-                          styles.overviewToggle,
-                          driMode === mode && styles.overviewToggleActive,
-                        ]}
-                        onPress={() => setDriMode(mode)}
-                        activeOpacity={0.75}
-                      >
-                        <Text
-                          style={[
-                            styles.overviewToggleText,
-                            driMode === mode && styles.overviewToggleTextActive,
-                          ]}
-                        >
-                          {mode === 'value' ? t('toggle.value') : t('toggle.dri')}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
+                {/* Toggle controls (Figma node 4345-12654) */}
+                <ServingToggle
+                  servingModes={servingModes}
+                  effectiveServingMode={effectiveServingMode}
+                  setServingMode={setServingMode}
+                  driMode={driMode}
+                  setDriMode={setDriMode}
+                  servingLabel={servingLabel}
+                  t={t}
+                />
 
-                {/* Weight stepper — only shown in Custom mode */}
-                {isCustomMode && (
-                  <View style={styles.weightStepper}>
-                    <TouchableOpacity
-                      style={styles.weightStepBtn}
-                      onPress={() => setCustomWeight((w) => Math.max(5, w - 5))}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.weightStepBtnText}>−</Text>
-                    </TouchableOpacity>
-                    {editingWeight ? (
-                      <TextInput
-                        style={styles.weightInputText}
-                        keyboardType="numeric"
-                        value={String(customWeight)}
-                        onChangeText={(v) => {
-                          const n = parseInt(v, 10);
-                          if (!isNaN(n) && n > 0 && n <= 9999) setCustomWeight(n);
-                          else if (v === '') setCustomWeight(0);
-                        }}
-                        onBlur={() => {
-                          setEditingWeight(false);
-                          if (customWeight < 1) setCustomWeight(100);
-                        }}
-                        autoFocus
-                        selectTextOnFocus
-                        maxLength={4}
-                      />
-                    ) : (
-                      <TouchableOpacity onPress={() => setEditingWeight(true)} activeOpacity={0.7}>
-                        <Text style={styles.weightValueText}>{customWeight}g</Text>
-                      </TouchableOpacity>
-                    )}
-                    <TouchableOpacity
-                      style={styles.weightStepBtn}
-                      onPress={() => setCustomWeight((w) => Math.min(9999, w + 5))}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.weightStepBtnText}>+</Text>
-                    </TouchableOpacity>
-                  </View>
+                {/* Weight stepper — shown when Per 100g is selected */}
+                {is100gMode && (
+                  <WeightStepper
+                    customWeight={customWeight}
+                    setCustomWeight={setCustomWeight}
+                    editingWeight={editingWeight}
+                    setEditingWeight={setEditingWeight}
+                  />
                 )}
 
                 <View style={styles.nutritionRows}>
@@ -3583,98 +1997,24 @@ export default function ScanResultScreen() {
               </View>
 
               {/* Toggle controls — same compact style as overview */}
-              <View style={styles.toggleControls}>
-                <View style={styles.toggleRowCompact}>
-                  {servingModes.map((mode) => (
-                    <TouchableOpacity
-                      key={mode}
-                      style={[
-                        styles.overviewToggle,
-                        effectiveServingMode === mode && styles.overviewToggleActive,
-                      ]}
-                      onPress={() => setServingMode(mode)}
-                      activeOpacity={0.75}
-                    >
-                      <Text
-                        style={[
-                          styles.overviewToggleText,
-                          effectiveServingMode === mode && styles.overviewToggleTextActive,
-                        ]}
-                      >
-                        {mode === 'serving'
-                          ? servingLabel || t('toggle.perServing')
-                          : mode === 'custom'
-                            ? t('toggle.custom', { defaultValue: 'Custom' })
-                            : t('toggle.per100g')}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-                <View style={styles.toggleRowCompact}>
-                  {(['value', 'dri'] as DriMode[]).map((mode) => (
-                    <TouchableOpacity
-                      key={mode}
-                      style={[
-                        styles.overviewToggle,
-                        driMode === mode && styles.overviewToggleActive,
-                      ]}
-                      onPress={() => setDriMode(mode)}
-                      activeOpacity={0.75}
-                    >
-                      <Text
-                        style={[
-                          styles.overviewToggleText,
-                          driMode === mode && styles.overviewToggleTextActive,
-                        ]}
-                      >
-                        {mode === 'value' ? t('toggle.value') : t('toggle.dri')}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
+              <ServingToggle
+                servingModes={servingModes}
+                effectiveServingMode={effectiveServingMode}
+                setServingMode={setServingMode}
+                driMode={driMode}
+                setDriMode={setDriMode}
+                servingLabel={servingLabel}
+                t={t}
+              />
 
-              {/* Weight stepper — only shown in Custom mode */}
-              {isCustomMode && hasNutrition && (
-                <View style={styles.weightStepper}>
-                  <TouchableOpacity
-                    style={styles.weightStepBtn}
-                    onPress={() => setCustomWeight((w) => Math.max(5, w - 5))}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.weightStepBtnText}>−</Text>
-                  </TouchableOpacity>
-                  {editingWeight ? (
-                    <TextInput
-                      style={styles.weightInputText}
-                      keyboardType="numeric"
-                      value={String(customWeight)}
-                      onChangeText={(v) => {
-                        const n = parseInt(v, 10);
-                        if (!isNaN(n) && n > 0 && n <= 9999) setCustomWeight(n);
-                        else if (v === '') setCustomWeight(0);
-                      }}
-                      onBlur={() => {
-                        setEditingWeight(false);
-                        if (customWeight < 1) setCustomWeight(100);
-                      }}
-                      autoFocus
-                      selectTextOnFocus
-                      maxLength={4}
-                    />
-                  ) : (
-                    <TouchableOpacity onPress={() => setEditingWeight(true)} activeOpacity={0.7}>
-                      <Text style={styles.weightValueText}>{customWeight}g</Text>
-                    </TouchableOpacity>
-                  )}
-                  <TouchableOpacity
-                    style={styles.weightStepBtn}
-                    onPress={() => setCustomWeight((w) => Math.min(9999, w + 5))}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.weightStepBtnText}>+</Text>
-                  </TouchableOpacity>
-                </View>
+              {/* Weight stepper — shown when Per 100g is selected */}
+              {is100gMode && hasNutrition && (
+                <WeightStepper
+                  customWeight={customWeight}
+                  setCustomWeight={setCustomWeight}
+                  editingWeight={editingWeight}
+                  setEditingWeight={setEditingWeight}
+                />
               )}
 
               {fetchingOff ? (
@@ -3733,32 +2073,76 @@ export default function ScanResultScreen() {
                     {t('section.nutrientWatchlistSubtitle')}
                   </Text>
                 </View>
-                <View style={styles.nutritionRows}>
-                  {watchlistAlerts.map((alert) => (
-                    <View key={alert.offKey} style={styles.nutritionRow}>
-                      <View style={styles.nutritionRowLeft}>
-                        <View style={[styles.watchlistDot, {
-                          backgroundColor: alert.direction === 'limit'
-                            ? Colors.status.negative
-                            : Colors.status.positive,
-                        }]} />
-                        <Text style={styles.nutritionName}>{alert.nutrient}</Text>
+                {/* Limit group */}
+                {watchlistAlerts.some((a) => a.direction === 'limit') && (
+                  <View style={styles.nwGroup}>
+                    <View style={styles.nwGroupHeader}>
+                      <View style={[styles.nwArrow, { backgroundColor: Colors.status.negative }]}>
+                        <Ionicons name="arrow-down" size={16} color="#fff" />
                       </View>
-                      <View style={styles.nutritionRowRight}>
-                        <Text style={styles.nutritionValue}>
-                          {alert.value}{alert.unit}
-                        </Text>
-                        <Text style={[styles.nutritionRating, {
-                          color: alert.direction === 'limit'
-                            ? Colors.status.negative
-                            : Colors.status.positive,
-                        }]}>
-                          {alert.direction === 'limit' ? tc('nutrientDirections.limit') : tc('nutrientDirections.boost')}
-                        </Text>
-                      </View>
+                      <Text style={styles.nwGroupTitle}>{tc('nutrientDirections.limit')}</Text>
                     </View>
-                  ))}
-                </View>
+                    {watchlistAlerts.filter((a) => a.direction === 'limit').map((alert) => {
+                      const sev = getNutrientSeverity(alert.offKey, alert.value, alert.direction);
+                      const isGood = sev.color === SEV_AMAZING || sev.color === SEV_GOOD;
+                      return (
+                        <View key={alert.offKey} style={styles.nwRow}>
+                          <View style={styles.nwRowLeft}>
+                            <Text style={styles.nwNutrient}>{alert.nutrient}</Text>
+                          </View>
+                          <View style={styles.nwRowRight}>
+                            <Text style={styles.nwValue}>
+                              {Number(alert.value.toFixed(2))}{alert.unit}/100g
+                            </Text>
+                            <View style={styles.nwRatingWrap}>
+                              {isGood
+                                ? <TickIcon color={sev.color} size={14} strokeWidth={3} />
+                                : <Ionicons name="close" size={16} color={sev.color} />}
+                              <Text style={[styles.nwRating, { color: sev.color }]}>
+                                {tc(`ratings.${sev.rating}`)}
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
+                {/* Increase group */}
+                {watchlistAlerts.some((a) => a.direction === 'boost') && (
+                  <View style={styles.nwGroup}>
+                    <View style={styles.nwGroupHeader}>
+                      <View style={[styles.nwArrow, { backgroundColor: Colors.status.positive }]}>
+                        <Ionicons name="arrow-up" size={16} color="#fff" />
+                      </View>
+                      <Text style={styles.nwGroupTitle}>{tc('nutrientDirections.increase')}</Text>
+                    </View>
+                    {watchlistAlerts.filter((a) => a.direction === 'boost').map((alert) => {
+                      const sev = getNutrientSeverity(alert.offKey, alert.value, alert.direction);
+                      const isGood = sev.color === SEV_AMAZING || sev.color === SEV_GOOD;
+                      return (
+                        <View key={alert.offKey} style={styles.nwRow}>
+                          <View style={styles.nwRowLeft}>
+                            <Text style={styles.nwNutrient}>{alert.nutrient}</Text>
+                          </View>
+                          <View style={styles.nwRowRight}>
+                            <Text style={styles.nwValue}>
+                              {Number(alert.value.toFixed(2))}{alert.unit}/100g
+                            </Text>
+                            <View style={styles.nwRatingWrap}>
+                              {isGood
+                                ? <TickIcon color={sev.color} size={14} strokeWidth={3} />
+                                : <Ionicons name="close" size={16} color={sev.color} />}
+                              <Text style={[styles.nwRating, { color: sev.color }]}>
+                                {tc(`ratings.${sev.rating}`)}
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
               </View>
             )}
           </View>
@@ -4268,6 +2652,7 @@ export default function ScanResultScreen() {
         insight={insightSheetDef}
         onClose={() => setInsightSheetDef(null)}
       />
+      </Animated.View>
     </SafeAreaView>
   );
 }
@@ -4754,66 +3139,81 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 
-  // Nutrient watchlist alert card
-  nutrientAlertCard: {
-    backgroundColor: Colors.surface.secondary,
-    borderWidth: 1,
-    borderColor: '#aad4cd',
-    borderRadius: 16,
-    padding: Spacing.s,
+  // ── Nutrient Watch (Figma node 3263-5807) ──
+  nwGroup: {
     gap: Spacing.xs,
   },
-  nutrientAlertBadge: {
+  nwGroupHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: Colors.accent,
-    borderRadius: 999,
-    paddingHorizontal: Spacing.xs,
-    paddingVertical: 4,
-    alignSelf: 'flex-start',
+    gap: Spacing.xs,
   },
-  nutrientAlertBadgeText: {
-    color: '#fff',
+  nwArrow: {
+    width: 24,
+    height: 24,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 4,
+  },
+  nwGroupTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: 0,
+    lineHeight: 20,
+  },
+  nwRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f5fbfb',
+    borderRadius: Radius.m,
+    borderWidth: 1,
+    borderColor: '#aad4cd',
+    padding: Spacing.s,
+    gap: Spacing.s,
+  },
+  nwRowLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  nwNutrient: {
+    fontSize: 16,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: 0,
+    lineHeight: 20,
+  },
+  nwRowRight: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: Spacing.xs,
+  },
+  nwValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: 0,
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+  nwRatingWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xxs,
+  },
+  nwRating: {
     fontSize: 14,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     letterSpacing: -0.28,
-  },
-  nutrientAlertRow: {
-    gap: 2,
-    backgroundColor: Colors.surface.tertiary,
-    borderRadius: Radius.l,
-    borderWidth: 1,
-    borderColor: '#aad4cd',
-    paddingHorizontal: Spacing.s,
-    paddingVertical: 10,
-  },
-  nutrientAlertNameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  nutrientAlertDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  nutrientAlertName: {
-    fontSize: 15,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
-    letterSpacing: -0.26,
-    lineHeight: 18,
-  },
-  nutrientAlertReason: {
-    fontSize: 13,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    letterSpacing: -0.13,
-    lineHeight: 18,
-    marginLeft: 14,
+    lineHeight: 17,
+    width: 61,
   },
   noMicroDataCard: {
     flexDirection: 'row',
@@ -4832,77 +3232,22 @@ const styles = StyleSheet.create({
     letterSpacing: -0.14,
     lineHeight: 21,
   },
-  watchlistDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginLeft: 11,
-    marginRight: 5,
-  },
-
-  // Weight stepper for custom weight input
-  weightStepper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    gap: 2,
-    paddingHorizontal: 2,
-  },
-  weightStepBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 999,
-    backgroundColor: Colors.surface.tertiary,
-    borderWidth: 2,
-    borderColor: '#aad4cd',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  weightStepBtnText: {
-    fontSize: 16,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
-    lineHeight: 18,
-  },
-  weightValueText: {
-    fontSize: 13,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.secondary,
-    letterSpacing: -0.26,
-    lineHeight: 16,
-    width: 68,
-    textAlign: 'center',
-  },
-  weightInputText: {
-    fontSize: 13,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
-    letterSpacing: -0.26,
-    lineHeight: 16,
-    width: 68,
-    textAlign: 'center',
-    borderBottomWidth: 2,
-    borderBottomColor: Colors.accent,
-    paddingVertical: 2,
-  },
 
   // Nutrition rows (per Figma Macro Stack node 3263-5386)
   // EACH ROW is individually styled — no shared card wrapper
   nutritionRows: {
-    gap: Spacing.xxs,  // 4px between rows, per Figma
+    gap: Spacing.xs,  // 8px between card rows
   },
   nutritionRow: {
-    // Individual row styling per Figma node 4351-5516
-    backgroundColor: Colors.surface.tertiary,
-    borderRadius: Radius.m,            // 8px, NOT 16
+    backgroundColor: '#f5fbfb',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#aad4cd',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingLeft: Spacing.xs,           // 8px
+    paddingLeft: 12,
     paddingRight: Spacing.s,           // 16px
-    paddingVertical: Spacing.xs,       // 8px
+    paddingVertical: 12,
     gap: Spacing.s,                    // 16px between icon+label and value
   },
   nutritionRowLeft: {
@@ -4980,15 +3325,13 @@ const styles = StyleSheet.create({
   },
 
   // Overview toggle controls (Figma node 3164-4264)
-  toggleControls: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
   toggleRowCompact: {
     flexDirection: 'row',
   },
   overviewToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xxs,
     paddingHorizontal: Spacing.xs,
     paddingVertical: Spacing.xs,
     borderRadius: 999,

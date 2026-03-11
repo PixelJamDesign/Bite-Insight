@@ -12,6 +12,7 @@ import {
   StyleSheet,
   Image,
   Animated,
+  Easing,
   Modal,
   Pressable,
 } from 'react-native';
@@ -210,6 +211,15 @@ export default function EditProfileScreen() {
       }));
   }
 
+  // ScrollView ref for resetting scroll position
+  const scrollRef = useRef<ScrollView>(null);
+
+  // Content transition animation (horizontal slide)
+  const contentOpacity = useRef(new Animated.Value(0)).current;
+  const contentTranslateX = useRef(new Animated.Value(40)).current;
+  const slideDirectionRef = useRef<'forward' | 'backward'>('forward');
+  const isTransitioning = useRef(false);
+
   // Chip search
   const [chipSearch, setChipSearch]           = useState('');
   const [chipSearchActive, setChipSearchActive] = useState(false);
@@ -308,11 +318,47 @@ export default function EditProfileScreen() {
     }
   }, [step]);
 
-  // Reset chip search on step change
+  // Enter animation: slide in new content after step changes
   useEffect(() => {
     setChipSearch('');
     setChipSearchActive(false);
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+
+    const slideFrom = slideDirectionRef.current === 'forward' ? 40 : -40;
+
+    contentOpacity.setValue(0);
+    contentTranslateX.setValue(slideFrom);
+    Animated.parallel([
+      Animated.timing(contentOpacity, {
+        toValue: 1, duration: 800, easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(contentTranslateX, {
+        toValue: 0, duration: 800, easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start(() => { isTransitioning.current = false; });
   }, [step]);
+
+  // Exit animation helper
+  function animateExit(direction: 'forward' | 'backward', onComplete: () => void) {
+    if (isTransitioning.current) return;
+    isTransitioning.current = true;
+    slideDirectionRef.current = direction;
+
+    const slideTo = direction === 'forward' ? -40 : 40;
+
+    Animated.parallel([
+      Animated.timing(contentOpacity, {
+        toValue: 0, duration: 800, easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(contentTranslateX, {
+        toValue: slideTo, duration: 800, easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start(() => onComplete());
+  }
 
   // ── Avatar picker ────────────────────────────────────────────────────────────
   function pickAvatar() {
@@ -355,12 +401,12 @@ export default function EditProfileScreen() {
       Alert.alert(tp('editProfile.alert.nameRequiredTitle'), tp('editProfile.alert.nameRequiredMessage'));
       return;
     }
-    setStep(s => Math.min(s + 1, totalSteps));
+    animateExit('forward', () => setStep(s => Math.min(s + 1, totalSteps)));
   }
 
   function handleBack() {
     if (step === 1) safeBack();
-    else setStep(s => s - 1);
+    else animateExit('backward', () => setStep(s => s - 1));
   }
 
   // ── Save changes ─────────────────────────────────────────────────────────────
@@ -660,11 +706,13 @@ export default function EditProfileScreen() {
 
         {/* Scrollable content */}
         <ScrollView
+          ref={scrollRef}
           style={{ flex: 1 }}
           contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
+          <Animated.View style={{ opacity: contentOpacity, transform: [{ translateX: contentTranslateX }] }}>
           {/* ── Step: About you ── */}
           {currentStepKey === 'about' && (
             <>
@@ -790,6 +838,7 @@ export default function EditProfileScreen() {
           )}
 
           <View style={{ height: 120 }} />
+          </Animated.View>
         </ScrollView>
 
         {/* ── Footer ── */}

@@ -255,7 +255,10 @@ export default function LoginScreen() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName } },
+      options: {
+        data: { full_name: fullName, display_name: fullName.trim().split(' ')[0] },
+        emailRedirectTo: 'biteinsight://verify',
+      },
     });
     setLoading(false);
 

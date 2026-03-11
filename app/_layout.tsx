@@ -50,6 +50,8 @@ function stepToSegment(step: OnboardingStep): string {
 }
 
 const JOURNEY_SEGMENTS = new Set(['onboarding', 'disclaimer', 'app-tour']);
+/** Segments that should NOT be re-accessible after the journey is complete. */
+const LOCKED_JOURNEY_SEGMENTS = new Set(['onboarding', 'disclaimer']);
 
 // ── Auth Guard ──────────────────────────────────────────────────────────────
 
@@ -107,8 +109,9 @@ function JourneyGuard() {
     if (currentSegment !== expectedSegment) {
       return <Redirect href={stepToRoute(onboardingStep) as any} />;
     }
-  } else if (JOURNEY_SEGMENTS.has(currentSegment)) {
-    // Journey complete but still on a journey screen — send to main app
+  } else if (LOCKED_JOURNEY_SEGMENTS.has(currentSegment)) {
+    // Journey complete but on a locked journey screen — send to main app
+    // (app-tour is intentionally NOT locked so users can re-view it from the menu)
     return <Redirect href="/(tabs)" />;
   }
 
@@ -122,14 +125,16 @@ function RootLayoutInner() {
   const router = useRouter();
   const handledUrl = useRef(false);
 
-  // Handle deep links for password reset.
+  // Handle deep links for password reset and email verification.
   // Supabase sends: biteinsight://reset-password#access_token=...&type=recovery
+  //            or:  biteinsight://verify#access_token=...&type=signup
   useEffect(() => {
     async function handleUrl(url: string) {
       const fragment = url.split('#')[1];
       if (!fragment) return;
       const params = new URLSearchParams(fragment);
-      if (params.get('type') !== 'recovery') return;
+      const type = params.get('type');
+      if (type !== 'recovery' && type !== 'signup') return;
       const access_token = params.get('access_token');
       const refresh_token = params.get('refresh_token');
       if (!access_token || !refresh_token || handledUrl.current) return;
@@ -137,7 +142,12 @@ function RootLayoutInner() {
       try {
         await supabase.auth.setSession({ access_token, refresh_token });
       } catch { /* ignore — screen will show an error if session is invalid */ }
-      router.replace('/reset-password');
+
+      if (type === 'recovery') {
+        router.replace('/reset-password');
+      }
+      // For signup verification, setting the session is enough —
+      // AuthGuard + JourneyGuard will route the user to the correct step.
     }
 
     // Cold start: app opened via deep link

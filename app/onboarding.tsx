@@ -18,6 +18,7 @@ import {
   Pressable,
   Image,
   Animated,
+  Easing,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -256,6 +257,19 @@ export default function OnboardingScreen() {
     ? (nextStepKey === 'about' ? tj('about.title') : t(`step.${nextStepKey}`))
     : null;
 
+  // ScrollView ref for resetting scroll position
+  const scrollRef = useRef<ScrollView>(null);
+
+  // Header entrance animation (fade + subtle slide-up)
+  const headerOpacity = useRef(new Animated.Value(0)).current;
+  const headerTranslateY = useRef(new Animated.Value(12)).current;
+
+  // Content transition animation (horizontal slide)
+  const contentOpacity = useRef(new Animated.Value(0)).current;
+  const contentTranslateX = useRef(new Animated.Value(40)).current;
+  const slideDirectionRef = useRef<'forward' | 'backward'>('forward');
+  const isTransitioning = useRef(false);
+
   // Chip search
   const [chipSearch, setChipSearch]           = useState('');
   const [chipSearchActive, setChipSearchActive] = useState(false);
@@ -299,11 +313,72 @@ export default function OnboardingScreen() {
     }
   }, [overallStep]);
 
-  // Reset chip search on step change
+  // Enter animation: header fades in first, content follows with a short delay
   useEffect(() => {
     setChipSearch('');
     setChipSearchActive(false);
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+
+    const slideFrom = slideDirectionRef.current === 'forward' ? 40 : -40;
+
+    // Reset both header and content
+    headerOpacity.setValue(0);
+    headerTranslateY.setValue(12);
+    contentOpacity.setValue(0);
+    contentTranslateX.setValue(slideFrom);
+
+    // Header fades in first
+    Animated.parallel([
+      Animated.timing(headerOpacity, {
+        toValue: 1, duration: 600, easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(headerTranslateY, {
+        toValue: 0, duration: 600, easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Content slides in after a short delay
+    Animated.parallel([
+      Animated.timing(contentOpacity, {
+        toValue: 1, duration: 800, delay: 150, easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(contentTranslateX, {
+        toValue: 0, duration: 800, delay: 150, easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start(() => { isTransitioning.current = false; });
   }, [pos]);
+
+  // Exit animation helper: slide out header + content, then invoke callback
+  function animateExit(direction: 'forward' | 'backward', onComplete: () => void) {
+    if (isTransitioning.current) return;
+    isTransitioning.current = true;
+    slideDirectionRef.current = direction;
+
+    const slideTo = direction === 'forward' ? -40 : 40;
+
+    Animated.parallel([
+      Animated.timing(headerOpacity, {
+        toValue: 0, duration: 800, easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(headerTranslateY, {
+        toValue: -8, duration: 800, easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(contentOpacity, {
+        toValue: 0, duration: 800, easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(contentTranslateX, {
+        toValue: slideTo, duration: 800, easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start(() => onComplete());
+  }
 
   // ── Avatar picker ──────────────────────────────────────────────────────────
   function pickAvatar() {
@@ -364,7 +439,7 @@ export default function OnboardingScreen() {
     if (currentStepKey === 'about') {
       await saveAboutData();
     }
-    setPos(p => p + 1);
+    animateExit('forward', () => setPos(p => p + 1));
   }
 
   function handleBack() {
@@ -372,7 +447,7 @@ export default function OnboardingScreen() {
       // Sign out from the journey
       supabase.auth.signOut();
     } else {
-      setPos(p => p - 1);
+      animateExit('backward', () => setPos(p => p - 1));
     }
   }
 
@@ -650,21 +725,25 @@ export default function OnboardingScreen() {
           <Logo width={141} height={36} />
         </View>
 
-        {/* Step header */}
-        <View style={styles.stepHeader}>
-          <View style={styles.stepTitleRow}>
-            <Text style={styles.stepTitle}>{stepTitle}</Text>
+        {/* Step header — fades in before content */}
+        <Animated.View style={{ opacity: headerOpacity, transform: [{ translateY: headerTranslateY }] }}>
+          <View style={styles.stepHeader}>
+            <View style={styles.stepTitleRow}>
+              <Text style={styles.stepTitle}>{stepTitle}</Text>
+            </View>
+            {renderProgress()}
           </View>
-          {renderProgress()}
-        </View>
+        </Animated.View>
 
         {/* Scrollable content */}
         <ScrollView
+          ref={scrollRef}
           style={{ flex: 1 }}
           contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
+          <Animated.View style={{ opacity: contentOpacity, transform: [{ translateX: contentTranslateX }] }}>
           {/* ── Step: About You ── */}
           {currentStepKey === 'about' && (
             <>
@@ -788,6 +867,7 @@ export default function OnboardingScreen() {
           )}
 
           <View style={{ height: 120 }} />
+          </Animated.View>
         </ScrollView>
 
         {/* ── Footer ── */}

@@ -105,7 +105,7 @@ function Footer() {
   return (
     <View style={styles.footer}>
       <Text style={styles.footerText}>{t('footer.version')}</Text>
-      <TouchableOpacity activeOpacity={0.7}>
+      <TouchableOpacity activeOpacity={0.7} onPress={() => Linking.openURL('https://biteinsight.co.uk/report.html')}>
         <Text style={[styles.footerText, styles.footerLink]}>{t('footer.reportProblem')}</Text>
       </TouchableOpacity>
     </View>

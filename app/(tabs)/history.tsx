@@ -25,6 +25,7 @@ import { useTabBarSlide } from '@/lib/tabBarContext';
 import { NoImagePlaceholder } from '@/components/NoImagePlaceholder';
 import type { Scan } from '@/lib/types';
 import { useFadeIn } from '@/lib/useFadeIn';
+import { useFocusFadeIn } from '@/lib/useFocusFadeIn';
 
 // ─── Nutriscore colours ────────────────────────────────────────────────────────
 const NUTRISCORE_COLORS: Record<string, string> = {
@@ -356,6 +357,8 @@ export default function HistoryScreen() {
 
   // Fade-in animations for content
   const fadeContent = useFadeIn(!loading, 0);
+  // Subtle re-entrance animation when returning from a pushed screen
+  const focusAnim = useFocusFadeIn();
 
   // Date tabs — last 7 days, built once on mount
   const dateTabs = useRef(buildDateTabs()).current;
@@ -516,6 +519,7 @@ export default function HistoryScreen() {
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <ScreenLayout title={t('screenTitle')} headerExtension={headerExtension}>
+      <Animated.View style={{ flex: 1, opacity: focusAnim.opacity, transform: [{ translateY: focusAnim.translateY }] }}>
       <View style={styles.contentOuter}>
         {/* Date tabs live here so the calOverlay (absoluteFillObject) starts at
             the same Y, aligning the calendar card with the top of the tabs. */}
@@ -597,6 +601,7 @@ export default function HistoryScreen() {
           </Animated.View>
         )}
       </View>
+      </Animated.View>
     </ScreenLayout>
   );
 }

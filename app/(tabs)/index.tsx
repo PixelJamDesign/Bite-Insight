@@ -14,6 +14,7 @@ import {
   Animated,
 } from 'react-native';
 import { useFadeIn } from '@/lib/useFadeIn';
+import { useFocusFadeIn } from '@/lib/useFocusFadeIn';
 import { useTranslation } from 'react-i18next';
 
 if (Platform.OS === 'android') {
@@ -240,6 +241,8 @@ export default function HomeDashboard() {
   const fadeInsight  = useFadeIn(!loading, 80);
   const fadeStats    = useFadeIn(!loading, 160);
   const fadeIngList  = useFadeIn(!loading, 240);
+  // Subtle re-entrance animation when returning from a pushed screen
+  const focusAnim = useFocusFadeIn();
 
   if (loading) {
     return (
@@ -251,6 +254,7 @@ export default function HomeDashboard() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={[]}>
+      <Animated.View style={{ flex: 1, opacity: focusAnim.opacity, transform: [{ translateY: focusAnim.translateY }] }}>
       {/* ── Dashboard content (always mounted) ── */}
       <ScrollView
         style={styles.scroll}
@@ -417,6 +421,7 @@ export default function HomeDashboard() {
 
         <View style={{ height: 120 }} />
       </ScrollView>
+      </Animated.View>
 
       {/* ── Top fade — masks content scrolling behind the header ── */}
       <LinearGradient
