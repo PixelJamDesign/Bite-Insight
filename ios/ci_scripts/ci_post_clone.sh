@@ -47,6 +47,13 @@ cd "$CI_PRIMARY_REPOSITORY_PATH"
 npx expo prebuild --platform ios --no-install
 echo "  ✓ Expo prebuild complete"
 
+# ── Homebrew + cmake (required by Hermes engine) ─────────────────────────────
+if ! command -v cmake &>/dev/null; then
+  echo "Installing cmake via Homebrew..."
+  brew install cmake
+fi
+echo "  ✓ cmake $(cmake --version | head -1)"
+
 # ── CocoaPods (UTF-8 fix for Xcode Cloud) ───────────────────────────────────
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
