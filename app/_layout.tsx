@@ -1,5 +1,5 @@
 import '@/lib/i18n';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Redirect, Stack, useRootNavigationState, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -167,13 +167,23 @@ function RootLayoutInner() {
   const { loading: journeyLoading } = useJourney();
   const { contentOpacity } = useTransition();
 
+  // Safety timeout — if providers haven't resolved after 8s, hide splash anyway
+  // so the user isn't stuck on a blank screen (e.g. slow network on Android)
+  const [timedOut, setTimedOut] = useState(false);
   useEffect(() => {
-    if (fontsLoaded && !loading && !journeyLoading) {
+    const timer = setTimeout(() => setTimedOut(true), 8000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const ready = (fontsLoaded && !loading && !journeyLoading) || timedOut;
+
+  useEffect(() => {
+    if (ready) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, loading, journeyLoading]);
+  }, [ready]);
 
-  if (!fontsLoaded || loading || journeyLoading) {
+  if (!ready) {
     return null;
   }
 
