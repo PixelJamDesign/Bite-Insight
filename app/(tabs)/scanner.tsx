@@ -7,15 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import * as ImagePicker from 'expo-image-picker';
-
-// ML Kit barcode scanning — imported safely so the app doesn't crash if
-// the native module isn't linked yet (e.g. older EAS builds).
-let BarcodeScanning: { scan: (uri: string) => Promise<Array<{ value?: string; format?: string }>> } | null = null;
-try {
-  BarcodeScanning = require('@react-native-ml-kit/barcode-scanning').default;
-} catch {
-  // Native module not available — will fall back to expo-camera scanFromURLAsync
-}
+import * as VisionScanner from '@/modules/barcode-scanner-vision/src';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { useSubscription } from '@/lib/subscriptionContext';
@@ -49,8 +41,9 @@ export default function ScannerScreen() {
   const actionBarBottom = insets.bottom + 8 + 60 + 32 + 8;
 
   /** Open photo library and scan a barcode from the selected image.
-   *  Prefers Google ML Kit (all barcode types on iOS + Android).
-   *  Falls back to expo-camera scanFromURLAsync (QR-only on iOS). */
+   *  iOS: Apple Vision (VNDetectBarcodesRequest) — all barcode types.
+   *  Android: expo-camera scanFromURLAsync — all barcode types.
+   *  Fallback: expo-camera scanFromURLAsync (QR-only on iOS). */
   async function handleGalleryScan() {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -61,9 +54,9 @@ export default function ScannerScreen() {
 
       const uri = result.assets[0].uri;
 
-      // Try ML Kit first (supports all barcode types on both platforms)
-      if (BarcodeScanning) {
-        const barcodes = await BarcodeScanning.scan(uri);
+      // Try Apple Vision first (iOS only — supports ALL barcode types from images)
+      if (VisionScanner.isAvailable()) {
+        const barcodes = await VisionScanner.scanFromImage(uri);
         if (barcodes && barcodes.length > 0) {
           const firstBarcode = barcodes[0];
           handleBarcodeScan({
@@ -75,7 +68,7 @@ export default function ScannerScreen() {
           return;
         }
       } else {
-        // Fallback: expo-camera scanFromURLAsync (QR-only on iOS, all types on Android)
+        // Android + fallback: expo-camera scanFromURLAsync (all types on Android)
         const barcodes = await Camera.scanFromURLAsync(uri, [
           'ean13', 'ean8', 'upc_a', 'upc_e',
           'code128', 'code39', 'qr',
