@@ -143,7 +143,7 @@ async function closeDb(region: RegionCode): Promise<void> {
 async function openDb(region: RegionCode): Promise<SQLite.SQLiteDatabase> {
   const existing = _offlineDbs.get(region);
   if (existing) return existing;
-  const db = await SQLite.openDatabaseAsync(dbFilename(region), undefined, DB_DIR);
+  const db = await SQLite.openDatabaseAsync(dbFilename(region), undefined, getDbDir());
   _offlineDbs.set(region, db);
   return db;
 }
