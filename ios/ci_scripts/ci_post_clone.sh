@@ -20,6 +20,13 @@ echo "Node $(node -v)  ·  npm $(npm -v)"
 cd "$CI_PRIMARY_REPOSITORY_PATH"
 npm ci
 
+# ── Purge any stale native packages that were previously removed ──────────
+# @react-native-ml-kit/barcode-scanning was removed but may linger in CI cache
+if [ -d "node_modules/@react-native-ml-kit" ]; then
+  echo "⚠️  Removing stale @react-native-ml-kit from node_modules..."
+  rm -rf "node_modules/@react-native-ml-kit"
+fi
+
 # ── Write .env from Xcode Cloud environment variables ────────────────────────
 # Set these in Xcode Cloud → Workflow → Environment Variables:
 #   EXPO_PUBLIC_SUPABASE_URL
@@ -59,6 +66,7 @@ export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 
 cd "$CI_PRIMARY_REPOSITORY_PATH/ios"
+pod cache clean --all 2>/dev/null || true
 pod install
 echo "  ✓ Pods installed"
 
