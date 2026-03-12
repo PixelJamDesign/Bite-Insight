@@ -450,9 +450,10 @@ export default function ScannerScreen() {
 
         {/* Icon buttons */}
         <View style={styles.actionBtnGroup}>
-          <TouchableOpacity style={styles.actionBtn} activeOpacity={0.8} onPress={handleGalleryScan}>
+          {/* Gallery upload hidden until barcode-from-image is fixed */}
+          {/* <TouchableOpacity style={styles.actionBtn} activeOpacity={0.8} onPress={handleGalleryScan}>
             <ActionGalleryIcon color={Colors.primary} size={24} />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           <TouchableOpacity style={styles.actionBtn} activeOpacity={0.8} onPress={() => router.push('/food-search')}>
             <ActionSearchIcon color={Colors.primary} size={22} />
           </TouchableOpacity>
@@ -715,7 +716,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xs,   // 8
     paddingVertical: Spacing.xs,
     height: 48,
-    width: 201,
+    flex: 1,
     gap: Spacing.xs,
     overflow: 'hidden',
   },
