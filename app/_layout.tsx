@@ -24,8 +24,13 @@ import type { OnboardingStep } from '@/lib/types';
 import { UpsellSheet } from '@/components/UpsellSheet';
 import { MyPlanSheet } from '@/components/MyPlanSheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { prefetchFoodImages } from '@/components/FoodCarousel';
 
 SplashScreen.preventAutoHideAsync();
+
+// Start prefetching food carousel images immediately so they're cached
+// by the time the user reaches the app tour welcome screen.
+prefetchFoodImages();
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -210,19 +215,19 @@ function RootLayoutInner() {
       <StatusBar style="dark" />
       <View style={{ flex: 1, backgroundColor: '#e2f1ee' }}>
         <Animated.View style={{ flex: 1, opacity: contentOpacity }}>
-          <Stack screenOptions={{ headerShown: false, animation: 'none' }}>
+          <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="scan-result" />
-            <Stack.Screen name="edit-profile" />
             <Stack.Screen name="onboarding" />
             <Stack.Screen name="disclaimer" />
-            <Stack.Screen name="family-members" />
-            <Stack.Screen name="add-family-member" />
-            <Stack.Screen name="upgrade-success" />
             <Stack.Screen name="app-tour" />
-            <Stack.Screen name="food-search" />
+            <Stack.Screen name="upgrade-success" />
             <Stack.Screen name="reset-password" />
+            <Stack.Screen name="scan-result" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="edit-profile" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="family-members" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="add-family-member" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="food-search" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="+not-found" />
           </Stack>
         </Animated.View>

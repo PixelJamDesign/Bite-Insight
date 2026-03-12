@@ -21,6 +21,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { MenuFaceIdIcon } from '@/components/MenuIcons';
 import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/theme';
 import LogoFull from '../../assets/images/logo-full.svg';
@@ -479,11 +480,10 @@ export default function LoginScreen() {
           onPress={handleBiometricLogin}
           activeOpacity={0.7}
         >
-          <Ionicons
-            name={biometricLabel.includes('Face') ? 'scan-outline' : 'finger-print-outline'}
-            size={22}
-            color={Colors.secondary}
-          />
+          {biometricLabel.includes('Face')
+            ? <MenuFaceIdIcon color={Colors.secondary} size={22} />
+            : <Ionicons name="finger-print-outline" size={22} color={Colors.secondary} />
+          }
           <Text style={styles.biometricText}>{t('login.biometricSignIn', { label: biometricLabel })}</Text>
         </TouchableOpacity>
       )}

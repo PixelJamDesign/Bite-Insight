@@ -55,6 +55,13 @@ const ROW_3_IMAGES = [
   `${BUCKET}/Carbs%20%26%20Wheat/couscous.webp`,
 ];
 
+const ALL_IMAGES = [...ROW_1_IMAGES, ...ROW_2_IMAGES, ...ROW_3_IMAGES];
+
+/** Prefetch all carousel images so they're cached before display. */
+export function prefetchFoodImages() {
+  ALL_IMAGES.forEach((uri) => Image.prefetch(uri));
+}
+
 interface CarouselRowProps {
   images: string[];
   /** 'left' = scroll left, 'right' = scroll right */

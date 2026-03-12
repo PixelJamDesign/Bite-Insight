@@ -1,60 +1,109 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '@/constants/theme';
+import { Animated, View, Text, Image, StyleSheet } from 'react-native';
+import { Colors, Spacing, Radius, Shadows, Typography } from '@/constants/theme';
+import { useFocusFadeIn } from '@/lib/useFocusFadeIn';
+import { ScreenLayout } from '@/components/ScreenLayout';
 
 export default function RecipesScreen() {
+  const focusAnim = useFocusFadeIn();
+
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Recipes</Text>
-      </View>
-      <View style={styles.emptyState}>
-        <Ionicons name="restaurant-outline" size={64} color={Colors.secondary} />
-        <Text style={styles.emptyTitle}>Recipes Coming Soon</Text>
-        <Text style={styles.emptyText}>
-          Personalised recipe suggestions based on your dietary preferences will appear here.
-        </Text>
-      </View>
-    </SafeAreaView>
+    <ScreenLayout title="Recipes">
+      <Animated.View style={{ flex: 1, opacity: focusAnim.opacity, transform: [{ translateY: focusAnim.translateY }] }}>
+        <View style={styles.centerWrap}>
+        <View style={styles.cardWrap}>
+          {/* Egg timer — transparent bg webp with shadow */}
+          <Image
+            source={require('@/assets/images/egg-timer.webp')}
+            style={styles.timerImage}
+            resizeMode="contain"
+          />
+
+          {/* White card */}
+          <View style={styles.card}>
+            <View style={styles.content}>
+              <View style={styles.textGroup}>
+                <Text style={styles.heading}>Sorry, nearly ready.</Text>
+                <Text style={styles.bodyLarge}>
+                  Recipes tailored to you based off your liked and disliked ingredients!
+                </Text>
+              </View>
+
+              <View style={styles.infoBox}>
+                <Text style={styles.infoText}>
+                  We're currently working extremely hard to bring this feature to Bite Insight. Stay tuned for exciting news and updates in the near future.
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+        </View>
+      </Animated.View>
+    </ScreenLayout>
   );
 }
 
+const TIMER_WIDTH = 140;
+const TIMER_HEIGHT = Math.round(TIMER_WIDTH * (292 / 240)); // maintain aspect ratio ≈ 170
+const OVERLAP = 50;
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  header: {
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 16,
-  },
-  title: {
-    fontSize: 30,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
-    letterSpacing: -0.6,
-  },
-  emptyState: {
+  centerWrap: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 40,
-    gap: 12,
-    paddingBottom: 100,
+    paddingBottom: 150,               // offset for tab bar height
   },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
+  cardWrap: {
+    paddingHorizontal: Spacing.m,     // 24px from device edges
+    alignItems: 'center',
+  },
+  timerImage: {
+    width: TIMER_WIDTH,
+    height: TIMER_HEIGHT,
+    zIndex: 2,
+    marginBottom: -OVERLAP,
+  },
+  card: {
+    backgroundColor: Colors.surface.secondary,
+    borderRadius: Radius.l,
+    borderWidth: 1,
+    borderColor: Colors.stroke.primary,
+    paddingTop: 60,
+    paddingBottom: Spacing.m,
+    paddingHorizontal: Spacing.m,
+    width: '100%',
+    ...Shadows.level4,
+    zIndex: 1,
+  },
+  content: {
+    gap: Spacing.m,                    // 24px
+  },
+  textGroup: {
+    gap: Spacing.s,                    // 16px
+    alignItems: 'center',
+  },
+  heading: {
+    ...Typography.h3,
     color: Colors.primary,
     textAlign: 'center',
+    width: '100%',
   },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: '300',
+  bodyLarge: {
+    ...Typography.bodyLarge,
     fontFamily: 'Figtree_300Light',
     color: Colors.secondary,
     textAlign: 'center',
-    lineHeight: 24,
+    width: '100%',
+  },
+  infoBox: {
+    backgroundColor: Colors.surface.tertiary,
+    borderRadius: Radius.m,
+    padding: Spacing.s,
+    width: '100%',
+  },
+  infoText: {
+    ...Typography.bodyRegular,
+    fontFamily: 'Figtree_300Light',
+    color: Colors.primary,
+    textAlign: 'center',
   },
 });

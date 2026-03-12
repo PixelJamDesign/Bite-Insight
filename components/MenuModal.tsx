@@ -19,6 +19,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { Ionicons } from '@expo/vector-icons';
 import { ConfirmSheet } from './ConfirmSheet';
+import { PolicySheet } from './PolicySheet';
 import { PlusBadge } from './PlusBadge';
 import {
   MenuDashboardIcon,
@@ -170,7 +171,7 @@ function AccountScreen({ goBack, onGo, onNavigate }: { goBack: () => void; onGo:
   );
 }
 
-function SettingsScreen({ goBack, onNavigate }: { goBack: () => void; onNavigate: (s: MenuScreen) => void }) {
+function SettingsScreen({ goBack, onNavigate, onOpenPolicy }: { goBack: () => void; onNavigate: (s: MenuScreen) => void; onOpenPolicy: (type: 'privacy' | 'cookie') => void }) {
   const { t } = useTranslation('menu');
   const { t: tc } = useTranslation('common');
   const { isPlus } = useSubscription();
@@ -186,10 +187,10 @@ function SettingsScreen({ goBack, onNavigate }: { goBack: () => void; onNavigate
       </View>
       <View style={styles.navList}>
         <NavItem icon={<MenuLockIcon color={Colors.secondary} />} label={t('settings.security')} onPress={() => onNavigate('security')} chevron />
-        <NavItem icon={<MenuNotificationsIcon color={Colors.secondary} />} label={t('settings.notifications')} onPress={() => {}} />
+        {/* <NavItem icon={<MenuNotificationsIcon color={Colors.secondary} />} label={t('settings.notifications')} onPress={() => {}} /> */}
         <NavItem icon={<MenuHelpIcon color={Colors.secondary} />} label={t('settings.helpSupport')} onPress={() => onNavigate('help')} chevron />
-        <NavItem icon={<MenuPrivacyIcon color={Colors.secondary} />} label={t('settings.privacyPolicy')} onPress={() => {}} />
-        <NavItem icon={<MenuCookieIcon color={Colors.secondary} />} label={t('settings.cookiePolicy')} onPress={() => {}} />
+        <NavItem icon={<MenuPrivacyIcon color={Colors.secondary} />} label={t('settings.privacyPolicy')} onPress={() => onOpenPolicy('privacy')} />
+        <NavItem icon={<MenuCookieIcon color={Colors.secondary} />} label={t('settings.cookiePolicy')} onPress={() => onOpenPolicy('cookie')} />
         <NavItem icon={<MenuDataIcon color={Colors.secondary} />} label={t('settings.myData')} onPress={() => onNavigate('mydata')} chevron />
         {Platform.OS !== 'web' && (
           <NavItem
@@ -1446,7 +1447,7 @@ function MainScreen({
         <View style={styles.navList}>
           <NavItem icon={<MenuDashboardIcon color={Colors.secondary} />} label={t('main.dashboard')} onPress={() => go('/(tabs)/')} />
           <NavItem icon={<MenuIngredientsIcon color={Colors.secondary} />} label={t('main.myIngredients')} onPress={() => onNavigate('ingredients')} chevron />
-          <NavItem icon={<MenuScannerIcon color={Colors.secondary} />} label={t('main.snackScanner')} onPress={() => go('/(tabs)/scanner')} />
+          <NavItem icon={<MenuScannerIcon color={Colors.secondary} />} label={t('main.foodScanner')} onPress={() => go('/(tabs)/scanner')} />
           <NavItem icon={<MenuHistoryIcon color={Colors.secondary} />} label={t('main.scanHistory')} onPress={() => go('/(tabs)/history')} />
           <NavItem icon={<MenuRecipesIcon color={Colors.secondary} />} label={t('main.recipes')} onPress={() => go('/(tabs)/recipes')} />
         </View>
@@ -1482,6 +1483,7 @@ export function MenuModal({ onClose, onNavigate }: MenuModalProps) {
   const [slotAScreen, setSlotAScreen] = useState<MenuScreen>('main');
   const [slotBScreen, setSlotBScreen] = useState<MenuScreen>('main');
   const [isAnimating, setIsAnimating] = useState(false);
+  const [policyType, setPolicyType] = useState<'privacy' | 'cookie' | null>(null);
 
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -1578,7 +1580,7 @@ export function MenuModal({ onClose, onNavigate }: MenuModalProps) {
       return <><AccountScreen goBack={() => navigate('main', true)} onGo={handleNavigate} onNavigate={(sc) => navigate(sc)} /><Footer /></>;
     }
     if (s === 'settings') {
-      return <><SettingsScreen goBack={() => navigate('main', true)} onNavigate={(sc) => navigate(sc)} /><Footer /></>;
+      return <><SettingsScreen goBack={() => navigate('main', true)} onNavigate={(sc) => navigate(sc)} onOpenPolicy={setPolicyType} /><Footer /></>;
     }
     if (s === 'mydata') {
       return <><MyDataScreen goBack={() => navigate('settings', true)} /><Footer /></>;
@@ -1617,6 +1619,13 @@ export function MenuModal({ onClose, onNavigate }: MenuModalProps) {
         {renderScreenContent(slotBScreen)}
       </Animated.ScrollView>
 
+      {policyType && (
+        <PolicySheet
+          visible={!!policyType}
+          onClose={() => setPolicyType(null)}
+          type={policyType}
+        />
+      )}
     </View>
   );
 }

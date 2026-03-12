@@ -367,32 +367,27 @@ export default function AppTourScreen() {
           )}
         </Animated.View>
 
-        {/* Footer — welcome fades in after words; intro uses gradient */}
+        {/* Skip — top right */}
+        <TouchableOpacity style={[styles.skipTopRight, { top: insets.top + 12 }]} onPress={handleSkip} activeOpacity={0.7}>
+          <Text style={styles.skipTopRightText}>{t('buttons.skip')}</Text>
+        </TouchableOpacity>
+
+        {/* Footer — single full-width button */}
         {isWelcome ? (
-          <Animated.View style={[styles.welcomeFooter, { opacity: welcomeFooterOpacity }]}>
-            <View style={styles.footerRow}>
-              <TouchableOpacity style={styles.skipBtn} onPress={handleSkip} activeOpacity={0.85}>
-                <Text style={styles.skipBtnText}>{t('buttons.skip')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.nextBtn} onPress={handleWelcomeNext} activeOpacity={0.85}>
-                <Text style={styles.nextBtnText}>{t('buttons.next')}</Text>
-              </TouchableOpacity>
-            </View>
+          <Animated.View style={[styles.welcomeFooter, { paddingBottom: insets.bottom + 12, opacity: welcomeFooterOpacity }]}>
+            <TouchableOpacity style={styles.fullWidthBtn} onPress={handleWelcomeNext} activeOpacity={0.85}>
+              <Text style={styles.fullWidthBtnText}>{t('buttons.next')}</Text>
+            </TouchableOpacity>
           </Animated.View>
         ) : (
           <LinearGradient
             colors={['rgba(226,241,238,0)', '#e2f1ee']}
             locations={[0, 0.45]}
-            style={styles.introFooterGradient}
+            style={[styles.introFooterGradient, { paddingBottom: insets.bottom + 12 }]}
           >
-            <View style={styles.footerRow}>
-              <TouchableOpacity style={styles.skipBtn} onPress={handleSkip} activeOpacity={0.85}>
-                <Text style={styles.skipBtnText}>{t('buttons.skip')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.nextBtn} onPress={handleBegin} activeOpacity={0.85}>
-                <Text style={styles.nextBtnText}>{t('buttons.next')}</Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity style={styles.fullWidthBtn} onPress={handleBegin} activeOpacity={0.85}>
+              <Text style={styles.fullWidthBtnText}>{t('buttons.next')}</Text>
+            </TouchableOpacity>
           </LinearGradient>
         )}
       </View>
@@ -454,23 +449,23 @@ export default function AppTourScreen() {
         </Animated.View>
       </Animated.View>
 
-      {/* Footer buttons — fade in last */}
+      {/* Skip — top right */}
+      <TouchableOpacity style={[styles.skipTopRight, { top: insets.top + 12 }]} onPress={handleSkip} activeOpacity={0.7}>
+        <Text style={styles.skipTopRightText}>{t('buttons.skip')}</Text>
+      </TouchableOpacity>
+
+      {/* Footer button — fade in last */}
       <Animated.View style={{ opacity: stepFooterOpacity }}>
         <LinearGradient
           colors={['rgba(226,241,238,0)', '#e2f1ee']}
           locations={[0, 0.45]}
-          style={styles.stepFooterGradient}
+          style={[styles.stepFooterGradient, { paddingBottom: insets.bottom + 12 }]}
         >
-          <View style={styles.footerRow}>
-            <TouchableOpacity style={styles.skipBtn} onPress={handleSkip} activeOpacity={0.85}>
-              <Text style={styles.skipBtnText}>{t('buttons.skip')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.nextBtn} onPress={handleNext} activeOpacity={0.85}>
-              <Text style={styles.nextBtnText}>
-                {isLastStep ? t('buttons.finish') : t('buttons.next')}
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity style={styles.fullWidthBtn} onPress={handleNext} activeOpacity={0.85}>
+            <Text style={styles.fullWidthBtnText}>
+              {isLastStep ? t('buttons.finish') : t('buttons.next')}
+            </Text>
+          </TouchableOpacity>
         </LinearGradient>
       </Animated.View>
     </View>
@@ -600,22 +595,15 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
 
-  // ── Shared footer buttons ─────────────────────────────────────────────────
-  footerRow: {
-    flexDirection: 'row',
-    gap: 10,
+  // ── Skip top-right ───────────────────────────────────────────────────────
+  skipTopRight: {
+    position: 'absolute',
+    right: 24,
+    zIndex: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
   },
-  skipBtn: {
-    width: 91,
-    borderWidth: 2,
-    borderColor: Colors.secondary,
-    borderRadius: 8,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  skipBtnText: {
+  skipTopRightText: {
     fontSize: 16,
     lineHeight: 20,
     fontWeight: '700',
@@ -623,8 +611,9 @@ const styles = StyleSheet.create({
     color: Colors.secondary,
     letterSpacing: 0,
   },
-  nextBtn: {
-    flex: 1,
+
+  // ── Full-width button ───────────────────────────────────────────────────
+  fullWidthBtn: {
     backgroundColor: '#00776f',
     borderRadius: 8,
     paddingVertical: 16,
@@ -632,7 +621,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  nextBtnText: {
+  fullWidthBtnText: {
     fontSize: 16,
     lineHeight: 20,
     fontWeight: '700',
