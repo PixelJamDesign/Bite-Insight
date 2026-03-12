@@ -37,6 +37,9 @@
   "link": {
     "signIn": "Se connecter"
   },
+  "label": {
+    "optional": "(facultatif)"
+  },
   "filters": {
     "all": "Tous"
   },

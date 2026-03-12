@@ -37,6 +37,9 @@
   "link": {
     "signIn": "Iniciar sesión"
   },
+  "label": {
+    "optional": "(opcional)"
+  },
   "filters": {
     "all": "Todo"
   },

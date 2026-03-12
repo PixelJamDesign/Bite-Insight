@@ -103,7 +103,7 @@ export default function DisclaimerScreen() {
     animateExit('forward', async () => {
       setSaving(true);
       try {
-        await advanceTo('app_tour');
+        await advanceTo('complete');
       } catch {
         Alert.alert('Error', 'Failed to continue. Please try again.');
       }
@@ -113,7 +113,7 @@ export default function DisclaimerScreen() {
 
   function handleBack() {
     animateExit('backward', () => {
-      advanceTo('create_profile').catch(() => {});
+      advanceTo('app_tour').catch(() => {});
     });
   }
 

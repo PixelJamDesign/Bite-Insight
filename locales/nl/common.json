@@ -37,6 +37,9 @@
   "link": {
     "signIn": "Inloggen"
   },
+  "label": {
+    "optional": "(optioneel)"
+  },
   "filters": {
     "all": "Alle"
   },

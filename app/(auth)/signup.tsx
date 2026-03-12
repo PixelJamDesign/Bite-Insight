@@ -179,7 +179,10 @@ export default function SignUpScreen() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName } },
+      options: {
+        data: { full_name: fullName },
+        emailRedirectTo: 'biteinsight://verify',
+      },
     });
     if (error) {
       setLoading(false);
@@ -215,7 +218,10 @@ export default function SignUpScreen() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName } },
+      options: {
+        data: { full_name: fullName },
+        emailRedirectTo: 'biteinsight://verify',
+      },
     });
     if (error) {
       setLoading(false);

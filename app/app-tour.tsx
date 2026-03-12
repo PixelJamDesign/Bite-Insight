@@ -17,6 +17,7 @@ import { useAuth } from '@/lib/auth';
 import { useJourney } from '@/lib/journeyContext';
 import { safeBack } from '@/lib/safeBack';
 import { Colors, Shadows } from '@/constants/theme';
+import FoodCarousel from '@/components/FoodCarousel';
 
 // ── Looping muted video player (hook-based, needs its own component) ────────
 function StepVideo({ source, style }: { source: any; style: any }) {
@@ -71,6 +72,7 @@ export default function AppTourScreen() {
   const insets = useSafeAreaInsets();
   const { t: tc } = useTranslation('common');
   const { t } = useTranslation('tour');
+  const { t: tj } = useTranslation('journey');
   const { session } = useAuth();
   const { onboardingStep, advanceTo } = useJourney();
 
@@ -264,7 +266,7 @@ export default function AppTourScreen() {
       return;
     }
     try {
-      await advanceTo('complete');
+      await advanceTo('disclaimer');
     } catch {
       // JourneyGuard will redirect on next render
     }
@@ -328,30 +330,13 @@ export default function AppTourScreen() {
         {/* Content — only this part fades between welcome and intro */}
         <Animated.View style={[styles.fadeContent, { opacity: screenOpacity, transform: [{ translateX: screenTranslateX }] }]}>
           {isWelcome ? (
-            /* ── Welcome: word-by-word text ── */
-            <View style={styles.welcomeTextWrap}>
-              <View style={styles.welcomeWordRow}>
-                {welcomeLine1.split(' ').map((word, i) => {
-                  const idx = wordIdx++;
-                  return (
-                    <Animated.Text key={`l1-${i}`} style={[styles.welcomeLine1, { opacity: wordAnims[idx] }]}>
-                      {word}{' '}
-                    </Animated.Text>
-                  );
-                })}
+            /* ── Welcome: greeting text + food carousel ── */
+            <View style={styles.welcomeCarouselWrap}>
+              <View style={styles.welcomeTextWrap}>
+                <Text style={styles.welcomeLine1}>{tj('welcome.thanks')}</Text>
+                <Text style={styles.welcomeLine2}>{tj('welcome.subtitle')}</Text>
               </View>
-              {/* Skip the '\n' separator */}
-              {(() => { wordIdx++; return null; })()}
-              <View style={styles.welcomeWordRow}>
-                {welcomeLine2.split(' ').map((word, i) => {
-                  const idx = wordIdx++;
-                  return (
-                    <Animated.Text key={`l2-${i}`} style={[styles.welcomeLine2, { opacity: wordAnims[idx] }]}>
-                      {word}{' '}
-                    </Animated.Text>
-                  );
-                })}
-              </View>
+              <FoodCarousel />
             </View>
           ) : (
             /* ── Intro: card + hero image ── */
@@ -508,13 +493,13 @@ const styles = StyleSheet.create({
   welcomeContainer: {
     paddingTop: 120,
   },
+  welcomeCarouselWrap: {
+    flex: 1,
+    gap: 20,
+  },
   welcomeTextWrap: {
     paddingHorizontal: 24,
     gap: 16,
-  },
-  welcomeWordRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
   },
   welcomeLine1: {
     fontSize: 24,

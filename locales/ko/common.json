@@ -37,6 +37,9 @@
   "link": {
     "signIn": "로그인"
   },
+  "label": {
+    "optional": "(선택사항)"
+  },
   "filters": {
     "all": "모두"
   },

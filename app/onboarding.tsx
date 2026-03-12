@@ -39,10 +39,9 @@ import {
 import type { NutrientWatchlistEntry } from '@/lib/types';
 import { CameraIcon, PersonalIcon, EmailIcon, BirthdayIcon, TickIcon } from '@/components/MenuIcons';
 import Logo from '../assets/images/logo.svg';
-import FoodCarousel from '@/components/FoodCarousel';
 
 // ── Step types ────────────────────────────────────────────────────────────────
-type StepKey = 'welcome' | 'about' | 'health' | 'nutrients' | 'allergies' | 'dietary';
+type StepKey = 'about' | 'health' | 'nutrients' | 'allergies' | 'dietary';
 
 // ── Condition key helpers ──────────────────────────────────────────────────
 // CONDITION_NUTRIENT_MAP uses legacy English keys ("Diabetes") while the
@@ -238,7 +237,6 @@ export default function OnboardingScreen() {
 
   // ── Dynamic step sequence ──────────────────────────────────────────────────
   const stepSequence: StepKey[] = useMemo(() => [
-    'welcome',
     'about',
     'health',
     ...(showNutrientStep ? ['nutrients' as StepKey] : []),
@@ -251,14 +249,12 @@ export default function OnboardingScreen() {
   const totalSteps = stepSequence.length;
   const overallStep = pos + 1;
 
-  const stepTitle = currentStepKey === 'welcome'
-    ? ''
-    : currentStepKey === 'about'
-      ? tj('about.title')
-      : t(`step.${currentStepKey}`);
+  const stepTitle = currentStepKey === 'about'
+    ? tj('about.title')
+    : t(`step.${currentStepKey}`);
   const nextStepKey = pos < stepSequence.length - 1 ? stepSequence[pos + 1] : null;
   const nextLabel = nextStepKey
-    ? (nextStepKey === 'welcome' ? '' : nextStepKey === 'about' ? tj('about.title') : t(`step.${nextStepKey}`))
+    ? (nextStepKey === 'about' ? tj('about.title') : t(`step.${nextStepKey}`))
     : null;
 
   // ScrollView ref for resetting scroll position
@@ -281,9 +277,9 @@ export default function OnboardingScreen() {
 
   const [saving, setSaving] = useState(false);
 
-  // Step progress animation (5 dots max to support optional nutrient step)
+  // Step progress animation (7 dots max to support all possible steps)
   const stepAnim    = useRef(new Animated.Value(1)).current;
-  const dotPops     = useRef([0, 1, 2, 3, 4].map(() => new Animated.Value(1))).current;
+  const dotPops     = useRef([0, 1, 2, 3, 4, 5, 6].map(() => new Animated.Value(1))).current;
   const prevStepRef = useRef(1);
 
   // Animate step tracker on step change
@@ -298,7 +294,7 @@ export default function OnboardingScreen() {
       friction: 10,
     }).start();
 
-    if (overallStep > prev) {
+    if (overallStep > prev && dotPops[prev - 1]) {
       const doneIdx = prev - 1;
       Animated.sequence([
         Animated.spring(dotPops[doneIdx], {
@@ -447,12 +443,6 @@ export default function OnboardingScreen() {
   }
 
   function handleBack() {
-    if (currentStepKey === 'welcome') {
-      // Skip onboarding entirely — go to disclaimer
-      setSaving(true);
-      advanceTo('disclaimer').catch(() => {}).finally(() => setSaving(false));
-      return;
-    }
     if (currentStepKey === 'about') {
       // Sign out from the about step
       supabase.auth.signOut();
@@ -482,7 +472,7 @@ export default function OnboardingScreen() {
       }
     }
     try {
-      await advanceTo('disclaimer');
+      await advanceTo('app_tour');
     } catch {
       Alert.alert('Error', 'Failed to advance. Please try again.');
     }
@@ -502,7 +492,7 @@ export default function OnboardingScreen() {
             const animHeight = stepAnim.interpolate({ inputRange: [s - 1, s, s + 1], outputRange: [10, 10, 20], extrapolate: 'clamp' });
             const animRadius = stepAnim.interpolate({ inputRange: [s - 1, s, s + 1], outputRange: [5,  5,  10], extrapolate: 'clamp' });
             return (
-              <Animated.View key={s} style={{ transform: [{ scale: dotPops[s - 1] }] }}>
+              <Animated.View key={s} style={{ transform: [{ scale: dotPops[s - 1] ?? 1 }] }}>
                 <Animated.View style={{ width: animWidth, height: animHeight, borderRadius: animRadius, backgroundColor: bgColor, alignItems: 'center', justifyContent: 'center' }}>
                   {isDone && <TickIcon size={10} color="#fff" />}
                 </Animated.View>
@@ -730,52 +720,30 @@ export default function OnboardingScreen() {
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        {/* Logo — hidden on welcome step */}
-        {currentStepKey !== 'welcome' && (
-          <View style={styles.logoArea}>
-            <Logo width={141} height={36} />
-          </View>
-        )}
+        <View style={styles.logoArea}>
+          <Logo width={141} height={36} />
+        </View>
 
-        {/* Step header — hidden on welcome step */}
-        {currentStepKey !== 'welcome' && (
-          <Animated.View style={{ opacity: headerOpacity, transform: [{ translateY: headerTranslateY }] }}>
-            <View style={styles.stepHeader}>
-              <View style={styles.stepTitleRow}>
-                <Text style={styles.stepTitle}>{stepTitle}</Text>
-              </View>
-              {renderProgress()}
+        <Animated.View style={{ opacity: headerOpacity, transform: [{ translateY: headerTranslateY }] }}>
+          <View style={styles.stepHeader}>
+            <View style={styles.stepTitleRow}>
+              <Text style={styles.stepTitle}>{stepTitle}</Text>
             </View>
-          </Animated.View>
-        )}
+            {renderProgress()}
+          </View>
+        </Animated.View>
 
         {/* Scrollable content */}
         <ScrollView
           ref={scrollRef}
           style={{ flex: 1 }}
-          contentContainerStyle={currentStepKey === 'welcome' ? styles.welcomeScroll : styles.scroll}
+          contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          showsHorizontalScrollIndicator={false}
+          alwaysBounceHorizontal={false}
         >
           <Animated.View style={{ opacity: contentOpacity, transform: [{ translateX: contentTranslateX }] }}>
-
-          {/* ── Step: Welcome ── */}
-          {currentStepKey === 'welcome' && (
-            <View style={styles.welcomeContainer}>
-              <View style={styles.welcomeTextBlock}>
-                <Text style={styles.welcomeGreeting}>{tj('welcome.greeting')}</Text>
-                <Text style={styles.welcomeName}>
-                  {session?.user?.user_metadata?.display_name
-                    || session?.user?.user_metadata?.full_name
-                    || session?.user?.email?.split('@')[0]
-                    || ''}
-                </Text>
-                <Text style={styles.welcomeTitle}>{tj('welcome.thanks')}</Text>
-                <Text style={styles.welcomeSubtitle}>{tj('welcome.subtitle')}</Text>
-              </View>
-              <FoodCarousel />
-            </View>
-          )}
 
           {/* ── Step: About You ── */}
           {currentStepKey === 'about' && (
@@ -841,6 +809,7 @@ export default function OnboardingScreen() {
                       onFocus={() => setFocusedField('age')}
                       onBlur={() => setFocusedField(null)}
                     />
+                    <Text style={styles.optionalLabel}>{tc('label.optional')}</Text>
                     {age ? (
                       <TouchableOpacity onPress={() => setAge('')} hitSlop={8}>
                         <Ionicons name="close" size={18} color={`${Colors.primary}80`} />
@@ -884,13 +853,13 @@ export default function OnboardingScreen() {
             </View>
           )}
 
-          {/* Skip link — skips remaining health/allergies/diet, goes to disclaimer */}
+          {/* Skip link — skips remaining health/allergies/diet, goes to app tour */}
           {currentStepKey !== 'about' && (
             <TouchableOpacity
               style={styles.skipBtn}
               onPress={async () => {
                 setSaving(true);
-                try { await advanceTo('disclaimer'); } catch { /* JourneyGuard handles */ }
+                try { await advanceTo('app_tour'); } catch { /* JourneyGuard handles */ }
                 setSaving(false);
               }}
               activeOpacity={0.7}
@@ -899,7 +868,7 @@ export default function OnboardingScreen() {
             </TouchableOpacity>
           )}
 
-          <View style={{ height: 120 }} />
+          <View style={{ height: 120, backgroundColor: 'transparent' }} />
           </Animated.View>
         </ScrollView>
 
@@ -913,7 +882,7 @@ export default function OnboardingScreen() {
           <View style={[styles.footerButtons, { paddingBottom: insets.bottom + 12 }]}>
             <TouchableOpacity style={styles.backBtn} onPress={handleBack} activeOpacity={0.8}>
               <Text style={styles.backBtnText}>
-                {currentStepKey === 'welcome' ? tc('buttons.skip') : currentStepKey === 'about' ? tj('about.signOut') : tc('buttons.back')}
+                {currentStepKey === 'about' ? tj('about.signOut') : tc('buttons.back')}
               </Text>
             </TouchableOpacity>
 
@@ -927,7 +896,7 @@ export default function OnboardingScreen() {
                 <ActivityIndicator color="#fff" />
               ) : (
                 <Text style={styles.nextBtnText} numberOfLines={1} adjustsFontSizeToFit>
-                  {isLastStep ? tc('buttons.finish') : currentStepKey === 'welcome' ? tc('buttons.next') : t('progress.next', { label: nextLabel })}
+                  {isLastStep ? tc('buttons.finish') : t('progress.next', { label: nextLabel })}
                 </Text>
               )}
             </TouchableOpacity>
@@ -998,6 +967,7 @@ const styles = StyleSheet.create({
   welcomeScroll: {
     paddingTop: 4,
     flexGrow: 1,
+    backgroundColor: Colors.background,
   },
 
   // ── Welcome step ───────────────────────────────────────────────────────────
@@ -1156,6 +1126,14 @@ const styles = StyleSheet.create({
   },
   inputReadOnly: {
     color: `${Colors.primary}80`,
+  },
+  optionalLabel: {
+    fontSize: 13,
+    lineHeight: 16,
+    fontFamily: 'Figtree_300Light',
+    fontWeight: '300',
+    color: `${Colors.secondary}80`,
+    letterSpacing: -0.13,
   },
 
   chipCardInfo: {

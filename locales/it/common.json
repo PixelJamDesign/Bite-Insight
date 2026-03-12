@@ -37,6 +37,9 @@
   "link": {
     "signIn": "Registrazione"
   },
+  "label": {
+    "optional": "(facoltativo)"
+  },
   "filters": {
     "all": "Tutto"
   },

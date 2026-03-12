@@ -124,6 +124,18 @@ export default function FoodCarousel() {
         style={styles.fadeRight}
         pointerEvents="none"
       />
+
+      {/* Top + bottom edge fades — mask shadow bleed from circular items */}
+      <LinearGradient
+        colors={[Colors.background, 'rgba(226,241,238,0)']}
+        style={styles.fadeTop}
+        pointerEvents="none"
+      />
+      <LinearGradient
+        colors={['rgba(226,241,238,0)', Colors.background]}
+        style={styles.fadeBottom}
+        pointerEvents="none"
+      />
     </View>
   );
 }
@@ -169,5 +181,19 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: FADE_WIDTH,
+  },
+  fadeTop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: FADE_WIDTH / 2,
+  },
+  fadeBottom: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: FADE_WIDTH / 2,
   },
 });

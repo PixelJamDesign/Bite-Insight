@@ -37,6 +37,9 @@
   "link": {
     "signIn": "登入"
   },
+  "label": {
+    "optional": "(可选)"
+  },
   "filters": {
     "all": "全部"
   },

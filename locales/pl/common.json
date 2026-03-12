@@ -37,6 +37,9 @@
   "link": {
     "signIn": "Zalogować się"
   },
+  "label": {
+    "optional": "(opcjonalnie)"
+  },
   "filters": {
     "all": "Wszystko"
   },

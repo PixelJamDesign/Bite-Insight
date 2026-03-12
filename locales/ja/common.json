@@ -37,6 +37,9 @@
   "link": {
     "signIn": "サインイン"
   },
+  "label": {
+    "optional": "(任意)"
+  },
   "filters": {
     "all": "全て"
   },
