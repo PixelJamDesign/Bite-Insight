@@ -6,16 +6,37 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "${EXPO_PUBLIC_SUPABASE_URL}",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "${EXPO_PUBLIC_SUPABASE_ANON_KEY}",
+        "EXPO_PUBLIC_REVENUECAT_IOS_KEY": "${EXPO_PUBLIC_REVENUECAT_IOS_KEY}",
+        "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY": "${EXPO_PUBLIC_REVENUECAT_ANDROID_KEY}",
+        "EXPO_PUBLIC_REVENUECAT_BILLING_KEY": "${EXPO_PUBLIC_REVENUECAT_BILLING_KEY}"
+      }
     },
     "preview": {
       "android": {
         "buildType": "apk"
       },
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "${EXPO_PUBLIC_SUPABASE_URL}",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "${EXPO_PUBLIC_SUPABASE_ANON_KEY}",
+        "EXPO_PUBLIC_REVENUECAT_IOS_KEY": "${EXPO_PUBLIC_REVENUECAT_IOS_KEY}",
+        "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY": "${EXPO_PUBLIC_REVENUECAT_ANDROID_KEY}",
+        "EXPO_PUBLIC_REVENUECAT_BILLING_KEY": "${EXPO_PUBLIC_REVENUECAT_BILLING_KEY}"
+      }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "${EXPO_PUBLIC_SUPABASE_URL}",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "${EXPO_PUBLIC_SUPABASE_ANON_KEY}",
+        "EXPO_PUBLIC_REVENUECAT_IOS_KEY": "${EXPO_PUBLIC_REVENUECAT_IOS_KEY}",
+        "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY": "${EXPO_PUBLIC_REVENUECAT_ANDROID_KEY}",
+        "EXPO_PUBLIC_REVENUECAT_BILLING_KEY": "${EXPO_PUBLIC_REVENUECAT_BILLING_KEY}"
+      }
     }
   },
   "submit": {

@@ -30,6 +30,7 @@
       }
     },
     "android": {
+      "newArchEnabled": false,
       "splash": {
         "image": "./assets/images/splash.png",
         "resizeMode": "cover",
@@ -44,7 +45,16 @@
         "android.permission.CAMERA",
         "android.permission.USE_BIOMETRIC",
         "android.permission.RECORD_AUDIO",
-        "android.permission.USE_FINGERPRINT"
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.INTERNET"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [{ "scheme": "biteinsight" }],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
       ]
     },
     "web": {
