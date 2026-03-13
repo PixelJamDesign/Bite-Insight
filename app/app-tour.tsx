@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/auth';
 import { useJourney } from '@/lib/journeyContext';
 import { safeBack } from '@/lib/safeBack';
+import Svg, { Path } from 'react-native-svg';
 import { Colors, Shadows } from '@/constants/theme';
 import FoodCarousel from '@/components/FoodCarousel';
 
@@ -55,10 +56,15 @@ const TOUR_STEPS: TourStep[] = [
     videoSource: require('@/assets/videos/onboarding/food-scanner.mp4'),
     nextStepName: 'Personalised Insights',
   },
-  // Future steps go here
+  {
+    key: 'personalised_insights',
+    videoSource: require('@/assets/videos/onboarding/personalised-insights.mp4'),
+    // nextStepName: 'Ingredient Preferences', // Step 4 — hidden until built
+  },
+  // Step 4 (Ingredient Preferences) goes here when ready
 ];
 
-const TOTAL_DOTS = 4; // Visual dot count (matches Figma — shows upcoming steps)
+const TOTAL_DOTS = 3; // Visual dot count — Step 4 hidden until built
 
 // ── Time-based greeting ─────────────────────────────────────────────────────
 function getGreeting(tc: (key: string) => string): string {
@@ -224,19 +230,22 @@ export default function AppTourScreen() {
     if (isTransitioning.current) return;
     isTransitioning.current = true;
 
+    const EXIT_MS = 400;
+    const ENTER_MS = 450;
+
     const exitAnims = [
       Animated.timing(screenOpacity, {
-        toValue: 0, duration: 800, easing: Easing.in(Easing.cubic), useNativeDriver: true,
+        toValue: 0, duration: EXIT_MS, easing: Easing.in(Easing.cubic), useNativeDriver: true,
       }),
       Animated.timing(screenTranslateX, {
-        toValue: -40, duration: 800, easing: Easing.in(Easing.cubic), useNativeDriver: true,
+        toValue: -30, duration: EXIT_MS, easing: Easing.in(Easing.cubic), useNativeDriver: true,
       }),
     ];
     // Fade greeting out when leaving intro for the step view
     if (nextIndex >= 0) {
       exitAnims.push(
         Animated.timing(greetingOpacity, {
-          toValue: 0, duration: 800, easing: Easing.in(Easing.cubic), useNativeDriver: true,
+          toValue: 0, duration: EXIT_MS, easing: Easing.in(Easing.cubic), useNativeDriver: true,
         }),
       );
     }
@@ -244,13 +253,13 @@ export default function AppTourScreen() {
       if (nextIndex >= 0) videoKey.current += 1;
       setCurrentIndex(nextIndex);
       // Reset for entrance: slide in from right
-      screenTranslateX.setValue(40);
+      screenTranslateX.setValue(30);
       Animated.parallel([
         Animated.timing(screenOpacity, {
-          toValue: 1, duration: 800, easing: Easing.out(Easing.cubic), useNativeDriver: true,
+          toValue: 1, duration: ENTER_MS, easing: Easing.out(Easing.cubic), useNativeDriver: true,
         }),
         Animated.timing(screenTranslateX, {
-          toValue: 0, duration: 800, easing: Easing.out(Easing.cubic), useNativeDriver: true,
+          toValue: 0, duration: ENTER_MS, easing: Easing.out(Easing.cubic), useNativeDriver: true,
         }),
       ]).start(() => {
         isTransitioning.current = false;
@@ -292,8 +301,7 @@ export default function AppTourScreen() {
   // ── Navigation ──────────────────────────────────────────────────────────────
   const handleNext = () => {
     if (currentIndex < TOUR_STEPS.length - 1) {
-      videoKey.current += 1;
-      setCurrentIndex(currentIndex + 1);
+      fadeToIndex(currentIndex + 1);
     } else {
       completeTour();
     }
@@ -411,15 +419,27 @@ export default function AppTourScreen() {
         <Animated.View style={[styles.progressRow, { opacity: stepDotsOpacity, transform: [{ translateY: stepDotsTranslateY }] }]}>
           <View style={styles.progressInner}>
             <View style={styles.dotsRow}>
-              {Array.from({ length: TOTAL_DOTS }).map((_, i) => (
-                <View
-                  key={i}
-                  style={[
-                    styles.dot,
-                    i === currentIndex ? styles.dotActive : styles.dotInactive,
-                  ]}
-                />
-              ))}
+              {Array.from({ length: TOTAL_DOTS }).map((_, i) => {
+                if (i < currentIndex) {
+                  // Completed step — teal circle with white checkmark
+                  return (
+                    <View key={i} style={styles.dotCompleted}>
+                      <Svg width={12} height={12} viewBox="0 0 12 12" fill="none">
+                        <Path d="M2.5 6.5L4.5 8.5L9.5 3.5" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                      </Svg>
+                    </View>
+                  );
+                }
+                return (
+                  <View
+                    key={i}
+                    style={[
+                      styles.dot,
+                      i === currentIndex ? styles.dotActive : styles.dotInactive,
+                    ]}
+                  />
+                );
+              })}
             </View>
           </View>
           {step?.nextStepName && (
@@ -449,23 +469,23 @@ export default function AppTourScreen() {
         </Animated.View>
       </Animated.View>
 
-      {/* Skip — top right */}
-      <TouchableOpacity style={[styles.skipTopRight, { top: insets.top + 12 }]} onPress={handleSkip} activeOpacity={0.7}>
-        <Text style={styles.skipTopRightText}>{t('buttons.skip')}</Text>
-      </TouchableOpacity>
-
-      {/* Footer button — fade in last */}
+      {/* Footer — Skip + Next side by side */}
       <Animated.View style={{ opacity: stepFooterOpacity }}>
         <LinearGradient
           colors={['rgba(226,241,238,0)', '#e2f1ee']}
           locations={[0, 0.45]}
           style={[styles.stepFooterGradient, { paddingBottom: insets.bottom + 12 }]}
         >
-          <TouchableOpacity style={styles.fullWidthBtn} onPress={handleNext} activeOpacity={0.85}>
-            <Text style={styles.fullWidthBtnText}>
-              {isLastStep ? t('buttons.finish') : t('buttons.next')}
-            </Text>
-          </TouchableOpacity>
+          <View style={styles.stepFooterRow}>
+            <TouchableOpacity style={styles.skipOutlineBtn} onPress={handleSkip} activeOpacity={0.85}>
+              <Text style={styles.skipOutlineBtnText}>{t('buttons.skip')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.nextFilledBtn} onPress={handleNext} activeOpacity={0.85}>
+              <Text style={styles.fullWidthBtnText}>
+                {isLastStep ? t('buttons.finish') : step?.nextStepName ? t('progress.next', { stepName: step.nextStepName }) : t('buttons.next')}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </LinearGradient>
       </Animated.View>
     </View>
@@ -661,6 +681,14 @@ const styles = StyleSheet.create({
     height: 10,
     borderRadius: 999,
   },
+  dotCompleted: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#3b9586',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   dotActive: {
     width: 48,
     backgroundColor: '#023432',
@@ -710,5 +738,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 16,
     paddingBottom: 40,
+  },
+  stepFooterRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  skipOutlineBtn: {
+    borderWidth: 2,
+    borderColor: '#00776f',
+    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  skipOutlineBtnText: {
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: '#00776f',
+    letterSpacing: 0,
+  },
+  nextFilledBtn: {
+    flex: 1,
+    backgroundColor: '#00776f',
+    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

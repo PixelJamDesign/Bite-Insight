@@ -703,6 +703,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: Spacing.s,    // 16px between region dropdown and search button
   },
 
   // Region dropdown pill (left side)

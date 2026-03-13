@@ -24,6 +24,8 @@ interface Props {
   onDislike: () => void;
   onFlag: () => void;
   showFlag?: boolean;
+  /** Called after exit animation completes and modal is fully unmounted. */
+  onExitComplete?: () => void;
 }
 
 export function IngredientDetailModal({
@@ -34,6 +36,7 @@ export function IngredientDetailModal({
   onDislike,
   onFlag,
   showFlag = false,
+  onExitComplete,
 }: Props) {
   const { t } = useTranslation('ingredients');
   const translateY = useRef(new Animated.Value(-80)).current;
@@ -78,7 +81,10 @@ export function IngredientDetailModal({
           duration: 180,
           useNativeDriver: true,
         }),
-      ]).start(() => setMounted(false));
+      ]).start(() => {
+        setMounted(false);
+        onExitComplete?.();
+      });
     }
   }, [ingredient]);
 

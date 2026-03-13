@@ -18,6 +18,11 @@
       "section": "Food Scanner",
       "title": "The heart of our app is the Food Scanner.",
       "subtitle": "It really is as simple as tapping the food scanner in the tab nav and scanning the barcode."
+    },
+    "personalised_insights": {
+      "section": "Personalised Insights",
+      "title": "This is your personalised food insights!",
+      "subtitle": "This is where your personalised food insights live. Everything tailored to your profile in one place."
     }
   },
   "progress": {

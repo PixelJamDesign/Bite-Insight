@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -111,6 +111,7 @@ export default function HomeDashboard() {
   >({});
   const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
   const [flagReasonTarget, setFlagReasonTarget] = useState<Ingredient | null>(null);
+  const pendingFlagRef = useRef<Ingredient | null>(null);
   const [loading, setLoading] = useState(true);
   const [avatarLoadError, setAvatarLoadError] = useState(false);
   useEffect(() => { setAvatarLoadError(false); }, [avatarUrl]);
@@ -446,11 +447,18 @@ export default function HomeDashboard() {
         }}
         onFlag={() => {
           if (selectedIngredient) {
-            setFlagReasonTarget(selectedIngredient);
+            pendingFlagRef.current = selectedIngredient;
             setSelectedIngredient(null);
+            // FlagReasonSheet opens via onExitComplete callback below
           }
         }}
         showFlag={isPlus}
+        onExitComplete={() => {
+          if (pendingFlagRef.current) {
+            setFlagReasonTarget(pendingFlagRef.current);
+            pendingFlagRef.current = null;
+          }
+        }}
       />
 
       {/* ── Header (always on top) ── */}
