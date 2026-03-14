@@ -59,6 +59,7 @@ const ALL_IMAGES = [...ROW_1_IMAGES, ...ROW_2_IMAGES, ...ROW_3_IMAGES];
 
 /** Prefetch all carousel images so they're cached before display. */
 export function prefetchFoodImages() {
+  if (typeof window === 'undefined') return; // SSR / static rendering
   ALL_IMAGES.forEach((uri) => Image.prefetch(uri));
 }
 
