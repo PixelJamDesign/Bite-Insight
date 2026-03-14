@@ -2,6 +2,7 @@ import 'react-native-url-polyfill/auto';
 import { Platform } from 'react-native';
 import { createClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system/legacy';
 import { decode } from 'base64-arraybuffer';
 
@@ -31,15 +32,36 @@ const webStorageAdapter = {
   },
 };
 
+/**
+ * Native storage adapter with fallback.
+ * Primary: expo-secure-store (hardware-backed keychain/keystore)
+ * Fallback: AsyncStorage (if SecureStore fails — e.g. some Android devices
+ *   with restrictive SELinux policies or missing keystore providers)
+ */
 const nativeStorageAdapter = {
   getItem: async (key: string): Promise<string | null> => {
-    try { return await SecureStore.getItemAsync(key); } catch { return null; }
+    try {
+      return await SecureStore.getItemAsync(key);
+    } catch (e) {
+      console.warn('[supabase] SecureStore.getItem failed, falling back to AsyncStorage:', e);
+      try { return await AsyncStorage.getItem(key); } catch { return null; }
+    }
   },
   setItem: async (key: string, value: string): Promise<void> => {
-    try { await SecureStore.setItemAsync(key, value); } catch { /* ignore */ }
+    try {
+      await SecureStore.setItemAsync(key, value);
+    } catch (e) {
+      console.warn('[supabase] SecureStore.setItem failed, falling back to AsyncStorage:', e);
+      try { await AsyncStorage.setItem(key, value); } catch { /* ignore */ }
+    }
   },
   removeItem: async (key: string): Promise<void> => {
-    try { await SecureStore.deleteItemAsync(key); } catch { /* ignore */ }
+    try {
+      await SecureStore.deleteItemAsync(key);
+    } catch (e) {
+      console.warn('[supabase] SecureStore.removeItem failed, falling back to AsyncStorage:', e);
+      try { await AsyncStorage.removeItem(key); } catch { /* ignore */ }
+    }
   },
 };
 

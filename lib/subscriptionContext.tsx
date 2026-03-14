@@ -71,8 +71,9 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
               else console.log('[RC→Supabase] is_plus =', active);
             });
         });
-      } catch {
+      } catch (e) {
         // Expo Go or unconfigured environment — RC unavailable, fall through to Supabase
+        console.warn('[RevenueCat] configure() failed:', e);
         rcConfigured.current = false;
       }
     }

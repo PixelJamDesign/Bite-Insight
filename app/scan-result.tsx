@@ -806,6 +806,7 @@ export default function ScanResultScreen() {
     categoriesTags: string;
     ingredientsJson: string;
     offLang: string;
+    offFetched: string;
   }>();
 
   const { activeFamilyId } = useActiveFamily();
@@ -975,13 +976,20 @@ export default function ScanResultScreen() {
       });
   }, [activeFamilyId]);
 
-  const needsOffFetch = !p.carbs && !!p.barcode;
+  // Only fetch from OFF when we don't have macros AND the scanner didn't already try.
+  // The scanner always fetches from OFF before navigating here, so re-fetching is
+  // redundant (and adds 5-10s of "loading nutritional data" for nothing).
+  // History entries don't pass offFetched, so they still trigger the OFF fetch.
+  const needsOffFetch = !p.carbs && !!p.barcode && p.offFetched !== '1';
 
   useEffect(() => {
     if (!needsOffFetch) return;
     setFetchingOff(true);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000); // 5s max
     fetch(`https://world.openfoodfacts.org/api/v0/product/${p.barcode}.json`, {
       headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
+      signal: controller.signal,
     })
       .then((r) => r.json())
       .then((data) => {
@@ -1040,49 +1048,50 @@ export default function ScanResultScreen() {
         }
       })
       .catch(() => {/* silently ignore — the empty state handles no-data */})
-      .finally(() => setFetchingOff(false));
+      .finally(() => {
+        clearTimeout(timeout);
+        setFetchingOff(false);
+      });
+    return () => { clearTimeout(timeout); controller.abort(); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // When macros were passed via route params (scanner already had them),
   // still fetch micronutrients from OFF for the nutrient watchlist feature.
-  // Deferred: waits 1.5s so the main UI renders instantly first.
+  // This runs in the background — it does NOT block the main nutrition UI.
   useEffect(() => {
     if (needsOffFetch || !p.barcode) return; // main fetch handles this case
-    const timer = setTimeout(() => {
-      fetch(`https://world.openfoodfacts.org/api/v0/product/${p.barcode}.json`, {
-        headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
+    fetch(`https://world.openfoodfacts.org/api/v0/product/${p.barcode}.json`, {
+      headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.status === 1 && data.product) {
+          const n = data.product.nutriments ?? {};
+          setMicronutrients({
+            'potassium_100g': n.potassium_100g ?? null,
+            'calcium_100g': n.calcium_100g ?? null,
+            'iron_100g': n.iron_100g ?? null,
+            'magnesium_100g': n.magnesium_100g ?? null,
+            'zinc_100g': n.zinc_100g ?? null,
+            'phosphorus_100g': n.phosphorus_100g ?? null,
+            'cholesterol_100g': n.cholesterol_100g ?? null,
+            'trans-fat_100g': n['trans-fat_100g'] ?? null,
+            'vitamin-a_100g': n['vitamin-a_100g'] ?? null,
+            'vitamin-c_100g': n['vitamin-c_100g'] ?? null,
+            'vitamin-d_100g': n['vitamin-d_100g'] ?? null,
+            'vitamin-e_100g': n['vitamin-e_100g'] ?? null,
+            'vitamin-k_100g': n['vitamin-k_100g'] ?? null,
+            'copper_100g': n.copper_100g ?? null,
+            'manganese_100g': n.manganese_100g ?? null,
+            'selenium_100g': n.selenium_100g ?? null,
+            'vitamin-b9_100g': n['vitamin-b9_100g'] ?? null,
+            'omega-3-fat_100g': n['omega-3-fat_100g'] ?? null,
+            'sodium_100g': n.sodium_100g ?? null,
+          });
+        }
       })
-        .then((r) => r.json())
-        .then((data) => {
-          if (data.status === 1 && data.product) {
-            const n = data.product.nutriments ?? {};
-            setMicronutrients({
-              'potassium_100g': n.potassium_100g ?? null,
-              'calcium_100g': n.calcium_100g ?? null,
-              'iron_100g': n.iron_100g ?? null,
-              'magnesium_100g': n.magnesium_100g ?? null,
-              'zinc_100g': n.zinc_100g ?? null,
-              'phosphorus_100g': n.phosphorus_100g ?? null,
-              'cholesterol_100g': n.cholesterol_100g ?? null,
-              'trans-fat_100g': n['trans-fat_100g'] ?? null,
-              'vitamin-a_100g': n['vitamin-a_100g'] ?? null,
-              'vitamin-c_100g': n['vitamin-c_100g'] ?? null,
-              'vitamin-d_100g': n['vitamin-d_100g'] ?? null,
-              'vitamin-e_100g': n['vitamin-e_100g'] ?? null,
-              'vitamin-k_100g': n['vitamin-k_100g'] ?? null,
-              'copper_100g': n.copper_100g ?? null,
-              'manganese_100g': n.manganese_100g ?? null,
-              'selenium_100g': n.selenium_100g ?? null,
-              'vitamin-b9_100g': n['vitamin-b9_100g'] ?? null,
-              'omega-3-fat_100g': n['omega-3-fat_100g'] ?? null,
-              'sodium_100g': n.sodium_100g ?? null,
-            });
-          }
-        })
-        .catch(() => {});
-    }, 1500);
-    return () => clearTimeout(timer);
+      .catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

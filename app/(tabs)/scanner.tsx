@@ -18,6 +18,7 @@ import { Colors, Spacing, Shadows } from '@/constants/theme';
 import { ActionSearchIcon, ActionGalleryIcon, ActionChevronDownIcon, ActionCheckIcon } from '@/components/MenuIcons';
 import { getCachedProduct, cacheProduct } from '@/lib/productCache';
 import { getOfflineProduct } from '@/lib/offlineDatabase';
+import { fetchAndCacheProfile } from '@/lib/profileCache';
 import { WebBarcodeScanner } from '@/components/WebBarcodeScanner';
 
 export default function ScannerScreen() {
@@ -123,6 +124,9 @@ export default function ScannerScreen() {
     setProcessing(true);
 
     try {
+      // Pre-warm the profile cache so scan-result has instant access
+      if (session?.user.id) fetchAndCacheProfile(session.user.id);
+
       // Fire profile upsert immediately — doesn't depend on product data
       const profilePromise = supabase
         .from('profiles')
@@ -336,6 +340,7 @@ export default function ScannerScreen() {
           categoriesTags: categoriesTags.join(','),
           ingredientsJson: ingredientsJson ?? '',
           offLang: offLang ?? 'en',
+          offFetched: '1',
         },
       });
 

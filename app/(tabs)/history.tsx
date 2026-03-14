@@ -26,6 +26,7 @@ import { NoImagePlaceholder } from '@/components/NoImagePlaceholder';
 import type { Scan } from '@/lib/types';
 import { useFadeIn } from '@/lib/useFadeIn';
 import { useFocusFadeIn } from '@/lib/useFocusFadeIn';
+import { getCachedProduct } from '@/lib/productCache';
 
 // ─── Nutriscore colours ────────────────────────────────────────────────────────
 const NUTRISCORE_COLORS: Record<string, string> = {
@@ -398,7 +399,9 @@ export default function HistoryScreen() {
     await supabase.from('scans').delete().eq('id', id);
   }
 
-  function openScan(scan: Scan) {
+  async function openScan(scan: Scan) {
+    // Check local SQLite cache for full nutrition data — avoids an OFF fetch
+    const cached = await getCachedProduct(scan.barcode);
     router.push({
       pathname: '/scan-result',
       params: {
@@ -407,7 +410,31 @@ export default function HistoryScreen() {
         brand: scan.brand ?? '',
         imageUrl: scan.image_url ?? '',
         barcode: scan.barcode,
-        nutriscoreGrade: scan.nutriscore_grade ?? '',
+        nutriscoreGrade: scan.nutriscore_grade ?? cached?.nutriscoreGrade ?? '',
+        ...(cached ? {
+          quantity: cached.quantity ?? '',
+          energyKcal: cached.energyKcal != null ? String(cached.energyKcal) : '',
+          carbs: cached.carbs != null ? String(cached.carbs) : '',
+          sugars: cached.sugars != null ? String(cached.sugars) : '',
+          fiber: cached.fiber != null ? String(cached.fiber) : '',
+          fat: cached.fat != null ? String(cached.fat) : '',
+          saturatedFat: cached.saturatedFat != null ? String(cached.saturatedFat) : '',
+          proteins: cached.proteins != null ? String(cached.proteins) : '',
+          salt: cached.salt != null ? String(cached.salt) : '',
+          servingSize: cached.servingSize ?? '',
+          energyKcalServing: cached.energyKcalServing != null ? String(cached.energyKcalServing) : '',
+          carbsServing: cached.carbsServing != null ? String(cached.carbsServing) : '',
+          sugarsServing: cached.sugarsServing != null ? String(cached.sugarsServing) : '',
+          fiberServing: cached.fiberServing != null ? String(cached.fiberServing) : '',
+          fatServing: cached.fatServing != null ? String(cached.fatServing) : '',
+          saturatedFatServing: cached.saturatedFatServing != null ? String(cached.saturatedFatServing) : '',
+          proteinsServing: cached.proteinsServing != null ? String(cached.proteinsServing) : '',
+          saltServing: cached.saltServing != null ? String(cached.saltServing) : '',
+          ingredientsText: cached.ingredientsText ?? '',
+          ingredientsJson: cached.ingredientsJson ?? '',
+          offLang: cached.offLang ?? 'en',
+          offFetched: '1',
+        } : {}),
       },
     });
   }
