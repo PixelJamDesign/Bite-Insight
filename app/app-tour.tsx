@@ -59,12 +59,15 @@ const TOUR_STEPS: TourStep[] = [
   {
     key: 'personalised_insights',
     videoSource: require('@/assets/videos/onboarding/personalised-insights.mp4'),
-    // nextStepName: 'Ingredient Preferences', // Step 4 — hidden until built
+    nextStepName: 'Ingredient Preferences',
   },
-  // Step 4 (Ingredient Preferences) goes here when ready
+  {
+    key: 'ingredient_preferences',
+    videoSource: require('@/assets/videos/onboarding/ingredient-preferences.mp4'),
+  },
 ];
 
-const TOTAL_DOTS = 3; // Visual dot count — Step 4 hidden until built
+const TOTAL_DOTS = 4;
 
 // ── Time-based greeting ─────────────────────────────────────────────────────
 function getGreeting(tc: (key: string) => string): string {
