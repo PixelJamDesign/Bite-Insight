@@ -930,53 +930,46 @@ export default function ScanResultScreen() {
   const [customWeight, setCustomWeight] = useState(100);
   const [editingWeight, setEditingWeight] = useState(false);
 
-  // Fetch user profile + flagged ingredient names
+  // Fetch user profile + flagged ingredient names — ALL IN PARALLEL
   useEffect(() => {
     if (!session?.user) return;
-    supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', session.user.id)
-      .single()
-      .then(({ data }) => {
-        if (!data) return;
-        setProfile(data as UserProfile);
-        const flaggedIds: string[] = data.flagged_ingredients ?? [];
-        if (flaggedIds.length) {
-          // Fetch ingredient names + build name→id map
-          supabase
-            .from('ingredients')
-            .select('id, name')
-            .in('id', flaggedIds)
-            .then(({ data: ingData }) => {
-              const names = (ingData ?? []).map((r: any) => r.name).filter(Boolean) as string[];
-              setFlaggedNames(names);
-              // Build lowercase name → UUID map for personal reason lookup
-              const nameToId: Record<string, string> = {};
-              for (const r of ingData ?? []) {
-                if (r.name) nameToId[r.name.toLowerCase()] = r.id;
-              }
-              setFlaggedNameToIdMap(nameToId);
-            });
-
-          // Fetch personal flag reasons
-          supabase
-            .from('ingredient_flag_reasons')
-            .select('ingredient_id, reason_category, reason_text')
-            .eq('user_id', data.id)
-            .in('ingredient_id', flaggedIds)
-            .then(({ data: reasonData }) => {
-              const map: Record<string, { category: string; text: string }> = {};
-              for (const r of reasonData ?? []) {
-                map[r.ingredient_id] = {
-                  category: r.reason_category,
-                  text: r.reason_text,
-                };
-              }
-              setFlagReasonMap(map);
-            });
-        }
-      });
+    (async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+      if (!data) return;
+      setProfile(data as UserProfile);
+      const flaggedIds: string[] = data.flagged_ingredients ?? [];
+      if (!flaggedIds.length) return;
+      // Fire both queries in parallel — no waterfall
+      const [{ data: ingData }, { data: reasonData }] = await Promise.all([
+        supabase.from('ingredients').select('id, name').in('id', flaggedIds),
+        supabase
+          .from('ingredient_flag_reasons')
+          .select('ingredient_id, reason_category, reason_text')
+          .eq('user_id', data.id)
+          .in('ingredient_id', flaggedIds),
+      ]);
+      // Process ingredient names
+      const names = (ingData ?? []).map((r: any) => r.name).filter(Boolean) as string[];
+      setFlaggedNames(names);
+      const nameToId: Record<string, string> = {};
+      for (const r of ingData ?? []) {
+        if (r.name) nameToId[r.name.toLowerCase()] = r.id;
+      }
+      setFlaggedNameToIdMap(nameToId);
+      // Process flag reasons
+      const map: Record<string, { category: string; text: string }> = {};
+      for (const r of reasonData ?? []) {
+        map[r.ingredient_id] = {
+          category: r.reason_category,
+          text: r.reason_text,
+        };
+      }
+      setFlagReasonMap(map);
+    })();
   }, [session]);
 
   // Fetch active family member profile when switching
@@ -1068,39 +1061,43 @@ export default function ScanResultScreen() {
 
   // When macros were passed via route params (scanner already had them),
   // still fetch micronutrients from OFF for the nutrient watchlist feature.
+  // Deferred: waits 1.5s so the main UI renders instantly first.
   useEffect(() => {
     if (needsOffFetch || !p.barcode) return; // main fetch handles this case
-    fetch(`https://world.openfoodfacts.org/api/v0/product/${p.barcode}.json`, {
-      headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
-    })
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.status === 1 && data.product) {
-          const n = data.product.nutriments ?? {};
-          setMicronutrients({
-            'potassium_100g': n.potassium_100g ?? null,
-            'calcium_100g': n.calcium_100g ?? null,
-            'iron_100g': n.iron_100g ?? null,
-            'magnesium_100g': n.magnesium_100g ?? null,
-            'zinc_100g': n.zinc_100g ?? null,
-            'phosphorus_100g': n.phosphorus_100g ?? null,
-            'cholesterol_100g': n.cholesterol_100g ?? null,
-            'trans-fat_100g': n['trans-fat_100g'] ?? null,
-            'vitamin-a_100g': n['vitamin-a_100g'] ?? null,
-            'vitamin-c_100g': n['vitamin-c_100g'] ?? null,
-            'vitamin-d_100g': n['vitamin-d_100g'] ?? null,
-            'vitamin-e_100g': n['vitamin-e_100g'] ?? null,
-            'vitamin-k_100g': n['vitamin-k_100g'] ?? null,
-            'copper_100g': n.copper_100g ?? null,
-            'manganese_100g': n.manganese_100g ?? null,
-            'selenium_100g': n.selenium_100g ?? null,
-            'vitamin-b9_100g': n['vitamin-b9_100g'] ?? null,
-            'omega-3-fat_100g': n['omega-3-fat_100g'] ?? null,
-            'sodium_100g': n.sodium_100g ?? null,
-          });
-        }
+    const timer = setTimeout(() => {
+      fetch(`https://world.openfoodfacts.org/api/v0/product/${p.barcode}.json`, {
+        headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
       })
-      .catch(() => {});
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.status === 1 && data.product) {
+            const n = data.product.nutriments ?? {};
+            setMicronutrients({
+              'potassium_100g': n.potassium_100g ?? null,
+              'calcium_100g': n.calcium_100g ?? null,
+              'iron_100g': n.iron_100g ?? null,
+              'magnesium_100g': n.magnesium_100g ?? null,
+              'zinc_100g': n.zinc_100g ?? null,
+              'phosphorus_100g': n.phosphorus_100g ?? null,
+              'cholesterol_100g': n.cholesterol_100g ?? null,
+              'trans-fat_100g': n['trans-fat_100g'] ?? null,
+              'vitamin-a_100g': n['vitamin-a_100g'] ?? null,
+              'vitamin-c_100g': n['vitamin-c_100g'] ?? null,
+              'vitamin-d_100g': n['vitamin-d_100g'] ?? null,
+              'vitamin-e_100g': n['vitamin-e_100g'] ?? null,
+              'vitamin-k_100g': n['vitamin-k_100g'] ?? null,
+              'copper_100g': n.copper_100g ?? null,
+              'manganese_100g': n.manganese_100g ?? null,
+              'selenium_100g': n.selenium_100g ?? null,
+              'vitamin-b9_100g': n['vitamin-b9_100g'] ?? null,
+              'omega-3-fat_100g': n['omega-3-fat_100g'] ?? null,
+              'sodium_100g': n.sodium_100g ?? null,
+            });
+          }
+        })
+        .catch(() => {});
+    }, 1500);
+    return () => clearTimeout(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
