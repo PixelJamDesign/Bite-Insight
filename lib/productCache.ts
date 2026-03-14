@@ -10,6 +10,7 @@
  *  - OFF API is only hit when a barcode has never been seen before
  */
 
+import { Platform } from 'react-native';
 import * as SQLite from 'expo-sqlite';
 
 export type CachedProduct = {
@@ -46,7 +47,8 @@ export type CachedProduct = {
 
 let _db: SQLite.SQLiteDatabase | null = null;
 
-async function getDb(): Promise<SQLite.SQLiteDatabase> {
+async function getDb(): Promise<SQLite.SQLiteDatabase | null> {
+  if (Platform.OS === 'web') return null; // expo-sqlite not available on web
   if (_db) return _db;
   _db = await SQLite.openDatabaseAsync('biteinsight_products.db');
   await _db.execAsync(`
@@ -94,6 +96,7 @@ async function getDb(): Promise<SQLite.SQLiteDatabase> {
 /** Returns the cached product or null if not found. */
 export async function getCachedProduct(barcode: string): Promise<CachedProduct | null> {
   const db = await getDb();
+  if (!db) return null;
   const row = await db.getFirstAsync<{
     barcode: string;
     product_name: string;
@@ -163,6 +166,7 @@ export async function getCachedProduct(barcode: string): Promise<CachedProduct |
 /** Inserts or replaces a product in the local cache. */
 export async function cacheProduct(product: Omit<CachedProduct, 'cachedAt'>): Promise<void> {
   const db = await getDb();
+  if (!db) return;
   await db.runAsync(
     `INSERT OR REPLACE INTO product_cache (
       barcode, product_name, brand, image_url, quantity, nutriscore_grade,
