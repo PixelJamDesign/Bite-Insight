@@ -807,6 +807,7 @@ export default function ScanResultScreen() {
     ingredientsJson: string;
     offLang: string;
     offFetched: string;
+    offRegion: string;
   }>();
 
   const { activeFamilyId } = useActiveFamily();
@@ -981,13 +982,14 @@ export default function ScanResultScreen() {
   // redundant (and adds 5-10s of "loading nutritional data" for nothing).
   // History entries don't pass offFetched, so they still trigger the OFF fetch.
   const needsOffFetch = !p.carbs && !!p.barcode && p.offFetched !== '1';
+  const offBase = `https://${p.offRegion || 'world'}.openfoodfacts.org`;
 
   useEffect(() => {
     if (!needsOffFetch) return;
     setFetchingOff(true);
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000); // 5s max
-    fetch(`https://world.openfoodfacts.org/api/v0/product/${p.barcode}.json`, {
+    fetch(`${offBase}/api/v0/product/${p.barcode}.json`, {
       headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
       signal: controller.signal,
     })
@@ -1061,7 +1063,7 @@ export default function ScanResultScreen() {
   // This runs in the background — it does NOT block the main nutrition UI.
   useEffect(() => {
     if (needsOffFetch || !p.barcode) return; // main fetch handles this case
-    fetch(`https://world.openfoodfacts.org/api/v0/product/${p.barcode}.json`, {
+    fetch(`${offBase}/api/v0/product/${p.barcode}.json`, {
       headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
     })
       .then((r) => r.json())
