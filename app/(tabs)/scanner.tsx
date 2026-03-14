@@ -340,7 +340,7 @@ export default function ScannerScreen() {
           categoriesTags: categoriesTags.join(','),
           ingredientsJson: ingredientsJson ?? '',
           offLang: offLang ?? 'en',
-          offFetched: '1',
+          offFetched: carbs != null ? '1' : '',
         },
       });
 
