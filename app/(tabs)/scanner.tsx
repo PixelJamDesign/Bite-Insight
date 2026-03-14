@@ -12,7 +12,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { useUpsellSheet } from '@/lib/upsellSheetContext';
-import { useRegion, REGIONS, FLAG_IMAGES, getOFFBaseUrl, PlusTag } from '@/lib/regionContext';
+import { useRegion, REGIONS, FLAG_IMAGES, PlusTag } from '@/lib/regionContext';
 import type { Region } from '@/lib/regionContext';
 import { Colors, Spacing, Shadows } from '@/constants/theme';
 import { ActionSearchIcon, ActionGalleryIcon, ActionChevronDownIcon, ActionCheckIcon } from '@/components/MenuIcons';
@@ -220,93 +220,11 @@ export default function ScannerScreen() {
           ingredientsJson = offlineResult.ingredientsJson ?? null;
           offLang         = offlineResult.offLang ?? null;
         }
-
-        // ── Tier 3: Open Food Facts API ─────────────────────────────────────
-        if (!offlineResult) {
-        const offBaseUrl = getOFFBaseUrl(selectedRegion);
-        try {
-          const offRes = await fetch(
-            `${offBaseUrl}/api/v0/product/${result.data}.json`,
-            { headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' } },
-          );
-          if (offRes.ok) {
-            const offData = await offRes.json();
-            if (offData.status === 1 && offData.product) {
-              const op = offData.product;
-              productName =
-                op.product_name ||
-                op.product_name_en ||
-                op.abbreviated_product_name ||
-                op.generic_name ||
-                tScan('product.unknownName');
-              brand           = op.brands || null;
-              imageUrl        = op.image_front_url || op.image_url || null;
-              quantity        = op.quantity || op.product_quantity || null;
-              nutriscoreGrade = op.nutriscore_grade || op.nutrition_grade_fr || null;
-              const hasEnglishText = !!op.ingredients_text_en;
-              ingredientsText = op.ingredients_text_en || op.ingredients_text || null;
-              allergens       = op.allergens_tags ?? [];
-              ingredientsJson = op.ingredients ? JSON.stringify(op.ingredients) : null;
-              categoriesTags  = op.categories_tags ?? [];
-              offLang         = hasEnglishText ? 'en' : (op.lang || op.lc || 'en');
-              const n = op.nutriments ?? {};
-              energyKcal   = n['energy-kcal_100g'] ?? null;
-              carbs        = n.carbohydrates_100g ?? null;
-              sugars       = n.sugars_100g ?? null;
-              fiber        = n.fiber_100g ?? null;
-              fat          = n.fat_100g ?? null;
-              saturatedFat = n['saturated-fat_100g'] ?? null;
-              proteins     = n.proteins_100g ?? null;
-              salt         = n.salt_100g ?? null;
-              servingSize         = op.serving_size ?? null;
-              energyKcalServing   = n['energy-kcal_serving'] ?? null;
-              carbsServing        = n.carbohydrates_serving ?? null;
-              sugarsServing       = n.sugars_serving ?? null;
-              fiberServing        = n.fiber_serving ?? null;
-              fatServing          = n.fat_serving ?? null;
-              saturatedFatServing = n['saturated-fat_serving'] ?? null;
-              proteinsServing     = n.proteins_serving ?? null;
-              saltServing         = n.salt_serving ?? null;
-            }
-          }
-        } catch {
-          // Network unavailable — continue with empty product data
-        }
-        } // end if (!offlineResult)
-
-        // Save to local cache for future offline use (fire-and-forget)
-        cacheProduct({
-          barcode:        result.data,
-          productName,
-          brand,
-          imageUrl,
-          quantity,
-          nutriscoreGrade,
-          energyKcal,
-          carbs,
-          sugars,
-          fiber,
-          fat,
-          saturatedFat,
-          proteins,
-          salt,
-          servingSize,
-          energyKcalServing,
-          carbsServing,
-          sugarsServing,
-          fiberServing,
-          fatServing,
-          saturatedFatServing,
-          proteinsServing,
-          saltServing,
-          ingredientsText,
-          allergens: allergens.join(',') || null,
-          ingredientsJson,
-          offLang,
-        }).catch(() => {/* non-critical — ignore cache write failures */});
+        // Tier 3 (OFF API) is now handled by scan-result page — no blocking here
       }
 
-      // ── Navigate immediately — don't block on Supabase ────────────────────
+      // ── Navigate immediately — scan-result will fetch from OFF if needed ──
+      const offRegionSubdomain = selectedRegion.subdomain;
       setProcessing(false);
       router.push({
         pathname: '/scan-result',
@@ -340,6 +258,7 @@ export default function ScannerScreen() {
           categoriesTags: categoriesTags.join(','),
           ingredientsJson: ingredientsJson ?? '',
           offLang: offLang ?? 'en',
+          offRegion: offRegionSubdomain,
         },
       });
 

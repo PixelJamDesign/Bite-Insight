@@ -20,6 +20,7 @@ import { Colors, Spacing, Radius } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { getCachedProfile, fetchAndCacheProfile } from '@/lib/profileCache';
+import { cacheProduct } from '@/lib/productCache';
 import type { UserProfile, FamilyProfile, DietaryTag, NutrientWatchlistEntry } from '@/lib/types';
 import { useActiveFamily } from '@/lib/activeFamilyContext';
 import { FamilySwitcherSheet } from '@/components/FamilySwitcherSheet';
@@ -806,6 +807,7 @@ export default function ScanResultScreen() {
     categoriesTags: string;
     ingredientsJson: string;
     offLang: string;
+    offRegion: string;
   }>();
 
   const { activeFamilyId } = useActiveFamily();
@@ -976,14 +978,16 @@ export default function ScanResultScreen() {
   }, [activeFamilyId]);
 
   // Fetch from OFF only when macros (carbs etc.) weren't passed via route params.
-  // The scanner passes all macros it already fetched, so this only triggers for
-  // history entries and food-search results that lack nutrition data.
+  // The scanner no longer blocks on OFF — it navigates instantly and lets this
+  // page handle the fetch progressively. Cached/offline products already have
+  // macros so this only fires for genuinely new products, history, and food-search.
   const needsOffFetch = !p.carbs && !!p.barcode;
+  const offRegion = p.offRegion || 'world';
 
   useEffect(() => {
     if (!needsOffFetch) return;
     setFetchingOff(true);
-    fetch(`https://world.openfoodfacts.org/api/v0/product/${p.barcode}.json`, {
+    fetch(`https://${offRegion}.openfoodfacts.org/api/v0/product/${p.barcode}.json`, {
       headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
     })
       .then((r) => r.json())
@@ -1040,6 +1044,56 @@ export default function ScanResultScreen() {
             'omega-3-fat_100g': n['omega-3-fat_100g'] ?? null,
             'sodium_100g': n.sodium_100g ?? null,
           });
+
+          // Cache the fetched product locally for instant future access
+          const productName = op.product_name || op.product_name_en || op.abbreviated_product_name || op.generic_name || p.productName;
+          const brand = op.brands || p.brand || null;
+          const imageUrl = op.image_front_url || op.image_url || p.imageUrl || null;
+          const hasEnglishText = !!op.ingredients_text_en;
+          cacheProduct({
+            barcode: p.barcode,
+            productName,
+            brand,
+            imageUrl,
+            quantity: op.quantity || op.product_quantity || null,
+            nutriscoreGrade: op.nutriscore_grade || op.nutrition_grade_fr || null,
+            energyKcal: n['energy-kcal_100g'] ?? null,
+            carbs: n.carbohydrates_100g ?? null,
+            sugars: n.sugars_100g ?? null,
+            fiber: n.fiber_100g ?? null,
+            fat: n.fat_100g ?? null,
+            saturatedFat: n['saturated-fat_100g'] ?? null,
+            proteins: n.proteins_100g ?? null,
+            salt: n.salt_100g ?? null,
+            servingSize: op.serving_size ?? null,
+            energyKcalServing: n['energy-kcal_serving'] ?? null,
+            carbsServing: n.carbohydrates_serving ?? null,
+            sugarsServing: n.sugars_serving ?? null,
+            fiberServing: n.fiber_serving ?? null,
+            fatServing: n.fat_serving ?? null,
+            saturatedFatServing: n['saturated-fat_serving'] ?? null,
+            proteinsServing: n.proteins_serving ?? null,
+            saltServing: n.salt_serving ?? null,
+            ingredientsText: op.ingredients_text_en || op.ingredients_text || null,
+            allergens: allergenTags.join(',') || null,
+            ingredientsJson: op.ingredients ? JSON.stringify(op.ingredients) : null,
+            offLang: hasEnglishText ? 'en' : (op.lang || op.lc || 'en'),
+          }).catch(() => {});
+
+          // Update Supabase scan history with the product info (fire-and-forget)
+          if (session?.user?.id) {
+            (async () => {
+              try {
+                const { data: existing } = await supabase.from('scans').select('id').eq('user_id', session.user.id).eq('barcode', p.barcode).limit(1).single();
+                if (existing) {
+                  await supabase.from('scans').update({
+                    product_name: productName, brand, image_url: imageUrl,
+                    nutriscore_grade: op.nutriscore_grade || op.nutrition_grade_fr || null,
+                  }).eq('id', existing.id);
+                }
+              } catch { /* non-critical */ }
+            })();
+          }
         }
       })
       .catch(() => {/* silently ignore — the empty state handles no-data */})
@@ -3192,7 +3246,8 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_700Bold',
     letterSpacing: -0.28,
     lineHeight: 17,
-    width: 61,
+    minWidth: 75,
+    flexShrink: 0,
   },
   noMicroDataCard: {
     flexDirection: 'row',

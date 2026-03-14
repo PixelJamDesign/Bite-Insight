@@ -64,15 +64,71 @@ function getWeekStart(): Date {
 }
 
 const INSIGHT_DISMISS_KEY = 'insight_dismissed_date';
+const INSIGHT_TODAY_KEY = 'insight_today_id';       // which insight is shown today
+const INSIGHT_TODAY_DATE_KEY = 'insight_today_date'; // date it was picked
+const INSIGHT_SEEN_KEY = 'insight_seen_ids';         // JSON array of recently shown IDs
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
-/** Pick one insight deterministically based on today's date. */
-function getTodayInsight(insights: DailyInsight[]): DailyInsight | null {
+/**
+ * Pick today's insight — random, never repeats until all have been shown.
+ * Persists the pick so it stays stable across re-renders within the same day.
+ */
+async function pickTodayInsight(insights: DailyInsight[]): Promise<DailyInsight | null> {
   if (insights.length === 0) return null;
-  const d = todayStr();
-  let hash = 0;
-  for (const ch of d) hash = ((hash << 5) - hash + ch.charCodeAt(0)) | 0;
-  return insights[Math.abs(hash) % insights.length];
+  const today = todayStr();
+
+  // Check if we already picked one today
+  try {
+    const storedDate = Platform.OS === 'web'
+      ? localStorage.getItem(INSIGHT_TODAY_DATE_KEY)
+      : await SecureStore.getItemAsync(INSIGHT_TODAY_DATE_KEY);
+
+    if (storedDate === today) {
+      const storedId = Platform.OS === 'web'
+        ? localStorage.getItem(INSIGHT_TODAY_KEY)
+        : await SecureStore.getItemAsync(INSIGHT_TODAY_KEY);
+      if (storedId) {
+        const found = insights.find((i) => i.id === storedId);
+        if (found) return found;
+      }
+    }
+  } catch { /* continue to pick fresh */ }
+
+  // Load seen IDs
+  let seenIds: string[] = [];
+  try {
+    const raw = Platform.OS === 'web'
+      ? localStorage.getItem(INSIGHT_SEEN_KEY)
+      : await SecureStore.getItemAsync(INSIGHT_SEEN_KEY);
+    if (raw) seenIds = JSON.parse(raw);
+  } catch { /* start fresh */ }
+
+  // Filter out already-seen insights
+  let pool = insights.filter((i) => !seenIds.includes(i.id));
+  if (pool.length === 0) {
+    // All seen — reset and start fresh
+    seenIds = [];
+    pool = insights;
+  }
+
+  // Pick a random one
+  const picked = pool[Math.floor(Math.random() * pool.length)];
+
+  // Save pick + update seen list
+  seenIds.push(picked.id);
+  try {
+    if (Platform.OS === 'web') {
+      localStorage.setItem(INSIGHT_TODAY_KEY, picked.id);
+      localStorage.setItem(INSIGHT_TODAY_DATE_KEY, today);
+      localStorage.setItem(INSIGHT_SEEN_KEY, JSON.stringify(seenIds));
+    } else {
+      await SecureStore.setItemAsync(INSIGHT_TODAY_KEY, picked.id);
+      await SecureStore.setItemAsync(INSIGHT_TODAY_DATE_KEY, today);
+      await SecureStore.setItemAsync(INSIGHT_SEEN_KEY, JSON.stringify(seenIds));
+    }
+  } catch { /* non-critical */ }
+
+  return picked;
 }
 
 function getGreeting(tc: (key: string) => string): string {
@@ -148,7 +204,7 @@ export default function HomeDashboard() {
       : supabase.from('daily_insights').select('*');
     const insightRes = await insightQuery;
 
-    const picked = getTodayInsight((insightRes.data ?? []) as DailyInsight[]);
+    const picked = await pickTodayInsight((insightRes.data ?? []) as DailyInsight[]);
     setInsight(picked);
 
     // Check if already dismissed today
