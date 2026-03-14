@@ -806,8 +806,6 @@ export default function ScanResultScreen() {
     categoriesTags: string;
     ingredientsJson: string;
     offLang: string;
-    offFetched: string;
-    offRegion: string;
   }>();
 
   const { activeFamilyId } = useActiveFamily();
@@ -977,21 +975,16 @@ export default function ScanResultScreen() {
       });
   }, [activeFamilyId]);
 
-  // Only fetch from OFF when we don't have macros AND the scanner didn't already try.
-  // The scanner always fetches from OFF before navigating here, so re-fetching is
-  // redundant (and adds 5-10s of "loading nutritional data" for nothing).
-  // History entries don't pass offFetched, so they still trigger the OFF fetch.
-  const needsOffFetch = !p.carbs && !!p.barcode && p.offFetched !== '1';
-  const offBase = `https://${p.offRegion || 'world'}.openfoodfacts.org`;
+  // Fetch from OFF only when macros (carbs etc.) weren't passed via route params.
+  // The scanner passes all macros it already fetched, so this only triggers for
+  // history entries and food-search results that lack nutrition data.
+  const needsOffFetch = !p.carbs && !!p.barcode;
 
   useEffect(() => {
     if (!needsOffFetch) return;
     setFetchingOff(true);
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000); // 5s max
-    fetch(`${offBase}/api/v0/product/${p.barcode}.json`, {
+    fetch(`https://world.openfoodfacts.org/api/v0/product/${p.barcode}.json`, {
       headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
-      signal: controller.signal,
     })
       .then((r) => r.json())
       .then((data) => {
@@ -1050,11 +1043,7 @@ export default function ScanResultScreen() {
         }
       })
       .catch(() => {/* silently ignore — the empty state handles no-data */})
-      .finally(() => {
-        clearTimeout(timeout);
-        setFetchingOff(false);
-      });
-    return () => { clearTimeout(timeout); controller.abort(); };
+      .finally(() => setFetchingOff(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1063,7 +1052,7 @@ export default function ScanResultScreen() {
   // This runs in the background — it does NOT block the main nutrition UI.
   useEffect(() => {
     if (needsOffFetch || !p.barcode) return; // main fetch handles this case
-    fetch(`${offBase}/api/v0/product/${p.barcode}.json`, {
+    fetch(`https://world.openfoodfacts.org/api/v0/product/${p.barcode}.json`, {
       headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
     })
       .then((r) => r.json())

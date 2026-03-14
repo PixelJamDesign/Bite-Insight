@@ -27,7 +27,6 @@ import type { Scan } from '@/lib/types';
 import { useFadeIn } from '@/lib/useFadeIn';
 import { useFocusFadeIn } from '@/lib/useFocusFadeIn';
 import { getCachedProduct } from '@/lib/productCache';
-import { useRegion } from '@/lib/regionContext';
 
 // ─── Nutriscore colours ────────────────────────────────────────────────────────
 const NUTRISCORE_COLORS: Record<string, string> = {
@@ -351,7 +350,6 @@ export default function HistoryScreen() {
   const { t: tc } = useTranslation('common');
   const { session } = useAuth();
   const router = useRouter();
-  const { selectedRegion } = useRegion();
   const tabBarSlide = useTabBarSlide();
 
   const [scans, setScans] = useState<Scan[]>([]);
@@ -435,9 +433,7 @@ export default function HistoryScreen() {
           ingredientsText: cached.ingredientsText ?? '',
           ingredientsJson: cached.ingredientsJson ?? '',
           offLang: cached.offLang ?? 'en',
-          offFetched: '1',
-          offRegion: selectedRegion.subdomain,
-        } : { offRegion: selectedRegion.subdomain }),
+        } : {}),
       },
     });
   }
