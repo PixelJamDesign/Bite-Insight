@@ -18,7 +18,8 @@ echo "Node $(node -v)  ·  npm $(npm -v)"
 
 # ── Dependencies ─────────────────────────────────────────────────────────────
 cd "$CI_PRIMARY_REPOSITORY_PATH"
-npm ci
+echo "Installing npm dependencies..."
+npm ci --loglevel verbose
 
 # ── Purge any stale native packages that were previously removed ──────────
 # @react-native-ml-kit/barcode-scanning was removed but may linger in CI cache
@@ -56,8 +57,13 @@ echo "  ✓ Expo prebuild complete"
 
 # ── Homebrew + cmake (required by Hermes engine) ─────────────────────────────
 if ! command -v cmake &>/dev/null; then
-  echo "Installing cmake via Homebrew..."
+  echo "Installing cmake via Homebrew (this may take a few minutes)..."
+  # Print a dot every 30s to keep Xcode Cloud's inactivity timer alive
+  ( while true; do sleep 30; echo -n "."; done ) &
+  KEEPALIVE_PID=$!
   brew install cmake
+  kill $KEEPALIVE_PID 2>/dev/null || true
+  echo ""
 fi
 echo "  ✓ cmake $(cmake --version | head -1)"
 
@@ -67,7 +73,10 @@ export LC_ALL=en_US.UTF-8
 
 cd "$CI_PRIMARY_REPOSITORY_PATH/ios"
 pod cache clean --all 2>/dev/null || true
-pod install
+
+# Use --verbose to keep stdout active and prevent Xcode Cloud's
+# 15-minute inactivity timeout from killing the build.
+pod install --verbose
 echo "  ✓ Pods installed"
 
 echo "──────────────────────────────────────────────"
