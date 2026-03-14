@@ -27,6 +27,7 @@ import * as SecureStore from 'expo-secure-store';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
+import { fetchAndCacheProfile } from '@/lib/profileCache';
 import { Colors, Shadows } from '@/constants/theme';
 import { DietaryTag } from '@/components/DietaryTag';
 import { StatPanel } from '@/components/StatPanel';
@@ -129,7 +130,11 @@ export default function HomeDashboard() {
       supabase.from('ingredients').select('*'),
     ]);
 
-    if (profileRes.data) setProfile(profileRes.data);
+    if (profileRes.data) {
+      setProfile(profileRes.data);
+      // Populate profile cache so scan-result renders insights instantly
+      fetchAndCacheProfile(userId).catch(() => {});
+    }
 
     // ── Daily insight: filter by user tags, pick one for today, check dismissal ──
     const userTags: string[] = [

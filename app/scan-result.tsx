@@ -19,6 +19,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Spacing, Radius } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
+import { getCachedProfile, fetchAndCacheProfile } from '@/lib/profileCache';
 import type { UserProfile, FamilyProfile, DietaryTag, NutrientWatchlistEntry } from '@/lib/types';
 import { useActiveFamily } from '@/lib/activeFamilyContext';
 import { FamilySwitcherSheet } from '@/components/FamilySwitcherSheet';
@@ -930,46 +931,30 @@ export default function ScanResultScreen() {
   const [customWeight, setCustomWeight] = useState(100);
   const [editingWeight, setEditingWeight] = useState(false);
 
-  // Fetch user profile + flagged ingredient names — ALL IN PARALLEL
+  // Load profile + flagged ingredients — use in-memory cache when available
+  // (populated by the dashboard), falling back to a network fetch.
   useEffect(() => {
     if (!session?.user) return;
-    (async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .single();
-      if (!data) return;
-      setProfile(data as UserProfile);
-      const flaggedIds: string[] = data.flagged_ingredients ?? [];
-      if (!flaggedIds.length) return;
-      // Fire both queries in parallel — no waterfall
-      const [{ data: ingData }, { data: reasonData }] = await Promise.all([
-        supabase.from('ingredients').select('id, name').in('id', flaggedIds),
-        supabase
-          .from('ingredient_flag_reasons')
-          .select('ingredient_id, reason_category, reason_text')
-          .eq('user_id', data.id)
-          .in('ingredient_id', flaggedIds),
-      ]);
-      // Process ingredient names
-      const names = (ingData ?? []).map((r: any) => r.name).filter(Boolean) as string[];
-      setFlaggedNames(names);
-      const nameToId: Record<string, string> = {};
-      for (const r of ingData ?? []) {
-        if (r.name) nameToId[r.name.toLowerCase()] = r.id;
-      }
-      setFlaggedNameToIdMap(nameToId);
-      // Process flag reasons
-      const map: Record<string, { category: string; text: string }> = {};
-      for (const r of reasonData ?? []) {
-        map[r.ingredient_id] = {
-          category: r.reason_category,
-          text: r.reason_text,
-        };
-      }
-      setFlagReasonMap(map);
-    })();
+    const userId = session.user.id;
+
+    // Try cache first — renders instantly if dashboard already loaded
+    const hit = getCachedProfile();
+    if (hit && hit.profile.id === userId) {
+      setProfile(hit.profile);
+      setFlaggedNames(hit.flaggedNames);
+      setFlaggedNameToIdMap(hit.flaggedNameToIdMap);
+      setFlagReasonMap(hit.flagReasonMap);
+      return; // skip network
+    }
+
+    // Cache miss — fetch from Supabase and populate cache
+    fetchAndCacheProfile(userId).then((result) => {
+      if (!result) return;
+      setProfile(result.profile);
+      setFlaggedNames(result.flaggedNames);
+      setFlaggedNameToIdMap(result.flaggedNameToIdMap);
+      setFlagReasonMap(result.flagReasonMap);
+    });
   }, [session]);
 
   // Fetch active family member profile when switching

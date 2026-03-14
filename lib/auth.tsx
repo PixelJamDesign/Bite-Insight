@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase, getAvatarUrl } from './supabase';
+import { clearProfileCache } from './profileCache';
 
 const SessionContext = createContext<{
   session: Session | null;
@@ -59,6 +60,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           });
       } else {
         setAvatarUrl(null);
+        clearProfileCache();
       }
     });
 
