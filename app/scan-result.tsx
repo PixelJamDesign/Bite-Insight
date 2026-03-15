@@ -50,6 +50,7 @@ import {
 import type { IngredientNode } from '@/lib/ingredientsCleaner';
 import { safeBack } from '@/lib/safeBack';
 import { ALLERGY_KEYWORDS, type AllergyEntry } from '@/lib/allergenKeywords';
+import { getAdditiveSeverity, computeAdditiveSeverity, type AdditiveEntry } from '@/constants/additiveSeverity';
 import { getSubstitutes, type FlagReason } from '@/lib/ingredientSubstitutes';
 import {
   type NutrientKey, type Threshold, DRI, NUTRIENT_LABELS, NUTRIENT_UNITS,
@@ -203,6 +204,9 @@ type NutrientData = {
   salt?: string; fat?: string; saturatedFat?: string;
   proteins?: string; energyKcal?: string;
   additiveCount?: number;
+  /** Severity-weighted additive data for condition-aware insight */
+  additiveHighCount?: number;
+  additiveModerateCount?: number;
 };
 
 type InsightDef = {
@@ -332,9 +336,16 @@ const INSIGHT_DEFS: InsightDef[] = [
     compute: (d) => {
       const count = d.additiveCount ?? -1;
       if (count < 0) return null;
-      if (count >= 5) return { label: 'Very High', color: Colors.status.negative, iconKey: 'veryHigh' };
-      if (count >= 3) return { label: 'High',      color: Extra.poorOrange,       iconKey: 'high' };
-      if (count >= 1) return { label: 'Moderate',  color: Extra.poorOrange,       iconKey: 'moderate' };
+      const high = d.additiveHighCount ?? 0;
+      const moderate = d.additiveModerateCount ?? 0;
+      // Severity-based: high-severity additives (Southampton Six etc.) drive the rating
+      if (high >= 2) return { label: 'Very High', color: Colors.status.negative, iconKey: 'veryHigh' };
+      if (high >= 1) return { label: 'High',      color: Extra.poorOrange,       iconKey: 'high' };
+      if (moderate >= 2) return { label: 'High',   color: Extra.poorOrange,       iconKey: 'high' };
+      if (moderate >= 1) return { label: 'Moderate', color: Extra.poorOrange,     iconKey: 'moderate' };
+      // Fall back to generic count for non-condition-specific additives
+      if (count >= 5) return { label: 'Moderate',  color: Extra.poorOrange,       iconKey: 'moderate' };
+      if (count >= 1) return { label: 'Low',       color: Extra.positiveGreen,    iconKey: 'low' };
       return { label: 'Low', color: Extra.positiveGreen, iconKey: 'low' };
     },
     icons: AdditiveIcons,
@@ -569,7 +580,7 @@ const TABS: { key: Tab; label: string }[] = [
 ];
 
 // ── Dietary tag display ───────────────────────────────────────────────────────
-const DIETARY_LABELS: Record<DietaryTag, string> = {
+const DIETARY_LABELS: Record<string, string> = {
   diabetic: 'Diabetic',
   keto: 'Keto',
   'gluten-free': 'Gluten-free',
@@ -578,6 +589,18 @@ const DIETARY_LABELS: Record<DietaryTag, string> = {
   lactose: 'Lactose-free',
   pescatarian: 'Pescatarian',
   kosher: 'Kosher',
+  childFriendly: 'Child-Friendly / Additive-Free',
+  cleanEating: 'Clean Eating',
+  dairyFree: 'Dairy-Free',
+  fodmap: 'FODMAP Diet',
+  highProtein: 'High-Protein / Fitness',
+  paleo: 'Paleo',
+  plantBased: 'Plant-Based',
+  postBariatric: 'Post-Bariatric Surgery',
+  pregnancy: 'Pregnancy-safe Diet',
+  sustainable: 'Sustainable / Eco',
+  weightLoss: 'Weight Loss',
+  whole30: 'Whole30',
 };
 
 
@@ -617,6 +640,7 @@ function categoriseIngredients(
   flaggedNameToIdMap?: Record<string, string>,
   productName?: string,     // product name for product-level matching
   categoriesTags?: string[],// OFF category tags for product-level matching
+  userConditions?: string[],// health conditions for additive severity highlighting
 ): IngredientCategory {
   const harmful: FlaggedIngredient[] = [];
   const userFlagged: FlaggedIngredient[] = [];
@@ -756,7 +780,22 @@ function categoriseIngredients(
     }
 
     // E-number food additive (en:e followed by digits)
-    if (/^en:e\d+/i.test(ingId)) { ok.push(ing); continue; }
+    if (/^en:e\d+/i.test(ingId)) {
+      // Check if this additive is flagged for the user's health conditions
+      const additiveSev = userConditions?.length
+        ? getAdditiveSeverity(ingId, userConditions)
+        : null;
+      if (additiveSev && (additiveSev.severity === 'high' || additiveSev.severity === 'moderate')) {
+        harmful.push({
+          ...ing,
+          flagReason: 'additive_concern',
+          additiveSeverity: additiveSev,
+        });
+        continue;
+      }
+      ok.push(ing);
+      continue;
+    }
 
     safe.push(ing);
   }
@@ -827,6 +866,7 @@ export default function ScanResultScreen() {
   ], [t]);
 
   const DIETARY_LABELS_T: Record<string, string> = useMemo(() => ({
+    // Legacy DietaryTag keys (from profile.dietary_preferences)
     diabetic: tpo('dietaryTags.diabetic'),
     keto: tpo('dietaryTags.keto'),
     'gluten-free': tpo('dietaryTags.gluten-free'),
@@ -835,6 +875,19 @@ export default function ScanResultScreen() {
     lactose: tpo('dietaryTags.lactose'),
     pescatarian: tpo('dietaryTags.pescatarian'),
     kosher: tpo('dietaryTags.kosher'),
+    // Newer DietaryPreferenceKey keys
+    childFriendly: tpo('dietaryPreferences.childFriendly'),
+    cleanEating: tpo('dietaryPreferences.cleanEating'),
+    dairyFree: tpo('dietaryPreferences.dairyFree'),
+    fodmap: tpo('dietaryPreferences.fodmap'),
+    highProtein: tpo('dietaryPreferences.highProtein'),
+    paleo: tpo('dietaryPreferences.paleo'),
+    plantBased: tpo('dietaryPreferences.plantBased'),
+    postBariatric: tpo('dietaryPreferences.postBariatric'),
+    pregnancy: tpo('dietaryPreferences.pregnancy'),
+    sustainable: tpo('dietaryPreferences.sustainable'),
+    weightLoss: tpo('dietaryPreferences.weightLoss'),
+    whole30: tpo('dietaryPreferences.whole30'),
   }), [tpo]);
 
   const NUTRIENT_LABELS_T: Record<NutrientKey, string> = useMemo(() => ({
@@ -927,11 +980,49 @@ export default function ScanResultScreen() {
   const [fetched, setFetched] = useState<Partial<OffPayload> | null>(null);
   const [fetchingOff, setFetchingOff] = useState(false);
 
+  // Animated progress bar — simulates progress during OFF fetch, snaps to 100% on completion.
+  const progressAnim = useRef(new Animated.Value(0)).current;
+  const progressPercent = useRef(0);
+  const [progressDisplay, setProgressDisplay] = useState(0);
+
+  useEffect(() => {
+    if (fetchingOff) {
+      // Reset and animate: fast to 40%, slow to 75%, crawl to 90%
+      progressAnim.setValue(0);
+      setProgressDisplay(0);
+      progressPercent.current = 0;
+      const listener = progressAnim.addListener(({ value }) => {
+        const pct = Math.round(value);
+        if (pct !== progressPercent.current) {
+          progressPercent.current = pct;
+          setProgressDisplay(pct);
+        }
+      });
+      Animated.sequence([
+        Animated.timing(progressAnim, { toValue: 40, duration: 800, useNativeDriver: false }),
+        Animated.timing(progressAnim, { toValue: 70, duration: 2500, useNativeDriver: false }),
+        Animated.timing(progressAnim, { toValue: 90, duration: 5000, useNativeDriver: false }),
+      ]).start();
+      return () => progressAnim.removeListener(listener);
+    } else if (progressPercent.current > 0) {
+      // Snap to 100% when fetch completes
+      progressAnim.stopAnimation(() => {
+        Animated.timing(progressAnim, { toValue: 100, duration: 300, useNativeDriver: false }).start();
+        setProgressDisplay(100);
+      });
+    }
+  }, [fetchingOff]);
+
   // Nutrition tab toggles
   const [servingMode, setServingMode] = useState<ServingMode>('100g');
   const [driMode, setDriMode] = useState<DriMode>('value');
   const [customWeight, setCustomWeight] = useState(100);
   const [editingWeight, setEditingWeight] = useState(false);
+
+  // Measure the widest rating label at the user's current font scale.
+  // An invisible "Moderate" is rendered off-screen; its measured width becomes
+  // the consistent minWidth for every rating column (nutrition + nutrient watch).
+  const [ratingColWidth, setRatingColWidth] = useState<number | undefined>(undefined);
 
   // Load profile + flagged ingredients — use in-memory cache when available
   // (populated by the dashboard), falling back to a network fetch.
@@ -1360,15 +1451,23 @@ export default function ScanResultScreen() {
   const categoriesSource = fetched?.categoriesTags ?? p.categoriesTags ?? '';
   const categoriesArray = categoriesSource.split(',').filter(Boolean);
 
+  // Flagged ingredients are personal to the main user — don't show them
+  // when viewing a family member's profile (they don't have their own flags yet).
+  const activeFlaggedNames = activeFamilyProfile ? [] : flaggedNames;
+  const activeFlagReasonMap = activeFamilyProfile ? {} : flagReasonMap;
+  const activeFlaggedNameToIdMap = activeFamilyProfile ? {} : flaggedNameToIdMap;
+
   const categorised = categoriseIngredients(
     structuredIngredients,
     allergenSource.split(',').filter(Boolean),
     activePrefs,
-    flaggedNames,
-    flagReasonMap,
-    flaggedNameToIdMap,
+    activeFlaggedNames,
+    activeFlagReasonMap,
+    activeFlaggedNameToIdMap,
     p.productName,
     categoriesArray,
+    [...(activeFamilyProfile?.health_conditions ?? profile?.health_conditions ?? []),
+     ...(activeFamilyProfile?.dietary_preferences?.map((d) => DIETARY_LABELS[d] ?? d) ?? profile?.dietary_preferences?.map((d) => DIETARY_LABELS[d] ?? d) ?? [])],
   );
 
   // ── Full List tree + category lookup for Ingredients sub-tabs ──
@@ -1461,20 +1560,9 @@ export default function ScanResultScreen() {
     : profile?.dietary_preferences?.map((d) => DIETARY_LABELS_T[d] ?? d) ?? [];
   const nutrientThresholds = buildThresholds(activeConditions, activeAllergies, activeDietaryLabels);
 
-  // Compute the minimum width for the rating column so it matches the widest label present.
-  // This prevents columns from jumping around when some rows say "Low" and others "Moderate".
-  let _ratingMaxLen = 0;
-  for (const { key, raw } of nutrientRows) {
-    if (!raw) continue;
-    const num = parseFloat(raw);
-    if (isNaN(num) || num < 0) continue;
-    const scaled = scaleRaw(raw);
-    const scaledNum = scaled ? parseFloat(scaled) : num;
-    const rating = getRatingT(key, isNaN(scaledNum) ? num : scaledNum, nutrientThresholds);
-    if (rating.label.length > _ratingMaxLen) _ratingMaxLen = rating.label.length;
-  }
-  // Figtree_700Bold 14px ≈ 7.8px per character
-  const ratingMinWidth = _ratingMaxLen > 0 ? Math.ceil(_ratingMaxLen * 7.8) : undefined;
+  // Rating column width is measured from an invisible "Moderate" label rendered off-screen.
+  // This ensures consistent column width across all rows AND scales with accessibility font size.
+  const ratingMinWidth = ratingColWidth;
 
   // ── Nutrient watchlist alerts ───────────────────────────────────────────────
   type WatchlistAlert = NutrientWatchlistEntry & { value: number };
@@ -1493,7 +1581,9 @@ export default function ScanResultScreen() {
 
   // Personalised impact insights (Overview → Important for you section)
   // Dynamically filtered based on the active profile's conditions/allergies/preferences.
-  const activeInsights = getActiveInsights(
+  // IMPORTANT: Don't compute while still fetching from OFF — empty/zero data would
+  // produce misleading "Low" ratings. Wait until real data is available.
+  const activeInsights = fetchingOff ? [] : getActiveInsights(
     activeConditions,
     activeAllergies,
     activeDietaryLabels,
@@ -1502,6 +1592,11 @@ export default function ScanResultScreen() {
       salt: rawSalt, fat: rawFat, saturatedFat: rawSaturatedFat,
       proteins: rawProteins, energyKcal: rawEnergyKcal,
       additiveCount: structuredIngredients.filter((ing) => /^en:e\d+/i.test(ing.id ?? '')).length,
+      ...(() => {
+        const allConditions = [...activeConditions, ...activeDietaryLabels];
+        const sev = computeAdditiveSeverity(structuredIngredients, allConditions);
+        return { additiveHighCount: sev.highCount, additiveModerateCount: sev.moderateCount };
+      })(),
     },
     INSIGHT_DEFS_T,
   );
@@ -1512,6 +1607,14 @@ export default function ScanResultScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      {/* Invisible text to measure the widest rating label at the user's font scale */}
+      <Text
+        style={styles.ratingMeasure}
+        onLayout={(e) => setRatingColWidth(Math.ceil(e.nativeEvent.layout.width))}
+        numberOfLines={1}
+      >
+        Moderate
+      </Text>
       <Animated.View style={{ flex: 1, opacity: pageOpacity, transform: [{ translateX: pageTranslateX }] }}>
       {/* ── Sticky Header (back, product info, nutri-score, tabs) ── */}
       <View style={styles.stickyHeader}>
@@ -1830,7 +1933,7 @@ export default function ScanResultScreen() {
                             <Text style={styles.nwValue}>
                               {Number(alert.value.toFixed(2))}{alert.unit}/100{baseUnit}
                             </Text>
-                            <Text style={[styles.nwRating, { color: sev.color }]}>
+                            <Text style={[styles.nwRating, { color: sev.color, minWidth: ratingColWidth }]} numberOfLines={1}>
                               {tc(`ratings.${sev.rating}`)}
                             </Text>
                           </View>
@@ -1860,7 +1963,7 @@ export default function ScanResultScreen() {
                             <Text style={styles.nwValue}>
                               {Number(alert.value.toFixed(2))}{alert.unit}/100{baseUnit}
                             </Text>
-                            <Text style={[styles.nwRating, { color: sev.color }]}>
+                            <Text style={[styles.nwRating, { color: sev.color, minWidth: ratingColWidth }]} numberOfLines={1}>
                               {tc(`ratings.${sev.rating}`)}
                             </Text>
                           </View>
@@ -1937,11 +2040,21 @@ export default function ScanResultScreen() {
               </View>
             )}
 
-            {/* Loading indicator while fetching OFF data */}
+            {/* Loading progress bar while fetching OFF data */}
             {fetchingOff && (
-              <View style={styles.fetchingRow}>
-                <ActivityIndicator size="small" color={Colors.primary} />
-                <Text style={styles.fetchingText}>{t('loading.nutritionalData')}</Text>
+              <View style={styles.progressContainer}>
+                <Text style={styles.progressLabel}>{t('loading.nutritionalData')}</Text>
+                <View style={styles.progressTrack}>
+                  <Animated.View
+                    style={[styles.progressFill, {
+                      width: progressAnim.interpolate({
+                        inputRange: [0, 100],
+                        outputRange: ['0%', '100%'],
+                      }),
+                    }]}
+                  />
+                </View>
+                <Text style={styles.progressPercent}>{progressDisplay}%</Text>
               </View>
             )}
 
@@ -2058,9 +2171,19 @@ export default function ScanResultScreen() {
               )}
 
               {fetchingOff ? (
-                <View style={styles.fetchingRow}>
-                  <ActivityIndicator size="small" color={Colors.primary} />
-                  <Text style={styles.fetchingText}>{t('loading.nutritionalData')}</Text>
+                <View style={styles.progressContainer}>
+                  <Text style={styles.progressLabel}>{t('loading.nutritionalData')}</Text>
+                  <View style={styles.progressTrack}>
+                    <Animated.View
+                      style={[styles.progressFill, {
+                        width: progressAnim.interpolate({
+                          inputRange: [0, 100],
+                          outputRange: ['0%', '100%'],
+                        }),
+                      }]}
+                    />
+                  </View>
+                  <Text style={styles.progressPercent}>{progressDisplay}%</Text>
                 </View>
               ) : hasNutrition ? (
                 <View style={styles.nutritionRows}>
@@ -2134,7 +2257,7 @@ export default function ScanResultScreen() {
                             <Text style={styles.nwValue}>
                               {Number(alert.value.toFixed(2))}{alert.unit}/100{baseUnit}
                             </Text>
-                            <Text style={[styles.nwRating, { color: sev.color }]}>
+                            <Text style={[styles.nwRating, { color: sev.color, minWidth: ratingColWidth }]} numberOfLines={1}>
                               {tc(`ratings.${sev.rating}`)}
                             </Text>
                           </View>
@@ -2164,7 +2287,7 @@ export default function ScanResultScreen() {
                             <Text style={styles.nwValue}>
                               {Number(alert.value.toFixed(2))}{alert.unit}/100{baseUnit}
                             </Text>
-                            <Text style={[styles.nwRating, { color: sev.color }]}>
+                            <Text style={[styles.nwRating, { color: sev.color, minWidth: ratingColWidth }]} numberOfLines={1}>
                               {tc(`ratings.${sev.rating}`)}
                             </Text>
                           </View>
@@ -2184,9 +2307,19 @@ export default function ScanResultScreen() {
         {activeTab === 'ingredients' && (
           <Animated.View style={[styles.tabContent, { gap: Spacing.s, opacity: fadeIngredient.opacity, transform: [{ translateY: fadeIngredient.translateY }] }]}>
             {fetchingOff ? (
-              <View style={styles.fetchingRow}>
-                <ActivityIndicator size="small" color={Colors.primary} />
-                <Text style={styles.fetchingText}>{t('loading.ingredients')}</Text>
+              <View style={styles.progressContainer}>
+                <Text style={styles.progressLabel}>{t('loading.ingredients')}</Text>
+                <View style={styles.progressTrack}>
+                  <Animated.View
+                    style={[styles.progressFill, {
+                      width: progressAnim.interpolate({
+                        inputRange: [0, 100],
+                        outputRange: ['0%', '100%'],
+                      }),
+                    }]}
+                  />
+                </View>
+                <Text style={styles.progressPercent}>{progressDisplay}%</Text>
               </View>
             ) : structuredIngredients.length > 0 ? (
               <>
@@ -2681,6 +2814,7 @@ export default function ScanResultScreen() {
       <InsightDetailSheet
         insight={insightSheetDef}
         onClose={() => setInsightSheetDef(null)}
+        flaggedAdditives={categorised.harmful.filter((ing) => ing.flagReason === 'additive_concern')}
       />
       </Animated.View>
     </SafeAreaView>
@@ -2691,6 +2825,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  ratingMeasure: {
+    position: 'absolute',
+    opacity: 0,
+    fontSize: 14,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    letterSpacing: -0.28,
   },
 
   // Sticky header (back, product info, nutri-score, tabs)
@@ -3020,18 +3162,36 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 
-  // OFF fetch loading
-  fetchingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
+  // OFF fetch progress bar
+  progressContainer: {
     paddingVertical: Spacing.s,
+    gap: Spacing.xs,
+    alignItems: 'center',
   },
-  fetchingText: {
+  progressLabel: {
     fontSize: 14,
     fontWeight: '300',
     fontFamily: 'Figtree_300Light',
     color: Colors.secondary,
+  },
+  progressTrack: {
+    width: '100%',
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.surface.tertiary,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 3,
+    backgroundColor: Colors.accent,
+  },
+  progressPercent: {
+    fontSize: 13,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.accent,
+    letterSpacing: -0.26,
   },
 
   // ── Impact panels (Important for you section) ────────────────────────────
@@ -3246,7 +3406,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_700Bold',
     letterSpacing: -0.28,
     lineHeight: 17,
-    minWidth: 75,
     flexShrink: 0,
   },
   noMicroDataCard: {

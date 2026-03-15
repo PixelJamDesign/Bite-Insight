@@ -613,19 +613,10 @@ export async function translateToEnglish(
 ): Promise<string> {
   if (!text || sourceLang === 'en') return text;
 
-  try {
-    const { onTranslateTask } = await import('expo-translate-text');
-    const result = await onTranslateTask({
-      input: text,
-      sourceLangCode: sourceLang,
-      targetLangCode: 'en',
-    });
-    if (result?.translatedTexts && typeof result.translatedTexts === 'string') {
-      return result.translatedTexts;
-    }
-  } catch {
-    // On-device translation unavailable (older OS, missing model, etc.)
-    // — return the original text as-is.
-  }
+  // On-device translation via expo-translate-text is disabled for now.
+  // The native module crashes in Expo Go/dev client and prompts users to
+  // download language packs on production builds — poor UX.
+  // Most OFF products already have English ingredient text via ingredients_text_en.
+  // TODO: Re-enable with a silent availability check once the library matures.
   return text;
 }

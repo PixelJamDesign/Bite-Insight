@@ -26,6 +26,7 @@ export type FlaggedIngredient = OffIngredient & {
   flagReason: FlagReason;
   personalReason?: { category: string; text: string };
   matchSource?: 'ingredient' | 'product-name' | 'category';
+  additiveSeverity?: { severity: 'high' | 'moderate' | 'low'; conditions: string[]; reason: string; group?: string };
 };
 
 type ImpactKey = 'low' | 'moderate' | 'high' | 'veryHigh';
@@ -134,7 +135,7 @@ const INSIGHT_EXPLANATIONS: Record<string, string> = {
   inflammatoryFat: 'Inflammatory fat is a proxy based on saturated fat content, which can promote inflammation relevant to autoimmune and inflammatory conditions.',
   digestiveLoad:   'Digestive load combines fat and fibre content to estimate how demanding this product is on your digestive system. High values may trigger symptoms in GERD, IBS and other gut conditions.',
   carbLoad:        'Carb load reflects the total carbohydrate content. This is key for low-carb, keto and diabetic diets where carbohydrate restriction is central.',
-  additives:       'Additive count tracks the number of food additives (E-numbers) in this product. Some additives are associated with sensitivities, behavioural effects in children, and digestive discomfort.',
+  additives:       'This rating is based on the severity of additives found in this product, not just the count. High-risk additives include the Southampton Six artificial colours (linked to hyperactivity in children), sodium benzoate, and propionates. These are flagged based on your health profile.',
 };
 
 // ─── 1) Flagged Ingredient Sheet ─────────────────────────────────────────────
@@ -158,9 +159,15 @@ export function FlaggedIngredientSheet({
     vegan: { title: t('flagReason.veganTitle'), body: t('flagReason.veganBody') },
     vegetarian: { title: t('flagReason.vegetarianTitle'), body: t('flagReason.vegetarianBody') },
     user_flagged: { title: t('flagReason.userFlaggedTitle'), body: t('flagReason.userFlaggedBody') },
+    additive_concern: { title: t('flagReason.additiveConcernTitle', 'Additive of Concern'), body: '' },
   };
 
-  const reason = display?.personalReason
+  const reason = display?.additiveSeverity
+    ? {
+        title: display.additiveSeverity.group ?? t('flagReason.additiveConcernTitle', 'Additive of Concern'),
+        body: display.additiveSeverity.reason,
+      }
+    : display?.personalReason
     ? {
         title: display.personalReason.text,
         body: t('flagReason.personalBody', { category: display.personalReason.category }),
@@ -265,12 +272,27 @@ export function IngredientInfoSheet({
 }
 
 // ─── 3) Insight Detail Sheet ─────────────────────────────────────────────────
+
+const SEVERITY_COLORS: Record<string, string> = {
+  high: '#ff3f42',
+  moderate: '#ff8736',
+  low: '#ffc72d',
+};
+
+const SEVERITY_ICONS: Record<string, string> = {
+  high: 'close-circle',
+  moderate: 'alert-circle',
+  low: 'information-circle',
+};
+
 export function InsightDetailSheet({
   insight,
   onClose,
+  flaggedAdditives,
 }: {
   insight: { def: InsightDef; result: ImpactResult } | null;
   onClose: () => void;
+  flaggedAdditives?: FlaggedIngredient[];
 }) {
   const { t } = useTranslation('scan');
   const lastRef = useRef<{ def: InsightDef; result: ImpactResult } | null>(null);
@@ -283,6 +305,10 @@ export function InsightDetailSheet({
   const Icon = def.icons[result.iconKey];
   const explanation = t(`insightExplanation.${def.key}`, INSIGHT_EXPLANATIONS[def.key] ?? '');
 
+  // For additives insight, show the list of problematic additives
+  const isAdditives = def.key === 'additives';
+  const additiveList = isAdditives ? (flaggedAdditives ?? []) : [];
+
   return (
     <BottomSheet visible={!!insight} onClose={onClose}>
       <Icon width={def.iconWidth * 1.4} height={def.iconHeight * 1.4} />
@@ -293,6 +319,33 @@ export function InsightDetailSheet({
       <View style={localStyles.descriptionBox}>
         <Text style={insightStyles.explanation}>{explanation}</Text>
       </View>
+
+      {/* Additive list — only shown for the additives insight card */}
+      {additiveList.length > 0 && (
+        <View style={additiveStyles.listCard}>
+          <Text style={additiveStyles.listTitle}>
+            Additives found in this product
+          </Text>
+          <View style={additiveStyles.list}>
+            {additiveList.map((ing, i) => {
+              const sev = ing.additiveSeverity?.severity ?? 'low';
+              const color = SEVERITY_COLORS[sev] ?? SEVERITY_COLORS.low;
+              const iconName = SEVERITY_ICONS[sev] ?? SEVERITY_ICONS.low;
+              const name = ing.text.charAt(0).toUpperCase() + ing.text.slice(1);
+              const reason = ing.additiveSeverity?.reason;
+              return (
+                <View key={`${ing.id ?? ing.text}-${i}`} style={additiveStyles.row}>
+                  <Ionicons name={iconName as any} size={20} color={color} />
+                  <View style={additiveStyles.rowText}>
+                    <Text style={additiveStyles.rowName}>{name}</Text>
+                    {reason ? <Text style={additiveStyles.rowReason}>{reason}</Text> : null}
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        </View>
+      )}
     </BottomSheet>
   );
 }
@@ -376,6 +429,52 @@ const localStyles = StyleSheet.create({
     color: '#00342c',
     letterSpacing: -0.26,
     lineHeight: 16,
+  },
+});
+
+const additiveStyles = StyleSheet.create({
+  listCard: {
+    width: '100%',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#aad4cd',
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    gap: 12,
+  },
+  listTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.secondary,
+    letterSpacing: -0.32,
+  },
+  list: {
+    gap: 8,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  rowText: {
+    flex: 1,
+    gap: 2,
+  },
+  rowName: {
+    fontSize: 15,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.3,
+  },
+  rowReason: {
+    fontSize: 13,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
+    color: Colors.secondary,
+    lineHeight: 18,
+    letterSpacing: -0.26,
   },
 });
 
