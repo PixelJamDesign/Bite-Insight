@@ -658,7 +658,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 24 },
     shadowOpacity: 0.05,
     shadowRadius: 24,
-    elevation: 4,
   },
   calHeader: {
     flexDirection: 'row',
@@ -965,7 +964,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.s,
     paddingVertical: Spacing.s,
     gap: Spacing.s,
-    ...Shadows.level4,
   },
   productImage: {
     width: 60,

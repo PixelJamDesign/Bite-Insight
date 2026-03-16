@@ -57,26 +57,28 @@ export const Radius = {
   full: 999,
 };
 
+import { Platform } from 'react-native';
+
 export const Shadows = {
   level2: {
     shadowColor: 'rgba(68,71,112)',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
-    elevation: 8,
+    ...(Platform.OS === 'android' ? { elevation: 2 } : {}),
   },
   level3: {
     shadowColor: 'rgba(68,71,112)',
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
-    elevation: 6,
+    ...(Platform.OS === 'android' ? { elevation: 2 } : {}),
   },
   level4: {
     shadowColor: 'rgba(68,71,112)',
     shadowOffset: { width: 0, height: 24 },
     shadowOpacity: 0.05,
     shadowRadius: 24,
-    elevation: 4,
+    ...(Platform.OS === 'android' ? { elevation: 1 } : {}),
   },
 };

@@ -1479,10 +1479,13 @@ export function MenuModal({ onClose, onNavigate }: MenuModalProps) {
   // Two permanent slots — one is always the front, one is always the back.
   // We never unmount a slot; we just swap which one is active. This avoids
   // any flash because the outgoing slot stays at opacity 1 until it animates out.
-  const [frontIsA, setFrontIsA] = useState(true);
+  // Combined into a single state object so frontIsA + isAnimating update
+  // atomically in one render — prevents the 1-frame flicker on Android where
+  // one value updates before the other.
+  const [slotState, setSlotState] = useState({ frontIsA: true, isAnimating: false });
+  const { frontIsA, isAnimating } = slotState;
   const [slotAScreen, setSlotAScreen] = useState<MenuScreen>('main');
   const [slotBScreen, setSlotBScreen] = useState<MenuScreen>('main');
-  const [isAnimating, setIsAnimating] = useState(false);
   const [policyType, setPolicyType] = useState<'privacy' | 'cookie' | null>(null);
 
   const insets = useSafeAreaInsets();
@@ -1496,70 +1499,99 @@ export function MenuModal({ onClose, onNavigate }: MenuModalProps) {
   const bSlideX = useRef(new Animated.Value(0)).current;
   const bFade = useRef(new Animated.Value(0)).current;
 
+  const animTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   function navigate(newScreen: MenuScreen, isBack = false) {
     if (isAnimating) return;
     const dir = isBack ? -1 : 1;
-    setIsAnimating(true);
+    const slideDistance = width * 0.22;
+    setSlotState(prev => ({ ...prev, isAnimating: true }));
+
+    // Safety timeout — if animation callback never fires (Android edge case),
+    // unlock interaction after the animation duration + buffer.
+    if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current);
+    animTimeoutRef.current = setTimeout(() => {
+      setSlotState(prev => ({ ...prev, isAnimating: false }));
+    }, 500);
+
+    // Animation config: crossfade with subtle slide.
+    // Outgoing fades out quickly while incoming fades in with a slight delay,
+    // giving a clean crossfade feel without the jarring parallel slide.
+    const DURATION = 280;
+    const FADE_OUT = 160;
+    const INCOMING_DELAY = 60;
 
     if (frontIsA) {
-      // A is outgoing (already at opacity 1), load new screen into B then slide B in
       setSlotBScreen(newScreen);
-      bSlideX.setValue(dir * width * 0.22);
-      bFade.setValue(0);
-      Animated.parallel([
-        Animated.timing(aSlideX, { toValue: -dir * width * 0.22, duration: 260, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-        Animated.timing(aFade, { toValue: 0, duration: 180, useNativeDriver: true }),
-        Animated.timing(bSlideX, { toValue: 0, duration: 260, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-        Animated.timing(bFade, { toValue: 1, duration: 260, useNativeDriver: true }),
-      ]).start(() => {
-        aSlideX.setValue(0);
-        aFade.setValue(0); // A is now the silent back slot
-        setFrontIsA(false);
-        setIsAnimating(false);
+      requestAnimationFrame(() => {
+        bSlideX.setValue(dir * slideDistance);
+        bFade.setValue(0);
+        Animated.parallel([
+          // Outgoing: slide + fade out
+          Animated.timing(aSlideX, { toValue: -dir * slideDistance, duration: DURATION, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+          Animated.timing(aFade, { toValue: 0, duration: FADE_OUT, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          // Incoming: slide in + delayed fade in
+          Animated.timing(bSlideX, { toValue: 0, duration: DURATION, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+          Animated.sequence([
+            Animated.delay(INCOMING_DELAY),
+            Animated.timing(bFade, { toValue: 1, duration: DURATION - INCOMING_DELAY, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+          ]),
+        ]).start(() => {
+          if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current);
+          aSlideX.setValue(0);
+          aFade.setValue(0);
+          setSlotState({ frontIsA: false, isAnimating: false });
+        });
       });
     } else {
-      // B is outgoing (already at opacity 1), load new screen into A then slide A in
       setSlotAScreen(newScreen);
-      aSlideX.setValue(dir * width * 0.22);
-      aFade.setValue(0);
-      Animated.parallel([
-        Animated.timing(bSlideX, { toValue: -dir * width * 0.22, duration: 260, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-        Animated.timing(bFade, { toValue: 0, duration: 180, useNativeDriver: true }),
-        Animated.timing(aSlideX, { toValue: 0, duration: 260, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-        Animated.timing(aFade, { toValue: 1, duration: 260, useNativeDriver: true }),
-      ]).start(() => {
-        bSlideX.setValue(0);
-        bFade.setValue(0); // B is now the silent back slot
-        setFrontIsA(true);
-        setIsAnimating(false);
+      requestAnimationFrame(() => {
+        aSlideX.setValue(dir * slideDistance);
+        aFade.setValue(0);
+        Animated.parallel([
+          // Outgoing: slide + fade out
+          Animated.timing(bSlideX, { toValue: -dir * slideDistance, duration: DURATION, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+          Animated.timing(bFade, { toValue: 0, duration: FADE_OUT, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          // Incoming: slide in + delayed fade in
+          Animated.timing(aSlideX, { toValue: 0, duration: DURATION, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+          Animated.sequence([
+            Animated.delay(INCOMING_DELAY),
+            Animated.timing(aFade, { toValue: 1, duration: DURATION - INCOMING_DELAY, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+          ]),
+        ]).start(() => {
+          if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current);
+          bSlideX.setValue(0);
+          bFade.setValue(0);
+          setSlotState({ frontIsA: true, isAnimating: false });
+        });
       });
     }
   }
 
   function handleClose() {
     // Reset both slots to clean state before closing
+    if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current);
     aSlideX.setValue(0);
     aFade.setValue(1);
     bSlideX.setValue(0);
     bFade.setValue(0);
-    setFrontIsA(true);
+    setSlotState({ frontIsA: true, isAnimating: false });
     setSlotAScreen('main');
     setSlotBScreen('main');
-    setIsAnimating(false);
     onClose();
   }
 
   function handleNavigate(route: any) {
     // Reset slots, close the menu overlay, then hand off to the global
     // transition overlay (fade-to-surface → navigate → fade-out reveal).
+    if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current);
     aSlideX.setValue(0);
     aFade.setValue(1);
     bSlideX.setValue(0);
     bFade.setValue(0);
-    setFrontIsA(true);
+    setSlotState({ frontIsA: true, isAnimating: false });
     setSlotAScreen('main');
     setSlotBScreen('main');
-    setIsAnimating(false);
     onNavigate();
     transitionTo(route);
   }
@@ -1602,22 +1634,43 @@ export function MenuModal({ onClose, onNavigate }: MenuModalProps) {
     showsVerticalScrollIndicator: false,
   };
 
+  const aIsActive = frontIsA && !isAnimating;
+  const bIsActive = !frontIsA && !isAnimating;
+
   return (
     <View style={styles.container}>
-      <Animated.ScrollView
-        {...sharedScrollProps}
-        style={[styles.scroll, styles.screenOverlay, { opacity: aFade, transform: [{ translateX: aSlideX }] }]}
-        pointerEvents={frontIsA && !isAnimating ? 'auto' : 'none'}
+      {/* Wrap each slot in a plain View for reliable pointerEvents + zIndex on Android.
+          Hide the back slot entirely when not animating to prevent ghosting artifacts. */}
+      <View
+        style={[
+          styles.screenOverlay,
+          { zIndex: frontIsA ? 1 : 0 },
+          !frontIsA && !isAnimating && styles.hiddenSlot,
+        ]}
+        pointerEvents={aIsActive ? 'auto' : 'none'}
       >
-        {renderScreenContent(slotAScreen)}
-      </Animated.ScrollView>
-      <Animated.ScrollView
-        {...sharedScrollProps}
-        style={[styles.scroll, styles.screenOverlay, { opacity: bFade, transform: [{ translateX: bSlideX }] }]}
-        pointerEvents={!frontIsA && !isAnimating ? 'auto' : 'none'}
+        <Animated.ScrollView
+          {...sharedScrollProps}
+          style={[styles.scroll, { opacity: aFade, transform: [{ translateX: aSlideX }] }]}
+        >
+          {renderScreenContent(slotAScreen)}
+        </Animated.ScrollView>
+      </View>
+      <View
+        style={[
+          styles.screenOverlay,
+          { zIndex: frontIsA ? 0 : 1 },
+          frontIsA && !isAnimating && styles.hiddenSlot,
+        ]}
+        pointerEvents={bIsActive ? 'auto' : 'none'}
       >
-        {renderScreenContent(slotBScreen)}
-      </Animated.ScrollView>
+        <Animated.ScrollView
+          {...sharedScrollProps}
+          style={[styles.scroll, { opacity: bFade, transform: [{ translateX: bSlideX }] }]}
+        >
+          {renderScreenContent(slotBScreen)}
+        </Animated.ScrollView>
+      </View>
 
       {policyType && (
         <PolicySheet
@@ -1644,6 +1697,10 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+    backgroundColor: '#fff',
+  },
+  hiddenSlot: {
+    opacity: 0,
   },
   scroll: {
     flex: 1,

@@ -331,7 +331,7 @@ export default function HomeDashboard() {
 
         {/* ── Greeting + Profile ── */}
         <Animated.View style={[styles.greetingRow, { opacity: fadeGreeting.opacity, transform: [{ translateY: fadeGreeting.translateY }] }]}>
-          <View style={styles.avatarLarge}>
+          <View style={[styles.avatarLarge, focusAnim.showElevation && Shadows.level2]}>
             {avatarUrl && !avatarLoadError ? (
               <Image
                 source={{ uri: avatarUrl }}
@@ -386,6 +386,7 @@ export default function HomeDashboard() {
             dietaryPreferences={profile?.dietary_preferences ?? []}
             healthConditions={profile?.health_conditions ?? []}
             allergies={profile?.allergies ?? []}
+            showElevation={focusAnim.showElevation}
           />
           </Animated.View>
         )}
@@ -399,6 +400,7 @@ export default function HomeDashboard() {
               label={t('scannedLabels')}
               imageSource={scannedLabelsImg}
               onPress={() => router.push('/(tabs)/history')}
+              showElevation={focusAnim.showElevation}
             />
             <StatPanel
               count={flaggedCount}
@@ -406,6 +408,7 @@ export default function HomeDashboard() {
               isPlusFeature
               imageSource={flagImg}
               onPress={() => router.push({ pathname: '/ingredient-preferences', params: { tab: 'flagged' } } as any)}
+              showElevation={focusAnim.showElevation}
             />
           </View>
         </Animated.View>
@@ -421,7 +424,7 @@ export default function HomeDashboard() {
           if (displayedIngredients.length === 0) {
             return (
               <View style={styles.ingredientSection}>
-                <View style={styles.ingredientCard}>
+                <View style={[styles.ingredientCard, focusAnim.showElevation && Shadows.level4]}>
                   <View style={styles.completionInner}>
                     <View style={styles.completionTick}>
                       <Ionicons name="checkmark" size={24} color="#fff" />
@@ -446,7 +449,7 @@ export default function HomeDashboard() {
 
           return (
             <View style={styles.ingredientSection}>
-              <View style={styles.ingredientCard}>
+              <View style={[styles.ingredientCard, focusAnim.showElevation && Shadows.level4]}>
                 <View style={styles.ingredientHeader}>
                   <Text style={styles.ingredientTitle}>{t('ingredientQuestion')}</Text>
                   <Text style={styles.ingredientSubtitle}>
@@ -582,7 +585,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 16,
     zIndex: 20,
-    elevation: 20,
   },
   headerMenu: {
     backgroundColor: '#fff',
@@ -593,7 +595,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 15,
-    elevation: 15,
   },
   menuBtn: {
     width: 48,
@@ -628,7 +629,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    ...Shadows.level2,
   },
   avatarImage: {
     width: '100%',
@@ -705,7 +705,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.stroke.primary,
     padding: 16,
     gap: 24,
-    ...Shadows.level4,
   },
   ingredientHeader: {
     gap: 4,

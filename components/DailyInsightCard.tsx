@@ -13,6 +13,7 @@ interface DailyInsightCardProps {
   dietaryPreferences?: DietaryTagType[];
   healthConditions?: string[];
   allergies?: string[];
+  showElevation?: boolean;
 }
 
 export function DailyInsightCard({
@@ -21,6 +22,7 @@ export function DailyInsightCard({
   dietaryPreferences = [],
   healthConditions = [],
   allergies = [],
+  showElevation = true,
 }: DailyInsightCardProps) {
   const { t } = useTranslation('dashboard');
   const { t: tpo } = useTranslation('profileOptions');
@@ -30,7 +32,7 @@ export function DailyInsightCard({
     allergies.length > 0;
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, showElevation && Shadows.level3]}>
       {/* Dismiss button */}
       <TouchableOpacity style={styles.closeBtn} onPress={onDismiss} hitSlop={8}>
         <Ionicons name="close" size={20} color={Colors.primary} />
@@ -78,7 +80,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.stroke.primary,
     padding: 24,
     gap: 16,
-    ...Shadows.level3,
   },
   closeBtn: {
     position: 'absolute',

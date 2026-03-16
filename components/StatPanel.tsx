@@ -8,11 +8,12 @@ interface StatPanelProps {
   isPlusFeature?: boolean;
   imageSource?: ImageSourcePropType;
   onPress?: () => void;
+  showElevation?: boolean;
 }
 
-export function StatPanel({ count, label, isPlusFeature = false, imageSource, onPress }: StatPanelProps) {
+export function StatPanel({ count, label, isPlusFeature = false, imageSource, onPress, showElevation = true }: StatPanelProps) {
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={onPress ? 0.75 : 1} disabled={!onPress}>
+    <TouchableOpacity style={[styles.container, showElevation && Shadows.level3]} onPress={onPress} activeOpacity={onPress ? 0.75 : 1} disabled={!onPress}>
       {isPlusFeature && (
         <View style={styles.plusBadgeWrap}>
           <PlusBadge />
@@ -40,7 +41,6 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
     alignItems: 'center',
     gap: 4,
-    ...Shadows.level3,
   },
   plusBadgeWrap: {
     position: 'absolute',

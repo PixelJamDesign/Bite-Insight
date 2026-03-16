@@ -19,7 +19,7 @@ export default function RecipesScreen() {
           />
 
           {/* White card */}
-          <View style={styles.card}>
+          <View style={[styles.card, focusAnim.showElevation && Shadows.level4]}>
             <View style={styles.content}>
               <View style={styles.textGroup}>
                 <Text style={styles.heading}>Sorry, nearly ready.</Text>
@@ -60,6 +60,7 @@ const styles = StyleSheet.create({
     width: TIMER_WIDTH,
     height: TIMER_HEIGHT,
     zIndex: 2,
+    elevation: 5,
     marginBottom: -OVERLAP,
   },
   card: {
@@ -71,7 +72,6 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.m,
     paddingHorizontal: Spacing.m,
     width: '100%',
-    ...Shadows.level4,
     zIndex: 1,
   },
   content: {
