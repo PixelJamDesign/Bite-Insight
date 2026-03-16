@@ -25,6 +25,7 @@ import { ScreenLayout } from '@/components/ScreenLayout';
 import { ActionSearchIcon, ActionPenIcon } from '@/components/MenuIcons';
 import { CachedAvatar } from '@/components/CachedAvatar';
 import type { FamilyProfile } from '@/lib/types';
+import { useTranslation } from 'react-i18next';
 import FamilyIcon from '../assets/icons/family_lg.svg';
 
 const TAG_CHIP_BG = '#B8DFD6';
@@ -34,12 +35,15 @@ function getInitials(name: string): string {
   return name.trim().split(/\s+/).map(n => n[0] ?? '').join('').toUpperCase().slice(0, 2) || '?';
 }
 
-/** Merge all tags into a single array for display as pills */
-function getAllTags(p: FamilyProfile): string[] {
+/** Merge all tags into a single array of display labels */
+function getAllTags(p: FamilyProfile, tpo: (key: string, opts?: any) => string): string[] {
   const tags: string[] = [];
-  if (p.health_conditions?.length) tags.push(...p.health_conditions);
-  if (p.allergies?.length) tags.push(...p.allergies);
-  if (p.dietary_preferences?.length) tags.push(...(p.dietary_preferences as string[]));
+  if (p.health_conditions?.length)
+    tags.push(...p.health_conditions.map(c => tpo(`healthConditions.${c}`, { defaultValue: c })));
+  if (p.allergies?.length)
+    tags.push(...p.allergies.map(a => tpo(`allergies.${a}`, { defaultValue: a })));
+  if (p.dietary_preferences?.length)
+    tags.push(...(p.dietary_preferences as string[]).map(d => tpo(`dietaryPreferences.${d}`, { defaultValue: d })));
   return tags;
 }
 
@@ -54,7 +58,8 @@ function EditRow({
   selectedIds: Set<string>;
   onToggle: (id: string) => void;
 }) {
-  const tags = getAllTags(profile);
+  const { t: tpo } = useTranslation('profileOptions');
+  const tags = getAllTags(profile, tpo);
   return (
     <ScaleDecorator>
       <TouchableOpacity
@@ -84,7 +89,7 @@ function EditRow({
           <View style={styles.nameRow}>
             <Text style={styles.rowName} numberOfLines={1}>{profile.name}</Text>
             {profile.relationship ? (
-              <Text style={styles.rowRelationship}>{profile.relationship}</Text>
+              <Text style={styles.rowRelationship}>{tpo(`relationships.${profile.relationship}`, { defaultValue: profile.relationship })}</Text>
             ) : null}
           </View>
           {tags.length > 0 && (
@@ -112,6 +117,7 @@ export default function FamilyMembersScreen() {
   const { session } = useAuth();
   const { isPlus } = useSubscription();
   const { showUpsell } = useUpsellSheet();
+  const { t: tpo } = useTranslation('profileOptions');
 
   // Page-level entrance/exit animation
   const { opacity: pageOpacity, translateX: pageTranslateX } = usePageTransition();
@@ -285,7 +291,7 @@ export default function FamilyMembersScreen() {
 
   // ── Render row (normal mode) ────────────────────────────────────────────────
   function renderNormalRow(profile: FamilyProfile) {
-    const tags = getAllTags(profile);
+    const tags = getAllTags(profile, tpo);
     return (
       <TouchableOpacity
         key={profile.id}
@@ -308,7 +314,7 @@ export default function FamilyMembersScreen() {
           <View style={styles.nameRow}>
             <Text style={styles.rowName} numberOfLines={1}>{profile.name}</Text>
             {profile.relationship ? (
-              <Text style={styles.rowRelationship}>{profile.relationship}</Text>
+              <Text style={styles.rowRelationship}>{tpo(`relationships.${profile.relationship}`, { defaultValue: profile.relationship })}</Text>
             ) : null}
           </View>
           {tags.length > 0 && (

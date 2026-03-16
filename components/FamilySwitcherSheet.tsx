@@ -303,7 +303,7 @@ export function FamilySwitcherSheet({
                       </Text>
                       {profile.relationship ? (
                         <Text style={styles.rowRelationship}>
-                          {profile.relationship}
+                          {tpo(`relationships.${profile.relationship}`, { defaultValue: profile.relationship })}
                         </Text>
                       ) : null}
                     </View>
