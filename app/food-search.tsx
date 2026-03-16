@@ -20,6 +20,9 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Colors, Shadows, Spacing, Radius } from '@/constants/theme';
 import { ActionSearchIcon, ActionChevronDownIcon, ActionCheckIcon, MenuArrowLeftIcon, MenuChevronRightIcon } from '@/components/MenuIcons';
+import { Ionicons } from '@expo/vector-icons';
+import { useMenu } from '@/lib/menuContext';
+import Logo from '../assets/images/logo.svg';
 import { NoImagePlaceholder } from '@/components/NoImagePlaceholder';
 import { sentenceCase } from '@/lib/text';
 import { safeBack } from '@/lib/safeBack';
@@ -68,6 +71,7 @@ export default function FoodSearchScreen() {
   const { opacity: pageOpacity, translateX: pageTranslateX, animateExit: pageExit } = usePageTransition();
 
   const { selectedRegion, setSelectedRegion } = useRegion();
+  const { menuOpen, openMenu, closeMenu } = useMenu();
   const [regionPickerVisible, setRegionPickerVisible] = useState(false);
   const [query, setQuery] = useState('');
   const [submittedQuery, setSubmittedQuery] = useState('');
@@ -481,6 +485,20 @@ export default function FoodSearchScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <Animated.View style={{ flex: 1, opacity: pageOpacity, transform: [{ translateX: pageTranslateX }] }}>
+      {/* ── Logo + menu header ── */}
+      <View style={styles.navHeader}>
+        <TouchableOpacity onPress={() => router.push('/(tabs)/' as any)} activeOpacity={0.7} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+          <Logo width={141} height={36} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.menuBtn}
+          onPress={menuOpen ? closeMenu : openMenu}
+          activeOpacity={0.8}
+        >
+          <Ionicons name={menuOpen ? 'close' : 'menu-outline'} size={24} color={Colors.primary} />
+        </TouchableOpacity>
+      </View>
+
       {/* Fixed header — stays outside FlatList so TextInput doesn't remount */}
       <View style={styles.headerContent}>
         {/* Back button */}
@@ -629,6 +647,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  navHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.m,
+    paddingTop: Spacing.m,
+  },
+  menuBtn: {
+    width: 48,
+    height: 48,
+    backgroundColor: Colors.surface.tertiary,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.stroke.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadows.level3,
   },
   listContent: {
     paddingHorizontal: Spacing.m,

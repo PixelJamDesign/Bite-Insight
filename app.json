@@ -30,6 +30,7 @@
       }
     },
     "android": {
+      "newArchEnabled": false,
       "splash": {
         "image": "./assets/images/splash.png",
         "resizeMode": "cover",
