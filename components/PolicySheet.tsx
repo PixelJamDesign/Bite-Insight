@@ -16,8 +16,6 @@ import {
   Modal,
   Dimensions,
   LayoutAnimation,
-  Platform,
-  UIManager,
   PanResponder,
   type GestureResponderEvent,
   type PanResponderGestureState,
@@ -29,9 +27,6 @@ import { Ionicons } from '@expo/vector-icons';
 // MenuIcons not needed — banner uses inline SVGs from policy_privacy_mini.svg / policy_cookies_mini.svg
 import { Colors, Spacing, Radius, Typography } from '@/constants/theme';
 
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 const SHEET_FRACTION = 0.92;

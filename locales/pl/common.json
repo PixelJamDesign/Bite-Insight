@@ -110,5 +110,11 @@
     "st": "ul",
     "nd": "II",
     "rd": "rd"
+  },
+  "tabs": {
+    "dashboard": "Panel",
+    "recipes": "Przepisy",
+    "scanner": "Skaner",
+    "history": "Historia"
   }
 }

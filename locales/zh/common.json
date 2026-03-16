@@ -110,5 +110,11 @@
     "st": "英石",
     "nd": "ND",
     "rd": "RD"
+  },
+  "tabs": {
+    "dashboard": "仪表板",
+    "recipes": "食谱",
+    "scanner": "扫描仪",
+    "history": "历史"
   }
 }

@@ -11,7 +11,6 @@ import {
   Alert,
   StyleSheet,
   LayoutAnimation,
-  UIManager,
   Animated,
   Easing,
   Image,
@@ -34,9 +33,6 @@ import {
   authenticateAndGetCredentials,
 } from '@/lib/biometrics';
 
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 const EASE_TRANSITION = {
   duration: 300,

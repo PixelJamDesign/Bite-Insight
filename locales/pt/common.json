@@ -110,5 +110,11 @@
     "st": "st",
     "nd": "e",
     "rd": "terceiro"
+  },
+  "tabs": {
+    "dashboard": "Painel",
+    "recipes": "Receitas",
+    "scanner": "Scanner",
+    "history": "Histórico"
   }
 }

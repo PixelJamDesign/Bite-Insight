@@ -10,16 +10,13 @@ import {
   RefreshControl,
   LayoutAnimation,
   Platform,
-  UIManager,
   Animated,
 } from 'react-native';
 import { useFadeIn } from '@/lib/useFadeIn';
 import { useFocusFadeIn } from '@/lib/useFocusFadeIn';
 import { useTranslation } from 'react-i18next';
 
-if (Platform.OS === 'android') {
-  UIManager.setLayoutAnimationEnabledExperimental?.(true);
-}
+
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';

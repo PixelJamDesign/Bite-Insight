@@ -110,5 +110,11 @@
     "st": "st",
     "nd": "nl",
     "rd": "rd"
+  },
+  "tabs": {
+    "dashboard": "Dashboard",
+    "recipes": "Recepten",
+    "scanner": "Scanner",
+    "history": "Geschiedenis"
   }
 }

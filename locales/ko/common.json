@@ -110,5 +110,11 @@
     "st": "성",
     "nd": "nd",
     "rd": "rd"
+  },
+  "tabs": {
+    "dashboard": "대시보드",
+    "recipes": "레시피",
+    "scanner": "스캐너",
+    "history": "기록"
   }
 }

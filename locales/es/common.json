@@ -110,5 +110,11 @@
     "st": "calle",
     "nd": "Dakota del Norte",
     "rd": "tercero"
+  },
+  "tabs": {
+    "dashboard": "Panel",
+    "recipes": "Recetas",
+    "scanner": "Escáner",
+    "history": "Historial"
   }
 }

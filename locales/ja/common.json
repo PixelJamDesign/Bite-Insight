@@ -110,5 +110,11 @@
     "st": "セント",
     "nd": "nd",
     "rd": "rd"
+  },
+  "tabs": {
+    "dashboard": "ダッシュボード",
+    "recipes": "レシピ",
+    "scanner": "スキャナー",
+    "history": "履歴"
   }
 }
