@@ -80,6 +80,12 @@ export const DEFAULT_THRESHOLDS: Record<NutrientKey, Threshold> = {
 // Keys must match the health_conditions / allergies / dietary_preferences strings stored in profiles.
 export const CONDITION_OVERRIDES: Record<string, Partial<Record<NutrientKey, Partial<Threshold>>>> = {
   // ── Health conditions ──
+  'Chronic Kidney Disease': {
+    salt:         { low: 0.1, moderate: 0.3 },
+    proteins:     { low: 3,   moderate: 8 },
+    saturatedFat: { low: 1,   moderate: 3 },
+    sugars:       { low: 2,   moderate: 5 },
+  },
   'Diabetes': {
     sugars:    { low: 2,   moderate: 5 },
     carbs:     { low: 3,   moderate: 15 },
@@ -161,6 +167,48 @@ export const CONDITION_OVERRIDES: Record<string, Partial<Record<NutrientKey, Par
   },
   'Autism': {
     sugars: { low: 3, moderate: 10 },
+  },
+  'Coeliac Disease': {
+    // Gluten-free products often high in sodium; flag salt more strictly
+    salt: { low: 0.2, moderate: 0.8 },
+  },
+  'Hypothyroidism': {
+    // Monitor iodine/selenium via ingredients; stricter sugar to support metabolism
+    sugars: { low: 3, moderate: 10 },
+  },
+  "Hashimoto's Thyroiditis": {
+    // Similar to hypothyroidism + gluten awareness (handled via ingredients)
+    sugars: { low: 3, moderate: 10 },
+  },
+  'NAFLD': {
+    sugars:      { low: 2,   moderate: 5 },
+    saturatedFat:{ low: 1.5, moderate: 5 },
+    fat:         { low: 2,   moderate: 10 },
+  },
+  'Pre-diabetes': {
+    sugars:   { low: 3,   moderate: 8 },
+    carbs:    { low: 5,   moderate: 18 },
+    netCarbs: { low: 5,   moderate: 18 },
+    fiber:    { low: 4,   moderate: 8, inverted: true },
+  },
+  'Insulin Resistance': {
+    sugars:   { low: 2,   moderate: 6 },
+    carbs:    { low: 4,   moderate: 16 },
+    netCarbs: { low: 4,   moderate: 16 },
+    fiber:    { low: 4,   moderate: 8, inverted: true },
+  },
+  'Gout': {
+    // High purine flagged via ingredients; stricter on sugar/fructose
+    sugars: { low: 2, moderate: 5 },
+  },
+  'Diverticular Disease': {
+    // Positive fibre emphasis
+    fiber: { low: 5, moderate: 10, inverted: true },
+  },
+  'Endometriosis': {
+    // Inflammation focus: stricter sat fat and sugar
+    saturatedFat:{ low: 1.5, moderate: 5 },
+    sugars:      { low: 3,   moderate: 10 },
   },
 
   // ── Allergies / intolerances ──

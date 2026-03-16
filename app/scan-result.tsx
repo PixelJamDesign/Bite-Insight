@@ -151,10 +151,11 @@ const SodiumIcons = {
 // │ Insight key             │ Relevant conditions / preferences               │
 // ├─────────────────────────┼──────────────────────────────────────────────────┤
 // │ glycemic                │ Diabetes, PCOS, Metabolic Syndrome,             │
-// │                         │ Low-Carb / Keto, Weight Loss, Diabetic          │
+// │                         │ Low-Carb / Keto, Weight Loss, Diabetic,         │
+// │                         │ Pre-diabetes, Insulin Resistance                │
 // ├─────────────────────────┼──────────────────────────────────────────────────┤
 // │ sodium                  │ Hypertension, Heart Disease, Kidney Disease,    │
-// │                         │ Lupus, Metabolic Syndrome                       │
+// │                         │ Lupus, Metabolic Syndrome, Coeliac Disease      │
 // ├─────────────────────────┼──────────────────────────────────────────────────┤
 // │ saturatedFat            │ Heart Disease, High Cholesterol,                │
 // │                         │ Metabolic Syndrome, Weight Loss                 │
@@ -171,15 +172,17 @@ const SodiumIcons = {
 // │                         │ Weight Loss                                     │
 // ├─────────────────────────┼──────────────────────────────────────────────────┤
 // │ calorie                 │ Weight Loss, Post-Bariatric Surgery,            │
-// │                         │ Metabolic Syndrome                              │
+// │                         │ Metabolic Syndrome, NAFLD                       │
 // ├─────────────────────────┼──────────────────────────────────────────────────┤
 // │ inflammatoryFat         │ Rheumatoid Arthritis, Multiple Sclerosis,       │
-// │                         │ Lupus, Eczema / Psoriasis                       │
+// │                         │ Lupus, Eczema / Psoriasis, Endometriosis, Gout  │
 // ├─────────────────────────┼──────────────────────────────────────────────────┤
 // │ digestiveLoad           │ GERD / Acid Reflux, IBS, Chron's Disease,      │
-// │                         │ Ulcerative Colitis, Leaky Gut Syndrome          │
+// │                         │ Ulcerative Colitis, Leaky Gut Syndrome,         │
+// │                         │ Diverticular Disease, Coeliac Disease           │
 // ├─────────────────────────┼──────────────────────────────────────────────────┤
-// │ carbLoad                │ Low-Carb / Keto, Diabetic                       │
+// │ carbLoad                │ Low-Carb / Keto, Diabetic, Pre-diabetes,        │
+// │                         │ Insulin Resistance                              │
 // ├─────────────────────────┼──────────────────────────────────────────────────┤
 // │ additives               │ Child-Friendly / Additive-Free, ADHD, Autism,   │
 // │                         │ Eczema / Psoriasis, IBS, Migraine / Chronic     │
@@ -229,6 +232,7 @@ const INSIGHT_DEFS: InsightDef[] = [
     relevantTo: [
       'Diabetes', 'Diabetic', 'PCOS', 'Metabolic Syndrome',
       'Low-Carb / Keto', 'Keto', 'Weight Loss',
+      'Pre-diabetes', 'Insulin Resistance',
     ],
     compute: (d) => {
       const sugars = d.sugars ? parseFloat(d.sugars) : NaN;
@@ -251,6 +255,7 @@ const INSIGHT_DEFS: InsightDef[] = [
     iconHeight: 44,
     relevantTo: [
       'Hypertension', 'Heart Disease', 'Lupus', 'Metabolic Syndrome',
+      'Coeliac Disease', 'Chronic Kidney Disease',
     ],
     compute: (d) => {
       const salt = d.salt ? parseFloat(d.salt) : NaN;
@@ -271,6 +276,7 @@ const INSIGHT_DEFS: InsightDef[] = [
     iconHeight: 44,
     relevantTo: [
       'Weight Loss', 'Post-Bariatric Surgery', 'Metabolic Syndrome',
+      'NAFLD',
     ],
     compute: (d) => {
       const kcal = d.energyKcal ? parseFloat(d.energyKcal) : NaN;
@@ -291,6 +297,7 @@ const INSIGHT_DEFS: InsightDef[] = [
     relevantTo: [
       'GERD / Acid Reflux', 'IBS', "Chron's Disease",
       'Ulcerative Colitis', 'Leaky Gut Syndrome',
+      'Diverticular Disease', 'Coeliac Disease',
     ],
     compute: (d) => {
       // Combined proxy: fat + fiber stress on the gut
@@ -312,6 +319,7 @@ const INSIGHT_DEFS: InsightDef[] = [
     iconHeight: 44,
     relevantTo: [
       'Low-Carb / Keto', 'Keto', 'Diabetic',
+      'Pre-diabetes', 'Insulin Resistance',
     ],
     compute: (d) => {
       const carbs = d.carbs ? parseFloat(d.carbs) : NaN;
@@ -370,6 +378,9 @@ const INSIGHT_WEIGHTS: Record<string, Partial<Record<InsightKey, number>>> = {
   'High Cholesterol': { saturatedFat: 10, inflammatoryFat: 7 },
   'Hypertension':     { sodium: 10 },
 
+  // ── Chronic Kidney Disease: sodium & protein restriction ──
+  'Chronic Kidney Disease': { sodium: 10, protein: 8, saturatedFat: 5 },
+
   // ── Metabolic syndrome: broad concern ──
   'Metabolic Syndrome': { calorie: 9, sugar: 8, sodium: 7, saturatedFat: 6, glycemic: 5 },
 
@@ -411,6 +422,17 @@ const INSIGHT_WEIGHTS: Record<string, Partial<Record<InsightKey, number>>> = {
 
   // ── Fitness: protein first ──
   'High-Protein / Fitness': { protein: 10, calorie: 6 },
+
+  // ── New health conditions ──
+  'Pre-diabetes':        { glycemic: 10, sugar: 9, carbLoad: 8 },
+  'Insulin Resistance':  { glycemic: 10, sugar: 9, carbLoad: 8 },
+  'NAFLD':               { saturatedFat: 10, sugar: 9, calorie: 8 },
+  'Coeliac Disease':     { sodium: 9, digestiveLoad: 8, additives: 6 },
+  'Diverticular Disease':{ digestiveLoad: 10, fiber: 9 },
+  'Endometriosis':       { inflammatoryFat: 10, sugar: 8, saturatedFat: 7 },
+  'Gout':                { sugar: 10, inflammatoryFat: 8 },
+  'Hypothyroidism':      { sugar: 8 },
+  "Hashimoto's Thyroiditis": { sugar: 8 },
 
   // ── Allergies ──
   'Fructose Intolerance': { sugar: 10 },

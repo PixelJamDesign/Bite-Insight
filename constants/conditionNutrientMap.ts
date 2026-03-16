@@ -167,7 +167,54 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // 3. Crohn's Disease
+  // 3a. Chronic Kidney Disease (CKD)
+  // ═══════════════════════════════════════════════════════════════════════════
+  'Chronic Kidney Disease': {
+    limit: [
+      {
+        nutrient: 'Sodium',
+        offKey: 'sodium_100g',
+        unit: 'g',
+        reason:
+          'High sodium intake increases blood pressure and fluid retention, accelerating kidney damage in CKD',
+      },
+      {
+        nutrient: 'Potassium',
+        offKey: 'potassium_100g',
+        unit: 'mg',
+        reason:
+          'Damaged kidneys struggle to remove excess potassium, which can cause dangerous heart rhythm problems',
+        userConfirmRequired: true,
+      },
+      {
+        nutrient: 'Phosphorus',
+        offKey: 'phosphorus_100g',
+        unit: 'mg',
+        reason:
+          'The kidneys cannot remove excess phosphorus effectively in CKD, leading to bone and cardiovascular complications',
+      },
+    ],
+    boost: [
+      {
+        nutrient: 'Iron',
+        offKey: 'iron_100g',
+        unit: 'mg',
+        reason:
+          'Anaemia is very common in CKD because the kidneys produce less erythropoietin, so adequate iron intake is important',
+      },
+      {
+        nutrient: 'Calcium',
+        offKey: 'calcium_100g',
+        unit: 'mg',
+        reason:
+          'CKD disrupts calcium and phosphorus balance, and maintaining calcium intake helps protect bone health',
+        userConfirmRequired: true,
+      },
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 3b. Crohn's Disease
   // ═══════════════════════════════════════════════════════════════════════════
   "Chron's Disease": {
     limit: [
@@ -1318,6 +1365,425 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
         unit: 'µg',
         reason:
           'Vitamin K deficiency is reported in IBD patients; important for blood clotting and bone health',
+        userConfirmRequired: true,
+      },
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 22. Coeliac Disease
+  // ═══════════════════════════════════════════════════════════════════════════
+  'Coeliac Disease': {
+    limit: [],
+    boost: [
+      {
+        nutrient: 'Iron',
+        offKey: 'iron_100g',
+        unit: 'mg',
+        reason:
+          'Iron deficiency is one of the most common nutritional problems in coeliac disease because damage to the small intestine reduces iron absorption',
+      },
+      {
+        nutrient: 'Calcium',
+        offKey: 'calcium_100g',
+        unit: 'mg',
+        reason:
+          'Calcium absorption is impaired in coeliac disease, increasing the risk of osteoporosis. Adequate intake is essential even after going gluten-free',
+      },
+      {
+        nutrient: 'Vitamin D',
+        offKey: 'vitamin-d_100g',
+        unit: 'µg',
+        reason:
+          'Vitamin D deficiency is very common in coeliac disease due to malabsorption. It works alongside calcium to protect bone density',
+      },
+      {
+        nutrient: 'Folate',
+        offKey: 'vitamin-b9_100g',
+        unit: 'µg',
+        reason:
+          'Folate deficiency is frequently seen at diagnosis because the damaged small intestine cannot absorb it properly',
+      },
+      {
+        nutrient: 'Zinc',
+        offKey: 'zinc_100g',
+        unit: 'mg',
+        reason:
+          'Zinc deficiency is common in coeliac patients and can affect immune function, wound healing and taste perception',
+      },
+      {
+        nutrient: 'Magnesium',
+        offKey: 'magnesium_100g',
+        unit: 'mg',
+        reason:
+          'Magnesium absorption is often compromised in coeliac disease, contributing to fatigue and muscle cramps',
+        userConfirmRequired: true,
+      },
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 23. Diverticular Disease
+  // ═══════════════════════════════════════════════════════════════════════════
+  'Diverticular Disease': {
+    limit: [],
+    boost: [
+      {
+        nutrient: 'Magnesium',
+        offKey: 'magnesium_100g',
+        unit: 'mg',
+        reason:
+          'Magnesium supports bowel motility and helps prevent constipation, which is a key factor in managing diverticular disease',
+      },
+      {
+        nutrient: 'Potassium',
+        offKey: 'potassium_100g',
+        unit: 'mg',
+        reason:
+          'Potassium supports muscle function in the colon walls and helps maintain regular bowel movements',
+        userConfirmRequired: true,
+      },
+      {
+        nutrient: 'Vitamin C',
+        offKey: 'vitamin-c_100g',
+        unit: 'mg',
+        reason:
+          'Vitamin C supports collagen production, which is important for maintaining the structural integrity of the colon wall',
+        userConfirmRequired: true,
+      },
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 24. Endometriosis
+  // ═══════════════════════════════════════════════════════════════════════════
+  'Endometriosis': {
+    limit: [
+      {
+        nutrient: 'Trans Fat',
+        offKey: 'trans-fat_100g',
+        unit: 'g',
+        reason:
+          'Trans fats promote systemic inflammation and have been associated with a higher risk of endometriosis in observational studies',
+      },
+    ],
+    boost: [
+      {
+        nutrient: 'Omega-3',
+        offKey: 'omega-3-fat_100g',
+        unit: 'g',
+        reason:
+          'Omega-3 fatty acids have anti-inflammatory properties that may help reduce the pain and inflammation associated with endometriosis',
+      },
+      {
+        nutrient: 'Iron',
+        offKey: 'iron_100g',
+        unit: 'mg',
+        reason:
+          'Heavy menstrual bleeding is common with endometriosis, making iron deficiency a frequent concern',
+      },
+      {
+        nutrient: 'Magnesium',
+        offKey: 'magnesium_100g',
+        unit: 'mg',
+        reason:
+          'Magnesium can help relax smooth muscle and may ease cramping. Many women with endometriosis are deficient',
+      },
+      {
+        nutrient: 'Vitamin D',
+        offKey: 'vitamin-d_100g',
+        unit: 'µg',
+        reason:
+          'Vitamin D plays a role in immune regulation and inflammation. Low levels have been linked to more severe endometriosis symptoms',
+        userConfirmRequired: true,
+      },
+      {
+        nutrient: 'Vitamin E',
+        offKey: 'vitamin-e_100g',
+        unit: 'mg',
+        reason:
+          'Vitamin E is an antioxidant that may help reduce oxidative stress and pelvic pain in endometriosis',
+        userConfirmRequired: true,
+      },
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 25. Gout
+  // ═══════════════════════════════════════════════════════════════════════════
+  'Gout': {
+    limit: [
+      {
+        nutrient: 'Cholesterol',
+        offKey: 'cholesterol_100g',
+        unit: 'mg',
+        reason:
+          'High cholesterol intake often correlates with purine-rich animal products. Gout patients benefit from reducing organ meats and rich fatty foods',
+        userConfirmRequired: true,
+      },
+    ],
+    boost: [
+      {
+        nutrient: 'Vitamin C',
+        offKey: 'vitamin-c_100g',
+        unit: 'mg',
+        reason:
+          'Vitamin C has been shown to lower uric acid levels by increasing its excretion through the kidneys. Studies suggest 500mg/day may reduce gout risk',
+      },
+      {
+        nutrient: 'Potassium',
+        offKey: 'potassium_100g',
+        unit: 'mg',
+        reason:
+          'Potassium helps the kidneys excrete uric acid more efficiently. A potassium-rich diet supports overall kidney health in gout patients',
+        userConfirmRequired: true,
+      },
+      {
+        nutrient: 'Magnesium',
+        offKey: 'magnesium_100g',
+        unit: 'mg',
+        reason:
+          'Magnesium deficiency is linked to higher uric acid levels. Adequate magnesium supports kidney function and may help prevent gout attacks',
+        userConfirmRequired: true,
+      },
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 26. Hashimoto's Thyroiditis
+  // ═══════════════════════════════════════════════════════════════════════════
+  "Hashimoto's Thyroiditis": {
+    limit: [],
+    boost: [
+      {
+        nutrient: 'Selenium',
+        offKey: 'selenium_100g',
+        unit: 'µg',
+        reason:
+          'Selenium is essential for thyroid hormone conversion and has been shown to reduce thyroid antibodies in Hashimoto\'s patients',
+      },
+      {
+        nutrient: 'Zinc',
+        offKey: 'zinc_100g',
+        unit: 'mg',
+        reason:
+          'Zinc is needed for thyroid hormone synthesis. Deficiency is common in hypothyroid conditions and can worsen symptoms',
+      },
+      {
+        nutrient: 'Iron',
+        offKey: 'iron_100g',
+        unit: 'mg',
+        reason:
+          'Iron deficiency impairs thyroid hormone production. Hashimoto\'s patients are at higher risk of anaemia',
+      },
+      {
+        nutrient: 'Vitamin D',
+        offKey: 'vitamin-d_100g',
+        unit: 'µg',
+        reason:
+          'Low vitamin D levels are strongly associated with autoimmune thyroid disease. Adequate levels may help modulate the immune response',
+      },
+      {
+        nutrient: 'Magnesium',
+        offKey: 'magnesium_100g',
+        unit: 'mg',
+        reason:
+          'Magnesium supports thyroid function and energy metabolism. Many thyroid patients are deficient without realising it',
+        userConfirmRequired: true,
+      },
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 27. Hypothyroidism
+  // ═══════════════════════════════════════════════════════════════════════════
+  'Hypothyroidism': {
+    limit: [],
+    boost: [
+      {
+        nutrient: 'Selenium',
+        offKey: 'selenium_100g',
+        unit: 'µg',
+        reason:
+          'Selenium is critical for converting the thyroid hormone T4 into its active form T3. The thyroid gland contains the highest concentration of selenium in the body',
+      },
+      {
+        nutrient: 'Zinc',
+        offKey: 'zinc_100g',
+        unit: 'mg',
+        reason:
+          'Zinc supports thyroid hormone production and helps regulate TSH levels. Deficiency can slow metabolism further',
+      },
+      {
+        nutrient: 'Iron',
+        offKey: 'iron_100g',
+        unit: 'mg',
+        reason:
+          'Iron deficiency reduces the activity of thyroid peroxidase, the enzyme that produces thyroid hormones. Anaemia and hypothyroidism often coexist',
+      },
+      {
+        nutrient: 'Vitamin D',
+        offKey: 'vitamin-d_100g',
+        unit: 'µg',
+        reason:
+          'Vitamin D deficiency is more prevalent in hypothyroid patients. Adequate levels support immune balance and bone health',
+        userConfirmRequired: true,
+      },
+      {
+        nutrient: 'Magnesium',
+        offKey: 'magnesium_100g',
+        unit: 'mg',
+        reason:
+          'Magnesium plays a role in thyroid hormone metabolism and energy production. Low levels can contribute to fatigue and muscle weakness',
+        userConfirmRequired: true,
+      },
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 28. Insulin Resistance
+  // ═══════════════════════════════════════════════════════════════════════════
+  'Insulin Resistance': {
+    limit: [
+      {
+        nutrient: 'Trans Fat',
+        offKey: 'trans-fat_100g',
+        unit: 'g',
+        reason:
+          'Trans fats worsen insulin resistance by promoting inflammation and impairing cell membrane function, making it harder for insulin to do its job',
+      },
+    ],
+    boost: [
+      {
+        nutrient: 'Magnesium',
+        offKey: 'magnesium_100g',
+        unit: 'mg',
+        reason:
+          'Magnesium plays a key role in insulin signalling. Low magnesium levels are strongly associated with insulin resistance and type 2 diabetes risk',
+      },
+      {
+        nutrient: 'Zinc',
+        offKey: 'zinc_100g',
+        unit: 'mg',
+        reason:
+          'Zinc is involved in insulin storage and secretion. Adequate zinc helps maintain healthy blood sugar regulation',
+      },
+      {
+        nutrient: 'Vitamin D',
+        offKey: 'vitamin-d_100g',
+        unit: 'µg',
+        reason:
+          'Vitamin D deficiency is linked to impaired insulin secretion and increased insulin resistance. Supplementation may improve sensitivity',
+        userConfirmRequired: true,
+      },
+      {
+        nutrient: 'Omega-3',
+        offKey: 'omega-3-fat_100g',
+        unit: 'g',
+        reason:
+          'Omega-3 fatty acids help reduce inflammation and may improve insulin sensitivity in people with insulin resistance',
+        userConfirmRequired: true,
+      },
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 29. NAFLD (Non-Alcoholic Fatty Liver Disease)
+  // ═══════════════════════════════════════════════════════════════════════════
+  'NAFLD': {
+    limit: [
+      {
+        nutrient: 'Trans Fat',
+        offKey: 'trans-fat_100g',
+        unit: 'g',
+        reason:
+          'Trans fats accelerate fat accumulation in the liver and worsen liver inflammation. They should be avoided as much as possible with NAFLD',
+      },
+      {
+        nutrient: 'Cholesterol',
+        offKey: 'cholesterol_100g',
+        unit: 'mg',
+        reason:
+          'Excess dietary cholesterol can contribute to liver fat accumulation and worsen NAFLD progression',
+        userConfirmRequired: true,
+      },
+    ],
+    boost: [
+      {
+        nutrient: 'Omega-3',
+        offKey: 'omega-3-fat_100g',
+        unit: 'g',
+        reason:
+          'Omega-3 fatty acids have been shown to reduce liver fat content and improve liver enzyme levels in NAFLD patients',
+      },
+      {
+        nutrient: 'Vitamin E',
+        offKey: 'vitamin-e_100g',
+        unit: 'mg',
+        reason:
+          'Vitamin E is one of the few supplements with clinical evidence for improving liver histology in non-diabetic NAFLD patients',
+      },
+      {
+        nutrient: 'Vitamin D',
+        offKey: 'vitamin-d_100g',
+        unit: 'µg',
+        reason:
+          'Vitamin D deficiency is common in NAFLD and is associated with more severe liver fibrosis. Adequate levels may support liver health',
+        userConfirmRequired: true,
+      },
+      {
+        nutrient: 'Magnesium',
+        offKey: 'magnesium_100g',
+        unit: 'mg',
+        reason:
+          'Magnesium supports insulin sensitivity and energy metabolism. Low levels are associated with both NAFLD and insulin resistance',
+        userConfirmRequired: true,
+      },
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 30. Pre-diabetes
+  // ═══════════════════════════════════════════════════════════════════════════
+  'Pre-diabetes': {
+    limit: [
+      {
+        nutrient: 'Trans Fat',
+        offKey: 'trans-fat_100g',
+        unit: 'g',
+        reason:
+          'Trans fats increase insulin resistance and inflammation, raising the risk of progressing from pre-diabetes to type 2 diabetes',
+      },
+    ],
+    boost: [
+      {
+        nutrient: 'Magnesium',
+        offKey: 'magnesium_100g',
+        unit: 'mg',
+        reason:
+          'Higher magnesium intake is associated with a significantly lower risk of developing type 2 diabetes. It plays a direct role in glucose metabolism',
+      },
+      {
+        nutrient: 'Zinc',
+        offKey: 'zinc_100g',
+        unit: 'mg',
+        reason:
+          'Zinc helps the pancreas produce, store and release insulin. Maintaining adequate zinc levels supports healthy blood sugar control',
+      },
+      {
+        nutrient: 'Vitamin D',
+        offKey: 'vitamin-d_100g',
+        unit: 'µg',
+        reason:
+          'Vitamin D improves insulin sensitivity and supports pancreatic beta-cell function. Deficiency is associated with higher diabetes risk',
+        userConfirmRequired: true,
+      },
+      {
+        nutrient: 'Omega-3',
+        offKey: 'omega-3-fat_100g',
+        unit: 'g',
+        reason:
+          'Omega-3s reduce systemic inflammation and may help improve insulin sensitivity, supporting the body in managing blood sugar more effectively',
         userConfirmRequired: true,
       },
     ],

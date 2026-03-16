@@ -1,5 +1,12 @@
 {
   "healthConditionReasons": {
+    "ckd": [
+      "Too high in sodium",
+      "Too much potassium",
+      "High in phosphorus",
+      "Too much protein for kidneys",
+      "Doctor advised to avoid"
+    ],
     "diabetes": [
       "Spikes blood sugar",
       "Causes energy crash",
@@ -145,6 +152,69 @@
       "Contains artificial additives",
       "Affects behaviour",
       "Doctor advised to avoid",
+      "Makes symptoms worse"
+    ],
+    "coeliac": [
+      "Contains gluten",
+      "Risk of cross-contamination",
+      "Doctor advised to avoid",
+      "Causes intestinal damage",
+      "Makes symptoms worse"
+    ],
+    "diverticular": [
+      "Irritates the colon",
+      "May trigger flare-up",
+      "Doctor advised to avoid",
+      "Causes discomfort",
+      "Makes symptoms worse"
+    ],
+    "endometriosis": [
+      "Causes inflammation",
+      "Worsens pain / cramps",
+      "Doctor advised to avoid",
+      "Hormonal disruption",
+      "Makes symptoms worse"
+    ],
+    "gout": [
+      "High in purines",
+      "Raises uric acid levels",
+      "Doctor advised to avoid",
+      "Triggers flare-up",
+      "Makes symptoms worse"
+    ],
+    "hashimotos": [
+      "Affects thyroid function",
+      "Causes inflammation",
+      "Doctor advised to avoid",
+      "Worsens autoimmune response",
+      "Makes symptoms worse"
+    ],
+    "hypothyroidism": [
+      "Affects thyroid function",
+      "Slows metabolism further",
+      "Doctor advised to avoid",
+      "Interferes with medication",
+      "Makes symptoms worse"
+    ],
+    "insulinResistance": [
+      "Spikes blood sugar",
+      "Worsens insulin resistance",
+      "Doctor advised to avoid",
+      "Affects insulin levels",
+      "Makes symptoms worse"
+    ],
+    "nafld": [
+      "Increases liver fat",
+      "Too high in sugar",
+      "Doctor advised to avoid",
+      "Too high in saturated fat",
+      "Makes symptoms worse"
+    ],
+    "preDiabetes": [
+      "Spikes blood sugar",
+      "Causes energy crash",
+      "Doctor advised to avoid",
+      "Monitoring carb intake",
       "Makes symptoms worse"
     ]
   },

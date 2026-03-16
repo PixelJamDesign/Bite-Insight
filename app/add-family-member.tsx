@@ -34,7 +34,10 @@ import {
   normalizeHealthCondition, normalizeAllergy, normalizeDietaryPreference,
 } from '@/constants/profileOptions';
 import type { NutrientWatchlistEntry } from '@/lib/types';
-import { CameraIcon, PersonalIcon, TickIcon } from '@/components/MenuIcons';
+import { CameraIcon, PersonalIcon, TickIcon, InfoIcon } from '@/components/MenuIcons';
+import { ConditionInfoSheet } from '@/components/ConditionInfoSheet';
+import { SuggestionSheet, type SuggestionCategory } from '@/components/SuggestionSheet';
+import { CONDITION_INFO } from '@/constants/conditionInfo';
 import Logo from '../assets/images/logo.svg';
 
 // ── Condition key helpers ──────────────────────────────────────────────────────
@@ -223,6 +226,8 @@ export default function AddFamilyMemberScreen() {
   // Chip search
   const [chipSearch, setChipSearch]           = useState('');
   const [chipSearchActive, setChipSearchActive] = useState(false);
+  const [infoKey, setInfoKey] = useState<string | null>(null);
+  const [suggestionCategory, setSuggestionCategory] = useState<SuggestionCategory | null>(null);
   const chipSearchRef = useRef<TextInput>(null);
 
   // Focus tracking
@@ -513,19 +518,33 @@ export default function AddFamilyMemberScreen() {
   }
 
   // ── Chip grid ─────────────────────────────────────────────────────────────
+  const LABEL_TO_CATEGORY: Record<string, SuggestionCategory> = {
+    healthConditions: 'health_condition',
+    allergies: 'allergy',
+    dietaryPreferences: 'dietary_preference',
+  };
+
   function renderChips(
     keys: readonly string[],
     labelPrefix: string,
     selected: string[],
     onToggle: (key: string) => void,
   ) {
-    const filtered = chipSearch.trim()
-      ? keys.filter(k => tpo(`${labelPrefix}.${k}`).toLowerCase().includes(chipSearch.toLowerCase()))
+    const q = chipSearch.trim().toLowerCase();
+    const filtered = q
+      ? keys.filter(k => {
+          if (tpo(`${labelPrefix}.${k}`).toLowerCase().includes(q)) return true;
+          const info = CONDITION_INFO[k];
+          if (info && (info.fullName.toLowerCase().includes(q) || info.description.toLowerCase().includes(q))) return true;
+          return false;
+        })
       : keys;
     return (
+      <>
       <View style={styles.chipWrap}>
         {filtered.map(key => {
           const active = selected.includes(key);
+          const hasInfo = !!CONDITION_INFO[key];
           return (
             <TouchableOpacity
               key={key}
@@ -537,10 +556,28 @@ export default function AddFamilyMemberScreen() {
                 {active && <TickIcon size={14} color="#fff" />}
               </View>
               <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>{tpo(`${labelPrefix}.${key}`)}</Text>
+              {hasInfo && (
+                <TouchableOpacity
+                  style={styles.chipInfo}
+                  onPress={(e) => { e.stopPropagation(); setInfoKey(key); }}
+                  hitSlop={8}
+                >
+                  <InfoIcon size={16} color={active ? '#fff' : Colors.secondary} />
+                </TouchableOpacity>
+              )}
             </TouchableOpacity>
           );
         })}
       </View>
+      {/* "Can't find yours?" text link */}
+      <TouchableOpacity
+        style={styles.suggestLink}
+        onPress={() => setSuggestionCategory(LABEL_TO_CATEGORY[labelPrefix] ?? 'health_condition')}
+        activeOpacity={0.7}
+      >
+        <Text style={styles.suggestLinkText}>Can't find yours? Suggest one</Text>
+      </TouchableOpacity>
+      </>
     );
   }
 
@@ -691,6 +728,7 @@ export default function AddFamilyMemberScreen() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
+    <>
     <SafeAreaView style={styles.safe} edges={['top']}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -876,6 +914,13 @@ export default function AddFamilyMemberScreen() {
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
+    <ConditionInfoSheet conditionKey={infoKey} onClose={() => setInfoKey(null)} />
+    <SuggestionSheet
+      visible={!!suggestionCategory}
+      onClose={() => setSuggestionCategory(null)}
+      category={suggestionCategory ?? 'health_condition'}
+    />
+    </>
   );
 }
 
@@ -1146,9 +1191,10 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexShrink: 1,
     gap: 8,
     paddingLeft: 8,
-    paddingRight: 16,
+    paddingRight: 8,
     paddingVertical: 8,
     backgroundColor: '#fff',
     borderWidth: 1,
@@ -1175,6 +1221,7 @@ const styles = StyleSheet.create({
     borderColor: '#3b9586',
   },
   chipLabel: {
+    flexShrink: 1,
     fontSize: 16,
     fontFamily: 'Figtree_700Bold',
     fontWeight: '700',
@@ -1183,6 +1230,22 @@ const styles = StyleSheet.create({
   },
   chipLabelActive: {
     color: '#fff',
+  },
+  chipInfo: {
+    marginLeft: -4,
+    padding: 2,
+  },
+  suggestLink: {
+    alignSelf: 'flex-start',
+    paddingVertical: 4,
+  },
+  suggestLinkText: {
+    fontSize: 14,
+    fontFamily: 'Figtree_300Light',
+    fontWeight: '300',
+    color: Colors.secondary,
+    letterSpacing: -0.14,
+    textDecorationLine: 'underline',
   },
 
   // ── Nutrient watchlist step styles ──────────────────────────────────────────
