@@ -245,6 +245,7 @@ i18n.use(initReactI18next).init({
     ko: bundle(ko_common, ko_profileOptions, ko_auth, ko_onboarding, ko_dashboard, ko_scan, ko_menu, ko_profile, ko_flagReasons, ko_ingredients, ko_history, ko_scanner, ko_tour, ko_journey),
     ar: bundle(ar_common, ar_profileOptions, ar_auth, ar_onboarding, ar_dashboard, ar_scan, ar_menu, ar_profile, ar_flagReasons, ar_ingredients, ar_history, ar_scanner, ar_tour, ar_journey),
   },
+  initImmediate: false, // Synchronous init — resources are inlined, no async loading needed
   interpolation: {
     escapeValue: false, // React Native handles XSS
   },
