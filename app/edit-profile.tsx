@@ -735,7 +735,7 @@ export default function EditProfileScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior="padding"
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         {/* Logo */}
         <View style={styles.logoArea}>
@@ -757,6 +757,7 @@ export default function EditProfileScreen() {
           contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          automaticallyAdjustKeyboardInsets
         >
           <Animated.View style={{ opacity: contentOpacity, transform: [{ translateX: contentTranslateX }] }}>
           {/* ── Step: About you ── */}

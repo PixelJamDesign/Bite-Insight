@@ -41,6 +41,7 @@
         "backgroundColor": "#e2f1ee"
       },
       "package": "com.biteinsightapp.gcahill",
+      "softwareKeyboardLayoutMode": "resize",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.USE_BIOMETRIC",

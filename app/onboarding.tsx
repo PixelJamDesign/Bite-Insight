@@ -764,7 +764,7 @@ export default function OnboardingScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior="padding"
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.logoArea}>
           <Logo width={141} height={36} />
@@ -788,6 +788,7 @@ export default function OnboardingScreen() {
           showsVerticalScrollIndicator={false}
           showsHorizontalScrollIndicator={false}
           alwaysBounceHorizontal={false}
+          automaticallyAdjustKeyboardInsets
         >
           <Animated.View style={{ opacity: contentOpacity, transform: [{ translateX: contentTranslateX }] }}>
 
