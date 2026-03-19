@@ -3497,7 +3497,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.28,
   },
   flaggedBody: {
-    gap: Spacing.xs,
+    gap: Spacing.xs,          // 8px between title and ingredient blocks
   },
   flaggedTitle: {
     fontSize: 14,
@@ -3505,15 +3505,14 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
     letterSpacing: -0.28,
-    lineHeight: 16.8,
+    lineHeight: 16.8,         // 14 × 1.2
   },
   flaggedIngBlock: {
     gap: 4,
   },
   flaggedDivider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: `${Extra.flaggedOrange}40`,
-    marginBottom: 4,
+    height: 1,
+    backgroundColor: `${Extra.flaggedOrange}30`,
   },
   flaggedIngName: {
     fontSize: 16,
@@ -3535,7 +3534,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_300Light',
     color: Extra.flaggedOrangeText,
     letterSpacing: -0.14,
-    lineHeight: 17.5,
+    lineHeight: 17.5,         // 14 × 1.25
   },
 
   // ── Nutrient Watch (Figma node 3263-5807) ──
