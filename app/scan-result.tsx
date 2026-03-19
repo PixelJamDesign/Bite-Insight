@@ -1010,6 +1010,9 @@ export default function ScanResultScreen() {
     categoriesTags: string;
     ingredientsJson: string;
     offLang: string;
+    productName: string;
+    brand: string;
+    imageUrl: string;
   };
   const [fetched, setFetched] = useState<Partial<OffPayload> | null>(null);
   const [fetchingOff, setFetchingOff] = useState(false);
@@ -1122,7 +1125,13 @@ export default function ScanResultScreen() {
           const n = op.nutriments ?? {};
           const allergenTags: string[] = op.allergens_tags ?? [];
           const tracesTags: string[] = op.traces_tags ?? [];
+          const fetchedProductName = op.product_name || op.product_name_en || op.abbreviated_product_name || op.generic_name || '';
+          const fetchedBrand = op.brands || '';
+          const fetchedImageUrl = op.image_front_url || op.image_url || '';
           setFetched({
+            productName: fetchedProductName,
+            brand: fetchedBrand,
+            imageUrl: fetchedImageUrl,
             nutriscoreGrade: op.nutriscore_grade || op.nutrition_grade_fr || '',
             quantity: op.quantity || op.product_quantity || '',
             energyKcal: n['energy-kcal_100g'] != null ? String(n['energy-kcal_100g']) : '',
@@ -1173,15 +1182,12 @@ export default function ScanResultScreen() {
           });
 
           // Cache the fetched product locally for instant future access
-          const productName = op.product_name || op.product_name_en || op.abbreviated_product_name || op.generic_name || p.productName;
-          const brand = op.brands || p.brand || null;
-          const imageUrl = op.image_front_url || op.image_url || p.imageUrl || null;
           const hasEnglishText = !!op.ingredients_text_en;
           cacheProduct({
             barcode: p.barcode,
-            productName,
-            brand,
-            imageUrl,
+            productName: fetchedProductName || p.productName,
+            brand: fetchedBrand || p.brand || null,
+            imageUrl: fetchedImageUrl || p.imageUrl || null,
             quantity: op.quantity || op.product_quantity || null,
             nutriscoreGrade: op.nutriscore_grade || op.nutrition_grade_fr || null,
             energyKcal: n['energy-kcal_100g'] ?? null,
@@ -1215,7 +1221,9 @@ export default function ScanResultScreen() {
                 const { data: existing } = await supabase.from('scans').select('id').eq('user_id', session.user.id).eq('barcode', p.barcode).limit(1).single();
                 if (existing) {
                   await supabase.from('scans').update({
-                    product_name: productName, brand, image_url: imageUrl,
+                    product_name: fetchedProductName || p.productName,
+                    brand: fetchedBrand || p.brand || null,
+                    image_url: fetchedImageUrl || p.imageUrl || null,
                     nutriscore_grade: op.nutriscore_grade || op.nutrition_grade_fr || null,
                   }).eq('id', existing.id);
                 }
@@ -1691,14 +1699,14 @@ export default function ScanResultScreen() {
           {/* ── Product header ── */}
         <View style={styles.productHeader}>
           <View style={styles.productInfo}>
-            {!!p.brand && <Text style={styles.brandName}>{sentenceCase(p.brand)}</Text>}
-            <Text style={styles.productName}>{sentenceCase(p.productName) || t('product.unknownName')}</Text>
+            {!!(fetched?.brand || p.brand) && <Text style={styles.brandName}>{sentenceCase(fetched?.brand || p.brand)}</Text>}
+            <Text style={styles.productName}>{sentenceCase(fetched?.productName || p.productName) || t('product.unknownName')}</Text>
             {!!quantity && <Text style={styles.quantity}>{quantity}</Text>}
           </View>
-          {p.imageUrl ? (
+          {(fetched?.imageUrl || p.imageUrl) ? (
             <View style={styles.imageCard}>
               <Image
-                source={{ uri: p.imageUrl }}
+                source={{ uri: fetched?.imageUrl || p.imageUrl }}
                 style={styles.productImage}
                 resizeMode="contain"
               />
