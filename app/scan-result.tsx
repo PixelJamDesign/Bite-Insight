@@ -821,7 +821,17 @@ function categoriseIngredients(
 
     safe.push(ing);
   }
-  return { harmful, userFlagged, ok, safe };
+  // Deduplicate by ingredient name (same ingredient can match via multiple sources)
+  const dedup = <T extends { text: string }>(arr: T[]): T[] => {
+    const seen = new Set<string>();
+    return arr.filter((item) => {
+      const key = item.text.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  };
+  return { harmful: dedup(harmful), userFlagged: dedup(userFlagged), ok, safe };
 }
 
 type ImpactKey = 'low' | 'moderate' | 'high' | 'veryHigh';
@@ -1848,23 +1858,15 @@ export default function ScanResultScreen() {
                   );
                 })()}
 
-                {/* User-flagged ingredient warning (orange card) — deduplicated by name */}
-                {categorised.userFlagged.length > 0 && (() => {
-                  const seen = new Set<string>();
-                  const unique = categorised.userFlagged.filter((ing) => {
-                    const key = ing.text.toLowerCase();
-                    if (seen.has(key)) return false;
-                    seen.add(key);
-                    return true;
-                  });
-                  return (
+                {/* User-flagged ingredient warning (orange card) */}
+                {categorised.userFlagged.length > 0 && (
                     <View style={styles.flaggedCard}>
                       <View style={styles.flaggedBadge}>
                         <MenuFlaggedIcon color="#fff" size={11} />
                         <Text style={styles.flaggedBadgeText}>{t('flagged.badge')}</Text>
                       </View>
                       <Text style={styles.flaggedTitle}>{t('flagged.title')}</Text>
-                      {unique.map((ing, i) => {
+                      {categorised.userFlagged.map((ing, i) => {
                         const reason = ing.personalReason
                           ? t('flagged.subtitle', { reason: ing.personalReason.text })
                           : t('flagged.subtitleGeneric');
@@ -1891,8 +1893,7 @@ export default function ScanResultScreen() {
                         );
                       })}
                     </View>
-                  );
-                })()}
+                )}
 
                 {/* Dynamic insight panels — rendered in pairs */}
                 {activeInsights.length > 0 && (
@@ -3578,6 +3579,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 24,
     gap: 12,
+    alignItems: 'stretch',
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.12,
@@ -3586,6 +3588,7 @@ const styles = StyleSheet.create({
   },
   ingCategoryHeading: {
     flexWrap: 'wrap',
+    textAlign: 'left',
   },
   ingCount: {
     fontSize: 16,
