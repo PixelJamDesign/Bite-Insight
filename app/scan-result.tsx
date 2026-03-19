@@ -1946,36 +1946,31 @@ export default function ScanResultScreen() {
                 {categorised.userFlagged.length > 0 && (
                     <View style={styles.flaggedCard}>
                       <View style={styles.flaggedBadge}>
-                        <MenuFlaggedIcon color="#fff" size={11} />
+                        <MenuFlaggedIcon color="#fff" size={16} />
                         <Text style={styles.flaggedBadgeText}>{t('flagged.badge')}</Text>
                       </View>
-                      <Text style={styles.flaggedTitle}>{t('flagged.title')}</Text>
-                      {categorised.userFlagged.map((ing, i) => {
-                        const reason = ing.personalReason
-                          ? t('flagged.subtitle', { reason: ing.personalReason.text })
-                          : t('flagged.subtitleGeneric');
-                        return (
-                          <View key={`ov-uf-${ing.id ?? i}`} style={styles.ingRow}>
-                            <View style={{ flex: 1 }}>
-                              <Text style={styles.ingName} numberOfLines={2}>
-                                {sentenceCase(ing.text)}
-                              </Text>
-                              <Text style={styles.flaggedSubtitle}>{reason}</Text>
+                      <View style={styles.flaggedBody}>
+                        <Text style={styles.flaggedTitle}>{t('flagged.title')}</Text>
+                        {categorised.userFlagged.map((ing, i) => {
+                          const reasons = ing.personalReason?.text
+                            ? ing.personalReason.text.split(',').map((r: string) => r.trim()).filter(Boolean)
+                            : [];
+                          return (
+                            <View key={`ov-uf-${ing.id ?? i}`} style={styles.flaggedIngBlock}>
+                              <View style={styles.flaggedDivider} />
+                              <Text style={styles.flaggedIngName}>{sentenceCase(ing.text)}</Text>
+                              {reasons.length > 0 ? reasons.map((r: string, ri: number) => (
+                                <View key={ri} style={styles.flaggedBulletRow}>
+                                  <Ionicons name="flash" size={18} color={Extra.flaggedOrangeBadge} />
+                                  <Text style={styles.flaggedBulletText}>{r}</Text>
+                                </View>
+                              )) : (
+                                <Text style={styles.flaggedBulletText}>{t('flagged.subtitleGeneric')}</Text>
+                              )}
                             </View>
-                            <TouchableOpacity
-                              style={styles.ingInfoContainer}
-                              onPress={() => setFlaggedSheetIng(ing)}
-                              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                            >
-                              <Ionicons
-                                name="information-circle-outline"
-                                size={16}
-                                color={Colors.secondary}
-                              />
-                            </TouchableOpacity>
-                          </View>
-                        );
-                      })}
+                          );
+                        })}
+                      </View>
                     </View>
                 )}
 
@@ -2705,30 +2700,31 @@ export default function ScanResultScreen() {
                     {filteredCategorised.userFlagged.length > 0 && (
                       <View style={styles.flaggedCard}>
                         <View style={styles.flaggedBadge}>
-                          <MenuFlaggedIcon color="#fff" size={11} />
+                          <MenuFlaggedIcon color="#fff" size={16} />
                           <Text style={styles.flaggedBadgeText}>{t('flagged.badge')}</Text>
                         </View>
-                        <Text style={styles.flaggedTitle}>{t('flagged.title')}</Text>
-                        {filteredCategorised.userFlagged.map((ing, i) => {
-                          const reason = ing.personalReason
-                            ? t('flagged.subtitle', { reason: ing.personalReason.text })
-                            : t('flagged.subtitleGeneric');
-                          return (
-                            <View key={`uf-${ing.id ?? i}`} style={styles.ingRow}>
-                              <View style={{ flex: 1 }}>
-                                <Text style={styles.ingName} numberOfLines={2}>{sentenceCase(ing.text)}</Text>
-                                <Text style={styles.flaggedSubtitle}>{reason}</Text>
+                        <View style={styles.flaggedBody}>
+                          <Text style={styles.flaggedTitle}>{t('flagged.title')}</Text>
+                          {filteredCategorised.userFlagged.map((ing, i) => {
+                            const reasons = ing.personalReason?.text
+                              ? ing.personalReason.text.split(',').map((r: string) => r.trim()).filter(Boolean)
+                              : [];
+                            return (
+                              <View key={`uf-${ing.id ?? i}`} style={styles.flaggedIngBlock}>
+                                <View style={styles.flaggedDivider} />
+                                <Text style={styles.flaggedIngName}>{sentenceCase(ing.text)}</Text>
+                                {reasons.length > 0 ? reasons.map((r: string, ri: number) => (
+                                  <View key={ri} style={styles.flaggedBulletRow}>
+                                    <Ionicons name="flash" size={18} color={Extra.flaggedOrangeBadge} />
+                                    <Text style={styles.flaggedBulletText}>{r}</Text>
+                                  </View>
+                                )) : (
+                                  <Text style={styles.flaggedBulletText}>{t('flagged.subtitleGeneric')}</Text>
+                                )}
                               </View>
-                              <TouchableOpacity
-                                style={styles.ingInfoContainer}
-                                onPress={() => setFlaggedSheetIng(ing)}
-                                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                              >
-                                <InfoIcon width={16} height={16} color={Colors.secondary} />
-                              </TouchableOpacity>
-                            </View>
-                          );
-                        })}
+                            );
+                          })}
+                        </View>
                       </View>
                     )}
 
@@ -3500,21 +3496,46 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_700Bold',
     letterSpacing: -0.28,
   },
+  flaggedBody: {
+    gap: Spacing.xs,
+  },
   flaggedTitle: {
     fontSize: 14,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
     letterSpacing: -0.28,
-    lineHeight: 18,
+    lineHeight: 16.8,
   },
-  flaggedSubtitle: {
+  flaggedIngBlock: {
+    gap: 4,
+  },
+  flaggedDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: `${Extra.flaggedOrange}40`,
+    marginBottom: 4,
+  },
+  flaggedIngName: {
+    fontSize: 16,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    lineHeight: 20,
+    letterSpacing: 0,
+  },
+  flaggedBulletRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  flaggedBulletText: {
+    flex: 1,
     fontSize: 14,
     fontWeight: '300',
     fontFamily: 'Figtree_300Light',
     color: Extra.flaggedOrangeText,
     letterSpacing: -0.14,
-    lineHeight: 18,
+    lineHeight: 17.5,
   },
 
   // ── Nutrient Watch (Figma node 3263-5807) ──
