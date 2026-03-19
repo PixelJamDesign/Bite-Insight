@@ -185,17 +185,24 @@ export function SuggestionSheet({ visible, onClose, category }: Props) {
                 Can't find what you're looking for? Let us know and we'll consider adding it.
               </Text>
 
-              <TextInput
-                style={styles.input}
-                placeholder={`e.g. "${category === 'health_condition' ? 'Fibromyalgia' : category === 'allergy' ? 'Nightshade Sensitivity' : 'Mediterranean Diet'}"`}
-                placeholderTextColor="#9cb8b5"
-                value={text}
-                onChangeText={(v) => { setText(v); setError(null); }}
-                autoFocus
-                maxLength={100}
-                returnKeyType="send"
-                onSubmitEditing={handleSubmit}
-              />
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  placeholder={`e.g. "${category === 'health_condition' ? 'Fibromyalgia' : category === 'allergy' ? 'Nightshade Sensitivity' : 'Mediterranean Diet'}"`}
+                  placeholderTextColor="#9cb8b5"
+                  value={text}
+                  onChangeText={(v) => { setText(v); setError(null); }}
+                  autoFocus
+                  maxLength={100}
+                  returnKeyType="send"
+                  onSubmitEditing={handleSubmit}
+                />
+                {text.length > 0 && (
+                  <TouchableOpacity onPress={() => { setText(''); setError(null); }} hitSlop={8} activeOpacity={0.7} style={styles.clearBtn}>
+                    <Ionicons name="close" size={20} color={Colors.primary} />
+                  </TouchableOpacity>
+                )}
+              </View>
 
               {error && <Text style={styles.error}>{error}</Text>}
 
@@ -267,18 +274,30 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     letterSpacing: 0,
   },
-  input: {
+  inputWrapper: {
     width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: '#aad4cd',
     borderRadius: Radius.m,
     paddingHorizontal: Spacing.s,
     paddingVertical: 14,
+    gap: 8,
+    backgroundColor: Colors.surface.tertiary,
+  },
+  input: {
+    flex: 1,
     fontSize: 16,
     fontFamily: 'Figtree_300Light',
     fontWeight: '300',
     color: Colors.primary,
-    backgroundColor: Colors.surface.tertiary,
+  },
+  clearBtn: {
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   error: {
     fontSize: 14,

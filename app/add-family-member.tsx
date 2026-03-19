@@ -501,17 +501,24 @@ export default function AddFamilyMemberScreen() {
           <Text style={styles.searchLinkText}>{tc('buttons.search')}</Text>
         </TouchableOpacity>
         {chipSearchActive && (
-          <TextInput
-            ref={chipSearchRef}
-            style={styles.chipSearchInput}
-            placeholder={tc('placeholder.search')}
-            placeholderTextColor={`${Colors.primary}50`}
-            selectionColor={Colors.primary}
-            value={chipSearch}
-            onChangeText={setChipSearch}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
+          <View style={styles.chipSearchWrapper}>
+            <TextInput
+              ref={chipSearchRef}
+              style={styles.chipSearchInput}
+              placeholder={tc('placeholder.search')}
+              placeholderTextColor={`${Colors.primary}50`}
+              selectionColor={Colors.primary}
+              value={chipSearch}
+              onChangeText={setChipSearch}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            {chipSearch.length > 0 && (
+              <TouchableOpacity onPress={() => setChipSearch('')} hitSlop={8} activeOpacity={0.7}>
+                <Ionicons name="close" size={18} color={`${Colors.primary}80`} />
+              </TouchableOpacity>
+            )}
+          </View>
         )}
       </View>
     );
@@ -1170,13 +1177,19 @@ const styles = StyleSheet.create({
     color: Colors.secondary,
     lineHeight: 20,
   },
-  chipSearchInput: {
+  chipSearchWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: Colors.surface.tertiary,
     borderWidth: 1,
     borderColor: '#aad4cd',
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
+    gap: 8,
+  },
+  chipSearchInput: {
+    flex: 1,
     fontSize: 15,
     fontFamily: 'Figtree_300Light',
     fontWeight: '300',

@@ -352,6 +352,11 @@ export default function LoginScreen() {
                   onFocus={() => setNameFocused(true)}
                   onBlur={() => setNameFocused(false)}
                 />
+                {fullName.length > 0 && (
+                  <TouchableOpacity onPress={() => { setFullName(''); clearError(); }} hitSlop={8} activeOpacity={0.7}>
+                    <Ionicons name="close" size={20} color={Colors.primary} />
+                  </TouchableOpacity>
+                )}
               </View>
             </Animated.View>
           )}
@@ -377,6 +382,11 @@ export default function LoginScreen() {
                 else { passwordRef.current?.focus(); }
               }}
             />
+            {email.length > 0 && (
+              <TouchableOpacity onPress={() => { setEmail(''); clearError(); }} hitSlop={8} activeOpacity={0.7}>
+                <Ionicons name="close" size={20} color={Colors.primary} />
+              </TouchableOpacity>
+            )}
           </View>
 
           {!isForgot && (
