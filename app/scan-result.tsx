@@ -832,7 +832,33 @@ function categoriseIngredients(
       return true;
     });
   };
-  return { harmful: dedup(harmful), userFlagged: dedup(userFlagged), ok, safe };
+
+  // Smart dedup for user-flagged: if one flagged ingredient's name is contained
+  // within another's (e.g. "Rice" inside "Steamed parboiled wholegrain rice"),
+  // and they share the same personalReason, keep only the shorter/parent name.
+  const smartDedupFlagged = (arr: FlaggedIngredient[]): FlaggedIngredient[] => {
+    const result: FlaggedIngredient[] = [];
+    const removed = new Set<number>();
+    for (let i = 0; i < arr.length; i++) {
+      if (removed.has(i)) continue;
+      for (let j = i + 1; j < arr.length; j++) {
+        if (removed.has(j)) continue;
+        const a = arr[i].text.toLowerCase();
+        const b = arr[j].text.toLowerCase();
+        const sameReason = arr[i].personalReason?.text === arr[j].personalReason?.text;
+        if (sameReason && (b.includes(a) || a.includes(b))) {
+          // Remove the longer name (it's the sub-ingredient)
+          removed.add(a.length <= b.length ? j : i);
+        }
+      }
+    }
+    for (let i = 0; i < arr.length; i++) {
+      if (!removed.has(i)) result.push(arr[i]);
+    }
+    return result;
+  };
+
+  return { harmful: dedup(harmful), userFlagged: smartDedupFlagged(userFlagged), ok, safe };
 }
 
 type ImpactKey = 'low' | 'moderate' | 'high' | 'veryHigh';
