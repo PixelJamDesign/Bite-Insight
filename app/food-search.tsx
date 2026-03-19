@@ -57,7 +57,9 @@ interface SearchProduct {
 const DEBOUNCE_MS = 400;
 const PAGE_SIZE = 24;
 const SEARCH_FIELDS = 'code,product_name,brands,image_front_small_url,nutriscore_grade,completeness,unique_scans_n';
-const SEARCH_BASE = 'https://search.openfoodfacts.org/search';
+// Use the classic CGI search API with region subdomains — the Search-A-Licious
+// endpoint (search.openfoodfacts.org) ignores country filters entirely.
+const SEARCH_PATH = 'openfoodfacts.org/cgi/search.pl';
 
 export default function FoodSearchScreen() {
   const { t } = useTranslation('scanner');
@@ -217,19 +219,18 @@ export default function FoodSearchScreen() {
 
   /** Build the Search-A-Licious query URL */
   function buildSearchUrl(searchTerm: string, region: Region, page: number): string {
+    // Classic CGI search — region subdomain handles country filtering natively
+    const subdomain = region.subdomain || 'world';
     const params = new URLSearchParams({
-      q: searchTerm,
+      search_terms: searchTerm,
+      search_simple: '1',
+      action: 'process',
+      json: '1',
       page: String(page),
       page_size: String(PAGE_SIZE),
       fields: SEARCH_FIELDS,
     });
-    // Use the dedicated `filter` parameter for country filtering — putting the
-    // Lucene AND clause inside `q` corrupts the text-matching (the engine splits
-    // the query terms and country tag together, reducing relevance to near zero).
-    if (region.countryTag) {
-      params.set('filter', `countries_tags:"${region.countryTag}"`);
-    }
-    return `${SEARCH_BASE}?${params.toString()}`;
+    return `https://${subdomain}.${SEARCH_PATH}?${params.toString()}`;
   }
 
   /** Normalise a product from the Search-A-Licious response.
@@ -242,7 +243,7 @@ export default function FoodSearchScreen() {
     } as SearchProduct;
   }
 
-  /** Perform a fresh search against the Search-A-Licious Elasticsearch API */
+  /** Perform a fresh search against the OFF classic CGI search API */
   async function performSearch(searchTerm: string, region: Region) {
     // Cancel any in-flight request
     if (abortRef.current) abortRef.current.abort();
@@ -267,8 +268,8 @@ export default function FoodSearchScreen() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
 
-      // Search-A-Licious returns results in `hits` (not `products`)
-      const products: SearchProduct[] = (data.hits ?? []).map(normaliseHit);
+      // Classic API returns `products`
+      const products: SearchProduct[] = (data.products ?? []).map(normaliseHit);
       const sorted = processResults(products, searchTerm);
 
       setResults(sorted);
@@ -306,7 +307,7 @@ export default function FoodSearchScreen() {
 
       if (!res.ok) throw new Error('Network error');
       const data = await res.json();
-      const products: SearchProduct[] = (data.hits ?? []).map(normaliseHit);
+      const products: SearchProduct[] = (data.products ?? []).map(normaliseHit);
 
       if (products.length === 0) {
         setHasMore(false);
