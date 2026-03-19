@@ -1476,6 +1476,21 @@ export default function ScanResultScreen() {
   const fadeNutrition  = useFadeIn(!fetchingOff, 80);
   const fadeIngredient = useFadeIn(!fetchingOff, 160);
 
+  // Skeleton pulse for loading state
+  const skeletonPulse = useRef(new Animated.Value(0.3)).current;
+  const showSkeleton = fetchingOff && !fetched?.productName && !p.brand;
+  useEffect(() => {
+    if (!showSkeleton) return;
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(skeletonPulse, { toValue: 1, duration: 800, useNativeDriver: true }),
+        Animated.timing(skeletonPulse, { toValue: 0.3, duration: 800, useNativeDriver: true }),
+      ]),
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, [showSkeleton]);
+
   // Weight scaling: applies in 100g mode when user adjusts the weight via stepper.
   // Per-serving mode remains unscaled.
   const weightScale = (is100gMode && customWeight !== 100) ? customWeight / 100 : 1;
@@ -1698,23 +1713,36 @@ export default function ScanResultScreen() {
         <View style={styles.stickyContent}>
           {/* ── Product header ── */}
         <View style={styles.productHeader}>
-          <View style={styles.productInfo}>
-            {!!(fetched?.brand || p.brand) && <Text style={styles.brandName}>{sentenceCase(fetched?.brand || p.brand)}</Text>}
-            <Text style={styles.productName}>{sentenceCase(fetched?.productName || p.productName) || t('product.unknownName')}</Text>
-            {!!quantity && <Text style={styles.quantity}>{quantity}</Text>}
-          </View>
-          {(fetched?.imageUrl || p.imageUrl) ? (
-            <View style={styles.imageCard}>
-              <Image
-                source={{ uri: fetched?.imageUrl || p.imageUrl }}
-                style={styles.productImage}
-                resizeMode="contain"
-              />
-            </View>
+          {showSkeleton ? (
+            <>
+              <View style={styles.productInfo}>
+                <Animated.View style={[styles.skeletonBar, { width: 100, height: 16, opacity: skeletonPulse }]} />
+                <Animated.View style={[styles.skeletonBar, { width: '85%', height: 26, marginTop: 4, opacity: skeletonPulse }]} />
+                <Animated.View style={[styles.skeletonBar, { width: 50, height: 16, marginTop: 4, opacity: skeletonPulse }]} />
+              </View>
+              <Animated.View style={[styles.imageCard, styles.skeletonImage, { opacity: skeletonPulse }]} />
+            </>
           ) : (
-            <View style={[styles.imageCard, styles.imagePlaceholder]}>
-              <NoImagePlaceholder />
-            </View>
+            <>
+              <View style={styles.productInfo}>
+                {!!(fetched?.brand || p.brand) && <Text style={styles.brandName}>{sentenceCase(fetched?.brand || p.brand)}</Text>}
+                <Text style={styles.productName}>{sentenceCase(fetched?.productName || p.productName) || t('product.unknownName')}</Text>
+                {!!quantity && <Text style={styles.quantity}>{quantity}</Text>}
+              </View>
+              {(fetched?.imageUrl || p.imageUrl) ? (
+                <View style={styles.imageCard}>
+                  <Image
+                    source={{ uri: fetched?.imageUrl || p.imageUrl }}
+                    style={styles.productImage}
+                    resizeMode="contain"
+                  />
+                </View>
+              ) : (
+                <View style={[styles.imageCard, styles.imagePlaceholder]}>
+                  <NoImagePlaceholder />
+                </View>
+              )}
+            </>
           )}
         </View>
 
@@ -3038,6 +3066,13 @@ const styles = StyleSheet.create({
   },
   imagePlaceholder: {
     backgroundColor: Colors.surface.tertiary,
+  },
+  skeletonBar: {
+    backgroundColor: '#d4e8e5',
+    borderRadius: Radius.s,
+  },
+  skeletonImage: {
+    backgroundColor: '#d4e8e5',
   },
   productImage: {
     width: '100%',
