@@ -9,6 +9,7 @@ import {
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
+  Keyboard,
   Platform,
   ScrollView,
   ActivityIndicator,
@@ -19,6 +20,7 @@ import {
   Image,
   Animated,
   Easing,
+  type LayoutChangeEvent,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -263,6 +265,41 @@ export default function OnboardingScreen() {
 
   // ScrollView ref for resetting scroll position
   const scrollRef = useRef<ScrollView>(null);
+  const scrollContainerRef = useRef<View>(null);
+  const nameRowRef = useRef<View>(null);
+  const ageRowRef = useRef<View>(null);
+  const keyboardHeightRef = useRef(0);
+  const scrollViewHeightRef = useRef(0);
+
+  // Track keyboard height
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSub = Keyboard.addListener(showEvent, (e) => {
+      keyboardHeightRef.current = e.endCoordinates.height;
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      keyboardHeightRef.current = 0;
+    });
+    return () => { showSub.remove(); hideSub.remove(); };
+  }, []);
+
+  /** Scroll to center the focused input in the visible area above the keyboard */
+  function scrollInputToCenter(inputRef: View | null) {
+    if (!inputRef || !scrollContainerRef.current || !scrollRef.current) return;
+    // Small delay to let keyboard height settle
+    setTimeout(() => {
+      inputRef.measureLayout(
+        scrollContainerRef.current!,
+        (_x, y, _w, h) => {
+          const visibleHeight = scrollViewHeightRef.current - keyboardHeightRef.current;
+          const targetY = y - (visibleHeight / 2) + (h / 2);
+          scrollRef.current?.scrollTo({ y: Math.max(0, targetY), animated: true });
+        },
+        () => {},
+      );
+    }, 150);
+  }
 
   // Header entrance animation (fade + subtle slide-up)
   const headerOpacity = useRef(new Animated.Value(0)).current;
@@ -781,14 +818,19 @@ export default function OnboardingScreen() {
 
         {/* Scrollable content */}
         <ScrollView
-          ref={scrollRef}
+          ref={(ref) => {
+            (scrollRef as any).current = ref;
+            (scrollContainerRef as any).current = ref;
+          }}
           style={{ flex: 1 }}
           contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
           showsHorizontalScrollIndicator={false}
           alwaysBounceHorizontal={false}
-          automaticallyAdjustKeyboardInsets
+          onLayout={(e: LayoutChangeEvent) => {
+            scrollViewHeightRef.current = e.nativeEvent.layout.height;
+          }}
         >
           <Animated.View style={{ opacity: contentOpacity, transform: [{ translateX: contentTranslateX }] }}>
 
@@ -815,7 +857,10 @@ export default function OnboardingScreen() {
                 </View>
 
                 <View style={styles.fields}>
-                  <View style={[styles.inputRow, focusedField === 'name' && styles.inputRowFocused]}>
+                  <View
+                    ref={(ref) => { (nameRowRef as any).current = ref; }}
+                    style={[styles.inputRow, focusedField === 'name' && styles.inputRowFocused]}
+                  >
                     <PersonalIcon size={16} color={Colors.primary} />
                     <TextInput
                       style={[styles.inputFieldInner, fullName ? styles.inputFieldBold : null]}
@@ -825,7 +870,7 @@ export default function OnboardingScreen() {
                       autoCapitalize="words"
                       value={fullName}
                       onChangeText={setFullName}
-                      onFocus={() => setFocusedField('name')}
+                      onFocus={() => { setFocusedField('name'); scrollInputToCenter(nameRowRef.current); }}
                       onBlur={() => setFocusedField(null)}
                     />
                     {fullName ? (
@@ -843,7 +888,10 @@ export default function OnboardingScreen() {
                       selectTextOnFocus={false}
                     />
                   </View>
-                  <View style={[styles.inputRow, focusedField === 'age' && styles.inputRowFocused]}>
+                  <View
+                    ref={(ref) => { (ageRowRef as any).current = ref; }}
+                    style={[styles.inputRow, focusedField === 'age' && styles.inputRowFocused]}
+                  >
                     <BirthdayIcon size={20} color={Colors.primary} />
                     <TextInput
                       style={[styles.inputFieldInner, age ? styles.inputFieldBold : null]}
@@ -854,7 +902,7 @@ export default function OnboardingScreen() {
                       inputAccessoryViewID="onboarding-age"
                       value={age}
                       onChangeText={setAge}
-                      onFocus={() => setFocusedField('age')}
+                      onFocus={() => { setFocusedField('age'); scrollInputToCenter(ageRowRef.current); }}
                       onBlur={() => setFocusedField(null)}
                     />
                     <Text style={styles.optionalLabel}>{tc('label.optional')}</Text>

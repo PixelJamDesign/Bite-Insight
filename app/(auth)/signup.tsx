@@ -5,6 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
+  Keyboard,
   Platform,
   ScrollView,
   ActivityIndicator,
@@ -12,6 +13,7 @@ import {
   StyleSheet,
   Image,
   Animated,
+  type LayoutChangeEvent,
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -76,9 +78,40 @@ export default function SignUpScreen() {
   const [infoKey, setInfoKey] = useState<string | null>(null);
   const [suggestionCategory, setSuggestionCategory] = useState<SuggestionCategory | null>(null);
   const chipSearchRef = useRef<TextInput>(null);
+  const scrollRef = useRef<ScrollView>(null);
+  const scrollContainerRef = useRef<View>(null);
+  const nameRowRef = useRef<View>(null);
+  const emailRowRef = useRef<View>(null);
+  const passwordRowRef = useRef<View>(null);
+  const ageRowRef = useRef<View>(null);
+  const keyboardHeightRef = useRef(0);
+  const scrollViewHeightRef = useRef(0);
 
   // Focus tracking
   const [focusedField, setFocusedField] = useState<string | null>(null);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSub = Keyboard.addListener(showEvent, (e) => { keyboardHeightRef.current = e.endCoordinates.height; });
+    const hideSub = Keyboard.addListener(hideEvent, () => { keyboardHeightRef.current = 0; });
+    return () => { showSub.remove(); hideSub.remove(); };
+  }, []);
+
+  function scrollInputToCenter(inputRef: View | null) {
+    if (!inputRef || !scrollContainerRef.current || !scrollRef.current) return;
+    setTimeout(() => {
+      inputRef.measureLayout(
+        scrollContainerRef.current!,
+        (_x, y, _w, h) => {
+          const visibleHeight = scrollViewHeightRef.current - keyboardHeightRef.current;
+          const targetY = y - (visibleHeight / 2) + (h / 2);
+          scrollRef.current?.scrollTo({ y: Math.max(0, targetY), animated: true });
+        },
+        () => {},
+      );
+    }, 150);
+  }
 
   const [loading, setLoading] = useState(false);
 
@@ -423,11 +456,17 @@ export default function SignUpScreen() {
 
         {/* Scrollable content */}
         <ScrollView
+          ref={(ref) => {
+            (scrollRef as any).current = ref;
+            (scrollContainerRef as any).current = ref;
+          }}
           style={{ flex: 1 }}
           contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
-          automaticallyAdjustKeyboardInsets
+          onLayout={(e: LayoutChangeEvent) => {
+            scrollViewHeightRef.current = e.nativeEvent.layout.height;
+          }}
         >
           {/* ── Step 1: About you ── */}
           {step === 1 && (
@@ -452,7 +491,10 @@ export default function SignUpScreen() {
                 </View>
 
                 <View style={styles.fields}>
-                  <View style={[styles.inputRow, focusedField === 'name' && styles.inputRowFocused]}>
+                  <View
+                    ref={(ref) => { (nameRowRef as any).current = ref; }}
+                    style={[styles.inputRow, focusedField === 'name' && styles.inputRowFocused]}
+                  >
                     <PersonalIcon size={20} color={Colors.primary} />
                     <TextInput
                       style={[styles.inputFieldInner, fullName ? styles.inputFieldBold : null]}
@@ -462,7 +504,7 @@ export default function SignUpScreen() {
                       autoCapitalize="words"
                       value={fullName}
                       onChangeText={setFullName}
-                      onFocus={() => setFocusedField('name')}
+                      onFocus={() => { setFocusedField('name'); scrollInputToCenter(nameRowRef.current); }}
                       onBlur={() => setFocusedField(null)}
                     />
                     {fullName ? (
@@ -471,7 +513,10 @@ export default function SignUpScreen() {
                       </TouchableOpacity>
                     ) : null}
                   </View>
-                  <View style={[styles.inputRow, focusedField === 'email' && styles.inputRowFocused]}>
+                  <View
+                    ref={(ref) => { (emailRowRef as any).current = ref; }}
+                    style={[styles.inputRow, focusedField === 'email' && styles.inputRowFocused]}
+                  >
                     <EmailIcon size={20} color={Colors.primary} />
                     <TextInput
                       style={[styles.inputFieldInner, email ? styles.inputFieldBold : null]}
@@ -483,7 +528,7 @@ export default function SignUpScreen() {
                       autoCorrect={false}
                       value={email}
                       onChangeText={setEmail}
-                      onFocus={() => setFocusedField('email')}
+                      onFocus={() => { setFocusedField('email'); scrollInputToCenter(emailRowRef.current); }}
                       onBlur={() => setFocusedField(null)}
                     />
                     {email ? (
@@ -492,7 +537,10 @@ export default function SignUpScreen() {
                       </TouchableOpacity>
                     ) : null}
                   </View>
-                  <View style={[styles.inputRow, focusedField === 'password' && styles.inputRowFocused]}>
+                  <View
+                    ref={(ref) => { (passwordRowRef as any).current = ref; }}
+                    style={[styles.inputRow, focusedField === 'password' && styles.inputRowFocused]}
+                  >
                     <Ionicons name="lock-closed-outline" size={20} color={Colors.primary} />
                     <TextInput
                       style={[styles.inputFieldInner, password ? styles.inputFieldBold : null]}
@@ -502,7 +550,7 @@ export default function SignUpScreen() {
                       secureTextEntry
                       value={password}
                       onChangeText={setPassword}
-                      onFocus={() => setFocusedField('password')}
+                      onFocus={() => { setFocusedField('password'); scrollInputToCenter(passwordRowRef.current); }}
                       onBlur={() => setFocusedField(null)}
                     />
                     {password ? (
@@ -511,7 +559,10 @@ export default function SignUpScreen() {
                       </TouchableOpacity>
                     ) : null}
                   </View>
-                  <View style={[styles.inputRow, focusedField === 'age' && styles.inputRowFocused]}>
+                  <View
+                    ref={(ref) => { (ageRowRef as any).current = ref; }}
+                    style={[styles.inputRow, focusedField === 'age' && styles.inputRowFocused]}
+                  >
                     <BirthdayIcon size={20} color={Colors.primary} />
                     <TextInput
                       style={[styles.inputFieldInner, age ? styles.inputFieldBold : null]}
@@ -522,7 +573,7 @@ export default function SignUpScreen() {
                       inputAccessoryViewID="signup-age"
                       value={age}
                       onChangeText={setAge}
-                      onFocus={() => setFocusedField('age')}
+                      onFocus={() => { setFocusedField('age'); scrollInputToCenter(ageRowRef.current); }}
                       onBlur={() => setFocusedField(null)}
                     />
                     {age ? (
