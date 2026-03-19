@@ -24,6 +24,7 @@ export type CachedProduct = {
   salt: number | null;
   ingredientsText: string | null;
   allergens: string | null;
+  traces: string | null;
   ingredientsJson: string | null;
   cachedAt: number;
 };

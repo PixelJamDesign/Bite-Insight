@@ -875,6 +875,7 @@ export default function ScanResultScreen() {
     saltServing: string;
     ingredientsText: string;
     allergens: string;
+    traces: string;
     categoriesTags: string;
     ingredientsJson: string;
     offLang: string;
@@ -1005,6 +1006,7 @@ export default function ScanResultScreen() {
     saltServing: string;
     ingredientsText: string;
     allergens: string;
+    traces: string;
     categoriesTags: string;
     ingredientsJson: string;
     offLang: string;
@@ -1119,6 +1121,7 @@ export default function ScanResultScreen() {
           const op = data.product;
           const n = op.nutriments ?? {};
           const allergenTags: string[] = op.allergens_tags ?? [];
+          const tracesTags: string[] = op.traces_tags ?? [];
           setFetched({
             nutriscoreGrade: op.nutriscore_grade || op.nutrition_grade_fr || '',
             quantity: op.quantity || op.product_quantity || '',
@@ -1141,6 +1144,7 @@ export default function ScanResultScreen() {
             saltServing: n.salt_serving != null ? String(n.salt_serving) : '',
             ingredientsText: op.ingredients_text_en || op.ingredients_text || '',
             allergens: allergenTags.join(','),
+            traces: tracesTags.join(','),
             categoriesTags: (op.categories_tags ?? []).join(','),
             ingredientsJson: op.ingredients ? JSON.stringify(op.ingredients) : '',
             offLang: op.ingredients_text_en ? 'en' : (op.lang || op.lc || 'en'),
@@ -1199,6 +1203,7 @@ export default function ScanResultScreen() {
             saltServing: n.salt_serving ?? null,
             ingredientsText: op.ingredients_text_en || op.ingredients_text || null,
             allergens: allergenTags.join(',') || null,
+            traces: tracesTags.join(',') || null,
             ingredientsJson: op.ingredients ? JSON.stringify(op.ingredients) : null,
             offLang: hasEnglishText ? 'en' : (op.lang || op.lc || 'en'),
           }).catch(() => {});
@@ -1290,6 +1295,7 @@ export default function ScanResultScreen() {
 
   const ingredientsTextRaw = p.ingredientsText || fetched?.ingredientsText || '';
   const allergenSource = p.allergens || fetched?.allergens || '';
+  const tracesSource = p.traces || fetched?.traces || '';
   const ingredientsJsonRaw = p.ingredientsJson || fetched?.ingredientsJson || '';
   const offLang = p.offLang || fetched?.offLang || 'en';
 
@@ -1379,6 +1385,30 @@ export default function ScanResultScreen() {
     return false;
   });
   const hasProfileAllergenMatch = matchedAllergens.length > 0;
+
+  // Parse traces ("may contain") tags — same format as allergens
+  const tracesList: string[] = tracesSource
+    ? tracesSource
+        .split(',')
+        .filter(Boolean)
+        .map((a) => {
+          const name = a.trim().replace(/^en:/, '').replace(/-/g, ' ');
+          return name.charAt(0).toUpperCase() + name.slice(1);
+        })
+    : [];
+
+  // Match product traces against the active profile's allergies
+  const tracesLower = tracesList.map((t) => t.toLowerCase());
+  const matchedTraces = profileAllergies.filter((profileAllergy) => {
+    const entry = ALLERGY_KEYWORDS[profileAllergy];
+    if (!entry) {
+      const firstWord = profileAllergy.split(/\s+/)[0].toLowerCase();
+      return tracesLower.some((tl) => tl.includes(firstWord));
+    }
+    const { tags } = entry;
+    return tags.some((t) => tracesLower.some((tl) => tl === t || tl.includes(t)));
+  });
+  const hasProfileTracesMatch = matchedTraces.length > 0;
 
   // Detect if serving is effectively 100g (e.g. "100g", "100 g", "1 serving (100 g)")
   const servingIs100g = /\b100\s*(g|ml)\b/i.test(servingSize);
@@ -1853,6 +1883,24 @@ export default function ScanResultScreen() {
                       </View>
                       <Text style={styles.allergenText}>
                         {t('allergen.warningText', { allergens: matchedAllergens.join(', '), name: firstName })}
+                      </Text>
+                    </View>
+                  );
+                })()}
+
+                {/* Traces / "may contain" warning — cross-contamination risk */}
+                {hasProfileTracesMatch && (() => {
+                  const firstName = activeFamilyProfile
+                    ? activeFamilyProfile.name.trim().split(/\s+/)[0]
+                    : profile?.full_name?.trim().split(/\s+/)[0];
+                  return (
+                    <View style={styles.tracesCard}>
+                      <View style={styles.tracesBadge}>
+                        <Ionicons name="alert-circle" size={11} color="#fff" />
+                        <Text style={styles.tracesBadgeText}>{t('allergen.tracesBadge')}</Text>
+                      </View>
+                      <Text style={styles.tracesText}>
+                        {t('allergen.tracesWarningText', { traces: matchedTraces.join(', '), name: firstName })}
                       </Text>
                     </View>
                   );
@@ -2599,6 +2647,24 @@ export default function ScanResultScreen() {
                       );
                     })()}
 
+                    {/* ── Traces / "may contain" warning ── */}
+                    {hasProfileTracesMatch && (() => {
+                      const firstName = activeFamilyProfile
+                        ? activeFamilyProfile.name.trim().split(/\s+/)[0]
+                        : profile?.full_name?.trim().split(/\s+/)[0];
+                      return (
+                        <View style={styles.tracesCard}>
+                          <View style={styles.tracesBadge}>
+                            <Ionicons name="alert-circle" size={11} color="#fff" />
+                            <Text style={styles.tracesBadgeText}>{t('allergen.tracesBadge')}</Text>
+                          </View>
+                          <Text style={styles.tracesText}>
+                            {t('allergen.tracesWarningText', { traces: matchedTraces.join(', '), name: firstName })}
+                          </Text>
+                        </View>
+                      );
+                    })()}
+
                     {/* ── User-flagged card (orange) ── */}
                     {filteredCategorised.userFlagged.length > 0 && (
                       <View style={styles.flaggedCard}>
@@ -2786,6 +2852,27 @@ export default function ScanResultScreen() {
                 <Text style={styles.emptyStateText}>
                   {t('empty.noAllergensText')}
                 </Text>
+              </View>
+            )}
+
+            {/* Traces / "may contain" cross-contamination warnings */}
+            {tracesList.length > 0 && (
+              <View style={styles.section}>
+                <View style={styles.sectionHeading}>
+                  <Text style={styles.sectionTitle}>{t('section.traces')}</Text>
+                  <Text style={styles.sectionSubtitle}>
+                    {t('section.tracesSubtitle')}
+                  </Text>
+                </View>
+                <View style={styles.tracesCard}>
+                  <View style={styles.tracesBadge}>
+                    <Ionicons name="alert-circle" size={11} color="#fff" />
+                    <Text style={styles.tracesBadgeText}>{t('allergen.tracesBadge')}</Text>
+                  </View>
+                  <Text style={styles.tracesText}>
+                    {t('allergen.tracesContainsText', { traces: tracesList.join(', ') })}
+                  </Text>
+                </View>
               </View>
             )}
           </View>
@@ -3301,6 +3388,41 @@ const styles = StyleSheet.create({
     letterSpacing: -0.28,
   },
   allergenText: {
+    fontSize: 15,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.26,
+    lineHeight: 18,
+  },
+
+  // Traces / "may contain" (amber card)
+  tracesCard: {
+    backgroundColor: 'rgba(255,160,0,0.08)',
+    borderWidth: 2,
+    borderColor: '#F57C00',
+    borderRadius: 16,
+    padding: Spacing.s,
+    gap: Spacing.xs,
+  },
+  tracesBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FFA000',
+    borderRadius: 999,
+    paddingHorizontal: Spacing.xs,
+    paddingVertical: 4,
+    alignSelf: 'flex-start',
+  },
+  tracesBadgeText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    letterSpacing: -0.28,
+  },
+  tracesText: {
     fontSize: 15,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',

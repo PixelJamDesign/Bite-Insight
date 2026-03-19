@@ -66,13 +66,18 @@
     "nutrientWatchlist": "Your Nutrient Watchlist",
     "nutrientWatchlistSubtitle": "Nutrients you're monitoring based on your health profile.",
     "allergens": "Allergens",
-    "allergensSubtitle": "Allergens listed for this product."
+    "allergensSubtitle": "Allergens listed for this product.",
+    "traces": "May contain (traces)",
+    "tracesSubtitle": "Cross-contamination warnings for this product."
   },
   "allergen": {
     "warningBadge": "Warning",
     "warningText": "Contains: {{allergens}}. This may affect {{name}}'s health profile.",
     "allergensBadge": "Allergens",
-    "containsText": "Contains: {{allergens}}."
+    "containsText": "Contains: {{allergens}}.",
+    "tracesBadge": "May contain",
+    "tracesWarningText": "May contain traces of: {{traces}}. This could affect {{name}} due to cross-contamination.",
+    "tracesContainsText": "May contain traces of: {{traces}}."
   },
   "nutrientWatch": {
     "noMicroData": "Micronutrient data is not available for this product."

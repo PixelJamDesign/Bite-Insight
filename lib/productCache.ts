@@ -40,6 +40,7 @@ export type CachedProduct = {
   saltServing: number | null;
   ingredientsText: string | null;
   allergens: string | null;      // comma-separated, e.g. "en:gluten,en:milk"
+  traces: string | null;         // comma-separated, e.g. "en:nuts,en:milk" ("may contain")
   ingredientsJson: string | null; // JSON.stringify(product.ingredients) from OFF API
   offLang: string | null;         // OFF product language code, e.g. "en", "fr", "de"
   cachedAt: number;              // Unix ms
@@ -86,6 +87,7 @@ async function getDb(): Promise<SQLite.SQLiteDatabase | null> {
     'ALTER TABLE product_cache ADD COLUMN proteins_serving REAL;',
     'ALTER TABLE product_cache ADD COLUMN salt_serving REAL;',
     'ALTER TABLE product_cache ADD COLUMN off_lang TEXT;',
+    'ALTER TABLE product_cache ADD COLUMN traces TEXT;',
   ];
   for (const sql of migrations) {
     try { await _db.execAsync(sql); } catch { /* column already exists */ }
@@ -123,6 +125,7 @@ export async function getCachedProduct(barcode: string): Promise<CachedProduct |
     salt_serving: number | null;
     ingredients_text: string | null;
     allergens: string | null;
+    traces: string | null;
     ingredients_json: string | null;
     off_lang: string | null;
     cached_at: number;
@@ -157,6 +160,7 @@ export async function getCachedProduct(barcode: string): Promise<CachedProduct |
     saltServing: row.salt_serving,
     ingredientsText: row.ingredients_text,
     allergens: row.allergens,
+    traces: row.traces,
     ingredientsJson: row.ingredients_json,
     offLang: row.off_lang,
     cachedAt: row.cached_at,
@@ -174,8 +178,8 @@ export async function cacheProduct(product: Omit<CachedProduct, 'cachedAt'>): Pr
       proteins, salt,
       serving_size, energy_kcal_serving, carbs_serving, sugars_serving,
       fiber_serving, fat_serving, saturated_fat_serving, proteins_serving, salt_serving,
-      ingredients_text, allergens, ingredients_json, off_lang, cached_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ingredients_text, allergens, traces, ingredients_json, off_lang, cached_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       product.barcode,
       product.productName,
@@ -202,6 +206,7 @@ export async function cacheProduct(product: Omit<CachedProduct, 'cachedAt'>): Pr
       product.saltServing,
       product.ingredientsText,
       product.allergens,
+      product.traces,
       product.ingredientsJson,
       product.offLang,
       Date.now(),

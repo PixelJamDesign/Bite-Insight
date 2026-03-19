@@ -156,6 +156,7 @@ export default function ScannerScreen() {
       let saltServing: number | null = null;
       let ingredientsText: string | null = null;
       let allergens: string[] = [];
+      let traces: string[] = [];
       let categoriesTags: string[] = [];
       let ingredientsJson: string | null = null;
       let offLang: string | null = null;
@@ -187,6 +188,7 @@ export default function ScannerScreen() {
         saltServing         = cached.saltServing;
         ingredientsText = cached.ingredientsText;
         allergens       = cached.allergens ? cached.allergens.split(',').filter(Boolean) : [];
+        traces          = cached.traces ? cached.traces.split(',').filter(Boolean) : [];
         ingredientsJson = cached.ingredientsJson ?? null;
         offLang         = cached.offLang ?? null;
       } else {
@@ -217,6 +219,7 @@ export default function ScannerScreen() {
           saltServing         = offlineResult.saltServing;
           ingredientsText = offlineResult.ingredientsText;
           allergens       = offlineResult.allergens ? offlineResult.allergens.split(',').filter(Boolean) : [];
+          traces          = (offlineResult as any).traces ? (offlineResult as any).traces.split(',').filter(Boolean) : [];
           ingredientsJson = offlineResult.ingredientsJson ?? null;
           offLang         = offlineResult.offLang ?? null;
         }
@@ -255,6 +258,7 @@ export default function ScannerScreen() {
           saltServing: saltServing != null ? String(saltServing) : '',
           ingredientsText: ingredientsText ?? '',
           allergens: allergens.join(','),
+          traces: traces.join(','),
           categoriesTags: categoriesTags.join(','),
           ingredientsJson: ingredientsJson ?? '',
           offLang: offLang ?? 'en',
