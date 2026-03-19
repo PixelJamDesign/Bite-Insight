@@ -564,6 +564,7 @@ export function matchesFlaggedIngredient(
   const textWords = new Set(
     normText.split(/\s+/).filter(w => w.length > 1).map(deplural),
   );
+  const normTextJoined = normText.trim();
 
   for (const flagged of flaggedNames) {
     const flagWords = flagged
@@ -581,9 +582,42 @@ export function matchesFlaggedIngredient(
       if (isNegatedInContext(text, flagged)) continue;
       return flagged;
     }
+
+    // Check synonyms: if the target text matches a synonym of this flagged name,
+    // return the original flagged name (so dedup works correctly)
+    const synonyms = _getSynonyms(flagged.toLowerCase());
+    for (const syn of synonyms) {
+      const synWords = syn.split(/\s+/).filter(w => w.length > 1).map(deplural);
+      if (synWords.length === 0) continue;
+      // For single-word synonyms, check word set; for multi-word, check substring
+      if (synWords.length === 1) {
+        if (textWords.has(synWords[0])) {
+          if (isNegatedInContext(text, syn)) continue;
+          return flagged;
+        }
+      } else if (synWords.every(sw => textWords.has(sw)) || normTextJoined.includes(syn)) {
+        if (isNegatedInContext(text, syn)) continue;
+        return flagged;
+      }
+    }
   }
 
   return null;
+}
+
+// Lazy import to avoid circular deps — cached after first call
+let _synonymCache: ((name: string) => string[]) | null = null;
+function _getSynonyms(name: string): string[] {
+  if (!_synonymCache) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const mod = require('./ingredientSynonyms');
+      _synonymCache = mod.getSynonyms;
+    } catch {
+      _synonymCache = () => [];
+    }
+  }
+  return _synonymCache!(name);
 }
 
 /**
