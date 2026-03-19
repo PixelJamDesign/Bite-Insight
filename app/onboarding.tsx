@@ -38,6 +38,7 @@ import {
 } from '@/constants/profileOptions';
 import type { NutrientWatchlistEntry } from '@/lib/types';
 import { CameraIcon, PersonalIcon, EmailIcon, BirthdayIcon, TickIcon, InfoIcon } from '@/components/MenuIcons';
+import { DoneAccessory } from '@/components/DoneAccessory';
 import { ConditionInfoSheet } from '@/components/ConditionInfoSheet';
 import { SuggestionSheet, type SuggestionCategory } from '@/components/SuggestionSheet';
 import { CONDITION_INFO } from '@/constants/conditionInfo';
@@ -849,6 +850,7 @@ export default function OnboardingScreen() {
                       placeholderTextColor={`${Colors.secondary}`}
                       selectionColor={Colors.primary}
                       keyboardType="number-pad"
+                      inputAccessoryViewID="onboarding-age"
                       value={age}
                       onChangeText={setAge}
                       onFocus={() => setFocusedField('age')}
@@ -955,6 +957,7 @@ export default function OnboardingScreen() {
       onClose={() => setSuggestionCategory(null)}
       category={suggestionCategory ?? 'health_condition'}
     />
+    <DoneAccessory id="onboarding-age" />
     </>
   );
 }

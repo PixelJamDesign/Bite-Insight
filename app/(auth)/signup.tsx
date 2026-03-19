@@ -24,6 +24,7 @@ import { supabase, uploadAvatar } from '@/lib/supabase';
 import { Colors, Shadows } from '@/constants/theme';
 import { HEALTH_CONDITION_KEYS, ALLERGY_KEYS, DIETARY_PREFERENCE_KEYS } from '@/constants/profileOptions';
 import { CameraIcon, PersonalIcon, EmailIcon, BirthdayIcon, TickIcon, InfoIcon } from '@/components/MenuIcons';
+import { DoneAccessory } from '@/components/DoneAccessory';
 import { ConditionInfoSheet } from '@/components/ConditionInfoSheet';
 import { SuggestionSheet, type SuggestionCategory } from '@/components/SuggestionSheet';
 import { CONDITION_INFO } from '@/constants/conditionInfo';
@@ -517,6 +518,7 @@ export default function SignUpScreen() {
                       placeholderTextColor={`${Colors.primary}50`}
                       selectionColor={Colors.primary}
                       keyboardType="number-pad"
+                      inputAccessoryViewID="signup-age"
                       value={age}
                       onChangeText={setAge}
                       onFocus={() => setFocusedField('age')}
@@ -634,6 +636,7 @@ export default function SignUpScreen() {
       onClose={() => setSuggestionCategory(null)}
       category={suggestionCategory ?? 'health_condition'}
     />
+    <DoneAccessory id="signup-age" />
     </>
   );
 }
