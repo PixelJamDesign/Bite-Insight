@@ -26,6 +26,7 @@ export type FlaggedIngredient = OffIngredient & {
   flagReason: FlagReason;
   personalReason?: { category: string; text: string };
   matchSource?: 'ingredient' | 'product-name' | 'category';
+  matchedFlagName?: string;  // the user-flagged name that triggered this match
   additiveSeverity?: { severity: 'high' | 'moderate' | 'low'; conditions: string[]; reason: string; group?: string };
 };
 

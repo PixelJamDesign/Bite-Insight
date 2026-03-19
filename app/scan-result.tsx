@@ -696,6 +696,7 @@ function categoriseIngredients(
           flagReason: 'user_flagged',
           personalReason,
           matchSource: 'product-name',
+          matchedFlagName: lc,
         });
       }
     }
@@ -719,6 +720,7 @@ function categoriseIngredients(
             flagReason: 'user_flagged',
             personalReason,
             matchSource: 'category',
+            matchedFlagName: lc,
           });
         }
       }
@@ -793,7 +795,7 @@ function categoriseIngredients(
           personalReason = flagReasonMap[ingredientUuid];
         }
       }
-      const entry: FlaggedIngredient = { ...ing, flagReason: reason, personalReason, matchSource: 'ingredient' };
+      const entry: FlaggedIngredient = { ...ing, flagReason: reason, personalReason, matchSource: 'ingredient', matchedFlagName: matchedFlaggedName?.toLowerCase() };
       if (reason === 'user_flagged') {
         userFlagged.push(entry);
       } else {
@@ -833,29 +835,25 @@ function categoriseIngredients(
     });
   };
 
-  // Smart dedup for user-flagged: if one flagged ingredient's name is contained
-  // within another's (e.g. "Rice" inside "Steamed parboiled wholegrain rice"),
-  // and they share the same personalReason, keep only the shorter/parent name.
+  // Smart dedup for user-flagged: collapse entries that matched the same user
+  // flag. E.g. "Rice", "Steamed parboiled wholegrain rice", and "Rice flour"
+  // all matched because user flagged "rice" → show only one entry with the
+  // flagged name capitalised.
   const smartDedupFlagged = (arr: FlaggedIngredient[]): FlaggedIngredient[] => {
-    const result: FlaggedIngredient[] = [];
-    const removed = new Set<number>();
-    for (let i = 0; i < arr.length; i++) {
-      if (removed.has(i)) continue;
-      for (let j = i + 1; j < arr.length; j++) {
-        if (removed.has(j)) continue;
-        const a = arr[i].text.toLowerCase();
-        const b = arr[j].text.toLowerCase();
-        const sameReason = arr[i].personalReason?.text === arr[j].personalReason?.text;
-        if (sameReason && (b.includes(a) || a.includes(b))) {
-          // Remove the longer name (it's the sub-ingredient)
-          removed.add(a.length <= b.length ? j : i);
-        }
+    const byFlag = new Map<string, FlaggedIngredient>();
+    for (const item of arr) {
+      const key = item.matchedFlagName ?? item.text.toLowerCase();
+      const existing = byFlag.get(key);
+      if (!existing) {
+        // Use the matched flag name as the display text when available
+        const displayName = item.matchedFlagName
+          ? item.matchedFlagName.charAt(0).toUpperCase() + item.matchedFlagName.slice(1)
+          : item.text;
+        byFlag.set(key, { ...item, text: displayName });
       }
+      // Additional entries for the same flag are simply dropped
     }
-    for (let i = 0; i < arr.length; i++) {
-      if (!removed.has(i)) result.push(arr[i]);
-    }
-    return result;
+    return Array.from(byFlag.values());
   };
 
   return { harmful: dedup(harmful), userFlagged: smartDedupFlagged(userFlagged), ok, safe };
