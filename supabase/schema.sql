@@ -138,25 +138,23 @@ create policy "Daily insights are public"
   on public.daily_insights for select using (true);
 
 -- ── Seed: sample daily insights ──────────────────────────────
--- Tags in suitable_for must match values from onboarding:
---   Health conditions: 'Diabetes', 'Hypertension', 'IBS', 'High Cholesterol', etc.
---   Allergies: 'Lactose Intolerance', 'Gluten Intolerance', 'Peanut Allergy', etc.
---   Dietary preferences: 'Vegan', 'Vegetarian', 'Low-Carb / Keto', 'Plant-Based', etc.
---   Legacy dietary tags: 'vegan', 'diabetic', 'keto', etc.
+-- Tags in suitable_for include BOTH normalised keys (e.g. 'diabetes')
+-- AND legacy display strings (e.g. 'Diabetes') so the overlaps query
+-- matches profiles regardless of when they were created.
 insert into public.daily_insights (content, suitable_for) values
-  ('Try using mashed bananas or applesauce as an egg replacement in baked goods for added moisture and sweetness!', ARRAY['vegan', 'Vegan', 'Plant-Based', 'Egg Allergy']),
-  ('Swap white rice for cauliflower rice to significantly reduce your carb intake while keeping the texture you love.', ARRAY['keto', 'Low-Carb / Keto', 'Diabetes', 'diabetic']),
-  ('Oats are a great source of beta-glucan fibre, which has been shown to help lower cholesterol and improve blood sugar control.', ARRAY['diabetic', 'Diabetes', 'High Cholesterol', 'vegetarian', 'Vegetarian', 'vegan', 'Vegan']),
-  ('Reading food labels for sodium content is one of the most effective ways to manage blood pressure. Aim for under 6g of salt per day.', ARRAY['Hypertension', 'Heart Disease']),
-  ('Peppermint tea can help relax the digestive tract muscles and reduce bloating — a simple swap for your after-dinner cuppa.', ARRAY['IBS', 'GERD / Acid Reflux']),
-  ('Coconut yoghurt and oat milk are excellent dairy-free alternatives that are now widely available in UK supermarkets.', ARRAY['Lactose Intolerance', 'lactose', 'Dairy-Free', 'vegan', 'Vegan']),
-  ('Sunflower seed butter is a tasty, nut-free alternative to peanut butter — great for sandwiches, smoothies and baking!', ARRAY['Peanut Allergy', 'Tree Nut Allergy']),
-  ('Buckwheat, despite its name, is completely gluten-free and makes a great alternative flour for pancakes and baking.', ARRAY['Gluten Intolerance', 'gluten-free']),
-  ('Omega-3 fatty acids found in flaxseeds and chia seeds can help reduce inflammation — especially helpful for managing joint conditions.', ARRAY['Rheumatoid Arthritis', 'Lupus', 'Plant-Based']),
-  ('Magnesium-rich foods like dark chocolate, almonds and spinach may help reduce the frequency of migraines.', ARRAY['Migraine / Chronic Headaches']),
-  ('Fermented foods like sauerkraut, kimchi and kefir support gut health by introducing beneficial bacteria to your digestive system.', ARRAY['IBS', 'Leaky Gut Syndrome', 'SIBO', 'Ulcerative Colitis']),
-  ('Turmeric contains curcumin, a powerful anti-inflammatory compound. Add black pepper to boost absorption by up to 2000%!', ARRAY['Rheumatoid Arthritis', 'Eczema / Psoriasis', 'Multiple Sclerosis']),
-  ('High-protein snacks like boiled eggs, Greek yoghurt or edamame can help keep blood sugar stable between meals.', ARRAY['Diabetes', 'diabetic', 'High-Protein / Fitness', 'PCOS', 'Metabolic Syndrome'])
+  ('Try using mashed bananas or applesauce as an egg replacement in baked goods for added moisture and sweetness!', ARRAY['vegan', 'Vegan', 'plantBased', 'Plant-Based', 'egg', 'Egg Allergy']),
+  ('Swap white rice for cauliflower rice to significantly reduce your carb intake while keeping the texture you love.', ARRAY['keto', 'Low-Carb / Keto', 'diabetes', 'Diabetes', 'diabetic']),
+  ('Oats are a great source of beta-glucan fibre, which has been shown to help lower cholesterol and improve blood sugar control.', ARRAY['diabetes', 'diabetic', 'Diabetes', 'highCholesterol', 'High Cholesterol', 'vegetarian', 'Vegetarian', 'vegan', 'Vegan']),
+  ('Reading food labels for sodium content is one of the most effective ways to manage blood pressure. Aim for under 6g of salt per day.', ARRAY['hypertension', 'Hypertension', 'heartDisease', 'Heart Disease']),
+  ('Peppermint tea can help relax the digestive tract muscles and reduce bloating — a simple swap for your after-dinner cuppa.', ARRAY['ibs', 'IBS', 'gerd', 'GERD / Acid Reflux']),
+  ('Coconut yoghurt and oat milk are excellent dairy-free alternatives that are now widely available in UK supermarkets.', ARRAY['lactose', 'Lactose Intolerance', 'dairyFree', 'Dairy-Free', 'vegan', 'Vegan']),
+  ('Sunflower seed butter is a tasty, nut-free alternative to peanut butter — great for sandwiches, smoothies and baking!', ARRAY['peanut', 'Peanut Allergy', 'treeNut', 'Tree Nut Allergy']),
+  ('Buckwheat, despite its name, is completely gluten-free and makes a great alternative flour for pancakes and baking.', ARRAY['gluten', 'Gluten Intolerance', 'coeliac', 'Coeliac Disease']),
+  ('Omega-3 fatty acids found in flaxseeds and chia seeds can help reduce inflammation — especially helpful for managing joint conditions.', ARRAY['ra', 'Rheumatoid Arthritis', 'lupus', 'Lupus', 'plantBased', 'Plant-Based']),
+  ('Magnesium-rich foods like dark chocolate, almonds and spinach may help reduce the frequency of migraines.', ARRAY['migraine', 'Migraine / Chronic Headaches']),
+  ('Fermented foods like sauerkraut, kimchi and kefir support gut health by introducing beneficial bacteria to your digestive system.', ARRAY['ibs', 'IBS', 'leakyGut', 'Leaky Gut Syndrome', 'sibo', 'SIBO', 'uc', 'Ulcerative Colitis']),
+  ('Turmeric contains curcumin, a powerful anti-inflammatory compound. Add black pepper to boost absorption by up to 2000%!', ARRAY['ra', 'Rheumatoid Arthritis', 'eczema', 'Eczema / Psoriasis', 'ms', 'Multiple Sclerosis']),
+  ('High-protein snacks like boiled eggs, Greek yoghurt or edamame can help keep blood sugar stable between meals.', ARRAY['diabetes', 'Diabetes', 'diabetic', 'highProtein', 'High-Protein / Fitness', 'pcos', 'PCOS'])
 on conflict do nothing;
 
 -- ── ingredient_flag_reasons ──────────────────────────────────

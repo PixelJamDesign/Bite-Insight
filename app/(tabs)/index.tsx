@@ -35,11 +35,37 @@ import { useMenu } from '@/lib/menuContext';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { UpsellBanner } from '@/components/UpsellBanner';
 import { FlagReasonSheet } from '@/components/FlagReasonSheet';
+import {
+  HEALTH_CONDITION_LEGACY_MAP,
+  ALLERGY_LEGACY_MAP,
+  DIETARY_PREFERENCE_LEGACY_MAP,
+} from '@/constants/profileOptions';
 import type { UserProfile, DailyInsight, Ingredient, UserIngredientPreference } from '@/lib/types';
 import Logo from '../../assets/images/logo.svg';
 
 const scannedLabelsImg = require('../../assets/images/scanned_labels.png');
 const flagImg = require('../../assets/images/flag.png');
+
+/**
+ * Build a reverse map from normalised key → legacy display string(s).
+ * e.g. 'diabetes' → 'Diabetes', 'keto' → 'Low-Carb / Keto'
+ */
+const KEY_TO_LEGACY: Record<string, string[]> = {};
+for (const map of [HEALTH_CONDITION_LEGACY_MAP, ALLERGY_LEGACY_MAP, DIETARY_PREFERENCE_LEGACY_MAP]) {
+  for (const [legacy, key] of Object.entries(map)) {
+    (KEY_TO_LEGACY[key] ??= []).push(legacy);
+  }
+}
+
+/** Expand normalised keys to also include their legacy display strings. */
+function expandTagsForQuery(tags: string[]): string[] {
+  const set = new Set<string>();
+  for (const t of tags) {
+    set.add(t);
+    for (const legacy of KEY_TO_LEGACY[t] ?? []) set.add(legacy);
+  }
+  return [...set];
+}
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -190,11 +216,15 @@ export default function HomeDashboard() {
     }
 
     // ── Daily insight: filter by user tags, pick one for today, check dismissal ──
-    const userTags: string[] = [
+    // Build tag list that includes BOTH normalised keys (e.g. 'diabetes') AND
+    // legacy display strings (e.g. 'Diabetes') so the overlaps() query matches
+    // insights whose suitable_for was seeded with either format.
+    const rawTags: string[] = [
       ...(profileRes.data?.dietary_preferences ?? []),
       ...(profileRes.data?.health_conditions ?? []),
       ...(profileRes.data?.allergies ?? []),
     ];
+    const userTags = expandTagsForQuery(rawTags);
 
     const insightQuery = userTags.length > 0
       ? supabase.from('daily_insights').select('*').overlaps('suitable_for', userTags)

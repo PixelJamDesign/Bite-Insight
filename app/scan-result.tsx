@@ -1982,7 +1982,7 @@ export default function ScanResultScreen() {
                             : [];
                           return (
                             <View key={`ov-uf-${ing.id ?? i}`} style={styles.flaggedIngBlock}>
-                              <View style={styles.flaggedDivider} />
+                              {i > 0 && <View style={styles.flaggedDivider} />}
                               <Text style={styles.flaggedIngName}>{sentenceCase(ing.text)}</Text>
                               {reasons.length > 0 ? reasons.map((r: string, ri: number) => (
                                 <View key={ri} style={styles.flaggedBulletRow}>
@@ -2736,7 +2736,7 @@ export default function ScanResultScreen() {
                               : [];
                             return (
                               <View key={`uf-${ing.id ?? i}`} style={styles.flaggedIngBlock}>
-                                <View style={styles.flaggedDivider} />
+                                {i > 0 && <View style={styles.flaggedDivider} />}
                                 <Text style={styles.flaggedIngName}>{sentenceCase(ing.text)}</Text>
                                 {reasons.length > 0 ? reasons.map((r: string, ri: number) => (
                                   <View key={ri} style={styles.flaggedBulletRow}>
