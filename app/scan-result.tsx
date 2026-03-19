@@ -59,6 +59,7 @@ import {
 import SwitchIcon from '@/assets/icons/switch.svg';
 import InfoIcon from '@/assets/icons/info.svg';
 import BigBackIcon from '@/assets/icons/big_back.svg';
+import BulletMarkerIcon from '@/assets/icons/bullet-marker.svg';
 
 // Helper: on web use PNG fallback (react-native-svg masks/clipPaths break on web),
 // on native use the SVG component directly.
@@ -1961,7 +1962,7 @@ export default function ScanResultScreen() {
                               <Text style={styles.flaggedIngName}>{sentenceCase(ing.text)}</Text>
                               {reasons.length > 0 ? reasons.map((r: string, ri: number) => (
                                 <View key={ri} style={styles.flaggedBulletRow}>
-                                  <Ionicons name="flash" size={18} color={Extra.flaggedOrangeBadge} />
+                                  <BulletMarkerIcon width={18} height={18} />
                                   <Text style={styles.flaggedBulletText}>{r}</Text>
                                 </View>
                               )) : (
@@ -2715,7 +2716,7 @@ export default function ScanResultScreen() {
                                 <Text style={styles.flaggedIngName}>{sentenceCase(ing.text)}</Text>
                                 {reasons.length > 0 ? reasons.map((r: string, ri: number) => (
                                   <View key={ri} style={styles.flaggedBulletRow}>
-                                    <Ionicons name="flash" size={18} color={Extra.flaggedOrangeBadge} />
+                                    <BulletMarkerIcon width={18} height={18} />
                                     <Text style={styles.flaggedBulletText}>{r}</Text>
                                   </View>
                                 )) : (
@@ -3511,8 +3512,9 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   flaggedDivider: {
-    height: 1,
-    backgroundColor: `${Extra.flaggedOrange}30`,
+    height: 2,
+    backgroundColor: 'rgba(255,135,54,0.2)',
+    borderRadius: 1,
   },
   flaggedIngName: {
     fontSize: 16,
