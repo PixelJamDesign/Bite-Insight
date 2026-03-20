@@ -19,6 +19,7 @@ import { MyPlanSheetProvider } from '@/lib/myPlanSheetContext';
 import { SubscriptionProvider } from '@/lib/subscriptionContext';
 import { ActiveFamilyProvider } from '@/lib/activeFamilyContext';
 import { RegionProvider } from '@/lib/regionContext';
+import { MenuProvider } from '@/lib/menuContext';
 import { JourneyProvider, useJourney } from '@/lib/journeyContext';
 import type { OnboardingStep } from '@/lib/types';
 import { UpsellSheet } from '@/components/UpsellSheet';
@@ -248,9 +249,11 @@ export default function RootLayout() {
               <RegionProvider>
                 <UpsellSheetProvider>
                   <MyPlanSheetProvider>
-                    <TransitionProvider>
-                      <RootLayoutInner />
-                    </TransitionProvider>
+                    <MenuProvider>
+                      <TransitionProvider>
+                        <RootLayoutInner />
+                      </TransitionProvider>
+                    </MenuProvider>
                   </MyPlanSheetProvider>
                 </UpsellSheetProvider>
               </RegionProvider>

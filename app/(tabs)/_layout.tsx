@@ -12,7 +12,7 @@ import { useAuth } from '@/lib/auth';
 import { DashboardIcon, RecipesIcon, HistoryIcon, ScannerIcon } from '@/components/TabIcons';
 import { useCachedAvatar } from '@/lib/useCachedAvatar';
 import { TabBarSlideProvider, useTabBarSlide } from '@/lib/tabBarContext';
-import { MenuProvider, useMenu } from '@/lib/menuContext';
+import { useMenu } from '@/lib/menuContext';
 import { MenuModal } from '@/components/MenuModal';
 import Logo from '../../assets/images/logo.svg';
 
@@ -341,7 +341,6 @@ export default function TabLayout() {
   const { t } = useTranslation('common');
   return (
     <TabBarSlideProvider>
-      <MenuProvider>
         <View style={{ flex: 1 }}>
           <Tabs
             tabBar={(props) => <CustomTabBar {...props} />}
@@ -355,7 +354,6 @@ export default function TabLayout() {
           </Tabs>
           <MenuOverlay />
         </View>
-      </MenuProvider>
     </TabBarSlideProvider>
   );
 }
