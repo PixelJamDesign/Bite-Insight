@@ -7,7 +7,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  ActivityIndicator,
   RefreshControl,
   Image,
   Animated,
@@ -23,6 +22,7 @@ import { sentenceCase } from '@/lib/text';
 import { ScreenLayout } from '@/components/ScreenLayout';
 import { useTabBarSlide } from '@/lib/tabBarContext';
 import { NoImagePlaceholder } from '@/components/NoImagePlaceholder';
+import { LottieLoader } from '@/components/LottieLoader';
 import type { Scan } from '@/lib/types';
 import { useFadeIn } from '@/lib/useFadeIn';
 import { useFocusFadeIn } from '@/lib/useFocusFadeIn';
@@ -589,9 +589,7 @@ export default function HistoryScreen() {
         {/* ── Normal content ── */}
         <Animated.View style={[styles.contentInner, { opacity: fadeContent.opacity, transform: [{ translateY: fadeContent.translateY }] }]}>
           {loading ? (
-            <View style={styles.center}>
-              <ActivityIndicator size="large" color={Colors.primary} />
-            </View>
+            <LottieLoader type="loading" fullScreen={false} />
           ) : filteredScans.length === 0 ? (
             <View style={styles.emptyState}>
               <Ionicons name="barcode-outline" size={64} color={Colors.secondary} />

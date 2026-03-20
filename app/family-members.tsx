@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
   TextInput,
   Alert,
   Animated,
@@ -24,6 +23,7 @@ import { usePageTransition } from '@/lib/usePageTransition';
 import { ScreenLayout } from '@/components/ScreenLayout';
 import { ActionSearchIcon, ActionPenIcon } from '@/components/MenuIcons';
 import { CachedAvatar } from '@/components/CachedAvatar';
+import { LottieLoader } from '@/components/LottieLoader';
 import type { FamilyProfile } from '@/lib/types';
 import { useTranslation } from 'react-i18next';
 import FamilyIcon from '../assets/icons/family_lg.svg';
@@ -341,9 +341,7 @@ export default function FamilyMembersScreen() {
     <Animated.View style={{ flex: 1, opacity: pageOpacity, transform: [{ translateX: pageTranslateX }] }}>
       <ScreenLayout title="My Family" headerExtension={headerExtension}>
         {loading ? (
-          <View style={styles.center}>
-            <ActivityIndicator size="large" color={Colors.primary} />
-          </View>
+          <LottieLoader type="loading" fullScreen={false} />
         ) : profiles.length === 0 ? (
           /* ── Empty state ── */
           <View style={styles.emptyOuter}>

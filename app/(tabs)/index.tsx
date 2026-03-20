@@ -6,7 +6,6 @@ import {
   Image,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
   RefreshControl,
   LayoutAnimation,
   Platform,
@@ -35,6 +34,7 @@ import { useMenu } from '@/lib/menuContext';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { UpsellBanner } from '@/components/UpsellBanner';
 import { FlagReasonSheet } from '@/components/FlagReasonSheet';
+import { LottieLoader } from '@/components/LottieLoader';
 import {
   HEALTH_CONDITION_LEGACY_MAP,
   ALLERGY_LEGACY_MAP,
@@ -334,11 +334,7 @@ export default function HomeDashboard() {
   const focusAnim = useFocusFadeIn();
 
   if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-      </View>
-    );
+    return <LottieLoader type="loading" />;
   }
 
   return (

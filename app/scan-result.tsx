@@ -36,6 +36,7 @@ import {
 import { ServingToggle, WeightStepper, type ServingMode, type DriMode } from '@/components/NutritionControls';
 import { useFadeIn } from '@/lib/useFadeIn';
 import { usePageTransition } from '@/lib/usePageTransition';
+import { useReviewPrompt } from '@/lib/useReviewPrompt';
 import {
   parseIngredientsText,
   parseIngredientsWithHierarchy,
@@ -869,6 +870,7 @@ export default function ScanResultScreen() {
   const { t } = useTranslation('scan');
   const { t: tc } = useTranslation('common');
   const { t: tpo } = useTranslation('profileOptions');
+  const { showReviewPrompt, recheckAfterScan, dismissReviewPrompt, completeReviewPrompt } = useReviewPrompt();
 
   // Page-level entrance/exit animation
   const { opacity: pageOpacity, translateX: pageTranslateX, animateExit: pageExit } = usePageTransition();
@@ -1183,6 +1185,8 @@ export default function ScanResultScreen() {
             ingredientsJson: op.ingredients ? JSON.stringify(op.ingredients) : '',
             offLang: op.ingredients_text_en ? 'en' : (op.lang || op.lc || 'en'),
           });
+          // Check if user has hit 20 scans — trigger review prompt if so
+          recheckAfterScan();
           // Extract micronutrient data for watchlist feature
           setMicronutrients({
             'potassium_100g': n.potassium_100g ?? null,
@@ -2984,6 +2988,24 @@ export default function ScanResultScreen() {
         flaggedAdditives={categorised.harmful.filter((ing) => ing.flagReason === 'additive_concern')}
       />
       </Animated.View>
+
+      {/* ── Review prompt — full-screen takeover ── */}
+      {showReviewPrompt && (
+        <View style={styles.reviewOverlay}>
+          <View style={styles.reviewCard}>
+            <Text style={styles.reviewTitle}>Loving BiteInsight?</Text>
+            <Text style={styles.reviewBody}>
+              You've scanned over 20 products! We'd love to hear what you think.
+            </Text>
+            <TouchableOpacity style={styles.reviewBtnPrimary} onPress={completeReviewPrompt} activeOpacity={0.8}>
+              <Text style={styles.reviewBtnPrimaryText}>Yes, I love it!</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.reviewBtnSecondary} onPress={dismissReviewPrompt} activeOpacity={0.7}>
+              <Text style={styles.reviewBtnSecondaryText}>Not right now</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -3978,5 +4000,67 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
     paddingHorizontal: 16,
+  },
+
+  // ── Review prompt (placeholder — swap for designed full-screen takeover) ──
+  reviewOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(2, 52, 50, 0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 999,
+    paddingHorizontal: Spacing.m,
+  },
+  reviewCard: {
+    backgroundColor: Colors.surface.secondary,
+    borderRadius: Radius.l,
+    paddingVertical: Spacing.l,
+    paddingHorizontal: Spacing.m,
+    width: '100%',
+    alignItems: 'center',
+    gap: Spacing.s,
+  },
+  reviewTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.48,
+    lineHeight: 30,
+    textAlign: 'center',
+  },
+  reviewBody: {
+    fontSize: 16,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
+    color: Colors.secondary,
+    lineHeight: 24,
+    textAlign: 'center',
+  },
+  reviewBtnPrimary: {
+    backgroundColor: Colors.accent,
+    borderRadius: Radius.full,
+    paddingVertical: 14,
+    paddingHorizontal: Spacing.l,
+    width: '100%',
+    alignItems: 'center',
+    marginTop: Spacing.xs,
+  },
+  reviewBtnPrimaryText: {
+    fontSize: 16,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: '#fff',
+    lineHeight: 20,
+  },
+  reviewBtnSecondary: {
+    paddingVertical: Spacing.xs,
+  },
+  reviewBtnSecondaryText: {
+    fontSize: 14,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
+    color: Colors.secondary,
+    lineHeight: 21,
   },
 });

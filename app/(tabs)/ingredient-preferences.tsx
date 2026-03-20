@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
   ActionSheetIOS,
   Modal,
   Platform,
@@ -28,6 +27,7 @@ import { ScreenLayout } from '@/components/ScreenLayout';
 import { MenuLikedIcon, MenuDislikedIcon, MenuFlaggedIcon, ActionSearchIcon, ActionPenIcon } from '@/components/MenuIcons';
 import { IngredientDetailModal } from '@/components/IngredientDetailModal';
 import { FlagReasonSheet } from '@/components/FlagReasonSheet';
+import { LottieLoader } from '@/components/LottieLoader';
 import { useTabBarSlide } from '@/lib/tabBarContext';
 import { useFadeIn } from '@/lib/useFadeIn';
 import type { Ingredient, DietaryTag } from '@/lib/types';
@@ -513,9 +513,7 @@ export default function IngredientPreferencesScreen() {
       {activeTab === 'flagged' && !isPlus ? (
         <FlaggedUpsell />
       ) : loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-        </View>
+        <LottieLoader type="loading" fullScreen={false} />
       ) : fetchError ? (
         <View style={styles.center}>
           <Ionicons name="alert-circle-outline" size={42} color={Colors.status.negative} />

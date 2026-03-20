@@ -37,6 +37,7 @@ import type { NutrientWatchlistEntry } from '@/lib/types';
 import { CameraIcon, PersonalIcon, TickIcon, InfoIcon } from '@/components/MenuIcons';
 import { ConditionInfoSheet } from '@/components/ConditionInfoSheet';
 import { SuggestionSheet, type SuggestionCategory } from '@/components/SuggestionSheet';
+import { LottieLoader } from '@/components/LottieLoader';
 import { CONDITION_INFO } from '@/constants/conditionInfo';
 import Logo from '../assets/images/logo.svg';
 
@@ -725,9 +726,7 @@ export default function AddFamilyMemberScreen() {
   if (!fetched) {
     return (
       <SafeAreaView style={styles.safe}>
-        <View style={styles.loadingWrap}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-        </View>
+        <LottieLoader type="loading" />
       </SafeAreaView>
     );
   }

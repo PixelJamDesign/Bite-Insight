@@ -40,6 +40,7 @@ import { CameraIcon, PersonalIcon, EmailIcon, BirthdayIcon, TickIcon, InfoIcon }
 import { DoneAccessory } from '@/components/DoneAccessory';
 import { ConditionInfoSheet } from '@/components/ConditionInfoSheet';
 import { SuggestionSheet, type SuggestionCategory } from '@/components/SuggestionSheet';
+import { LottieLoader } from '@/components/LottieLoader';
 import { CONDITION_INFO } from '@/constants/conditionInfo';
 import Logo from '../assets/images/logo.svg';
 
@@ -750,9 +751,7 @@ export default function EditProfileScreen() {
   if (!fetched) {
     return (
       <SafeAreaView style={styles.safe}>
-        <View style={styles.loadingWrap}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-        </View>
+        <LottieLoader type="loading" />
       </SafeAreaView>
     );
   }

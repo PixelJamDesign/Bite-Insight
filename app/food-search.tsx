@@ -24,6 +24,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMenu } from '@/lib/menuContext';
 import Logo from '../assets/images/logo.svg';
 import { NoImagePlaceholder } from '@/components/NoImagePlaceholder';
+import { MenuModal } from '@/components/MenuModal';
+import { LottieLoader } from '@/components/LottieLoader';
 import { sentenceCase } from '@/lib/text';
 import { safeBack } from '@/lib/safeBack';
 import { usePageTransition } from '@/lib/usePageTransition';
@@ -73,7 +75,7 @@ export default function FoodSearchScreen() {
   const { opacity: pageOpacity, translateX: pageTranslateX, animateExit: pageExit } = usePageTransition();
 
   const { selectedRegion, setSelectedRegion } = useRegion();
-  const { menuOpen, openMenu, closeMenu } = useMenu();
+  const { menuOpen, menuVisible, menuAnim, openMenu, closeMenu, closeMenuInstant } = useMenu();
   const [regionPickerVisible, setRegionPickerVisible] = useState(false);
   const [query, setQuery] = useState('');
   const [submittedQuery, setSubmittedQuery] = useState('');
@@ -134,6 +136,10 @@ export default function FoodSearchScreen() {
 
     // Don't auto-search until at least 2 characters
     if (trimmed.length < 2) return undefined;
+
+    // Show loading immediately so there's no flash of "no results" during debounce
+    setLoading(true);
+    setHasSearched(true);
 
     debounceRef.current = setTimeout(() => {
       debounceRef.current = null;
@@ -430,8 +436,7 @@ export default function FoodSearchScreen() {
     if (loading) {
       return (
         <View style={styles.emptyContainer}>
-          <ActivityIndicator size="large" color={Colors.secondary} />
-          <Text style={styles.emptyText}>{t('search.searching')}</Text>
+          <LottieLoader type="searching" fullScreen={false} size={100} message={t('search.searching')} />
         </View>
       );
     }
@@ -639,6 +644,19 @@ export default function FoodSearchScreen() {
         </View>
       </Modal>
       </Animated.View>
+
+      {/* Menu overlay — same pattern as (tabs)/_layout.tsx */}
+      {menuVisible && (
+        <Animated.View style={[StyleSheet.absoluteFill, styles.menuOverlay, { opacity: menuAnim }]}>
+          <MenuModal onClose={closeMenu} onNavigate={closeMenuInstant} />
+          <View style={[styles.menuHeader, { paddingTop: insets.top + Spacing.m }]}>
+            <Logo width={141} height={36} />
+            <TouchableOpacity style={styles.menuBtn} onPress={closeMenu} activeOpacity={0.8}>
+              <Ionicons name="close" size={24} color={Colors.primary} />
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+      )}
     </View>
   );
 }
@@ -928,5 +946,21 @@ const styles = StyleSheet.create({
     color: Colors.secondary,
     letterSpacing: -0.28,
     lineHeight: 17,
+  },
+
+  // Menu overlay
+  menuOverlay: {
+    backgroundColor: Colors.background,
+    zIndex: 100,
+  },
+  menuHeader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.m,
   },
 });
