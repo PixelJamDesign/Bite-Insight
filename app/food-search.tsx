@@ -109,6 +109,8 @@ export default function FoodSearchScreen() {
     const trimmed = query.trim();
     if (trimmed.length >= 2) {
       if (debounceRef.current) { clearTimeout(debounceRef.current); debounceRef.current = null; }
+      setLoading(true);
+      setResults([]);
       performSearch(trimmed, region);
     }
   }
@@ -232,6 +234,7 @@ export default function FoodSearchScreen() {
       search_simple: '1',
       action: 'process',
       json: '1',
+      lc: 'en',
       page: String(page),
       page_size: String(PAGE_SIZE),
       fields: SEARCH_FIELDS,
@@ -257,7 +260,6 @@ export default function FoodSearchScreen() {
     abortRef.current = controller;
 
     setLoading(true);
-    setResults([]);                      // clear previous results immediately
     setSubmittedQuery(searchTerm);
     setHasSearched(true);
     pageRef.current = 1;
@@ -278,18 +280,19 @@ export default function FoodSearchScreen() {
       const products: SearchProduct[] = (data.products ?? []).map(normaliseHit);
       const sorted = processResults(products, searchTerm);
 
+      // Update results and loading in one batch — no flash of "no results"
       setResults(sorted);
       setTotalCount(data.count ?? 0);
       setHasMore((data.count ?? 0) > PAGE_SIZE);
+      setLoading(false);
     } catch (err: any) {
       if (err?.name !== 'AbortError') {
         console.warn('[FoodSearch] Search failed:', err?.message ?? err);
         setResults([]);
         setTotalCount(0);
         setHasMore(false);
+        setLoading(false);
       }
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -527,15 +530,6 @@ export default function FoodSearchScreen() {
           <ActionChevronDownIcon color={Colors.primary} size={20} />
         </TouchableOpacity>
 
-        {/* Subtitle — result count */}
-        {hasSearched && !loading && (
-          <Text style={styles.subtitle}>
-            {results.length > 0
-              ? t('search.showing', { count: totalCount, term: submittedQuery })
-              : t('search.noResults', { term: submittedQuery })}
-          </Text>
-        )}
-
         {/* Search input (Figma node 2976-2368) */}
         <View style={styles.searchInputContainer}>
           <ActionSearchIcon color={Colors.secondary} size={24} />
@@ -574,6 +568,15 @@ export default function FoodSearchScreen() {
         data={results}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
+        ListHeaderComponent={hasSearched && !loading && results.length > 0 ? (
+          <Text style={styles.subtitle}>
+            {t('search.showing', { count: totalCount, term: submittedQuery })}
+          </Text>
+        ) : hasSearched && !loading && results.length === 0 ? (
+          <Text style={styles.subtitle}>
+            {t('search.noResults', { term: submittedQuery })}
+          </Text>
+        ) : null}
         ListEmptyComponent={ListEmpty}
         ListFooterComponent={ListFooter}
         contentContainerStyle={[
@@ -726,6 +729,7 @@ const styles = StyleSheet.create({
     color: Colors.secondary,
     letterSpacing: -0.36,
     lineHeight: 24,
+    marginBottom: Spacing.xs,
   },
 
   // Search input — matches Figma node 2976-2368
@@ -739,7 +743,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.s,
     paddingVertical: Spacing.s,
     gap: Spacing.xs,
-    marginTop: Spacing.xs,
   },
   searchInput: {
     flex: 1,

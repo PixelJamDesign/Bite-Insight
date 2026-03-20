@@ -642,6 +642,29 @@ function sentenceCase(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 }
 
+/**
+ * Prefer English text for ingredient names when available.
+ * OFF returns `text` in the product's original language and optionally
+ * `text_en` with an English translation. This recursively walks the
+ * ingredient tree and swaps `text` for `text_en` where present.
+ */
+function preferEnglishIngredients(ingredients: any[]): any[] {
+  return ingredients.map((ing) => {
+    const copy = { ...ing };
+    // Use English name if available, otherwise try to derive from id (en:sugar → sugar)
+    if (copy.text_en) {
+      copy.text = copy.text_en;
+    } else if (!copy.text && copy.id?.startsWith('en:')) {
+      copy.text = copy.id.replace('en:', '').replace(/-/g, ' ');
+    }
+    // Recurse into sub-ingredients
+    if (copy.ingredients && Array.isArray(copy.ingredients)) {
+      copy.ingredients = preferEnglishIngredients(copy.ingredients);
+    }
+    return copy;
+  });
+}
+
 // OffIngredient, FlaggedIngredient imported from @/components/ScanResultSheets
 
 type IngredientCategory = {
@@ -1142,7 +1165,7 @@ export default function ScanResultScreen() {
   useEffect(() => {
     if (!needsOffFetch) return;
     setFetchingOff(true);
-    fetch(`https://${offRegion}.openfoodfacts.org/api/v0/product/${p.barcode}.json`, {
+    fetch(`https://${offRegion}.openfoodfacts.org/api/v0/product/${p.barcode}.json?lc=en`, {
       headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
     })
       .then((r) => r.json())
@@ -1182,7 +1205,7 @@ export default function ScanResultScreen() {
             allergens: allergenTags.join(','),
             traces: tracesTags.join(','),
             categoriesTags: (op.categories_tags ?? []).join(','),
-            ingredientsJson: op.ingredients ? JSON.stringify(op.ingredients) : '',
+            ingredientsJson: op.ingredients ? JSON.stringify(preferEnglishIngredients(op.ingredients)) : '',
             offLang: op.ingredients_text_en ? 'en' : (op.lang || op.lc || 'en'),
           });
           // Check if user has hit 20 scans — trigger review prompt if so
@@ -1239,7 +1262,7 @@ export default function ScanResultScreen() {
             ingredientsText: op.ingredients_text_en || op.ingredients_text || null,
             allergens: allergenTags.join(',') || null,
             traces: tracesTags.join(',') || null,
-            ingredientsJson: op.ingredients ? JSON.stringify(op.ingredients) : null,
+            ingredientsJson: op.ingredients ? JSON.stringify(preferEnglishIngredients(op.ingredients)) : null,
             offLang: hasEnglishText ? 'en' : (op.lang || op.lc || 'en'),
           }).catch(() => {});
 
@@ -1271,7 +1294,7 @@ export default function ScanResultScreen() {
   // This runs in the background — it does NOT block the main nutrition UI.
   useEffect(() => {
     if (needsOffFetch || !p.barcode) return; // main fetch handles this case
-    fetch(`https://world.openfoodfacts.org/api/v0/product/${p.barcode}.json`, {
+    fetch(`https://world.openfoodfacts.org/api/v0/product/${p.barcode}.json?lc=en`, {
       headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
     })
       .then((r) => r.json())
