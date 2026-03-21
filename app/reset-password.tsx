@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -29,6 +29,16 @@ export default function ResetPasswordScreen() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [done, setDone] = useState(false);
+  const [sessionMissing, setSessionMissing] = useState(false);
+
+  // Check for a valid session on mount — if missing, the deep link token
+  // didn't arrive or expired. Show a helpful message instead of letting
+  // the user type a password only to hit a wall.
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) setSessionMissing(true);
+    });
+  }, []);
 
   const rules = [
     { bold: 'one letter',        met: /[a-zA-Z]/.test(password) },
@@ -54,7 +64,12 @@ export default function ResetPasswordScreen() {
     setLoading(false);
 
     if (error) {
-      setErrorMsg(error.message);
+      // Translate unhelpful Supabase error into user-friendly message
+      if (error.message.toLowerCase().includes('session')) {
+        setSessionMissing(true);
+      } else {
+        setErrorMsg(error.message);
+      }
       return;
     }
 
@@ -83,7 +98,17 @@ export default function ResetPasswordScreen() {
               <Text style={styles.cardSubtitle}>Choose a strong password for your account.</Text>
             </View>
 
-            {done ? (
+            {sessionMissing ? (
+              <View style={styles.errorCard}>
+                <View style={styles.errorBadge}>
+                  <Ionicons name="warning" size={11} color="#fff" />
+                  <Text style={styles.errorBadgeText}>Link Expired</Text>
+                </View>
+                <Text style={styles.errorText}>
+                  This password reset link has expired or is no longer valid. Please request a new one from the sign-in screen.
+                </Text>
+              </View>
+            ) : done ? (
               <View style={styles.successCard}>
                 <View style={styles.successIconRow}>
                   <Ionicons name="checkmark-circle" size={24} color={Colors.status.positive} />
@@ -172,14 +197,14 @@ export default function ResetPasswordScreen() {
 
             <TouchableOpacity
               style={styles.submitBtn}
-              onPress={done ? () => router.replace('/(auth)/login') : handleSubmit}
+              onPress={(done || sessionMissing) ? () => router.replace('/(auth)/login') : handleSubmit}
               disabled={loading}
               activeOpacity={0.88}
             >
               {loading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.submitText}>{done ? 'Back to Sign In' : 'Update Password'}</Text>
+                <Text style={styles.submitText}>{(done || sessionMissing) ? 'Back to Sign In' : 'Update Password'}</Text>
               )}
             </TouchableOpacity>
           </View>

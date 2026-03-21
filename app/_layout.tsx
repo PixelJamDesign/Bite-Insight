@@ -146,8 +146,11 @@ function RootLayoutInner() {
       if (!access_token || !refresh_token || handledUrl.current) return;
       handledUrl.current = true;
       try {
-        await supabase.auth.setSession({ access_token, refresh_token });
-      } catch { /* ignore — screen will show an error if session is invalid */ }
+        const { error } = await supabase.auth.setSession({ access_token, refresh_token });
+        if (error) console.warn('[DeepLink] setSession failed:', error.message);
+      } catch (e) {
+        console.warn('[DeepLink] setSession exception:', e);
+      }
 
       if (type === 'recovery') {
         router.replace('/reset-password');
