@@ -1,6 +1,4 @@
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Colors } from '@/constants/theme';
 import { useSubscription } from '@/lib/subscriptionContext';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
@@ -46,41 +44,9 @@ export function getOFFBaseUrl(region: Region): string {
 }
 
 // ─── Shared PlusTag component ───────────────────────────────────────────────────
+// Re-exports PlusBadge so existing imports from regionContext keep working.
 
-export function PlusTag() {
-  return (
-    <View style={pStyles.plusTag}>
-      <Text style={pStyles.plusText}>plus</Text>
-      <Text style={pStyles.plusStar}>⁺</Text>
-    </View>
-  );
-}
-
-const pStyles = StyleSheet.create({
-  plusTag: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: Colors.primary,
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 4,
-  },
-  plusText: {
-    fontSize: 16,
-    fontFamily: 'Figtree_700Bold',
-    fontWeight: '700',
-    color: '#fff',
-    lineHeight: 17.6,
-    letterSpacing: -0.32,
-  },
-  plusStar: {
-    fontSize: 8,
-    fontFamily: 'Figtree_700Bold',
-    fontWeight: '700',
-    color: '#fff',
-    marginTop: -1,
-  },
-});
+export { PlusBadge as PlusTag } from '@/components/PlusBadge';
 
 // ─── Context ────────────────────────────────────────────────────────────────────
 

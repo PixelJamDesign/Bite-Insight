@@ -28,6 +28,7 @@ import { MenuLikedIcon, MenuDislikedIcon, MenuFlaggedIcon, ActionSearchIcon, Act
 import { IngredientDetailModal } from '@/components/IngredientDetailModal';
 import { FlagReasonSheet } from '@/components/FlagReasonSheet';
 import { LottieLoader } from '@/components/LottieLoader';
+import { PlusBadge } from '@/components/PlusBadge';
 import { useTabBarSlide } from '@/lib/tabBarContext';
 import { useFadeIn } from '@/lib/useFadeIn';
 import type { Ingredient, DietaryTag } from '@/lib/types';
@@ -767,9 +768,8 @@ function FlaggedUpsell() {
               <View style={styles.upsellLogoRow}>
                 <Text style={styles.upsellLogoBite}>{t('upsell.bite')}</Text>
                 <Text style={styles.upsellLogoInsight}>{t('upsell.insight')}</Text>
-                <View style={styles.upsellPlusTag}>
-                  <Text style={styles.upsellPlusTagText}>{t('upsell.plus')}</Text>
-                  <Text style={styles.upsellPlusTagSup}>{t('upsell.plusSymbol')}</Text>
+                <View style={{ marginLeft: 6, marginBottom: 2 }}>
+                  <PlusBadge size="small" />
                 </View>
               </View>
               <Text style={styles.upsellTagline}>
@@ -1179,30 +1179,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_700Bold',
     color: Colors.accent,
     letterSpacing: -0.5,
-  },
-  upsellPlusTag: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 4,
-    paddingHorizontal: 5,
-    paddingVertical: 3,
-    marginLeft: 6,
-    marginBottom: 2,
-  },
-  upsellPlusTagText: {
-    color: '#fff',
-    fontSize: 11,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    lineHeight: 13,
-  },
-  upsellPlusTagSup: {
-    color: '#fff',
-    fontSize: 7,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    lineHeight: 9,
   },
   upsellTagline: {
     fontSize: 16,
