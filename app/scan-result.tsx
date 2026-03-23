@@ -139,6 +139,34 @@ const SodiumIcons = {
   high:     impactIcon(require('@/assets/icons/impact/sodium_high.svg'),     require('@/assets/icons/impact/png/sodium_high.png')),
   veryHigh: impactIcon(require('@/assets/icons/impact/sodium_very_high.svg'), require('@/assets/icons/impact/png/sodium_very_high.png')),
 };
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const SugarIcons = {
+  low:      impactIcon(require('@/assets/icons/impact/sugar_low.svg'),      require('@/assets/icons/impact/png/sugar_low.png')),
+  moderate: impactIcon(require('@/assets/icons/impact/sugar_moderate.svg'), require('@/assets/icons/impact/png/sugar_moderate.png')),
+  high:     impactIcon(require('@/assets/icons/impact/sugar_high.svg'),     require('@/assets/icons/impact/png/sugar_high.png')),
+  veryHigh: impactIcon(require('@/assets/icons/impact/sugar_very_high.svg'), require('@/assets/icons/impact/png/sugar_very_high.png')),
+};
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const FibreIcons = {
+  low:      impactIcon(require('@/assets/icons/impact/fibre_low.svg'),      require('@/assets/icons/impact/png/fibre_low.png')),
+  moderate: impactIcon(require('@/assets/icons/impact/fibre_moderate.svg'), require('@/assets/icons/impact/png/fibre_moderate.png')),
+  high:     impactIcon(require('@/assets/icons/impact/fibre_high.svg'),     require('@/assets/icons/impact/png/fibre_high.png')),
+  veryHigh: impactIcon(require('@/assets/icons/impact/fibre_very_high.svg'), require('@/assets/icons/impact/png/fibre_very_high.png')),
+};
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const ProteinIcons = {
+  low:      impactIcon(require('@/assets/icons/impact/protein_low.svg'),      require('@/assets/icons/impact/png/protein_low.png')),
+  moderate: impactIcon(require('@/assets/icons/impact/protein_moderate.svg'), require('@/assets/icons/impact/png/protein_moderate.png')),
+  high:     impactIcon(require('@/assets/icons/impact/protein_high.svg'),     require('@/assets/icons/impact/png/protein_high.png')),
+  veryHigh: impactIcon(require('@/assets/icons/impact/protein_very_high.svg'), require('@/assets/icons/impact/png/protein_very_high.png')),
+};
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const SaturatedFatIcons = {
+  low:      impactIcon(require('@/assets/icons/impact/saturated_fat_low.svg'),      require('@/assets/icons/impact/png/saturated_fat_low.png')),
+  moderate: impactIcon(require('@/assets/icons/impact/saturated_fat_moderate.svg'), require('@/assets/icons/impact/png/saturated_fat_moderate.png')),
+  high:     impactIcon(require('@/assets/icons/impact/saturated_fat_high.svg'),     require('@/assets/icons/impact/png/saturated_fat_high.png')),
+  veryHigh: impactIcon(require('@/assets/icons/impact/saturated_fat_very_high.svg'), require('@/assets/icons/impact/png/saturated_fat_very_high.png')),
+};
 
 // ── Personalised insight definitions ─────────────────────────────────────────
 // Each insight declares which conditions/preferences/allergies make it relevant,
@@ -857,24 +885,26 @@ function categoriseIngredients(
     if (healthKeywords.size > 0 || healthIngIds.size > 0) {
       // 1. Direct OFF ingredient ID match
       if (ingId && healthIngIds.has(ingId)) {
-        harmful.push({ ...ing, flagReason: 'health_condition', matchSource: 'ingredient' });
+        const conditionKey = healthSourceMap.get(ingId);
+        harmful.push({ ...ing, flagReason: 'health_condition', matchSource: 'ingredient', healthConditionKey: conditionKey });
         continue;
       }
       // 2. Keyword match against ingredient text
       let healthMatched = false;
+      let matchedConditionKey: string | undefined;
       for (const kw of healthKeywords) {
-        if (ingText === kw) { healthMatched = true; break; }
+        if (ingText === kw) { healthMatched = true; matchedConditionKey = healthSourceMap.get(kw); break; }
         // Word-boundary match for single words, substring for multi-word
         if (kw.includes(' ')) {
-          if (ingText.includes(kw)) { healthMatched = true; break; }
+          if (ingText.includes(kw)) { healthMatched = true; matchedConditionKey = healthSourceMap.get(kw); break; }
         } else {
           // Match as whole word using regex
           const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          if (new RegExp(`\\b${escaped}\\b`).test(ingText)) { healthMatched = true; break; }
+          if (new RegExp(`\\b${escaped}\\b`).test(ingText)) { healthMatched = true; matchedConditionKey = healthSourceMap.get(kw); break; }
         }
       }
       if (healthMatched) {
-        harmful.push({ ...ing, flagReason: 'health_condition', matchSource: 'ingredient' });
+        harmful.push({ ...ing, flagReason: 'health_condition', matchSource: 'ingredient', healthConditionKey: matchedConditionKey });
         continue;
       }
     }

@@ -27,6 +27,7 @@ export type FlaggedIngredient = OffIngredient & {
   personalReason?: { category: string; text: string };
   matchSource?: 'ingredient' | 'product-name' | 'category';
   matchedFlagName?: string;  // the user-flagged name that triggered this match
+  healthConditionKey?: string;  // which health condition / dietary pref triggered this flag
   additiveSeverity?: { severity: 'high' | 'moderate' | 'low'; conditions: string[]; reason: string; group?: string };
 };
 
@@ -152,16 +153,29 @@ export function FlaggedIngredientSheet({
   allergies: string[];
 }) {
   const { t } = useTranslation('scan');
+  const { t: tpo } = useTranslation('profileOptions');
   const lastIngRef = useRef<FlaggedIngredient | null>(null);
   if (ingredient) lastIngRef.current = ingredient;
   const display = ingredient ?? lastIngRef.current;
+
+  // Build condition-specific body text for health_condition flags
+  const healthConditionBody = (() => {
+    if (!display?.healthConditionKey) return t('flagReason.healthConditionBody', 'This ingredient may be harmful based on your health conditions or dietary preferences.');
+    const key = display.healthConditionKey;
+    // Try health conditions first, then dietary preferences
+    const label = tpo(`healthConditions.${key}`, '') || tpo(`dietaryPreferences.${key}`, '') || key;
+    return t('flagReason.healthConditionBodySpecific', {
+      defaultValue: `This ingredient may be harmful for people with {{condition}}.`,
+      condition: label,
+    });
+  })();
 
   const FLAG_REASON_TEXT_LOCAL: Record<FlagReason, { title: string; body: string }> = {
     vegan: { title: t('flagReason.veganTitle'), body: t('flagReason.veganBody') },
     vegetarian: { title: t('flagReason.vegetarianTitle'), body: t('flagReason.vegetarianBody') },
     user_flagged: { title: t('flagReason.userFlaggedTitle'), body: t('flagReason.userFlaggedBody') },
     additive_concern: { title: t('flagReason.additiveConcernTitle', 'Additive of Concern'), body: '' },
-    health_condition: { title: t('flagReason.healthConditionTitle', 'Flagged for Your Health'), body: t('flagReason.healthConditionBody', 'This ingredient may be harmful based on your health conditions or dietary preferences.') },
+    health_condition: { title: t('flagReason.healthConditionTitle', 'Flagged for Your Health'), body: healthConditionBody },
   };
 
   const reason = display?.additiveSeverity
