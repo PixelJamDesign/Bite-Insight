@@ -99,45 +99,45 @@ const FoodIcons = {
 // and pass as the second arg to impactIcon().
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const GlycemicIcons = {
-  low:      impactIcon(require('@/assets/icons/impact/glycemic-low.svg'),      require('@/assets/icons/impact/png/glycemic-low.png')),
-  moderate: impactIcon(require('@/assets/icons/impact/glycemic-moderate.svg'), require('@/assets/icons/impact/png/glycemic-moderate.png')),
-  high:     impactIcon(require('@/assets/icons/impact/glycemic-high.svg'),     require('@/assets/icons/impact/png/glycemic-high.png')),
-  veryHigh: impactIcon(require('@/assets/icons/impact/glycemic-very-high.svg'), require('@/assets/icons/impact/png/glycemic-very-high.png')),
+  low:      impactIcon(require('@/assets/icons/impact/glycemic_low.svg'),      require('@/assets/icons/impact/png/glycemic_low.png')),
+  moderate: impactIcon(require('@/assets/icons/impact/glycemic_moderate.svg'), require('@/assets/icons/impact/png/glycemic_moderate.png')),
+  high:     impactIcon(require('@/assets/icons/impact/glycemic_high.svg'),     require('@/assets/icons/impact/png/glycemic_high.png')),
+  veryHigh: impactIcon(require('@/assets/icons/impact/glycemic_very_high.svg'), require('@/assets/icons/impact/png/glycemic_very_high.png')),
 };
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const CalorieIcons = {
-  low:      impactIcon(require('@/assets/icons/impact/calorie-low.svg'),      require('@/assets/icons/impact/png/calorie-low.png')),
-  moderate: impactIcon(require('@/assets/icons/impact/calorie-moderate.svg'), require('@/assets/icons/impact/png/calorie-moderate.png')),
-  high:     impactIcon(require('@/assets/icons/impact/calorie-high.svg'),     require('@/assets/icons/impact/png/calorie-high.png')),
-  veryHigh: impactIcon(require('@/assets/icons/impact/calorie-very-high.svg'), require('@/assets/icons/impact/png/calorie-very-high.png')),
+  low:      impactIcon(require('@/assets/icons/impact/calories_low.svg'),      require('@/assets/icons/impact/png/calories_low.png')),
+  moderate: impactIcon(require('@/assets/icons/impact/calories_moderate.svg'), require('@/assets/icons/impact/png/calories_moderate.png')),
+  high:     impactIcon(require('@/assets/icons/impact/calories_high.svg'),     require('@/assets/icons/impact/png/calories_high.png')),
+  veryHigh: impactIcon(require('@/assets/icons/impact/calories_very_high.svg'), require('@/assets/icons/impact/png/calories_very_high.png')),
 };
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const AdditiveIcons = {
-  low:      impactIcon(require('@/assets/icons/impact/additive-low.svg'),      require('@/assets/icons/impact/png/additive-low.png')),
-  moderate: impactIcon(require('@/assets/icons/impact/additive-moderate.svg'), require('@/assets/icons/impact/png/additive-moderate.png')),
-  high:     impactIcon(require('@/assets/icons/impact/additive-high.svg'),     require('@/assets/icons/impact/png/additive-high.png')),
-  veryHigh: impactIcon(require('@/assets/icons/impact/additive-very-high.svg'), require('@/assets/icons/impact/png/additive-very-high.png')),
+  low:      impactIcon(require('@/assets/icons/impact/additives_low.svg'),      require('@/assets/icons/impact/png/additives_low.png')),
+  moderate: impactIcon(require('@/assets/icons/impact/additives_moderate.svg'), require('@/assets/icons/impact/png/additives_moderate.png')),
+  high:     impactIcon(require('@/assets/icons/impact/additives_high.svg'),     require('@/assets/icons/impact/png/additives_high.png')),
+  veryHigh: impactIcon(require('@/assets/icons/impact/additives_very_high.svg'), require('@/assets/icons/impact/png/additives_very_high.png')),
 };
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const DigestiveLoadIcons = {
-  low:      impactIcon(require('@/assets/icons/impact/digestion-low.svg'),      require('@/assets/icons/impact/png/digestion-low.png')),
-  moderate: impactIcon(require('@/assets/icons/impact/digestion-moderate.svg'), require('@/assets/icons/impact/png/digestion-moderate.png')),
-  high:     impactIcon(require('@/assets/icons/impact/digestion-high.svg'),     require('@/assets/icons/impact/png/digestion-high.png')),
-  veryHigh: impactIcon(require('@/assets/icons/impact/digestion-very-high.svg'), require('@/assets/icons/impact/png/digestion-very-high.png')),
+  low:      impactIcon(require('@/assets/icons/impact/digestion_low.svg'),      require('@/assets/icons/impact/png/digestion_low.png')),
+  moderate: impactIcon(require('@/assets/icons/impact/digestion_moderate.svg'), require('@/assets/icons/impact/png/digestion_moderate.png')),
+  high:     impactIcon(require('@/assets/icons/impact/digestion_high.svg'),     require('@/assets/icons/impact/png/digestion_high.png')),
+  veryHigh: impactIcon(require('@/assets/icons/impact/digestion_very_high.svg'), require('@/assets/icons/impact/png/digestion_very_high.png')),
 };
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const CarbLoadIcons = {
-  low:      impactIcon(require('@/assets/icons/impact/carbload-low.svg'),      require('@/assets/icons/impact/png/carbload-low.png')),
-  moderate: impactIcon(require('@/assets/icons/impact/carbload-moderate.svg'), require('@/assets/icons/impact/png/carbload-moderate.png')),
-  high:     impactIcon(require('@/assets/icons/impact/carbload-high.svg'),     require('@/assets/icons/impact/png/carbload-high.png')),
-  veryHigh: impactIcon(require('@/assets/icons/impact/carbload-very-high.svg'), require('@/assets/icons/impact/png/carbload-very-high.png')),
+  low:      impactIcon(require('@/assets/icons/impact/carbs_low.svg'),      require('@/assets/icons/impact/png/carbs_low.png')),
+  moderate: impactIcon(require('@/assets/icons/impact/carbs_moderate.svg'), require('@/assets/icons/impact/png/carbs_moderate.png')),
+  high:     impactIcon(require('@/assets/icons/impact/carbs_high.svg'),     require('@/assets/icons/impact/png/carbs_high.png')),
+  veryHigh: impactIcon(require('@/assets/icons/impact/carbs_very_high.svg'), require('@/assets/icons/impact/png/carbs_very_high.png')),
 };
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const SodiumIcons = {
-  low:      impactIcon(require('@/assets/icons/impact/sodium-low.svg'),      require('@/assets/icons/impact/png/sodium-low.png')),
-  moderate: impactIcon(require('@/assets/icons/impact/sodium-moderate.svg'), require('@/assets/icons/impact/png/sodium-moderate.png')),
-  high:     impactIcon(require('@/assets/icons/impact/sodium-high.svg'),     require('@/assets/icons/impact/png/sodium-high.png')),
-  veryHigh: impactIcon(require('@/assets/icons/impact/sodium-very-high.svg'), require('@/assets/icons/impact/png/sodium-very-high.png')),
+  low:      impactIcon(require('@/assets/icons/impact/sodium_low.svg'),      require('@/assets/icons/impact/png/sodium_low.png')),
+  moderate: impactIcon(require('@/assets/icons/impact/sodium_moderate.svg'), require('@/assets/icons/impact/png/sodium_moderate.png')),
+  high:     impactIcon(require('@/assets/icons/impact/sodium_high.svg'),     require('@/assets/icons/impact/png/sodium_high.png')),
+  veryHigh: impactIcon(require('@/assets/icons/impact/sodium_very_high.svg'), require('@/assets/icons/impact/png/sodium_very_high.png')),
 };
 
 // ── Personalised insight definitions ─────────────────────────────────────────
