@@ -3,7 +3,7 @@
 // getSubstitutes checks the ingredient against ALL maps relevant to the
 // active profile and returns the first match.
 
-export type FlagReason = 'vegan' | 'vegetarian' | 'user_flagged' | 'additive_concern';
+export type FlagReason = 'vegan' | 'vegetarian' | 'user_flagged' | 'additive_concern' | 'health_condition';
 
 export const DIETARY_SUBSTITUTES: Record<string, Record<string, string[]>> = {
   vegan: {

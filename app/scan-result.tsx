@@ -52,6 +52,7 @@ import type { IngredientNode } from '@/lib/ingredientsCleaner';
 import { safeBack } from '@/lib/safeBack';
 import { ALLERGY_KEYWORDS, type AllergyEntry } from '@/lib/allergenKeywords';
 import { getAdditiveSeverity, computeAdditiveSeverity, type AdditiveEntry } from '@/constants/additiveSeverity';
+import { HEALTH_CONDITION_INGREDIENTS, DIETARY_PREFERENCE_INGREDIENTS, type HealthFlagEntry } from '@/constants/healthIngredientFlags';
 import { getSubstitutes, type FlagReason } from '@/lib/ingredientSubstitutes';
 import {
   type NutrientKey, type Threshold, DRI, NUTRIENT_LABELS, NUTRIENT_UNITS,
@@ -688,6 +689,8 @@ function categoriseIngredients(
   productName?: string,     // product name for product-level matching
   categoriesTags?: string[],// OFF category tags for product-level matching
   userConditions?: string[],// health conditions for additive severity highlighting
+  healthConditionKeys?: string[],  // profile health_conditions keys (e.g. 'diabetes')
+  dietaryPreferenceKeys?: string[],// profile dietary_preferences keys (e.g. 'keto')
 ): IngredientCategory {
   const harmful: FlaggedIngredient[] = [];
   const userFlagged: FlaggedIngredient[] = [];
@@ -695,6 +698,26 @@ function categoriseIngredients(
   const safe: OffIngredient[] = [];
   const allergenSet = new Set(allergenTags.map((a) => a.toLowerCase()));
   const flaggedSet = new Set(flaggedNames.map((n) => n.toLowerCase()));
+
+  // ── Build health-condition + dietary-preference keyword sets ──────────────
+  // Merges all keyword lists from the user's conditions/preferences into a
+  // single set of lowercase keywords and a set of OFF ingredient IDs.
+  const healthKeywords = new Set<string>();
+  const healthIngIds = new Set<string>();
+  const healthSourceMap = new Map<string, string>(); // keyword → condition/pref key
+
+  for (const key of (healthConditionKeys ?? [])) {
+    const entry = HEALTH_CONDITION_INGREDIENTS[key];
+    if (!entry) continue;
+    for (const kw of entry.keywords) { healthKeywords.add(kw); healthSourceMap.set(kw, key); }
+    for (const id of entry.ingredientIds) { healthIngIds.add(id); healthSourceMap.set(id, key); }
+  }
+  for (const key of (dietaryPreferenceKeys ?? [])) {
+    const entry = DIETARY_PREFERENCE_INGREDIENTS[key];
+    if (!entry) continue;
+    for (const kw of entry.keywords) { healthKeywords.add(kw); healthSourceMap.set(kw, key); }
+    for (const id of entry.ingredientIds) { healthIngIds.add(id); healthSourceMap.set(id, key); }
+  }
 
   // ── Product-level matching ─────────────────────────────────────────────────
   // Check the product name and OFF categories against flagged ingredients.
@@ -826,6 +849,34 @@ function categoriseIngredients(
         harmful.push(entry);
       }
       continue;
+    }
+
+    // ── Health condition / dietary preference ingredient flagging ────────────
+    // Check the ingredient against the merged keyword & ID sets from the user's
+    // health conditions and dietary preferences.
+    if (healthKeywords.size > 0 || healthIngIds.size > 0) {
+      // 1. Direct OFF ingredient ID match
+      if (ingId && healthIngIds.has(ingId)) {
+        harmful.push({ ...ing, flagReason: 'health_condition', matchSource: 'ingredient' });
+        continue;
+      }
+      // 2. Keyword match against ingredient text
+      let healthMatched = false;
+      for (const kw of healthKeywords) {
+        if (ingText === kw) { healthMatched = true; break; }
+        // Word-boundary match for single words, substring for multi-word
+        if (kw.includes(' ')) {
+          if (ingText.includes(kw)) { healthMatched = true; break; }
+        } else {
+          // Match as whole word using regex
+          const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          if (new RegExp(`\\b${escaped}\\b`).test(ingText)) { healthMatched = true; break; }
+        }
+      }
+      if (healthMatched) {
+        harmful.push({ ...ing, flagReason: 'health_condition', matchSource: 'ingredient' });
+        continue;
+      }
     }
 
     // E-number food additive (en:e followed by digits)
@@ -1605,6 +1656,8 @@ export default function ScanResultScreen() {
     categoriesArray,
     [...(activeFamilyProfile?.health_conditions ?? profile?.health_conditions ?? []),
      ...(activeFamilyProfile?.dietary_preferences?.map((d) => DIETARY_LABELS[d] ?? d) ?? profile?.dietary_preferences?.map((d) => DIETARY_LABELS[d] ?? d) ?? [])],
+    activeFamilyProfile?.health_conditions ?? profile?.health_conditions ?? [],
+    (activeFamilyProfile?.dietary_preferences ?? profile?.dietary_preferences ?? []) as string[],
   );
 
   // ── Full List tree + category lookup for Ingredients sub-tabs ──

@@ -949,20 +949,7 @@ export default function OnboardingScreen() {
             </View>
           )}
 
-          {/* Skip link — skips remaining health/allergies/diet, goes to app tour */}
-          {currentStepKey !== 'about' && (
-            <TouchableOpacity
-              style={styles.skipBtn}
-              onPress={async () => {
-                setSaving(true);
-                try { await advanceTo('app_tour'); } catch { /* JourneyGuard handles */ }
-                setSaving(false);
-              }}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.skipText}>{tc('buttons.skip')}</Text>
-            </TouchableOpacity>
-          )}
+          {/* Skip link removed — health/allergy/dietary setup is required for core flagging */}
 
           <View style={{ height: 120, backgroundColor: 'transparent' }} />
           </Animated.View>

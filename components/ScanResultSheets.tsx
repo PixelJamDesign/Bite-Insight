@@ -161,6 +161,7 @@ export function FlaggedIngredientSheet({
     vegetarian: { title: t('flagReason.vegetarianTitle'), body: t('flagReason.vegetarianBody') },
     user_flagged: { title: t('flagReason.userFlaggedTitle'), body: t('flagReason.userFlaggedBody') },
     additive_concern: { title: t('flagReason.additiveConcernTitle', 'Additive of Concern'), body: '' },
+    health_condition: { title: t('flagReason.healthConditionTitle', 'Flagged for Your Health'), body: t('flagReason.healthConditionBody', 'This ingredient may be harmful based on your health conditions or dietary preferences.') },
   };
 
   const reason = display?.additiveSeverity
