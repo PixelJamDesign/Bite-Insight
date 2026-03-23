@@ -260,10 +260,10 @@ const INSIGHT_DEFS: InsightDef[] = [
     label: 'Glycemic impact',
     iconWidth: 31,
     iconHeight: 44,
+    // DB keys from health_conditions + dietary_preferences
     relevantTo: [
-      'Diabetes', 'Diabetic', 'PCOS', 'Metabolic Syndrome',
-      'Low-Carb / Keto', 'Keto', 'Weight Loss',
-      'Pre-diabetes', 'Insulin Resistance',
+      'diabetes', 'preDiabetes', 'insulinResistance', 'pcos',
+      'keto', 'weightLoss',
     ],
     compute: (d) => {
       const sugars = d.sugars ? parseFloat(d.sugars) : NaN;
@@ -285,8 +285,7 @@ const INSIGHT_DEFS: InsightDef[] = [
     iconWidth: 28,
     iconHeight: 44,
     relevantTo: [
-      'Hypertension', 'Heart Disease', 'Lupus', 'Metabolic Syndrome',
-      'Coeliac Disease', 'Chronic Kidney Disease',
+      'hypertension', 'heartDisease', 'lupus', 'ckd', 'coeliac',
     ],
     compute: (d) => {
       const salt = d.salt ? parseFloat(d.salt) : NaN;
@@ -298,16 +297,91 @@ const INSIGHT_DEFS: InsightDef[] = [
     },
     icons: SodiumIcons,
   },
-  // TODO: Re-enable these insights once dedicated icon assets are created
-  // Hidden: saturatedFat, sugar, fiber, protein (no icons yet)
+  {
+    key: 'sugar',
+    label: 'Sugar',
+    iconWidth: 32,
+    iconHeight: 44,
+    relevantTo: [
+      'diabetes', 'preDiabetes', 'insulinResistance', 'pcos',
+      'nafld', 'weightLoss', 'keto', 'childFriendly',
+    ],
+    compute: (d) => {
+      const sugars = d.sugars ? parseFloat(d.sugars) : NaN;
+      if (isNaN(sugars)) return null;
+      if (sugars > 22.5) return { label: 'Very High', color: Colors.status.negative, iconKey: 'veryHigh' };
+      if (sugars > 12.5) return { label: 'High',      color: Extra.poorOrange,       iconKey: 'high' };
+      if (sugars > 5)    return { label: 'Moderate',  color: Extra.poorOrange,       iconKey: 'moderate' };
+      return { label: 'Low', color: Extra.positiveGreen, iconKey: 'low' };
+    },
+    icons: SugarIcons,
+  },
+  {
+    key: 'saturatedFat',
+    label: 'Saturated fat',
+    iconWidth: 32,
+    iconHeight: 44,
+    relevantTo: [
+      'heartDisease', 'highCholesterol', 'hypertension', 'nafld',
+      'weightLoss',
+    ],
+    compute: (d) => {
+      const satFat = d.saturatedFat ? parseFloat(d.saturatedFat) : NaN;
+      if (isNaN(satFat)) return null;
+      if (satFat > 5)  return { label: 'Very High', color: Colors.status.negative, iconKey: 'veryHigh' };
+      if (satFat > 3)  return { label: 'High',      color: Extra.poorOrange,       iconKey: 'high' };
+      if (satFat > 1.5) return { label: 'Moderate', color: Extra.poorOrange,       iconKey: 'moderate' };
+      return { label: 'Low', color: Extra.positiveGreen, iconKey: 'low' };
+    },
+    icons: SaturatedFatIcons,
+  },
+  {
+    key: 'fiber',
+    label: 'Fibre',
+    iconWidth: 32,
+    iconHeight: 44,
+    relevantTo: [
+      'ibs', 'crohns', 'uc', 'diverticular', 'coeliac',
+      'leakyGut', 'diabetes', 'weightLoss',
+    ],
+    compute: (d) => {
+      const fiber = d.fiber ? parseFloat(d.fiber) : NaN;
+      if (isNaN(fiber)) return null;
+      // Higher fibre is generally better (inverted scale)
+      if (fiber >= 6) return { label: 'Very High', color: Extra.positiveGreen, iconKey: 'veryHigh' };
+      if (fiber >= 3) return { label: 'High',      color: Extra.positiveGreen, iconKey: 'high' };
+      if (fiber >= 1) return { label: 'Moderate',  color: Extra.poorOrange,    iconKey: 'moderate' };
+      return { label: 'Low', color: Colors.status.negative, iconKey: 'low' };
+    },
+    icons: FibreIcons,
+  },
+  {
+    key: 'protein',
+    label: 'Protein',
+    iconWidth: 32,
+    iconHeight: 44,
+    relevantTo: [
+      'highProtein', 'weightLoss', 'postBariatric', 'diabetes',
+      'keto',
+    ],
+    compute: (d) => {
+      const proteins = d.proteins ? parseFloat(d.proteins) : NaN;
+      if (isNaN(proteins)) return null;
+      // Higher protein is generally better (inverted scale)
+      if (proteins >= 20) return { label: 'Very High', color: Extra.positiveGreen, iconKey: 'veryHigh' };
+      if (proteins >= 10) return { label: 'High',      color: Extra.positiveGreen, iconKey: 'high' };
+      if (proteins >= 5)  return { label: 'Moderate',  color: Extra.poorOrange,    iconKey: 'moderate' };
+      return { label: 'Low', color: Colors.status.negative, iconKey: 'low' };
+    },
+    icons: ProteinIcons,
+  },
   {
     key: 'calorie',
     label: 'Calorie density',
     iconWidth: 32,
     iconHeight: 44,
     relevantTo: [
-      'Weight Loss', 'Post-Bariatric Surgery', 'Metabolic Syndrome',
-      'NAFLD',
+      'weightLoss', 'postBariatric', 'nafld',
     ],
     compute: (d) => {
       const kcal = d.energyKcal ? parseFloat(d.energyKcal) : NaN;
@@ -319,16 +393,14 @@ const INSIGHT_DEFS: InsightDef[] = [
     },
     icons: CalorieIcons,
   },
-  // TODO: Re-enable inflammatoryFat once dedicated icon assets are created
   {
     key: 'digestiveLoad',
     label: 'Digestive load',
     iconWidth: 50,
     iconHeight: 44,
     relevantTo: [
-      'GERD / Acid Reflux', 'IBS', "Chron's Disease",
-      'Ulcerative Colitis', 'Leaky Gut Syndrome',
-      'Diverticular Disease', 'Coeliac Disease',
+      'gerd', 'ibs', 'crohns', 'uc', 'leakyGut',
+      'diverticular', 'coeliac', 'sibo',
     ],
     compute: (d) => {
       // Combined proxy: fat + fiber stress on the gut
@@ -349,8 +421,7 @@ const INSIGHT_DEFS: InsightDef[] = [
     iconWidth: 43,
     iconHeight: 44,
     relevantTo: [
-      'Low-Carb / Keto', 'Keto', 'Diabetic',
-      'Pre-diabetes', 'Insulin Resistance',
+      'keto', 'diabetes', 'preDiabetes', 'insulinResistance',
     ],
     compute: (d) => {
       const carbs = d.carbs ? parseFloat(d.carbs) : NaN;
@@ -368,9 +439,8 @@ const INSIGHT_DEFS: InsightDef[] = [
     iconWidth: 33,
     iconHeight: 44,
     relevantTo: [
-      'Child-Friendly / Additive-Free', 'ADHD', 'Autism',
-      'Eczema / Psoriasis', 'IBS', 'Migraine / Chronic Headaches',
-      'Clean Eating',
+      'childFriendly', 'adhd', 'autism', 'eczema', 'ibs',
+      'migraine', 'cleanEating',
     ],
     compute: (d) => {
       const count = d.additiveCount ?? -1;
@@ -397,76 +467,71 @@ const MAX_INSIGHTS = 3;
 // Higher weight = more likely to be shown. Insights not listed for a tag default to 1.
 const INSIGHT_WEIGHTS: Record<string, Partial<Record<InsightKey, number>>> = {
   // ── Diabetes focus: glycemic & sugar first, carbs second ──
-  'Diabetes':    { glycemic: 10, sugar: 9, carbLoad: 8, calorie: 3 },
-  'Diabetic':    { glycemic: 10, sugar: 9, carbLoad: 8, calorie: 3 },
+  diabetes:          { glycemic: 10, sugar: 9, carbLoad: 8, calorie: 3 },
 
   // ── Weight loss: calories & fat first ──
-  'Weight Loss':           { calorie: 10, saturatedFat: 9, sugar: 7, protein: 6 },
-  'Post-Bariatric Surgery':{ calorie: 10, protein: 9, sugar: 7 },
+  weightLoss:        { calorie: 10, saturatedFat: 9, sugar: 7, protein: 6 },
+  postBariatric:     { calorie: 10, protein: 9, sugar: 7 },
 
   // ── Heart / cholesterol: sat fat & sodium ──
-  'Heart Disease':    { saturatedFat: 10, sodium: 9, calorie: 5 },
-  'High Cholesterol': { saturatedFat: 10, inflammatoryFat: 7 },
-  'Hypertension':     { sodium: 10 },
+  heartDisease:      { saturatedFat: 10, sodium: 9, calorie: 5 },
+  highCholesterol:   { saturatedFat: 10, inflammatoryFat: 7 },
+  hypertension:      { sodium: 10 },
 
   // ── Chronic Kidney Disease: sodium & protein restriction ──
-  'Chronic Kidney Disease': { sodium: 10, protein: 8, saturatedFat: 5 },
-
-  // ── Metabolic syndrome: broad concern ──
-  'Metabolic Syndrome': { calorie: 9, sugar: 8, sodium: 7, saturatedFat: 6, glycemic: 5 },
+  ckd:               { sodium: 10, protein: 8, saturatedFat: 5 },
 
   // ── PCOS: sugar & glycemic ──
-  'PCOS': { sugar: 10, glycemic: 9, carbLoad: 7 },
+  pcos:              { sugar: 10, glycemic: 9, carbLoad: 7 },
 
   // ── Keto: carbs first ──
-  'Low-Carb / Keto': { carbLoad: 10, glycemic: 8, sugar: 7 },
-  'Keto':            { carbLoad: 10, glycemic: 8, sugar: 7 },
+  keto:              { carbLoad: 10, glycemic: 8, sugar: 7 },
 
   // ── Gut conditions: digestive load & fiber ──
-  'IBS':                 { digestiveLoad: 10, fiber: 9, additives: 7 },
-  "Chron's Disease":     { digestiveLoad: 10, fiber: 9 },
-  'Ulcerative Colitis':  { digestiveLoad: 10, fiber: 9 },
-  'SIBO':                { fiber: 10, sugar: 8 },
-  'Leaky Gut Syndrome':  { digestiveLoad: 10, fiber: 8, sugar: 6 },
-  'GERD / Acid Reflux':  { digestiveLoad: 10, saturatedFat: 7 },
-  'FODMAP Diet':         { fiber: 10, sugar: 8 },
+  ibs:               { digestiveLoad: 10, fiber: 9, additives: 7 },
+  crohns:            { digestiveLoad: 10, fiber: 9 },
+  uc:                { digestiveLoad: 10, fiber: 9 },
+  sibo:              { fiber: 10, sugar: 8 },
+  leakyGut:          { digestiveLoad: 10, fiber: 8, sugar: 6 },
+  gerd:              { digestiveLoad: 10, saturatedFat: 7 },
+  fodmap:            { fiber: 10, sugar: 8 },
 
   // ── Inflammatory / autoimmune: inflammatory fat ──
-  'Rheumatoid Arthritis': { inflammatoryFat: 10, sugar: 6 },
-  'Multiple Sclerosis':   { inflammatoryFat: 10 },
-  'Lupus':                { inflammatoryFat: 10, sodium: 8 },
-  'Eczema / Psoriasis':   { inflammatoryFat: 10, sugar: 7, additives: 8 },
+  ra:                { inflammatoryFat: 10, sugar: 6 },
+  ms:                { inflammatoryFat: 10 },
+  lupus:             { inflammatoryFat: 10, sodium: 8 },
+  eczema:            { inflammatoryFat: 10, sugar: 7, additives: 8 },
 
   // ── Neurological / behavioural: additives & sugar ──
-  'ADHD':   { additives: 10, sugar: 8 },
-  'Autism':  { additives: 10, sugar: 8 },
+  adhd:              { additives: 10, sugar: 8 },
+  autism:            { additives: 10, sugar: 8 },
 
   // ── Migraine: additives & sodium ──
-  'Migraine / Chronic Headaches': { additives: 10, sodium: 8, sugar: 5 },
+  migraine:          { additives: 10, sodium: 8, sugar: 5 },
 
   // ── Fatigue: sugar ──
-  'ME / Chronic Fatigue': { sugar: 10 },
+  me:                { sugar: 10 },
 
   // ── Child-friendly / clean eating: additives first ──
-  'Child-Friendly / Additive-Free': { additives: 10, sugar: 7 },
-  'Clean Eating':                    { additives: 10, sugar: 6 },
+  childFriendly:     { additives: 10, sugar: 7 },
+  cleanEating:       { additives: 10, sugar: 6 },
 
   // ── Fitness: protein first ──
-  'High-Protein / Fitness': { protein: 10, calorie: 6 },
+  highProtein:       { protein: 10, calorie: 6 },
 
-  // ── New health conditions ──
-  'Pre-diabetes':        { glycemic: 10, sugar: 9, carbLoad: 8 },
-  'Insulin Resistance':  { glycemic: 10, sugar: 9, carbLoad: 8 },
-  'NAFLD':               { saturatedFat: 10, sugar: 9, calorie: 8 },
-  'Coeliac Disease':     { sodium: 9, digestiveLoad: 8, additives: 6 },
-  'Diverticular Disease':{ digestiveLoad: 10, fiber: 9 },
-  'Endometriosis':       { inflammatoryFat: 10, sugar: 8, saturatedFat: 7 },
-  'Gout':                { sugar: 10, inflammatoryFat: 8 },
-  'Hypothyroidism':      { sugar: 8 },
-  "Hashimoto's Thyroiditis": { sugar: 8 },
+  // ── Other conditions ──
+  preDiabetes:       { glycemic: 10, sugar: 9, carbLoad: 8 },
+  insulinResistance: { glycemic: 10, sugar: 9, carbLoad: 8 },
+  nafld:             { saturatedFat: 10, sugar: 9, calorie: 8 },
+  coeliac:           { sodium: 9, digestiveLoad: 8, additives: 6 },
+  diverticular:      { digestiveLoad: 10, fiber: 9 },
+  endometriosis:     { inflammatoryFat: 10, sugar: 8, saturatedFat: 7 },
+  gout:              { sugar: 10, inflammatoryFat: 8 },
+  hypothyroidism:    { sugar: 8 },
+  hashimotos:        { sugar: 8 },
 
   // ── Allergies ──
-  'Fructose Intolerance': { sugar: 10 },
+  fructose:          { sugar: 10 },
 };
 
 // Returns the top 3 insights ranked by relevance to the active profile's focus.
@@ -1775,9 +1840,10 @@ export default function ScanResultScreen() {
   const activeAllergies = activeFamilyProfile
     ? activeFamilyProfile.allergies ?? []
     : profile?.allergies ?? [];
+  // Pass raw DB keys — relevantTo and INSIGHT_WEIGHTS now use DB keys, not display labels
   const activeDietaryLabels = activeFamilyProfile
-    ? activeFamilyProfile.dietary_preferences?.map((d) => DIETARY_LABELS_T[d] ?? d) ?? []
-    : profile?.dietary_preferences?.map((d) => DIETARY_LABELS_T[d] ?? d) ?? [];
+    ? activeFamilyProfile.dietary_preferences ?? []
+    : profile?.dietary_preferences ?? [];
   const nutrientThresholds = buildThresholds(activeConditions, activeAllergies, activeDietaryLabels);
 
   // Rating column width is measured from an invisible "Moderate" label rendered off-screen.
