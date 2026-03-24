@@ -1197,7 +1197,7 @@ export default function ScanResultScreen() {
   };
 
   const [activeTab, setActiveTab] = useState<Tab>('overview');
-  const [ingredientSubTab, setIngredientSubTab] = useState<'fullList' | 'insightGroups'>('fullList');
+  const [ingredientSubTab, setIngredientSubTab] = useState<'fullList' | 'insightGroups'>('insightGroups');
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [tabScrollX, setTabScrollX] = useState(0);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -2856,22 +2856,6 @@ export default function ScanResultScreen() {
                   <TouchableOpacity
                     style={[
                       styles.overviewToggle,
-                      ingredientSubTab === 'fullList' && styles.overviewToggleActive,
-                    ]}
-                    onPress={() => setIngredientSubTab('fullList')}
-                  >
-                    <Text
-                      style={[
-                        styles.overviewToggleText,
-                        ingredientSubTab === 'fullList' && styles.overviewToggleTextActive,
-                      ]}
-                    >
-                      {t('ingredientSubTab.fullList')}
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.overviewToggle,
                       ingredientSubTab === 'insightGroups' && styles.overviewToggleActive,
                     ]}
                     onPress={() => setIngredientSubTab('insightGroups')}
@@ -2883,6 +2867,22 @@ export default function ScanResultScreen() {
                       ]}
                     >
                       {t('ingredientSubTab.insightGroups')}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.overviewToggle,
+                      ingredientSubTab === 'fullList' && styles.overviewToggleActive,
+                    ]}
+                    onPress={() => setIngredientSubTab('fullList')}
+                  >
+                    <Text
+                      style={[
+                        styles.overviewToggleText,
+                        ingredientSubTab === 'fullList' && styles.overviewToggleTextActive,
+                      ]}
+                    >
+                      {t('ingredientSubTab.fullList')}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -2918,8 +2918,10 @@ export default function ScanResultScreen() {
                               const childKey = `${topIdx}-${childIdx}`;
                               const isExpanded = expandedNodes.has(childKey);
                               const { iconName: childIconName, color: childColor } = getCategoryIcon(childLabel);
-                              const isHarmfulOrFlagged = categoryMap.get(childLabel.toLowerCase()) === 'harmful'
-                                || categoryMap.get(childLabel.toLowerCase()) === 'flagged';
+                              const childCat = categoryMap.get(childLabel.toLowerCase());
+                              const isHarmfulOrFlagged = childCat === 'harmful' || childCat === 'flagged';
+                              const isOk = childCat === 'ok';
+                              const showInfoIcon = isHarmfulOrFlagged || isOk;
 
                               return (
                                 <View key={childKey}>
@@ -2943,15 +2945,21 @@ export default function ScanResultScreen() {
                                         ({t('fullList.ingredients', { count: countDescendants(child) })})
                                       </Text>
                                     )}
-                                    {isHarmfulOrFlagged && (
+                                    {showInfoIcon && !childHasChildren && (
                                       <TouchableOpacity
                                         style={styles.fullListChevron}
                                         onPress={() => {
-                                          const lc = childLabel.toLowerCase();
-                                          const matchedFlagged =
-                                            categorised.harmful.find((fi) => fi.text.toLowerCase() === lc)
-                                            ?? categorised.userFlagged.find((fi) => fi.text.toLowerCase() === lc);
-                                          if (matchedFlagged) setFlaggedSheetIng(matchedFlagged);
+                                          if (isHarmfulOrFlagged) {
+                                            const lc = childLabel.toLowerCase();
+                                            const matchedFlagged =
+                                              categorised.harmful.find((fi) => fi.text.toLowerCase() === lc)
+                                              ?? categorised.userFlagged.find((fi) => fi.text.toLowerCase() === lc);
+                                            if (matchedFlagged) setFlaggedSheetIng(matchedFlagged);
+                                          } else if (isOk) {
+                                            const lc = childLabel.toLowerCase();
+                                            const matchedOk = categorised.ok.find((oi) => oi.text.toLowerCase() === lc);
+                                            if (matchedOk) setInfoSheetIng({ ing: matchedOk, category: 'ok' });
+                                          }
                                         }}
                                         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                                       >
@@ -3062,6 +3070,10 @@ export default function ScanResultScreen() {
                             const cleaned = cleanTreeToken(node.text);
                             const oLabel = cleaned.charAt(0).toUpperCase() + cleaned.slice(1).toLowerCase();
                             const { iconName, color } = getCategoryIcon(oLabel);
+                            const oCat = categoryMap.get(oLabel.toLowerCase());
+                            const oIsHarmful = oCat === 'harmful' || oCat === 'flagged';
+                            const oIsOk = oCat === 'ok';
+                            const oShowInfo = oIsHarmful || oIsOk;
                             return (
                               <View key={`orphan-${idx}`}>
                                 {idx > 0 && <View style={styles.fullListSeparator} />}
@@ -3072,6 +3084,26 @@ export default function ScanResultScreen() {
                                   <Text style={styles.fullListIngName} numberOfLines={2}>
                                     {oLabel}
                                   </Text>
+                                  {oShowInfo && (
+                                    <TouchableOpacity
+                                      style={styles.fullListChevron}
+                                      onPress={() => {
+                                        if (oIsHarmful) {
+                                          const lc = oLabel.toLowerCase();
+                                          const match = categorised.harmful.find((fi) => fi.text.toLowerCase() === lc)
+                                            ?? categorised.userFlagged.find((fi) => fi.text.toLowerCase() === lc);
+                                          if (match) setFlaggedSheetIng(match);
+                                        } else if (oIsOk) {
+                                          const lc = oLabel.toLowerCase();
+                                          const match = categorised.ok.find((oi) => oi.text.toLowerCase() === lc);
+                                          if (match) setInfoSheetIng({ ing: match, category: 'ok' });
+                                        }
+                                      }}
+                                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                    >
+                                      <InfoIcon width={16} height={16} color={Colors.secondary} />
+                                    </TouchableOpacity>
+                                  )}
                                 </View>
                               </View>
                             );
@@ -4420,12 +4452,12 @@ const styles = StyleSheet.create({
   } as const,
   fullListIngName: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
     letterSpacing: -0.28,
-    lineHeight: 17,
+    lineHeight: 20,
   } as const,
   fullListChevron: {
     width: 20,
