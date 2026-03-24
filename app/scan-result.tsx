@@ -1816,17 +1816,21 @@ export default function ScanResultScreen() {
   //   "30 g"             → "30g"
   //   "(63g)"            → "63g"
   const measurementMatch = servingSize.match(/(\d+(?:\.\d+)?)\s*(g|mg|kg|ml|cl|l|oz|fl\s*oz)\b/i);
-  const servingMeasurement = measurementMatch
+  // Detect liquid products — use ml/l units instead of g
+  const isLiquid = /(ml|cl|litre|liter|fl\s*oz)\b/i.test(quantity + ' ' + servingSize);
+
+  const rawMeasurement = measurementMatch
     ? `${measurementMatch[1]}${measurementMatch[2].replace(/\s/g, '').toLowerCase()}`
     : '';
+  // For liquid products, swap 'g' → 'ml' in the serving label if OFF reported grams
+  const servingMeasurement = isLiquid && rawMeasurement.endsWith('g')
+    ? rawMeasurement.slice(0, -1) + 'ml'
+    : rawMeasurement;
   // Show "Per Serving (500ml)" when we extracted a measurement,
   // plain "Per Serving" if we couldn't parse one.
   const servingLabel = servingMeasurement
     ? `Per Serving (${servingMeasurement})`
     : 'Per Serving';
-
-  // Detect liquid products — use ml/l units instead of g
-  const isLiquid = /(ml|cl|litre|liter|fl\s*oz)\b/i.test(quantity + ' ' + servingSize);
   const baseUnit = isLiquid ? 'ml' : 'g';
 
   // Available modes for the toggle (show serving only when data exists + differs from 100g)
