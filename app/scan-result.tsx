@@ -1752,52 +1752,57 @@ export default function ScanResultScreen() {
       if (!relatedEntry) continue;
 
       const { tags, keywords, ingredientIds } = relatedEntry;
-      let found = false;
+      let foundInIngredients = false;
+      let foundInAllergenTags = false;
 
-      // Check OFF allergen tags
-      if (tags.some((t) => allergenLower.some((al) => al === t || al.includes(t)))) found = true;
-      // Check structured ingredient IDs
-      if (!found && ingredientIds.some((id) => structuredIngIds.some((sid) => sid === id || sid.includes(id)))) found = true;
-      // Check raw ingredients text
-      if (!found && keywords.some((kw) => {
+      // Check OFF allergen tags (may include "may contain" items — unreliable alone)
+      if (tags.some((t) => allergenLower.some((al) => al === t || al.includes(t)))) foundInAllergenTags = true;
+      // Check structured ingredient IDs — this IS a confirmed ingredient
+      if (ingredientIds.some((id) => structuredIngIds.some((sid) => sid === id || sid.includes(id)))) foundInIngredients = true;
+      // Check raw ingredients text — this IS a confirmed ingredient
+      if (!foundInIngredients && keywords.some((kw) => {
         if (kw.length <= 3) return new RegExp(`\\b${kw}\\b`, 'i').test(ingredientsText);
         return ingTextLower.includes(kw);
-      })) found = true;
-      // Check derivatives
-      if (!found) {
+      })) foundInIngredients = true;
+      // Check derivatives in ingredients text
+      if (!foundInIngredients) {
         const derivativeKeys = _allergyToDerivativeKeys(rel.keywordKey);
         for (const dk of derivativeKeys) {
           const derivs = getDerivatives(dk);
           for (const d of derivs) {
             if (d.length < 3) continue;
-            if (ingTextLower.includes(d)) { found = true; break; }
+            if (ingTextLower.includes(d)) { foundInIngredients = true; break; }
             const asId = 'en:' + d.replace(/\s+/g, '-');
-            if (structuredIngIds.some((sid) => sid === asId || sid.includes(d.replace(/\s+/g, '-')))) { found = true; break; }
+            if (structuredIngIds.some((sid) => sid === asId || sid.includes(d.replace(/\s+/g, '-')))) { foundInIngredients = true; break; }
           }
-          if (found) break;
+          if (foundInIngredients) break;
         }
       }
 
-      // Also check if related allergen appears in traces ("may contain")
+      // Check traces ("may contain") field
       const tracesTextLower = tracesSource.toLowerCase();
       let foundInTraces = false;
-      if (!found) {
-        if (tags.some((t) => tracesTextLower.includes(t))) foundInTraces = true;
-        if (!foundInTraces && keywords.some((kw) => kw.length > 3 && tracesTextLower.includes(kw))) foundInTraces = true;
-      }
+      if (tags.some((t) => tracesTextLower.includes(t))) foundInTraces = true;
+      if (!foundInTraces && keywords.some((kw) => kw.length > 3 && tracesTextLower.includes(kw))) foundInTraces = true;
 
-      if (found || foundInTraces) {
+      // Determine: confirmed in ingredients, or only in traces/allergen tags
+      const found = foundInIngredients || foundInAllergenTags || foundInTraces;
+      // Only "confirmed" if actually found in the ingredient list text/IDs
+      // Allergen tags alone are unreliable — OFF often puts traces items there
+      const isTracesOnly = !foundInIngredients;
+
+      if (found) {
         // Build a specific label of which related allergens were found
         const foundNames: string[] = [];
-        const searchText = found ? ingTextLower : tracesTextLower;
-        const searchIds = found ? structuredIngIds : [];
+        // Search both ingredients and traces text for specific names
+        const combinedText = ingTextLower + ' ' + tracesTextLower;
         // Try to identify specific nuts/items found
         const relDerivKeys = _allergyToDerivativeKeys(rel.keywordKey);
         for (const dk of relDerivKeys) {
           const derivs = getDerivatives(dk);
           for (const d of derivs) {
             if (d.length < 3) continue;
-            if (searchText.includes(d) || searchIds.some((sid) => sid.includes(d.replace(/\s+/g, '-')))) {
+            if (combinedText.includes(d) || structuredIngIds.some((sid) => sid.includes(d.replace(/\s+/g, '-')))) {
               const capitalized = d.charAt(0).toUpperCase() + d.slice(1);
               if (!foundNames.includes(capitalized)) foundNames.push(capitalized);
             }
@@ -1805,7 +1810,7 @@ export default function ScanResultScreen() {
         }
         // Also check direct keyword matches
         for (const kw of keywords) {
-          if (kw.length >= 4 && searchText.includes(kw)) {
+          if (kw.length >= 4 && combinedText.includes(kw)) {
             const capitalized = kw.charAt(0).toUpperCase() + kw.slice(1);
             if (!foundNames.includes(capitalized)) foundNames.push(capitalized);
           }
@@ -1818,7 +1823,7 @@ export default function ScanResultScreen() {
           userAllergy: allergyDisplayName,
           relatedAllergens: foundNames.length > 0 ? foundNames.slice(0, 5) : [crossEntry.label],
           label: crossEntry.label,
-          isTracesOnly: !found && foundInTraces,
+          isTracesOnly,
         });
       }
     }
