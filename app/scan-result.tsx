@@ -51,6 +51,7 @@ import {
 import type { IngredientNode } from '@/lib/ingredientsCleaner';
 import { safeBack } from '@/lib/safeBack';
 import { ALLERGY_KEYWORDS, type AllergyEntry } from '@/lib/allergenKeywords';
+import { getDerivatives } from '@/lib/ingredientDerivatives';
 import { getAdditiveSeverity, computeAdditiveSeverity, type AdditiveEntry } from '@/constants/additiveSeverity';
 import { HEALTH_CONDITION_INGREDIENTS, DIETARY_PREFERENCE_INGREDIENTS, type HealthFlagEntry } from '@/constants/healthIngredientFlags';
 import { getSubstitutes, type FlagReason } from '@/lib/ingredientSubstitutes';
@@ -274,7 +275,7 @@ const INSIGHT_DEFS: InsightDef[] = [
       const score = (sugars * 2 + netCarbs) / (fiber + 1);
       if (score > 30) return { label: 'Very High', color: Colors.status.negative, iconKey: 'veryHigh' };
       if (score > 15) return { label: 'High',      color: Extra.poorOrange,       iconKey: 'high' };
-      if (score > 5)  return { label: 'Moderate',  color: Extra.poorOrange,       iconKey: 'moderate' };
+      if (score > 5)  return { label: 'Moderate',  color: Extra.okYellow,         iconKey: 'moderate' };
       return { label: 'Low', color: Extra.positiveGreen, iconKey: 'low' };
     },
     icons: GlycemicIcons,
@@ -292,7 +293,7 @@ const INSIGHT_DEFS: InsightDef[] = [
       if (isNaN(salt)) return null;
       if (salt > 3)   return { label: 'Very High', color: Colors.status.negative, iconKey: 'veryHigh' };
       if (salt > 1.5) return { label: 'High',      color: Extra.poorOrange,       iconKey: 'high' };
-      if (salt > 0.3) return { label: 'Moderate',  color: Extra.poorOrange,       iconKey: 'moderate' };
+      if (salt > 0.3) return { label: 'Moderate',  color: Extra.okYellow,         iconKey: 'moderate' };
       return { label: 'Low', color: Extra.positiveGreen, iconKey: 'low' };
     },
     icons: SodiumIcons,
@@ -311,7 +312,7 @@ const INSIGHT_DEFS: InsightDef[] = [
       if (isNaN(sugars)) return null;
       if (sugars > 22.5) return { label: 'Very High', color: Colors.status.negative, iconKey: 'veryHigh' };
       if (sugars > 12.5) return { label: 'High',      color: Extra.poorOrange,       iconKey: 'high' };
-      if (sugars > 5)    return { label: 'Moderate',  color: Extra.poorOrange,       iconKey: 'moderate' };
+      if (sugars > 5)    return { label: 'Moderate',  color: Extra.okYellow,         iconKey: 'moderate' };
       return { label: 'Low', color: Extra.positiveGreen, iconKey: 'low' };
     },
     icons: SugarIcons,
@@ -388,7 +389,7 @@ const INSIGHT_DEFS: InsightDef[] = [
       if (isNaN(kcal)) return null;
       if (kcal > 400) return { label: 'Very High', color: Colors.status.negative, iconKey: 'veryHigh' };
       if (kcal > 250) return { label: 'High',      color: Extra.poorOrange,       iconKey: 'high' };
-      if (kcal > 100) return { label: 'Moderate',  color: Extra.poorOrange,       iconKey: 'moderate' };
+      if (kcal > 100) return { label: 'Moderate',  color: Extra.okYellow,         iconKey: 'moderate' };
       return { label: 'Low', color: Extra.positiveGreen, iconKey: 'low' };
     },
     icons: CalorieIcons,
@@ -410,7 +411,7 @@ const INSIGHT_DEFS: InsightDef[] = [
       const score = fat + fiber;
       if (score > 15) return { label: 'Very High', color: Colors.status.negative, iconKey: 'veryHigh' };
       if (score > 8)  return { label: 'High',      color: Extra.poorOrange,       iconKey: 'high' };
-      if (score > 4)  return { label: 'Moderate',  color: Extra.poorOrange,       iconKey: 'moderate' };
+      if (score > 4)  return { label: 'Moderate',  color: Extra.okYellow,         iconKey: 'moderate' };
       return { label: 'Low', color: Extra.positiveGreen, iconKey: 'low' };
     },
     icons: DigestiveLoadIcons,
@@ -428,7 +429,7 @@ const INSIGHT_DEFS: InsightDef[] = [
       if (isNaN(carbs)) return null;
       if (carbs > 30) return { label: 'Very High', color: Colors.status.negative, iconKey: 'veryHigh' };
       if (carbs > 15) return { label: 'High',      color: Extra.poorOrange,       iconKey: 'high' };
-      if (carbs > 5)  return { label: 'Moderate',  color: Extra.poorOrange,       iconKey: 'moderate' };
+      if (carbs > 5)  return { label: 'Moderate',  color: Extra.okYellow,         iconKey: 'moderate' };
       return { label: 'Low', color: Extra.positiveGreen, iconKey: 'low' };
     },
     icons: CarbLoadIcons,
@@ -451,9 +452,9 @@ const INSIGHT_DEFS: InsightDef[] = [
       if (high >= 2) return { label: 'Very High', color: Colors.status.negative, iconKey: 'veryHigh' };
       if (high >= 1) return { label: 'High',      color: Extra.poorOrange,       iconKey: 'high' };
       if (moderate >= 2) return { label: 'High',   color: Extra.poorOrange,       iconKey: 'high' };
-      if (moderate >= 1) return { label: 'Moderate', color: Extra.poorOrange,     iconKey: 'moderate' };
+      if (moderate >= 1) return { label: 'Moderate',  color: Extra.okYellow,         iconKey: 'moderate' };
       // Fall back to generic count for non-condition-specific additives
-      if (count >= 5) return { label: 'Moderate',  color: Extra.poorOrange,       iconKey: 'moderate' };
+      if (count >= 5) return { label: 'Moderate',  color: Extra.okYellow,         iconKey: 'moderate' };
       if (count >= 1) return { label: 'Low',       color: Extra.positiveGreen,    iconKey: 'low' };
       return { label: 'Low', color: Extra.positiveGreen, iconKey: 'low' };
     },
@@ -737,6 +738,33 @@ function sentenceCase(s: string): string {
 }
 
 /**
+ * Maps profile allergy names (e.g. "Peanut Allergy", "Tree Nut Allergy")
+ * to derivative parent keys used in ingredientDerivatives.ts.
+ */
+const ALLERGY_DERIVATIVE_MAP: Record<string, string[]> = {
+  'Peanut Allergy':       ['peanut'],
+  'Tree Nut Allergy':     ['almond', 'cashew', 'walnut', 'pecan', 'pistachio', 'macadamia', 'brazil nut', 'hazelnut', 'chestnut', 'pine nut', 'coconut', 'tree nuts'],
+  'Egg Allergy':          ['egg'],
+  'Lactose Intolerance':  ['milk'],
+  'Gluten Intolerance':   ['gluten', 'wheat'],
+  'Soy Allergy':          ['soy'],
+  'Fish Allergy':         ['fish'],
+  'Shellfish Allergy':    ['shellfish'],
+  'Sesame Allergy':       ['sesame'],
+  'Celery Allergy':       ['celery'],
+  'Mustard Allergy':      ['mustard'],
+  'Lupin Allergy':        ['lupin'],
+  'Sulphite Sensitivity': ['sulphites'],
+  'Fructose Intolerance': ['sugar'],
+  'MSG Sensitivity':      ['msg'],
+  'Histamine Intolerance': ['histamine'],
+  'Salicylate Sensitivity': ['salicylate'],
+};
+function _allergyToDerivativeKeys(profileAllergy: string): string[] {
+  return ALLERGY_DERIVATIVE_MAP[profileAllergy] ?? [profileAllergy.replace(/\s*(allergy|intolerance|sensitivity)\s*/gi, '').trim().toLowerCase()];
+}
+
+/**
  * Prefer English text for ingredient names when available.
  * OFF returns `text` in the product's original language and optionally
  * `text_en` with an English translation. This recursively walks the
@@ -890,38 +918,20 @@ function categoriseIngredients(
     //    Combined, these avoid mid-word matches:
     //    "milk chocolate with sweetener" — "chocolate" is neither at start nor end ✗
     // 4. OFF id match: compare en:chocolate against ing.id
-    if (!reason && flaggedSet.size > 0) {
-      for (const f of flaggedSet) {
-        // Skip if the flagged term appears in a negated context
-        // e.g. "sugar-free sweetener" should NOT flag for "sugar"
-        if (isNegatedInContext(ing.text, f)) continue;
-
-        // 1. Exact text match
-        if (ingText === f) { reason = 'user_flagged'; matchedFlaggedName = f; break; }
-
-        const escaped = f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        // 2. Starts-with: flagged name at the beginning, followed by space or end
-        //    e.g. "soy" matches "soy lecithin", "corn" matches "corn syrup"
-        if (new RegExp(`^${escaped}s?(?:\\s|$)`).test(ingText)) {
+    if (!reason && flaggedNames.length > 0) {
+      // Use the smart matching function that handles plurals, synonyms,
+      // and negated contexts (e.g. "sugar-free")
+      const match = matchesFlaggedIngredient(ing.text, flaggedNames);
+      if (match) {
+        reason = 'user_flagged';
+        matchedFlaggedName = match.toLowerCase();
+      }
+      // Also check the OFF id (e.g. "en:potatoes" should match "potato")
+      if (!reason && ingId) {
+        const idMatch = matchesFlaggedIngredient(ingId, flaggedNames);
+        if (idMatch) {
           reason = 'user_flagged';
-          matchedFlaggedName = f;
-          break;
-        }
-        // 3. Ends-with: flagged name at the end, preceded by space or start
-        //    e.g. "sugar" matches "brown sugar", "oil" matches "palm oil"
-        if (new RegExp(`(?:^|\\s)${escaped}s?$`).test(ingText)) {
-          reason = 'user_flagged';
-          matchedFlaggedName = f;
-          break;
-        }
-        // 4. OFF id match — convert flagged name to OFF id format and compare
-        if (ingId) {
-          const flaggedAsId = 'en:' + f.replace(/\s+/g, '-');
-          if (ingId === flaggedAsId) {
-            reason = 'user_flagged';
-            matchedFlaggedName = f;
-            break;
-          }
+          matchedFlaggedName = idMatch.toLowerCase();
         }
       }
     }
@@ -1588,6 +1598,19 @@ export default function ScanResultScreen() {
       if (kw.length <= 3) return new RegExp(`\\b${kw}\\b`, 'i').test(ingredientsText);
       return ingTextLower.includes(kw);
     })) return true;
+    // ── Derivative check (catches hidden allergens like "arachis oil" → peanut) ──
+    // Map allergy profile names to derivative parent keys
+    const derivativeKeys = _allergyToDerivativeKeys(profileAllergy);
+    for (const dk of derivativeKeys) {
+      const derivs = getDerivatives(dk);
+      for (const d of derivs) {
+        if (d.length < 3) continue;
+        if (ingTextLower.includes(d)) return true;
+        // Also check structured IDs (e.g. "en:arachis-oil")
+        const asId = 'en:' + d.replace(/\s+/g, '-');
+        if (structuredIngIds.some((sid) => sid === asId || sid.includes(d.replace(/\s+/g, '-')))) return true;
+      }
+    }
     return false;
   });
   const hasProfileAllergenMatch = matchedAllergens.length > 0;
@@ -2175,12 +2198,32 @@ export default function ScanResultScreen() {
                     </View>
                 )}
 
-                {/* Dynamic insight panels — rendered in pairs */}
+                {/* Dynamic insight panels — vertical stack when 3+, horizontal row when 1-2 */}
                 {activeInsights.length > 0 && (
-                  <View style={styles.impactPanelsRow}>
+                  <View style={activeInsights.length >= 3 ? styles.impactPanelsCol : styles.impactPanelsRow}>
                     {activeInsights.map(({ def, result }) => {
                       const Icon = def.icons[result.iconKey];
-                      return (
+                      return activeInsights.length >= 3 ? (
+                        /* ── Vertical stacked row layout (Figma 4624-16315) ── */
+                        <TouchableOpacity
+                          key={def.key}
+                          style={styles.impactPanelRow}
+                          activeOpacity={0.7}
+                          onPress={() => setInsightSheetDef({ def, result })}
+                        >
+                          <Icon width={48} height={40} />
+                          <View style={styles.impactRowContent}>
+                            <View style={styles.impactRowLabelPill}>
+                              <Text style={styles.impactRowLabel}>{def.label}</Text>
+                              <View style={[styles.impactPill, { backgroundColor: result.color }]}>
+                                <Text style={styles.impactPillText}>{result.label}</Text>
+                              </View>
+                            </View>
+                          </View>
+                          <InfoIcon width={14} height={14} color={Colors.secondary} />
+                        </TouchableOpacity>
+                      ) : (
+                        /* ── Card layout for 1-2 panels ── */
                         <TouchableOpacity
                           key={def.key}
                           style={styles.impactPanel}
@@ -3567,6 +3610,44 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: Spacing.s,
   },
+  impactPanelsCol: {
+    flexDirection: 'column',
+    gap: Spacing.xxs,    // 4px between stacked rows per Figma
+  },
+  impactPanelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,     // 8px
+    backgroundColor: '#eff7f5',
+    borderRadius: Radius.m,
+    borderWidth: 1,
+    borderColor: '#aad4cd',
+    padding: Spacing.s,
+    shadowColor: 'rgba(63,105,98,1)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  impactRowContent: {
+    flex: 1,
+  },
+  impactRowLabelPill: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.xs,
+  },
+  impactRowLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.28,
+    lineHeight: 17,
+    flexShrink: 1,
+  },
   impactPanel: {
     flex: 1,
     backgroundColor: Colors.surface.tertiary,
@@ -3982,9 +4063,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#aad4cd',
     paddingHorizontal: 16,
-    paddingVertical: 24,
+    paddingVertical: 16,
     gap: 12,
-    alignItems: 'stretch',
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.12,
@@ -4020,6 +4100,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     minHeight: 12,
+    width: '100%',
   },
   // ok / safe rows — 4px gap between elements (Figma node 3263-3941)
   ingRowSmall: {

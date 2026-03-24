@@ -78,7 +78,10 @@
         }
       ],
       "expo-localization",
-      "expo-video"
+      "expo-video",
+      "expo-image",
+      "expo-sharing",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

@@ -469,13 +469,35 @@ export function parseIngredientsWithHierarchy(
 // ── Flagged ingredient matching ──────────────────────────────────────────────
 
 /**
- * Strips common English plural suffixes so "breads" matches "bread",
- * "pastas" matches "pasta", "allergies" matches "allergy", etc.
+ * Strips common English plural and verb suffixes for ingredient matching.
+ * Handles plurals, past tense, and -ing forms so that:
+ *   "potatoes" → "potato",  "breads" → "bread",   "berries" → "berry"
+ *   "sugars" → "sugar",     "modified" → "modifi", "roasted" → "roast"
+ *   "dehydrated" → "dehydrat", "sweetened" → "sweeten"
+ *
+ * Not a full stemmer — intentionally simple to avoid over-stemming.
  */
 function deplural(word: string): string {
+  // -ies → -y  (berries → berry, allergies → allergy)
   if (word.endsWith('ies') && word.length > 4) return word.slice(0, -3) + 'y';
-  if (word.endsWith('es') && word.length > 3) return word.slice(0, -2);
-  if (word.endsWith('s') && !word.endsWith('ss') && word.length > 2) return word.slice(0, -1);
+  // -oes → -o  (potatoes → potato, tomatoes → tomato)
+  if (word.endsWith('oes') && word.length > 4) return word.slice(0, -2);
+  // -ves → -f  (halves → half, loaves → loaf) — but not "olives", "chives"
+  if (word.endsWith('lves') && word.length > 5) return word.slice(0, -3) + 'f';
+  if (word.endsWith('aves') && word.length > 5) return word.slice(0, -3) + 'f';
+  // -ses → -s for words like "cheeses" (but "ses" alone = keep)
+  if (word.endsWith('ses') && word.length > 5) return word.slice(0, -2);
+  // -es after sh/ch/x/z/s (dishes→dish, sauces→sauc is wrong, so be careful)
+  if (word.endsWith('es') && word.length > 3) {
+    const pre = word.slice(0, -2);
+    const last = pre[pre.length - 1];
+    // Only strip -es after sibilant-like endings where -es is the plural form
+    if ('shxz'.includes(last) || pre.endsWith('ch') || pre.endsWith('ss')) return pre;
+    // For other -es words, also strip (catches "potatoes" via -oes above, "spices"→"spic")
+    return pre;
+  }
+  // -s (but not -ss, -us, -is)
+  if (word.endsWith('s') && !word.endsWith('ss') && !word.endsWith('us') && !word.endsWith('is') && word.length > 2) return word.slice(0, -1);
   return word;
 }
 
@@ -600,12 +622,47 @@ export function matchesFlaggedIngredient(
         return flagged;
       }
     }
+
+    // Check derivatives: "sodium caseinate" → milk, "arachis oil" → peanut
+    // If the ingredient text matches a known derivative of the flagged name,
+    // flag it. This catches chemical names, E-numbers, and hidden allergens.
+    const derivatives = _getDerivatives(flagged.toLowerCase());
+    for (const deriv of derivatives) {
+      if (deriv.length < 3) continue; // skip very short to avoid false positives
+      // Check if derivative appears as whole word(s) in normalised text
+      if (normTextJoined.includes(deriv)) {
+        // Verify whole-word boundary
+        const idx = normTextJoined.indexOf(deriv);
+        const before = idx > 0 ? normTextJoined[idx - 1] : ' ';
+        const after = idx + deriv.length < normTextJoined.length ? normTextJoined[idx + deriv.length] : ' ';
+        if (/[\s,;()\/\-.:']/.test(before) || idx === 0) {
+          if (/[\s,;()\/\-.:']/.test(after) || idx + deriv.length === normTextJoined.length) {
+            if (isNegatedInContext(text, deriv)) continue;
+            return flagged;
+          }
+        }
+      }
+    }
+  }
+
+  // Reverse lookup: check if the ingredient itself is a known derivative
+  // of ANY flagged name. e.g. "casein" on label → parents ["milk"] → if user
+  // flagged "milk", return "milk".
+  // Uses findAllParentAllergens to catch multi-parent derivatives like
+  // lecithin (egg + soy) or surimi (egg + fish + shellfish).
+  const parentAllergens = _findAllParentAllergens(normTextJoined);
+  for (const parent of parentAllergens) {
+    for (const flagged of flaggedNames) {
+      if (flagged.toLowerCase() === parent) {
+        if (!isNegatedInContext(text, flagged)) return flagged;
+      }
+    }
   }
 
   return null;
 }
 
-// Lazy import to avoid circular deps — cached after first call
+// Lazy imports to avoid circular deps — cached after first call
 let _synonymCache: ((name: string) => string[]) | null = null;
 function _getSynonyms(name: string): string[] {
   if (!_synonymCache) {
@@ -618,6 +675,34 @@ function _getSynonyms(name: string): string[] {
     }
   }
   return _synonymCache!(name);
+}
+
+let _derivativesCache: ((name: string) => string[]) | null = null;
+function _getDerivatives(name: string): string[] {
+  if (!_derivativesCache) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const mod = require('./ingredientDerivatives');
+      _derivativesCache = mod.getDerivatives;
+    } catch {
+      _derivativesCache = () => [];
+    }
+  }
+  return _derivativesCache!(name);
+}
+
+let _findAllParentsCache: ((text: string) => string[]) | null = null;
+function _findAllParentAllergens(text: string): string[] {
+  if (!_findAllParentsCache) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const mod = require('./ingredientDerivatives');
+      _findAllParentsCache = mod.findAllParentAllergens;
+    } catch {
+      _findAllParentsCache = () => [];
+    }
+  }
+  return _findAllParentsCache!(text);
 }
 
 /**

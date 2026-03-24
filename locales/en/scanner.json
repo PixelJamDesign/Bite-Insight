@@ -43,6 +43,7 @@
     "searching": "Searching...",
     "prompt": "Search for a product by name",
     "back": "Back",
-    "noImage": "No image"
+    "noImage": "No image",
+    "loadMore": "Load more results"
   }
 }

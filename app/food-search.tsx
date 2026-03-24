@@ -56,7 +56,7 @@ interface SearchProduct {
   unique_scans_n?: number;
 }
 
-const DEBOUNCE_MS = 400;
+const DEBOUNCE_MS = 500;
 const PAGE_SIZE = 24;
 const SEARCH_FIELDS = 'code,product_name,brands,image_front_small_url,nutriscore_grade,completeness,unique_scans_n';
 // Use the classic CGI search API with region subdomains — the Search-A-Licious
@@ -268,10 +268,19 @@ export default function FoodSearchScreen() {
     try {
       const url = buildSearchUrl(searchTerm, region, 1);
 
-      const res = await fetch(url, {
+      let res = await fetch(url, {
         signal: controller.signal,
         headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
       });
+
+      // Retry once on rate limit (429) after a short backoff
+      if (res.status === 429) {
+        await new Promise((r) => setTimeout(r, 1500));
+        res = await fetch(url, {
+          signal: controller.signal,
+          headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
+        });
+      }
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();

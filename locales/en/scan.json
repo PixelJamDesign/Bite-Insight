@@ -29,11 +29,16 @@
   },
   "insight": {
     "glycemic": "Glycemic impact",
+    "sugar": "Sugar",
+    "saturatedFat": "Saturated fat",
+    "fiber": "Fibre",
+    "protein": "Protein",
     "sodium": "Sodium",
     "calorie": "Calorie density",
     "digestiveLoad": "Digestive load",
     "carbLoad": "Carb load",
-    "additives": "Additives"
+    "additives": "Additives",
+    "inflammatoryFat": "Inflammatory fat"
   },
   "impact": {
     "veryHigh": "Very High",
@@ -143,6 +148,10 @@
     "veganBody": "This ingredient is not vegan, which conflicts with your dietary preferences.",
     "vegetarianTitle": "Not vegetarian",
     "vegetarianBody": "This ingredient is not vegetarian, which conflicts with your dietary preferences.",
+    "healthConditionTitle": "Health condition",
+    "healthConditionBody": "This ingredient may be harmful based on your health conditions or dietary preferences.",
+    "healthConditionBodySpecific": "This ingredient may be harmful for people with {{condition}}.",
+    "additiveConcernTitle": "Additive concern",
     "userFlaggedTitle": "Personally flagged",
     "userFlaggedBody": "You've flagged this ingredient. It will be highlighted whenever it appears in products you scan.",
     "personalBody": "You flagged this because of your {{category}}."
