@@ -21,6 +21,17 @@
     "netCarbs": "Net Carbs",
     "salt": "Salt"
   },
+  "nutrientLabelsShort": {
+    "energyKcal": "Cals",
+    "fat": "Fat",
+    "saturatedFat": "Sat Fat",
+    "carbs": "Carbs",
+    "sugars": "Sugars",
+    "fiber": "Fibre",
+    "proteins": "Protein",
+    "netCarbs": "Net Carbs",
+    "salt": "Salt"
+  },
   "nutrientRating": {
     "low": "Low",
     "moderate": "Moderate",

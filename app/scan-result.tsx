@@ -1064,6 +1064,22 @@ function categoriseIngredients(
 type ImpactKey = 'low' | 'moderate' | 'high' | 'veryHigh';
 type ImpactResult = { label: string; color: string; iconKey: ImpactKey };
 
+// ── Adaptive label: swaps to short text if the full label wraps ──────────────
+function AdaptiveNutrientLabel({ full, short, style }: { full: string; short: string; style: any }) {
+  const [useShort, setUseShort] = useState(false);
+  return (
+    <Text
+      style={style}
+      numberOfLines={useShort ? 1 : undefined}
+      onTextLayout={(e: any) => {
+        if (!useShort && e.nativeEvent.lines?.length > 1) setUseShort(true);
+      }}
+    >
+      {useShort ? short : full}
+    </Text>
+  );
+}
+
 // ── Screen ────────────────────────────────────────────────────────────────────
 export default function ScanResultScreen() {
   const router = useRouter();
@@ -1161,6 +1177,18 @@ export default function ScanResultScreen() {
     proteins: t('nutrientLabels.proteins'),
     netCarbs: t('nutrientLabels.netCarbs'),
     salt: t('nutrientLabels.salt'),
+  }), [t]);
+
+  const NUTRIENT_LABELS_SHORT_T: Record<NutrientKey, string> = useMemo(() => ({
+    energyKcal: t('nutrientLabelsShort.energyKcal'),
+    fat: t('nutrientLabelsShort.fat'),
+    saturatedFat: t('nutrientLabelsShort.saturatedFat'),
+    carbs: t('nutrientLabelsShort.carbs'),
+    sugars: t('nutrientLabelsShort.sugars'),
+    fiber: t('nutrientLabelsShort.fiber'),
+    proteins: t('nutrientLabelsShort.proteins'),
+    netCarbs: t('nutrientLabelsShort.netCarbs'),
+    salt: t('nutrientLabelsShort.salt'),
   }), [t]);
 
   // Build translated INSIGHT_DEFS — only labels and compute return labels change
@@ -2645,7 +2673,7 @@ export default function ScanResultScreen() {
                           <View style={styles.nutritionIconBox}>
                             <IconComp width={32} height={32} />
                           </View>
-                          <Text style={styles.nutritionName}>{NUTRIENT_LABELS_T[key]}</Text>
+                          <AdaptiveNutrientLabel full={NUTRIENT_LABELS_T[key]} short={NUTRIENT_LABELS_SHORT_T[key]} style={styles.nutritionName} />
                         </View>
                         <View style={styles.nutritionRowRight}>
                           <Text style={styles.nutritionValue}>{displayVal}</Text>
@@ -2742,7 +2770,7 @@ export default function ScanResultScreen() {
                           <View style={styles.nutritionIconBox}>
                             <IconComp width={32} height={32} />
                           </View>
-                          <Text style={styles.nutritionName}>{NUTRIENT_LABELS_T[key]}</Text>
+                          <AdaptiveNutrientLabel full={NUTRIENT_LABELS_T[key]} short={NUTRIENT_LABELS_SHORT_T[key]} style={styles.nutritionName} />
                         </View>
                         <View style={styles.nutritionRowRight}>
                           <Text style={styles.nutritionValue}>{displayVal}</Text>
