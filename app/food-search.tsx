@@ -83,6 +83,7 @@ export default function FoodSearchScreen() {
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [serverError, setServerError] = useState(false);
   const [hasMore, setHasMore] = useState(false);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -261,6 +262,7 @@ export default function FoodSearchScreen() {
     setLoading(true);
     setSubmittedQuery(searchTerm);
     setHasSearched(true);
+    setServerError(false);
     pageRef.current = 1;
     currentTermRef.current = searchTerm;
 
@@ -317,10 +319,11 @@ export default function FoodSearchScreen() {
         } catch (retryErr: any) {
           if (retryErr?.name === 'AbortError') return;
         }
-        // Only show "no results" after all retries exhausted
+        // All retries exhausted — show server error, not "no results"
         setResults([]);
         setTotalCount(0);
         setHasMore(false);
+        setServerError(true);
         setLoading(false);
       }
     }
@@ -601,6 +604,10 @@ export default function FoodSearchScreen() {
         ListHeaderComponent={hasSearched && !loading && results.length > 0 ? (
           <Text style={styles.subtitle}>
             {t('search.showing', { count: totalCount, term: submittedQuery })}
+          </Text>
+        ) : hasSearched && !loading && results.length === 0 && serverError ? (
+          <Text style={styles.subtitle}>
+            {t('search.serverBusy')}
           </Text>
         ) : hasSearched && !loading && results.length === 0 ? (
           <Text style={styles.subtitle}>
