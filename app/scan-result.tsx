@@ -2592,8 +2592,10 @@ export default function ScanResultScreen() {
                   </Text>
                   <View style={{ gap: 4 }}>
                     {categorised.harmful.map((ing, i) => (
-                      <View key={`ov-harm-${ing.id ?? i}`} style={[styles.ingRow, (ing.depth ?? 0) > 0 && { paddingLeft: (ing.depth ?? 0) * 20 }]}>
-                        <Ionicons name="close" size={24} color={Colors.status.negative} />
+                      <View key={`ov-harm-${ing.id ?? i}`} style={styles.ingRow}>
+                        <View style={{ width: 24, alignItems: 'center' }}>
+                          <Ionicons name="close" size={24} color={Colors.status.negative} />
+                        </View>
                         <View style={{ flex: 1 }}>
                           <Text style={styles.ingName} numberOfLines={2}>
                             {sentenceCase(ing.text)}
