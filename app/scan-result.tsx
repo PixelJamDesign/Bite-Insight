@@ -3274,7 +3274,7 @@ export default function ScanResultScreen() {
                             <View key={`harm-${ing.id ?? i}`} style={styles.ingRow}>
                               <Ionicons name="close" size={24} color={Colors.status.negative} />
                               <View style={{ flex: 1 }}>
-                                <Text style={styles.ingName} numberOfLines={2}>{sentenceCase(ing.text)}</Text>
+                                <Text style={styles.ingName} numberOfLines={1}>{sentenceCase(ing.text)}</Text>
                                 {ing.matchSource === 'product-name' && (
                                   <Text style={styles.matchSourceLabel}>{t('ingredients.matchProductName')}</Text>
                                 )}
@@ -4420,9 +4420,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    minHeight: 36,
+    minHeight: 32,
     width: '100%',
-    paddingVertical: 4,
   },
   // ok / safe rows — 4px gap between elements (Figma node 3263-3941)
   ingRowSmall: {
