@@ -603,6 +603,7 @@ const localStyles = StyleSheet.create({
   unsuitableSection: {
     width: '100%',
     gap: 8,
+    alignItems: 'center',
   },
   unsuitableLabel: {
     fontSize: 14,
@@ -614,6 +615,7 @@ const localStyles = StyleSheet.create({
   tagRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    justifyContent: 'center',
     gap: 6,
   },
   conditionTag: {
