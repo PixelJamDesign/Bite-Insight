@@ -9,7 +9,6 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing } from '@/constants/theme';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -61,9 +60,7 @@ export function ServingToggle({
                 ? servingLabel || t('toggle.perServing')
                 : `Per 100${baseUnit}`}
             </Text>
-            {mode === '100g' && effectiveServingMode === '100g' && (
-              <Ionicons name="chevron-down" size={10} color={Colors.primary} style={{ marginLeft: 2 }} />
-            )}
+            {/* Chevron removed — stepper appears below, no dropdown action */}
           </TouchableOpacity>
         ))}
       </View>

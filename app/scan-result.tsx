@@ -1826,7 +1826,7 @@ export default function ScanResultScreen() {
     : 'Per Serving';
 
   // Detect liquid products — use ml/l units instead of g
-  const isLiquid = /\b(ml|cl|litre|liter|fl\s*oz)\b/i.test(quantity + ' ' + servingSize);
+  const isLiquid = /(ml|cl|litre|liter|fl\s*oz)\b/i.test(quantity + ' ' + servingSize);
   const baseUnit = isLiquid ? 'ml' : 'g';
 
   // Available modes for the toggle (show serving only when data exists + differs from 100g)
