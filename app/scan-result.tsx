@@ -2571,7 +2571,7 @@ export default function ScanResultScreen() {
             )}
 
             {/* ── Flagged ingredients (Figma node 3263-6094) ── */}
-            {categorised.harmful.length > 0 && (
+            {filteredCategorised.harmful.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeading}>
                   <Text style={styles.sectionTitle}>{t('section.flaggedIngredients')}</Text>
@@ -2582,16 +2582,16 @@ export default function ScanResultScreen() {
                 <View style={styles.ingCategoryCard}>
                   <Text style={styles.ingCategoryHeading}>
                     <Text style={styles.ingCount}>
-                      {t('ingredients.ingredient', { count: categorised.harmful.length })}
+                      {t('ingredients.ingredient', { count: filteredCategorised.harmful.length })}
                     </Text>
                     <Text style={styles.ingMiddle}>
                       {' '}
-                      {categorised.harmful.length === 1 ? t('ingredients.is') : t('ingredients.are')} {t('ingredients.considered')}{' '}
+                      {filteredCategorised.harmful.length === 1 ? t('ingredients.is') : t('ingredients.are')} {t('ingredients.considered')}{' '}
                     </Text>
                     <Text style={[styles.ingWord, { color: Colors.status.negative }]}>{t('ingredients.harmful')}</Text>
                   </Text>
                   <View style={{ gap: 4 }}>
-                    {categorised.harmful.map((ing, i) => (
+                    {filteredCategorised.harmful.map((ing, i) => (
                       <View key={`ov-harm-${ing.id ?? i}`} style={styles.ingRow}>
                         <View style={{ width: 24, alignItems: 'center' }}>
                           <Ionicons name="close" size={24} color={Colors.status.negative} />
