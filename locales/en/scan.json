@@ -77,14 +77,14 @@
   },
   "allergen": {
     "warningBadge": "Warning",
-    "warningText": "Contains: {{allergens}}. This may affect {{name}}'s health profile.",
+    "warningText": "This product contains {{allergens}}, which may affect {{name}}'s health profile.",
     "allergensBadge": "Allergens",
-    "containsText": "Contains: {{allergens}}.",
+    "containsText": "This product contains {{allergens}}.",
     "crossReactivityBadge": "Caution",
-    "crossReactivityText": "You have {{allergy}}, and this product contains {{found}}. Cross-reactivity is common — speak to your allergist if unsure.",
+    "crossReactivityText": "We noticed you have {{allergy}} and this product contains {{found}}. Cross-reactivity between these is common, so please check with your allergist if you're unsure.",
     "tracesBadge": "May contain",
-    "tracesWarningText": "May contain traces of: {{traces}}. This could affect {{name}} due to cross-contamination.",
-    "tracesContainsText": "May contain traces of: {{traces}}."
+    "tracesWarningText": "This product may contain traces of {{traces}}, which could affect {{name}} due to cross-contamination.",
+    "tracesContainsText": "This product may contain traces of {{traces}}."
   },
   "nutrientWatch": {
     "noMicroData": "Micronutrient data is not available for this product."
@@ -159,7 +159,8 @@
     "personalBody": "You flagged this because of your {{category}}."
   },
   "flaggedSheet": {
-    "substitutesTitle": "Suitable replacements include:"
+    "substitutesTitle": "Suitable replacements include:",
+    "unsuitableFor": "Unsuitable for:"
   },
   "ingredientSheet": {
     "categoryOk": "OK",

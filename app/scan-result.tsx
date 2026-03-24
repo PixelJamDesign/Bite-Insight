@@ -741,7 +741,29 @@ function sentenceCase(s: string): string {
  * Maps profile allergy names (e.g. "Peanut Allergy", "Tree Nut Allergy")
  * to derivative parent keys used in ingredientDerivatives.ts.
  */
+// Maps profile allergy SHORT keys (as stored in DB) → derivative parent keys
+// in lib/ingredientDerivatives.ts. Also supports ALLERGY_KEYWORDS display names
+// as a fallback for cross-reactivity lookups.
 const ALLERGY_DERIVATIVE_MAP: Record<string, string[]> = {
+  // Short profile keys (used by profile.allergies)
+  'peanut':      ['peanut'],
+  'treeNut':     ['almond', 'cashew', 'walnut', 'pecan', 'pistachio', 'macadamia', 'brazil nut', 'hazelnut', 'chestnut', 'pine nut', 'coconut', 'tree nuts'],
+  'egg':         ['egg'],
+  'lactose':     ['milk'],
+  'gluten':      ['gluten', 'wheat'],
+  'soy':         ['soy'],
+  'fish':        ['fish'],
+  'shellfish':   ['shellfish'],
+  'sesame':      ['sesame'],
+  'celery':      ['celery'],
+  'mustard':     ['mustard'],
+  'lupin':       ['lupin'],
+  'sulphite':    ['sulphites'],
+  'fructose':    ['sugar'],
+  'msg':         ['msg'],
+  'histamine':   ['histamine'],
+  'salicylate':  ['salicylate'],
+  // Display-name keys (used by ALLERGY_KEYWORDS / cross-reactivity lookups)
   'Peanut Allergy':       ['peanut'],
   'Tree Nut Allergy':     ['almond', 'cashew', 'walnut', 'pecan', 'pistachio', 'macadamia', 'brazil nut', 'hazelnut', 'chestnut', 'pine nut', 'coconut', 'tree nuts'],
   'Egg Allergy':          ['egg'],
@@ -1578,8 +1600,31 @@ export default function ScanResultScreen() {
     collectIds(parsed);
   } catch { /* malformed JSON — ignore */ }
 
+  // Map short profile keys → ALLERGY_KEYWORDS display-name keys
+  const PROFILE_KEY_TO_KEYWORD_KEY: Record<string, string> = {
+    'peanut': 'Peanut Allergy',
+    'treeNut': 'Tree Nut Allergy',
+    'egg': 'Egg Allergy',
+    'lactose': 'Lactose Intolerance',
+    'gluten': 'Gluten Intolerance',
+    'soy': 'Soy Allergy',
+    'fish': 'Fish Allergy',
+    'shellfish': 'Shellfish Allergy',
+    'sesame': 'Sesame Allergy',
+    'celery': 'Celery Allergy',
+    'mustard': 'Mustard Allergy',
+    'lupin': 'Lupin Allergy',
+    'sulphite': 'Sulphite Sensitivity',
+    'fructose': 'Fructose Intolerance',
+    'msg': 'MSG Sensitivity',
+    'histamine': 'Histamine Intolerance',
+    'salicylate': 'Salicylate Sensitivity',
+  };
+
   const matchedAllergens = profileAllergies.filter((profileAllergy) => {
-    const entry = ALLERGY_KEYWORDS[profileAllergy];
+    // Try direct lookup, then mapped lookup (short key → display name)
+    const entry = ALLERGY_KEYWORDS[profileAllergy]
+      ?? ALLERGY_KEYWORDS[PROFILE_KEY_TO_KEYWORD_KEY[profileAllergy] ?? ''];
     if (!entry) {
       // Fallback for unknown allergies: word-boundary match on first word
       const firstWord = profileAllergy.split(/\s+/)[0].toLowerCase();
@@ -1620,34 +1665,33 @@ export default function ScanResultScreen() {
   // (or vice versa), warn them even though it's not their exact allergy.
   // Medical guidance: people with one nut allergy are at higher risk for
   // others due to cross-reactivity and shared processing facilities.
-  const CROSS_REACTIVITY_MAP: Record<string, { related: string[]; label: string }> = {
-    'Peanut Allergy': {
-      related: ['Tree Nut Allergy'],
+  // Keys use the SHORT profile keys (e.g. 'peanut', not 'Peanut Allergy')
+  // because profile.allergies stores short keys.
+  // `relatedAllergyKeyword` is the ALLERGY_KEYWORDS display-name key for lookup.
+  const CROSS_REACTIVITY_MAP: Record<string, { related: { profileKey: string; keywordKey: string }[]; label: string }> = {
+    'peanut': {
+      related: [{ profileKey: 'treeNut', keywordKey: 'Tree Nut Allergy' }],
       label: 'tree nuts (e.g. hazelnuts, almonds, cashews)',
     },
-    'Tree Nut Allergy': {
-      related: ['Peanut Allergy'],
+    'treeNut': {
+      related: [{ profileKey: 'peanut', keywordKey: 'Peanut Allergy' }],
       label: 'peanuts',
     },
-    'Fish Allergy': {
-      related: ['Shellfish Allergy'],
+    'fish': {
+      related: [{ profileKey: 'shellfish', keywordKey: 'Shellfish Allergy' }],
       label: 'shellfish',
     },
-    'Shellfish Allergy': {
-      related: ['Fish Allergy'],
+    'shellfish': {
+      related: [{ profileKey: 'fish', keywordKey: 'Fish Allergy' }],
       label: 'fish',
     },
-    'Egg Allergy': {
-      related: ['Lactose Intolerance'],
+    'egg': {
+      related: [{ profileKey: 'lactose', keywordKey: 'Lactose Intolerance' }],
       label: 'dairy/milk',
     },
-    'Lactose Intolerance': {
-      related: ['Egg Allergy'],
+    'lactose': {
+      related: [{ profileKey: 'egg', keywordKey: 'Egg Allergy' }],
       label: 'egg',
-    },
-    'Gluten Intolerance': {
-      related: [],
-      label: '',
     },
   };
 
@@ -1661,16 +1705,16 @@ export default function ScanResultScreen() {
   };
 
   const crossReactivityWarnings: CrossReactivityWarning[] = [];
-  for (const profileAllergy of profileAllergies) {
-    const crossEntry = CROSS_REACTIVITY_MAP[profileAllergy];
+  for (const profileAllergyKey of profileAllergies) {
+    const crossEntry = CROSS_REACTIVITY_MAP[profileAllergyKey];
     if (!crossEntry || crossEntry.related.length === 0) continue;
 
-    for (const relatedAllergy of crossEntry.related) {
-      // Skip if the user already has this allergy in their profile (already flagged)
-      if (profileAllergies.includes(relatedAllergy)) continue;
+    for (const rel of crossEntry.related) {
+      // Skip if the user already has this related allergy in their profile
+      if (profileAllergies.includes(rel.profileKey)) continue;
 
-      // Check if the product actually contains the related allergen
-      const relatedEntry = ALLERGY_KEYWORDS[relatedAllergy];
+      // Look up the related allergy's detection data via its ALLERGY_KEYWORDS key
+      const relatedEntry = ALLERGY_KEYWORDS[rel.keywordKey];
       if (!relatedEntry) continue;
 
       const { tags, keywords, ingredientIds } = relatedEntry;
@@ -1687,7 +1731,7 @@ export default function ScanResultScreen() {
       })) found = true;
       // Check derivatives
       if (!found) {
-        const derivativeKeys = _allergyToDerivativeKeys(relatedAllergy);
+        const derivativeKeys = _allergyToDerivativeKeys(rel.keywordKey);
         for (const dk of derivativeKeys) {
           const derivs = getDerivatives(dk);
           for (const d of derivs) {
@@ -1704,30 +1748,30 @@ export default function ScanResultScreen() {
         // Build a specific label of which related allergens were found
         const foundNames: string[] = [];
         // Try to identify specific nuts/items found
-        const relDerivKeys = _allergyToDerivativeKeys(relatedAllergy);
+        const relDerivKeys = _allergyToDerivativeKeys(rel.keywordKey);
         for (const dk of relDerivKeys) {
           const derivs = getDerivatives(dk);
           for (const d of derivs) {
             if (d.length < 3) continue;
             if (ingTextLower.includes(d) || structuredIngIds.some((sid) => sid.includes(d.replace(/\s+/g, '-')))) {
-              // Capitalize the found ingredient name
               const capitalized = d.charAt(0).toUpperCase() + d.slice(1);
               if (!foundNames.includes(capitalized)) foundNames.push(capitalized);
             }
           }
         }
         // Also check direct keyword matches
-        if (relatedEntry) {
-          for (const kw of relatedEntry.keywords) {
-            if (kw.length >= 4 && ingTextLower.includes(kw)) {
-              const capitalized = kw.charAt(0).toUpperCase() + kw.slice(1);
-              if (!foundNames.includes(capitalized)) foundNames.push(capitalized);
-            }
+        for (const kw of keywords) {
+          if (kw.length >= 4 && ingTextLower.includes(kw)) {
+            const capitalized = kw.charAt(0).toUpperCase() + kw.slice(1);
+            if (!foundNames.includes(capitalized)) foundNames.push(capitalized);
           }
         }
 
+        // Translate the profile key to a human-readable name for the warning text
+        const allergyDisplayName = tpo(`allergies.${profileAllergyKey}`, { defaultValue: profileAllergyKey });
+
         crossReactivityWarnings.push({
-          userAllergy: profileAllergy,
+          userAllergy: allergyDisplayName,
           relatedAllergens: foundNames.length > 0 ? foundNames.slice(0, 5) : [crossEntry.label],
           label: crossEntry.label,
         });
@@ -1750,7 +1794,8 @@ export default function ScanResultScreen() {
   // Match product traces against the active profile's allergies
   const tracesLower = tracesList.map((t) => t.toLowerCase());
   const matchedTraces = profileAllergies.filter((profileAllergy) => {
-    const entry = ALLERGY_KEYWORDS[profileAllergy];
+    const entry = ALLERGY_KEYWORDS[profileAllergy]
+      ?? ALLERGY_KEYWORDS[PROFILE_KEY_TO_KEYWORD_KEY[profileAllergy] ?? ''];
     if (!entry) {
       const firstWord = profileAllergy.split(/\s+/)[0].toLowerCase();
       return tracesLower.some((tl) => tl.includes(firstWord));
@@ -3340,6 +3385,7 @@ export default function ScanResultScreen() {
         onClose={() => setFlaggedSheetIng(null)}
         conditions={activeConditions}
         allergies={activeAllergies}
+        dietaryPreferences={activeDietaryLabels}
       />
 
       {/* ── OK / Safe ingredient info sheet ── */}

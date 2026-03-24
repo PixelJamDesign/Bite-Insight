@@ -9,6 +9,7 @@ import { Colors } from '@/constants/theme';
 import { BottomSheet } from '@/components/BottomSheet';
 import { TickIcon } from '@/components/MenuIcons';
 import { getSubstitutes, type FlagReason } from '@/lib/ingredientSubstitutes';
+import { HEALTH_CONDITION_INGREDIENTS, DIETARY_PREFERENCE_INGREDIENTS } from '@/constants/healthIngredientFlags';
 
 // ── Types (mirrored from scan-result.tsx) ────────────────────────────────────
 export type OffIngredient = {
@@ -140,17 +141,181 @@ const INSIGHT_EXPLANATIONS: Record<string, string> = {
   additives:       'This rating is based on the severity of additives found in this product, not just the count. High-risk additives include the Southampton Six artificial colours (linked to hyperactivity in children), sodium benzoate, and propionates. These are flagged based on your health profile.',
 };
 
+// ── Harmful ingredient descriptions (what it is and why it matters) ──────────
+const HARMFUL_INGREDIENT_DESCRIPTIONS: Record<string, string> = {
+  // Oils & fats
+  'palm oil': 'A vegetable oil high in saturated fat, commonly used in processed foods for its stability and texture.',
+  'palm kernel oil': 'An oil extracted from the kernel of the oil palm fruit. It is very high in saturated fat, even more so than regular palm oil.',
+  'partially hydrogenated': 'An oil that has been chemically processed to become more solid. This process creates trans fats, which raise bad cholesterol and lower good cholesterol.',
+  'hydrogenated fat': 'A fat that has been processed to make it more solid and shelf-stable. Often contains trans fats which are linked to heart disease.',
+  'hydrogenated oil': 'An oil that has been chemically hardened. This process can create trans fats which are harmful to cardiovascular health.',
+  'coconut oil': 'An oil extracted from coconut meat. While popular, it is very high in saturated fat.',
+  'lard': 'Rendered pig fat, high in saturated fat. Used in baking and frying.',
+  'tallow': 'Rendered beef or mutton fat, high in saturated fat.',
+  'shortening': 'A solid fat used in baking, often made from hydrogenated vegetable oils.',
+  // Sugars
+  'sugar': 'Refined sucrose, typically from sugar cane or sugar beet. Provides quick energy but has no nutritional value beyond calories.',
+  'high fructose corn syrup': 'A sweetener made from corn starch. It has been linked to obesity and metabolic issues when consumed in excess.',
+  'glucose syrup': 'A concentrated sugar solution made from starch. It has a very high glycemic index and can spike blood sugar rapidly.',
+  'glucose-fructose syrup': 'A blend of glucose and fructose sugars derived from starch. Similar to high fructose corn syrup.',
+  'dextrose': 'A simple sugar (glucose) derived from corn. It has a very high glycemic index.',
+  'maltodextrin': 'A processed starch with a very high glycemic index, often used as a thickener or filler in processed foods.',
+  'invert sugar': 'A liquid sweetener made by splitting sucrose into glucose and fructose. Commonly used in confectionery.',
+  'caramel': 'Heated sugar used for colour and flavour. Some forms (caramel colour E150) may contain processing byproducts.',
+  // Sodium
+  'salt': 'Sodium chloride, essential in small amounts but excess intake is linked to high blood pressure and cardiovascular risk.',
+  'sodium': 'A mineral found naturally in foods and added as salt. High intake is associated with elevated blood pressure.',
+  'monosodium glutamate': 'A flavour enhancer (MSG) that adds umami/savoury taste. Some people report sensitivity, and it contributes to sodium intake.',
+  // Starches
+  'white flour': 'Refined wheat flour with the bran and germ removed. It has a high glycemic index and less fibre than wholegrain alternatives.',
+  'modified starch': 'Starch that has been chemically or physically altered to change its properties. Often high glycemic.',
+  'cornstarch': 'A refined starch from corn. Very high glycemic index with minimal nutritional value.',
+  // Meat
+  'bacon': 'Cured pork, classified as processed meat by the WHO. Regular consumption is linked to increased risk of colorectal cancer.',
+  'ham': 'Cured or processed pork. As a processed meat, it is associated with increased cancer risk when consumed regularly.',
+  'sausage': 'Processed meat typically containing preservatives like nitrates. Linked to increased cancer risk with regular consumption.',
+  'salami': 'A cured, fermented meat product. High in saturated fat, sodium, and nitrates.',
+  // Common allergens / flagged items
+  'peanut': 'A legume (not a true nut) that is one of the most common causes of severe allergic reactions.',
+  'hazelnut': 'A tree nut commonly used in chocolate and spreads. A common allergen with cross-reactivity to other tree nuts and pollen.',
+  'almond': 'A tree nut rich in healthy fats and protein, but a common allergen.',
+  'cashew': 'A tree nut that can cause severe allergic reactions. Cross-reactivity with pistachio is common.',
+  'walnut': 'A tree nut that is a common allergen. Cross-reactivity with pecan is well documented.',
+  'milk': 'Contains lactose (milk sugar) and casein/whey proteins. Common trigger for lactose intolerance and milk allergy.',
+  'milk powder': 'Dehydrated milk that retains all the proteins and lactose of liquid milk.',
+  'skimmed milk powder': 'Dried milk with fat removed. Still contains lactose and milk proteins.',
+  'whey': 'A milk protein found in dairy products. Contains lactose and can trigger milk allergy symptoms.',
+  'casein': 'The main protein in milk. A common allergen even in small amounts.',
+  'butter': 'A dairy product made from churned cream. Contains milk proteins and lactose.',
+  'cream': 'The high-fat portion of milk. Contains lactose and milk proteins.',
+  'cheese': 'A dairy product that retains casein and may contain lactose depending on aging.',
+  'egg': 'A common allergen. Both egg white and egg yolk proteins can trigger reactions.',
+  'gluten': 'A protein found in wheat, barley, and rye. Triggers an immune response in people with coeliac disease.',
+  'wheat': 'A cereal grain containing gluten. One of the most common food allergens.',
+  'soy': 'A legume and common allergen. Found in many processed foods as oil, lecithin, or protein.',
+  'soya': 'Another name for soy. Common in processed foods and can trigger allergic reactions.',
+  'shellfish': 'Includes crustaceans and molluscs. A common cause of food allergy, sometimes severe.',
+  'sesame': 'A seed increasingly recognised as a major allergen. Found in bread, hummus, and Asian cuisine.',
+  'celery': 'A vegetable that is a recognised allergen in the EU. Can cause severe reactions in sensitive individuals.',
+  'mustard': 'A condiment and spice that is a recognised allergen. Can be hidden in sauces and dressings.',
+  'lupin': 'A legume used in gluten-free baking. Cross-reactivity with peanut allergy is common.',
+  // Additives
+  'sodium nitrite': 'A preservative (E250) used in processed meats. Linked to formation of nitrosamines, which are associated with cancer risk.',
+  'sodium nitrate': 'A preservative (E251) that converts to nitrite in the body. Used in cured meats.',
+  'aspartame': 'An artificial sweetener (E951). Generally recognised as safe, though people with PKU should avoid it.',
+  'acesulfame k': 'An artificial sweetener (E950). Some studies raise questions about long-term consumption.',
+};
+
+/** Find the description for an ingredient by checking text and id. */
+function getHarmfulDescription(text: string, id?: string): string | null {
+  const t = text.toLowerCase().trim();
+  if (HARMFUL_INGREDIENT_DESCRIPTIONS[t]) return HARMFUL_INGREDIENT_DESCRIPTIONS[t];
+  // Check if any key is contained in the text
+  for (const [key, desc] of Object.entries(HARMFUL_INGREDIENT_DESCRIPTIONS)) {
+    if (t === key || t.includes(key)) return desc;
+  }
+  // Check additive descriptions too
+  if (id) {
+    const addDesc = getAdditiveDescription({ text, id } as OffIngredient);
+    if (addDesc) return `${addDesc.what} ${addDesc.why}`;
+  }
+  return null;
+}
+
+/**
+ * Find ALL profile conditions, allergies and dietary preferences that
+ * match a given ingredient. Returns an array of display-ready labels.
+ */
+function findAllMatchingProfileTags(
+  ingredientText: string,
+  ingredientId: string | undefined,
+  conditions: string[],
+  allergies: string[],
+  dietaryPreferences: string[],
+  tpo: (key: string, opts?: any) => string,
+): string[] {
+  const tags: string[] = [];
+  const ingText = ingredientText.toLowerCase().trim();
+  const ingId = ingredientId?.toLowerCase() ?? '';
+
+  // Check health conditions
+  for (const key of conditions) {
+    const entry = HEALTH_CONDITION_INGREDIENTS[key];
+    if (!entry) continue;
+    const matched = entry.keywords.some((kw) => {
+      if (kw.includes(' ')) return ingText.includes(kw);
+      return new RegExp(`\\b${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(ingText);
+    }) || entry.ingredientIds.some((id) => ingId === id || ingId.includes(id));
+    if (matched) {
+      const label = tpo(`healthConditions.${key}`, { defaultValue: key });
+      if (!tags.includes(label)) tags.push(label);
+    }
+  }
+
+  // Check allergies
+  for (const key of allergies) {
+    const label = tpo(`allergies.${key}`, { defaultValue: key });
+    // Simple check: does the ingredient name relate to this allergy?
+    // The ingredient is already flagged, so if its healthConditionKey exists we trust it
+    if (!tags.includes(label)) {
+      // Check via allergen derivative map keywords
+      const allergyKeywords: Record<string, string[]> = {
+        peanut: ['peanut', 'groundnut', 'arachis', 'monkey nut'],
+        treeNut: ['hazelnut', 'almond', 'walnut', 'cashew', 'pecan', 'pistachio', 'macadamia', 'brazil nut', 'chestnut', 'pine nut', 'coconut', 'praline', 'gianduja', 'marzipan', 'frangipane', 'filbert', 'tree nut', 'mixed nuts', 'nut'],
+        egg: ['egg', 'albumin', 'albumen', 'lysozyme', 'ovomucin', 'ovalbumin', 'meringue', 'mayonnaise'],
+        lactose: ['milk', 'lactose', 'dairy', 'whey', 'casein', 'cream', 'butter', 'cheese', 'yogurt', 'yoghurt', 'curd'],
+        gluten: ['gluten', 'wheat', 'barley', 'rye', 'oat', 'spelt', 'kamut', 'semolina', 'couscous', 'bulgur', 'seitan'],
+        soy: ['soy', 'soya', 'soybean', 'tofu', 'tempeh', 'edamame', 'miso', 'natto'],
+        fish: ['fish', 'anchovy', 'cod', 'salmon', 'tuna', 'sardine', 'mackerel', 'haddock', 'herring', 'surimi'],
+        shellfish: ['shellfish', 'shrimp', 'prawn', 'crab', 'lobster', 'mussel', 'oyster', 'scallop', 'squid', 'clam'],
+        sesame: ['sesame', 'tahini', 'halvah', 'halva'],
+        celery: ['celery', 'celeriac'],
+        mustard: ['mustard'],
+        lupin: ['lupin', 'lupine'],
+        sulphite: ['sulphite', 'sulfite', 'sulphur dioxide', 'e220', 'e221', 'e222', 'e223', 'e224', 'e225', 'e226', 'e227', 'e228'],
+        histamine: ['histamine'],
+        salicylate: ['salicylate'],
+        msg: ['msg', 'monosodium glutamate', 'e621'],
+        fructose: ['fructose'],
+      };
+      const kws = allergyKeywords[key];
+      if (kws?.some((kw) => ingText.includes(kw))) {
+        tags.push(label);
+      }
+    }
+  }
+
+  // Check dietary preferences
+  for (const key of dietaryPreferences) {
+    const entry = DIETARY_PREFERENCE_INGREDIENTS[key];
+    if (!entry) continue;
+    const matched = entry.keywords.some((kw) => {
+      if (kw.includes(' ')) return ingText.includes(kw);
+      return new RegExp(`\\b${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(ingText);
+    }) || entry.ingredientIds.some((id) => ingId === id || ingId.includes(id));
+    if (matched) {
+      const label = tpo(`dietaryPreferences.${key}`, { defaultValue: key });
+      if (!tags.includes(label)) tags.push(label);
+    }
+  }
+
+  // For vegan / vegetarian flag reasons, add those as tags
+  return tags;
+}
+
 // ─── 1) Flagged Ingredient Sheet ─────────────────────────────────────────────
 export function FlaggedIngredientSheet({
   ingredient,
   onClose,
   conditions,
   allergies,
+  dietaryPreferences,
 }: {
   ingredient: FlaggedIngredient | null;
   onClose: () => void;
   conditions: string[];
   allergies: string[];
+  dietaryPreferences?: string[];
 }) {
   const { t } = useTranslation('scan');
   const { t: tpo } = useTranslation('profileOptions');
@@ -193,6 +358,31 @@ export function FlaggedIngredientSheet({
     ? getSubstitutes(display.text, display.flagReason as FlagReason, conditions, allergies)
     : [];
 
+  // Get ingredient description
+  const description = display ? getHarmfulDescription(display.text, display.id) : null;
+
+  // Find ALL matching profile tags for this ingredient
+  const profileTags = display
+    ? findAllMatchingProfileTags(
+        display.text,
+        display.id,
+        conditions,
+        allergies,
+        dietaryPreferences ?? [],
+        tpo,
+      )
+    : [];
+
+  // Add vegan/vegetarian as a tag if that's the flag reason
+  if (display?.flagReason === 'vegan') {
+    const veganLabel = tpo('dietaryTags.vegan', { defaultValue: 'Vegan' });
+    if (!profileTags.includes(veganLabel)) profileTags.unshift(veganLabel);
+  }
+  if (display?.flagReason === 'vegetarian') {
+    const vegLabel = tpo('dietaryTags.vegetarian', { defaultValue: 'Vegetarian' });
+    if (!profileTags.includes(vegLabel)) profileTags.unshift(vegLabel);
+  }
+
   return (
     <BottomSheet visible={!!ingredient} onClose={onClose}>
       {display && (
@@ -203,10 +393,33 @@ export function FlaggedIngredientSheet({
           <Text style={localStyles.ingredientName}>
             {display.text.charAt(0).toUpperCase() + display.text.slice(1)}
           </Text>
+
+          {/* Ingredient description */}
+          {description && (
+            <Text style={localStyles.ingredientDescription}>{description}</Text>
+          )}
+
+          {/* Why it's flagged */}
           <View style={localStyles.descriptionBox}>
             <Text style={localStyles.reasonTitle}>{reason.title}</Text>
             <Text style={localStyles.reasonBody}>{reason.body}</Text>
           </View>
+
+          {/* Unsuitable for: condition/allergy/diet tags */}
+          {profileTags.length > 0 && (
+            <View style={localStyles.unsuitableSection}>
+              <Text style={localStyles.unsuitableLabel}>
+                {t('flaggedSheet.unsuitableFor', { defaultValue: 'Unsuitable for:' })}
+              </Text>
+              <View style={localStyles.tagRow}>
+                {profileTags.map((tag) => (
+                  <View key={tag} style={localStyles.conditionTag}>
+                    <Text style={localStyles.conditionTagText}>{tag}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
 
           {substitutes.length > 0 && (
             <View style={localStyles.substituteCard}>
@@ -383,6 +596,44 @@ const localStyles = StyleSheet.create({
     color: Colors.primary,
     letterSpacing: -0.4,
     textAlign: 'center',
+  },
+  ingredientDescription: {
+    fontSize: 15,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
+    color: Colors.primary,
+    lineHeight: 22,
+    textAlign: 'center',
+    paddingHorizontal: 8,
+  },
+  unsuitableSection: {
+    width: '100%',
+    gap: 8,
+  },
+  unsuitableLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.28,
+  },
+  tagRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  conditionTag: {
+    backgroundColor: Colors.surface.tertiary,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  conditionTagText: {
+    fontSize: 13,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.26,
   },
   reasonTitle: {
     fontSize: 16,
