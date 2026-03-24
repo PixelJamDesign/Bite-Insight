@@ -1508,6 +1508,8 @@ const styles = StyleSheet.create({
   },
   footerButtons: {
     flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 12,
     paddingHorizontal: 24,
     paddingTop: 8,

@@ -52,13 +52,12 @@ interface SearchProduct {
   brands?: string;
   image_front_small_url?: string;
   nutriscore_grade?: string;
-  completeness?: number;
-  unique_scans_n?: number;
+  quantity?: string;
 }
 
 const DEBOUNCE_MS = 500;
 const PAGE_SIZE = 24;
-const SEARCH_FIELDS = 'code,product_name,brands,image_front_small_url,nutriscore_grade,completeness,unique_scans_n';
+const SEARCH_FIELDS = 'code,product_name,brands,image_front_small_url,nutriscore_grade,quantity';
 // Use the classic CGI search API with region subdomains — the Search-A-Licious
 // endpoint (search.openfoodfacts.org) ignores country filters entirely.
 const SEARCH_PATH = 'openfoodfacts.org/cgi/search.pl';
@@ -273,8 +272,8 @@ export default function FoodSearchScreen() {
         headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
       });
 
-      // Retry once on rate limit (429) after a short backoff
-      if (res.status === 429) {
+      // Retry once on rate limit (429) or server error (503) after a short backoff
+      if (res.status === 429 || res.status === 503) {
         await new Promise((r) => setTimeout(r, 1500));
         res = await fetch(url, {
           signal: controller.signal,
