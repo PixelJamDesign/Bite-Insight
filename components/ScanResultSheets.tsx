@@ -399,12 +399,6 @@ export function FlaggedIngredientSheet({
             <Text style={localStyles.ingredientDescription}>{description}</Text>
           )}
 
-          {/* Why it's flagged */}
-          <View style={localStyles.descriptionBox}>
-            <Text style={localStyles.reasonTitle}>{reason.title}</Text>
-            <Text style={localStyles.reasonBody}>{reason.body}</Text>
-          </View>
-
           {/* Unsuitable for: condition/allergy/diet tags */}
           {profileTags.length > 0 && (
             <View style={localStyles.unsuitableSection}>
@@ -623,7 +617,7 @@ const localStyles = StyleSheet.create({
     gap: 6,
   },
   conditionTag: {
-    backgroundColor: Colors.surface.tertiary,
+    backgroundColor: Colors.surface.contrast,
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -632,7 +626,7 @@ const localStyles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
+    color: '#fff',
     letterSpacing: -0.26,
   },
   reasonTitle: {
