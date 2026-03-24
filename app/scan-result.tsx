@@ -1279,7 +1279,7 @@ export default function ScanResultScreen() {
   }, [fetchingOff]);
 
   // Nutrition tab toggles
-  const [servingMode, setServingMode] = useState<ServingMode>('100g');
+  const [servingMode, setServingMode] = useState<ServingMode>('serving');
   const [driMode, setDriMode] = useState<DriMode>('value');
   const [customWeight, setCustomWeight] = useState(100);
   const [editingWeight, setEditingWeight] = useState(false);
