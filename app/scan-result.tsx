@@ -2593,8 +2593,8 @@ export default function ScanResultScreen() {
                   <View style={{ gap: 4 }}>
                     {filteredCategorised.harmful.map((ing, i) => (
                       <View key={`ov-harm-${ing.id ?? i}`} style={styles.ingRow}>
-                        <View style={{ width: 24, alignItems: 'center' }}>
-                          <Ionicons name="close" size={24} color={Colors.status.negative} />
+                        <View style={{ width: 28, alignItems: 'center' }}>
+                          <Ionicons name="close" size={28} color={Colors.status.negative} />
                         </View>
                         <View style={{ flex: 1 }}>
                           <Text style={styles.ingName} numberOfLines={2}>
