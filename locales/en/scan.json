@@ -93,6 +93,7 @@
     "containsText": "This product contains {{allergens}}.",
     "crossReactivityBadge": "Caution",
     "crossReactivityText": "We noticed you have {{allergy}} and this product contains {{found}}. Cross-reactivity between these is common, so please check with your allergist if you're unsure.",
+    "crossReactivityTracesText": "We noticed you have {{allergy}} and this product may contain traces of {{found}}. Cross-reactivity between these is common, so please check with your allergist if you're unsure.",
     "tracesBadge": "May contain",
     "tracesWarningText": "This product may contain traces of {{traces}}, which could affect {{name}} due to cross-contamination.",
     "tracesContainsText": "This product may contain traces of {{traces}}."

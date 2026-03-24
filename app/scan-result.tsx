@@ -872,7 +872,7 @@ function categoriseIngredients(
   if (flaggedNames.length > 0) {
     // Check product name
     if (productName) {
-      const nameMatch = matchesFlaggedIngredient(productName, flaggedNames);
+      const nameMatch = matchesFlaggedIngredient(productName, flaggedNames, false);
       if (nameMatch) {
         const lc = nameMatch.toLowerCase();
         productMatchedNames.add(lc);
@@ -895,7 +895,7 @@ function categoriseIngredients(
     if (categoriesTags && categoriesTags.length > 0) {
       const normCategories = categoriesTags.map(normaliseCategoryTag);
       for (const cat of normCategories) {
-        const catMatch = matchesFlaggedIngredient(cat, flaggedNames);
+        const catMatch = matchesFlaggedIngredient(cat, flaggedNames, false);
         if (catMatch) {
           const lc = catMatch.toLowerCase();
           if (productMatchedNames.has(lc)) continue; // already flagged via product name
@@ -943,14 +943,14 @@ function categoriseIngredients(
     if (!reason && flaggedNames.length > 0) {
       // Use the smart matching function that handles plurals, synonyms,
       // and negated contexts (e.g. "sugar-free")
-      const match = matchesFlaggedIngredient(ing.text, flaggedNames);
+      const match = matchesFlaggedIngredient(ing.text, flaggedNames, false);
       if (match) {
         reason = 'user_flagged';
         matchedFlaggedName = match.toLowerCase();
       }
       // Also check the OFF id (e.g. "en:potatoes" should match "potato")
       if (!reason && ingId) {
-        const idMatch = matchesFlaggedIngredient(ingId, flaggedNames);
+        const idMatch = matchesFlaggedIngredient(ingId, flaggedNames, false);
         if (idMatch) {
           reason = 'user_flagged';
           matchedFlaggedName = idMatch.toLowerCase();
@@ -1735,6 +1735,7 @@ export default function ScanResultScreen() {
     userAllergy: string;         // e.g. "Peanut Allergy"
     relatedAllergens: string[];  // the related allergens found in this product
     label: string;               // human-readable e.g. "tree nuts (e.g. hazelnuts, almonds)"
+    isTracesOnly: boolean;       // true when match was only in "may contain" traces
   };
 
   const crossReactivityWarnings: CrossReactivityWarning[] = [];
@@ -1777,16 +1778,26 @@ export default function ScanResultScreen() {
         }
       }
 
-      if (found) {
+      // Also check if related allergen appears in traces ("may contain")
+      const tracesTextLower = tracesSource.toLowerCase();
+      let foundInTraces = false;
+      if (!found) {
+        if (tags.some((t) => tracesTextLower.includes(t))) foundInTraces = true;
+        if (!foundInTraces && keywords.some((kw) => kw.length > 3 && tracesTextLower.includes(kw))) foundInTraces = true;
+      }
+
+      if (found || foundInTraces) {
         // Build a specific label of which related allergens were found
         const foundNames: string[] = [];
+        const searchText = found ? ingTextLower : tracesTextLower;
+        const searchIds = found ? structuredIngIds : [];
         // Try to identify specific nuts/items found
         const relDerivKeys = _allergyToDerivativeKeys(rel.keywordKey);
         for (const dk of relDerivKeys) {
           const derivs = getDerivatives(dk);
           for (const d of derivs) {
             if (d.length < 3) continue;
-            if (ingTextLower.includes(d) || structuredIngIds.some((sid) => sid.includes(d.replace(/\s+/g, '-')))) {
+            if (searchText.includes(d) || searchIds.some((sid) => sid.includes(d.replace(/\s+/g, '-')))) {
               const capitalized = d.charAt(0).toUpperCase() + d.slice(1);
               if (!foundNames.includes(capitalized)) foundNames.push(capitalized);
             }
@@ -1794,7 +1805,7 @@ export default function ScanResultScreen() {
         }
         // Also check direct keyword matches
         for (const kw of keywords) {
-          if (kw.length >= 4 && ingTextLower.includes(kw)) {
+          if (kw.length >= 4 && searchText.includes(kw)) {
             const capitalized = kw.charAt(0).toUpperCase() + kw.slice(1);
             if (!foundNames.includes(capitalized)) foundNames.push(capitalized);
           }
@@ -1807,6 +1818,7 @@ export default function ScanResultScreen() {
           userAllergy: allergyDisplayName,
           relatedAllergens: foundNames.length > 0 ? foundNames.slice(0, 5) : [crossEntry.label],
           label: crossEntry.label,
+          isTracesOnly: !found && foundInTraces,
         });
       }
     }
@@ -2360,7 +2372,7 @@ export default function ScanResultScreen() {
                       <Text style={styles.crossReactivityBadgeText}>{t('allergen.crossReactivityBadge')}</Text>
                     </View>
                     <Text style={styles.crossReactivityText}>
-                      {t('allergen.crossReactivityText', {
+                      {t(cw.isTracesOnly ? 'allergen.crossReactivityTracesText' : 'allergen.crossReactivityText', {
                         allergy: cw.userAllergy,
                         found: cw.relatedAllergens.join(', '),
                       })}
@@ -3182,7 +3194,7 @@ export default function ScanResultScreen() {
                           <Text style={styles.crossReactivityBadgeText}>{t('allergen.crossReactivityBadge')}</Text>
                         </View>
                         <Text style={styles.crossReactivityText}>
-                          {t('allergen.crossReactivityText', {
+                          {t(cw.isTracesOnly ? 'allergen.crossReactivityTracesText' : 'allergen.crossReactivityText', {
                             allergy: cw.userAllergy,
                             found: cw.relatedAllergens.join(', '),
                           })}

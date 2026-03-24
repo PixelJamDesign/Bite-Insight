@@ -562,6 +562,12 @@ export function isNegatedInContext(text: string, flaggedTerm: string): boolean {
  *
  * Returns the original (non-lowercased) flagged name that matched, or null.
  *
+ * When `isAllergyFlag` is false (dietary/preference flag), refined derivatives
+ * like "potato starch", "corn starch", "rice flour" etc. are excluded because
+ * they are processed to the point of being nutritionally different from the
+ * base ingredient. When `isAllergyFlag` is true, these still match because
+ * even trace proteins in refined products can trigger allergic reactions.
+ *
  * Examples:
  *   matchesFlaggedIngredient("Hovis Wholemeal Bread", ["bread"]) → "bread"
  *   matchesFlaggedIngredient("Penne Pasta 500g", ["Penne Pasta"]) → "Penne Pasta"
@@ -569,10 +575,26 @@ export function isNegatedInContext(text: string, flaggedTerm: string): boolean {
  *   matchesFlaggedIngredient("Chocolate Cake", ["bread"]) → null
  *   matchesFlaggedIngredient("No Added Sugar Beans", ["sugar"]) → null  (negated)
  *   matchesFlaggedIngredient("Sugar-Free Jelly", ["sugar"]) → null  (negated)
+ *   matchesFlaggedIngredient("potato starch", ["potato"], false) → null  (refined)
+ *   matchesFlaggedIngredient("potato starch", ["potato"], true) → "potato" (allergy)
  */
+
+// Refined derivatives that should NOT trigger dietary/preference flags.
+// These are processed enough that their nutritional profile differs significantly
+// from the base ingredient. They SHOULD still flag for allergies.
+const REFINED_EXCLUSIONS: Record<string, string[]> = {
+  potato: ['potato starch', 'potato flour', 'potato maltodextrin', 'potato protein', 'potato fibre', 'potato fiber', 'modified potato starch'],
+  corn: ['corn starch', 'cornstarch', 'corn flour', 'cornflour', 'corn syrup', 'corn maltodextrin', 'modified corn starch', 'corn oil'],
+  rice: ['rice starch', 'rice flour', 'rice syrup', 'rice protein', 'rice bran oil', 'rice maltodextrin'],
+  wheat: ['wheat starch', 'wheat glucose syrup', 'wheat maltodextrin'],
+  tapioca: ['tapioca starch', 'tapioca flour', 'tapioca maltodextrin'],
+  pea: ['pea starch', 'pea protein', 'pea fibre', 'pea fiber', 'pea flour'],
+};
+
 export function matchesFlaggedIngredient(
   text: string,
   flaggedNames: string[],
+  isAllergyFlag: boolean = true,
 ): string | null {
   if (!text || flaggedNames.length === 0) return null;
 
@@ -589,8 +611,16 @@ export function matchesFlaggedIngredient(
   const normTextJoined = normText.trim();
 
   for (const flagged of flaggedNames) {
-    const flagWords = flagged
-      .toLowerCase()
+    const flagLc = flagged.toLowerCase();
+
+    // For dietary/preference flags (not allergy), skip refined derivatives.
+    // e.g. "potato starch" should not trigger a "potato" dietary flag.
+    if (!isAllergyFlag) {
+      const exclusions = REFINED_EXCLUSIONS[flagLc];
+      if (exclusions && exclusions.some(ex => normTextJoined.includes(ex))) continue;
+    }
+
+    const flagWords = flagLc
       .replace(/[-_]/g, ' ')
       .split(/\s+/)
       .filter(w => w.length > 1)
