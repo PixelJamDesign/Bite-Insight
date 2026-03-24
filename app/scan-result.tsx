@@ -301,8 +301,8 @@ const INSIGHT_DEFS: InsightDef[] = [
   {
     key: 'sugar',
     label: 'Sugar',
-    iconWidth: 32,
-    iconHeight: 44,
+    iconWidth: 48,
+    iconHeight: 48,
     relevantTo: [
       'diabetes', 'preDiabetes', 'insulinResistance', 'pcos',
       'nafld', 'weightLoss', 'keto', 'childFriendly',
