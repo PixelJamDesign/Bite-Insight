@@ -3272,7 +3272,9 @@ export default function ScanResultScreen() {
                         <View style={{ gap: 2 }}>
                           {filteredCategorised.harmful.map((ing, i) => (
                             <View key={`harm-${ing.id ?? i}`} style={styles.ingRow}>
-                              <Ionicons name="close" size={24} color={Colors.status.negative} />
+                              <View style={{ width: 24, alignItems: 'center' }}>
+                                <Ionicons name="close" size={24} color={Colors.status.negative} />
+                              </View>
                               <View style={{ flex: 1 }}>
                                 <Text style={styles.ingName} numberOfLines={1}>{sentenceCase(ing.text)}</Text>
                                 {ing.matchSource === 'product-name' && (
@@ -3310,7 +3312,9 @@ export default function ScanResultScreen() {
                         <View style={{ gap: 2 }}>
                           {filteredCategorised.ok.map((ing, i) => (
                             <View key={`ok-${ing.id ?? i}`} style={styles.ingRowSmall}>
-                              <Ionicons name="checkmark" size={24} color={Extra.poorOrange} />
+                              <View style={{ width: 24, alignItems: 'center' }}>
+                                <Ionicons name="checkmark" size={24} color={Extra.poorOrange} />
+                              </View>
                               <Text style={styles.ingName} numberOfLines={2}>{sentenceCase(ing.text)}</Text>
                               <TouchableOpacity
                                 style={styles.ingInfoContainer}
@@ -3340,7 +3344,9 @@ export default function ScanResultScreen() {
                         <View style={{ gap: 2 }}>
                           {filteredCategorised.safe.map((ing, i) => (
                             <View key={`safe-${ing.id ?? i}`} style={styles.ingRowSmall}>
-                              <Ionicons name="checkmark" size={24} color={Extra.positiveGreen} />
+                              <View style={{ width: 24, alignItems: 'center' }}>
+                                <Ionicons name="checkmark" size={24} color={Extra.positiveGreen} />
+                              </View>
                               <Text style={styles.ingName} numberOfLines={2}>{sentenceCase(ing.text)}</Text>
                             </View>
                           ))}
@@ -4419,8 +4425,8 @@ const styles = StyleSheet.create({
   ingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    minHeight: 32,
+    gap: 4,
+    minHeight: 24,
     width: '100%',
   },
   // ok / safe rows — 4px gap between elements (Figma node 3263-3941)
