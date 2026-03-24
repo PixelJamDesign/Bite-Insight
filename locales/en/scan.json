@@ -80,6 +80,8 @@
     "warningText": "Contains: {{allergens}}. This may affect {{name}}'s health profile.",
     "allergensBadge": "Allergens",
     "containsText": "Contains: {{allergens}}.",
+    "crossReactivityBadge": "Caution",
+    "crossReactivityText": "You have {{allergy}}, and this product contains {{found}}. Cross-reactivity is common — speak to your allergist if unsure.",
     "tracesBadge": "May contain",
     "tracesWarningText": "May contain traces of: {{traces}}. This could affect {{name}} due to cross-contamination.",
     "tracesContainsText": "May contain traces of: {{traces}}."

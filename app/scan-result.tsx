@@ -1615,6 +1615,127 @@ export default function ScanResultScreen() {
   });
   const hasProfileAllergenMatch = matchedAllergens.length > 0;
 
+  // ── Cross-reactivity warnings ──────────────────────────────────────────
+  // If someone has a peanut allergy but the product contains tree nuts
+  // (or vice versa), warn them even though it's not their exact allergy.
+  // Medical guidance: people with one nut allergy are at higher risk for
+  // others due to cross-reactivity and shared processing facilities.
+  const CROSS_REACTIVITY_MAP: Record<string, { related: string[]; label: string }> = {
+    'Peanut Allergy': {
+      related: ['Tree Nut Allergy'],
+      label: 'tree nuts (e.g. hazelnuts, almonds, cashews)',
+    },
+    'Tree Nut Allergy': {
+      related: ['Peanut Allergy'],
+      label: 'peanuts',
+    },
+    'Fish Allergy': {
+      related: ['Shellfish Allergy'],
+      label: 'shellfish',
+    },
+    'Shellfish Allergy': {
+      related: ['Fish Allergy'],
+      label: 'fish',
+    },
+    'Egg Allergy': {
+      related: ['Lactose Intolerance'],
+      label: 'dairy/milk',
+    },
+    'Lactose Intolerance': {
+      related: ['Egg Allergy'],
+      label: 'egg',
+    },
+    'Gluten Intolerance': {
+      related: [],
+      label: '',
+    },
+  };
+
+  // Check if the product contains allergens from a related group the user
+  // doesn't already have in their profile. E.g. user has Peanut Allergy
+  // but NOT Tree Nut Allergy — if product contains tree nuts, show caution.
+  type CrossReactivityWarning = {
+    userAllergy: string;         // e.g. "Peanut Allergy"
+    relatedAllergens: string[];  // the related allergens found in this product
+    label: string;               // human-readable e.g. "tree nuts (e.g. hazelnuts, almonds)"
+  };
+
+  const crossReactivityWarnings: CrossReactivityWarning[] = [];
+  for (const profileAllergy of profileAllergies) {
+    const crossEntry = CROSS_REACTIVITY_MAP[profileAllergy];
+    if (!crossEntry || crossEntry.related.length === 0) continue;
+
+    for (const relatedAllergy of crossEntry.related) {
+      // Skip if the user already has this allergy in their profile (already flagged)
+      if (profileAllergies.includes(relatedAllergy)) continue;
+
+      // Check if the product actually contains the related allergen
+      const relatedEntry = ALLERGY_KEYWORDS[relatedAllergy];
+      if (!relatedEntry) continue;
+
+      const { tags, keywords, ingredientIds } = relatedEntry;
+      let found = false;
+
+      // Check OFF allergen tags
+      if (tags.some((t) => allergenLower.some((al) => al === t || al.includes(t)))) found = true;
+      // Check structured ingredient IDs
+      if (!found && ingredientIds.some((id) => structuredIngIds.some((sid) => sid === id || sid.includes(id)))) found = true;
+      // Check raw ingredients text
+      if (!found && keywords.some((kw) => {
+        if (kw.length <= 3) return new RegExp(`\\b${kw}\\b`, 'i').test(ingredientsText);
+        return ingTextLower.includes(kw);
+      })) found = true;
+      // Check derivatives
+      if (!found) {
+        const derivativeKeys = _allergyToDerivativeKeys(relatedAllergy);
+        for (const dk of derivativeKeys) {
+          const derivs = getDerivatives(dk);
+          for (const d of derivs) {
+            if (d.length < 3) continue;
+            if (ingTextLower.includes(d)) { found = true; break; }
+            const asId = 'en:' + d.replace(/\s+/g, '-');
+            if (structuredIngIds.some((sid) => sid === asId || sid.includes(d.replace(/\s+/g, '-')))) { found = true; break; }
+          }
+          if (found) break;
+        }
+      }
+
+      if (found) {
+        // Build a specific label of which related allergens were found
+        const foundNames: string[] = [];
+        // Try to identify specific nuts/items found
+        const relDerivKeys = _allergyToDerivativeKeys(relatedAllergy);
+        for (const dk of relDerivKeys) {
+          const derivs = getDerivatives(dk);
+          for (const d of derivs) {
+            if (d.length < 3) continue;
+            if (ingTextLower.includes(d) || structuredIngIds.some((sid) => sid.includes(d.replace(/\s+/g, '-')))) {
+              // Capitalize the found ingredient name
+              const capitalized = d.charAt(0).toUpperCase() + d.slice(1);
+              if (!foundNames.includes(capitalized)) foundNames.push(capitalized);
+            }
+          }
+        }
+        // Also check direct keyword matches
+        if (relatedEntry) {
+          for (const kw of relatedEntry.keywords) {
+            if (kw.length >= 4 && ingTextLower.includes(kw)) {
+              const capitalized = kw.charAt(0).toUpperCase() + kw.slice(1);
+              if (!foundNames.includes(capitalized)) foundNames.push(capitalized);
+            }
+          }
+        }
+
+        crossReactivityWarnings.push({
+          userAllergy: profileAllergy,
+          relatedAllergens: foundNames.length > 0 ? foundNames.slice(0, 5) : [crossEntry.label],
+          label: crossEntry.label,
+        });
+      }
+    }
+  }
+  const hasCrossReactivityWarning = crossReactivityWarnings.length > 0;
+
   // Parse traces ("may contain") tags — same format as allergens
   const tracesList: string[] = tracesSource
     ? tracesSource
@@ -2117,7 +2238,7 @@ export default function ScanResultScreen() {
             })()}
 
             {/* ── Important for you ── */}
-            {(hasProfileAllergenMatch || activeInsights.length > 0) && (
+            {(hasProfileAllergenMatch || hasCrossReactivityWarning || activeInsights.length > 0) && (
               <View style={styles.section}>
                 <View style={styles.sectionHeading}>
                   <Text style={styles.sectionTitle}>{t('section.importantForYou')}</Text>
@@ -2147,6 +2268,22 @@ export default function ScanResultScreen() {
                     </View>
                   );
                 })()}
+
+                {/* Cross-reactivity warning — related allergen groups */}
+                {hasCrossReactivityWarning && crossReactivityWarnings.map((cw, idx) => (
+                  <View key={`cross-${idx}`} style={styles.crossReactivityCard}>
+                    <View style={styles.crossReactivityBadge}>
+                      <Ionicons name="information-circle" size={11} color="#fff" />
+                      <Text style={styles.crossReactivityBadgeText}>{t('allergen.crossReactivityBadge')}</Text>
+                    </View>
+                    <Text style={styles.crossReactivityText}>
+                      {t('allergen.crossReactivityText', {
+                        allergy: cw.userAllergy,
+                        found: cw.relatedAllergens.join(', '),
+                      })}
+                    </Text>
+                  </View>
+                ))}
 
                 {/* Traces / "may contain" warning — cross-contamination risk */}
                 {hasProfileTracesMatch && (() => {
@@ -2921,6 +3058,22 @@ export default function ScanResultScreen() {
                         </View>
                       );
                     })()}
+
+                    {/* ── Cross-reactivity warning ── */}
+                    {hasCrossReactivityWarning && crossReactivityWarnings.map((cw, idx) => (
+                      <View key={`cross2-${idx}`} style={styles.crossReactivityCard}>
+                        <View style={styles.crossReactivityBadge}>
+                          <Ionicons name="information-circle" size={11} color="#fff" />
+                          <Text style={styles.crossReactivityBadgeText}>{t('allergen.crossReactivityBadge')}</Text>
+                        </View>
+                        <Text style={styles.crossReactivityText}>
+                          {t('allergen.crossReactivityText', {
+                            allergy: cw.userAllergy,
+                            found: cw.relatedAllergens.join(', '),
+                          })}
+                        </Text>
+                      </View>
+                    ))}
 
                     {/* ── Traces / "may contain" warning ── */}
                     {hasProfileTracesMatch && (() => {
@@ -3733,6 +3886,41 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     letterSpacing: -0.26,
     lineHeight: 18,
+  },
+
+  // Cross-reactivity (blue-teal card)
+  crossReactivityCard: {
+    backgroundColor: 'rgba(0,119,111,0.08)',
+    borderWidth: 2,
+    borderColor: Colors.secondary,
+    borderRadius: 16,
+    padding: Spacing.s,
+    gap: Spacing.xs,
+  },
+  crossReactivityBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: Colors.secondary,
+    borderRadius: 999,
+    paddingHorizontal: Spacing.xs,
+    paddingVertical: 4,
+    alignSelf: 'flex-start',
+  },
+  crossReactivityBadgeText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    letterSpacing: -0.28,
+  },
+  crossReactivityText: {
+    fontSize: 15,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.26,
+    lineHeight: 20,
   },
 
   // Traces / "may contain" (amber card)
