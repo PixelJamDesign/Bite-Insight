@@ -1196,7 +1196,12 @@ export default function ScanResultScreen() {
     return { ...result, label: labelMap[result.label] ?? result.label };
   };
 
-  const [activeTab, setActiveTab] = useState<Tab>('overview');
+  const [activeTab, _setActiveTab] = useState<Tab>('overview');
+  const contentScrollRef = useRef<ScrollView>(null);
+  const setActiveTab = (tab: Tab) => {
+    contentScrollRef.current?.scrollTo({ y: 0, animated: false });
+    _setActiveTab(tab);
+  };
   const [ingredientSubTab, setIngredientSubTab] = useState<'fullList' | 'insightGroups'>('insightGroups');
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [tabScrollX, setTabScrollX] = useState(0);
@@ -2218,6 +2223,7 @@ export default function ScanResultScreen() {
       {/* ── Scrollable tab content ── */}
       <View style={{ flex: 1 }}>
         <ScrollView
+          ref={contentScrollRef}
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
