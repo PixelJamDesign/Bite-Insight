@@ -604,6 +604,7 @@ const localStyles = StyleSheet.create({
     width: '100%',
     gap: 8,
     alignItems: 'center',
+    marginTop: 12,
   },
   unsuitableLabel: {
     fontSize: 14,
