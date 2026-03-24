@@ -4420,8 +4420,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    minHeight: 12,
+    minHeight: 36,
     width: '100%',
+    paddingVertical: 4,
   },
   // ok / safe rows — 4px gap between elements (Figma node 3263-3941)
   ingRowSmall: {
