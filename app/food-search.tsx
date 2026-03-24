@@ -296,6 +296,28 @@ export default function FoodSearchScreen() {
     } catch (err: any) {
       if (err?.name !== 'AbortError') {
         console.warn('[FoodSearch] Search failed:', err?.message ?? err);
+        // Retry once more after a delay — keep loading state so user sees
+        // the searching animation rather than a premature "no results"
+        try {
+          await new Promise((r) => setTimeout(r, 2000));
+          const retryRes = await fetch(buildSearchUrl(searchTerm, region, 1), {
+            signal: controller.signal,
+            headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
+          });
+          if (retryRes.ok) {
+            const retryData = await retryRes.json();
+            const products: SearchProduct[] = (retryData.products ?? []).map(normaliseHit);
+            const sorted = processResults(products, searchTerm);
+            setResults(sorted);
+            setTotalCount(retryData.count ?? 0);
+            setHasMore((retryData.count ?? 0) > PAGE_SIZE);
+            setLoading(false);
+            return;
+          }
+        } catch (retryErr: any) {
+          if (retryErr?.name === 'AbortError') return;
+        }
+        // Only show "no results" after all retries exhausted
         setResults([]);
         setTotalCount(0);
         setHasMore(false);
