@@ -141,9 +141,10 @@ export default function FoodSearchScreen() {
     // Don't auto-search until at least 2 characters
     if (trimmed.length < 2) return undefined;
 
-    // Show loading immediately so there's no flash of "no results" during debounce
+    // Show loading immediately and clear old results so the user sees the searching state
     setLoading(true);
     setHasSearched(true);
+    setResults([]);
 
     debounceRef.current = setTimeout(() => {
       debounceRef.current = null;
