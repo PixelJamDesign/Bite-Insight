@@ -36,6 +36,7 @@ export default function ScannerScreen() {
   const { showUpsell } = useUpsellSheet();
   const insets = useSafeAreaInsets();
   const lastScan = useRef<string | null>(null);
+  const scanLock = useRef(false);
 
   // Bottom offset to position action bar above the tab bar
   // Tab bar: paddingTop(32) + pill(60) + paddingBottom(insets.bottom+8) + gap(8)
@@ -113,12 +114,17 @@ export default function ScannerScreen() {
       setScanning(true);
       setProcessing(false);
       lastScan.current = null;
+      scanLock.current = false;
     }, []),
   );
 
   async function handleBarcodeScan(result: BarcodeScanningResult) {
-    // Debounce — ignore repeated scans of the same code
-    if (!scanning || processing || result.data === lastScan.current) return;
+    // Synchronous ref lock — prevents race conditions when multiple barcodes
+    // are in the camera view (setState is async, ref is immediate)
+    if (scanLock.current) return;
+    if (!scanning || processing) return;
+    if (result.data === lastScan.current) return;
+    scanLock.current = true;
     lastScan.current = result.data;
     setScanning(false);
     setProcessing(true);
