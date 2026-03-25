@@ -173,7 +173,10 @@ export function UpsellSheet() {
             </View>
           </View>
 
-          {/* ── Pricing ── */}
+        </ScrollView>
+
+        {/* ── Sticky Pricing + CTAs ── */}
+        <View style={[styles.ctaSection, { paddingBottom: insets.bottom + 16 }]}>
           <View style={styles.pricingSection}>
             <Text style={styles.pricingJust}>Just</Text>
             <View style={styles.priceRow}>
@@ -184,10 +187,6 @@ export function UpsellSheet() {
               Subscription renews automatically. Cancel anytime.
             </Text>
           </View>
-        </ScrollView>
-
-        {/* ── Sticky CTAs ── */}
-        <View style={[styles.ctaSection, { paddingBottom: insets.bottom + 16 }]}>
           <TouchableOpacity
             style={[styles.primaryBtn, purchasing && styles.primaryBtnDisabled]}
             activeOpacity={0.85}
@@ -199,10 +198,6 @@ export function UpsellSheet() {
             ) : (
               <Text style={styles.primaryBtnText}>Upgrade to Bite Insight+</Text>
             )}
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.secondaryBtn} onPress={hideUpsell} activeOpacity={0.7}>
-            <Ionicons name="arrow-up" size={16} color="#aad4cd" />
-            <Text style={styles.secondaryBtnText}>No thanks</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.restoreBtn} onPress={restorePurchases} activeOpacity={0.6}>
             <Text style={styles.restoreBtnText}>Restore purchases</Text>
