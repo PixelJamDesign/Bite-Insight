@@ -957,14 +957,23 @@ export default function OnboardingScreen() {
         </ScrollView>
 
         {/* ── Footer ── */}
-        <FooterButtonRow
-          secondaryLabel={currentStepKey === 'about' ? tj('about.signOut') : tc('buttons.back')}
-          primaryLabel={isLastStep ? tc('buttons.finish') : t('progress.next', { label: nextLabel })}
-          onSecondaryPress={handleBack}
-          onPrimaryPress={isLastStep ? handleFinish : handleNext}
-          primaryLoading={saving}
-          primaryDisabled={saving}
-        />
+        <View style={styles.footer}>
+          <LinearGradient
+            colors={['rgba(226,241,238,0)', Colors.background]}
+            style={styles.footerFade}
+            pointerEvents="none"
+          />
+          <View style={[styles.footerButtons, { paddingBottom: insets.bottom + 12 }]}>
+            <FooterButtonRow
+              secondaryLabel={currentStepKey === 'about' ? tj('about.signOut') : tc('buttons.back')}
+              primaryLabel={isLastStep ? tc('buttons.finish') : t('progress.next', { label: nextLabel })}
+              onSecondaryPress={handleBack}
+              onPrimaryPress={isLastStep ? handleFinish : handleNext}
+              primaryLoading={saving}
+              primaryDisabled={saving}
+            />
+          </View>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
     <ConditionInfoSheet conditionKey={infoKey} onClose={() => setInfoKey(null)} />
@@ -1487,9 +1496,6 @@ const styles = StyleSheet.create({
     height: 40,
   },
   footerButtons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
     paddingHorizontal: 24,
     paddingTop: 8,
     backgroundColor: Colors.background,

@@ -654,14 +654,23 @@ export default function SignUpScreen() {
         </ScrollView>
 
         {/* ── Footer ── */}
-        <FooterButtonRow
-          secondaryLabel={step === 1 ? tc('buttons.cancel') : tc('buttons.back')}
-          primaryLabel={nextBtnLabel}
-          onSecondaryPress={handleBack}
-          onPrimaryPress={step === 4 ? handleFinish : handleNext}
-          primaryLoading={loading}
-          primaryDisabled={loading}
-        />
+        <View style={styles.footer}>
+          <LinearGradient
+            colors={['rgba(226,241,238,0)', Colors.background]}
+            style={styles.footerFade}
+            pointerEvents="none"
+          />
+          <View style={[styles.footerButtons, { paddingBottom: insets.bottom + 12 }]}>
+            <FooterButtonRow
+              secondaryLabel={step === 1 ? tc('buttons.cancel') : tc('buttons.back')}
+              primaryLabel={nextBtnLabel}
+              onSecondaryPress={handleBack}
+              onPrimaryPress={step === 4 ? handleFinish : handleNext}
+              primaryLoading={loading}
+              primaryDisabled={loading}
+            />
+          </View>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
     <ConditionInfoSheet conditionKey={infoKey} onClose={() => setInfoKey(null)} />
@@ -1003,8 +1012,6 @@ const styles = StyleSheet.create({
     height: 40,
   },
   footerButtons: {
-    flexDirection: 'row',
-    gap: 12,
     paddingHorizontal: 24,
     paddingTop: 8,
     backgroundColor: Colors.background,

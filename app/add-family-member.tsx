@@ -890,16 +890,25 @@ export default function AddFamilyMemberScreen() {
         </ScrollView>
 
         {/* ── Footer ── */}
-        <FooterButtonRow
-          secondaryLabel={step === 1 ? tc('buttons.cancel') : tc('buttons.back')}
-          primaryLabel={isLastStep
-            ? (isEditing ? tp('editProfile.saveChanges') : tc('buttons.finish'))
-            : to('progress.next', { label: nextLabel })}
-          onSecondaryPress={handleBack}
-          onPrimaryPress={isLastStep ? handleSave : handleNext}
-          primaryLoading={saving}
-          primaryDisabled={saving}
-        />
+        <View style={styles.footer}>
+          <LinearGradient
+            colors={['rgba(226,241,238,0)', Colors.background]}
+            style={styles.footerFade}
+            pointerEvents="none"
+          />
+          <View style={[styles.footerButtons, { paddingBottom: insets.bottom + 12 }]}>
+            <FooterButtonRow
+              secondaryLabel={step === 1 ? tc('buttons.cancel') : tc('buttons.back')}
+              primaryLabel={isLastStep
+                ? (isEditing ? tp('editProfile.saveChanges') : tc('buttons.finish'))
+                : to('progress.next', { label: nextLabel })}
+              onSecondaryPress={handleBack}
+              onPrimaryPress={isLastStep ? handleSave : handleNext}
+              primaryLoading={saving}
+              primaryDisabled={saving}
+            />
+          </View>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
     <ConditionInfoSheet conditionKey={infoKey} onClose={() => setInfoKey(null)} />
@@ -1396,8 +1405,6 @@ const styles = StyleSheet.create({
     height: 40,
   },
   footerButtons: {
-    flexDirection: 'row',
-    gap: 12,
     paddingHorizontal: 24,
     paddingTop: 8,
     backgroundColor: Colors.background,
