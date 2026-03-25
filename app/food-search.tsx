@@ -90,6 +90,8 @@ export default function FoodSearchScreen() {
   const abortRef = useRef<AbortController | null>(null);
   const pageRef = useRef(1);
   const currentTermRef = useRef('');
+  const retryCountRef = useRef(0);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<TextInput>(null);
   // Keep a ref to selectedRegion so the debounce timeout always reads the latest value
   const regionRef = useRef(selectedRegion);
@@ -355,8 +357,10 @@ export default function FoodSearchScreen() {
 
   /** Perform a fresh search against the OFF classic CGI search API */
   async function performSearch(searchTerm: string, region: Region) {
-    // Cancel any in-flight request
+    // Cancel any in-flight request and pending retry timer
     if (abortRef.current) abortRef.current.abort();
+    if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+    retryCountRef.current = 0;
     const controller = new AbortController();
     abortRef.current = controller;
 
@@ -466,30 +470,21 @@ export default function FoodSearchScreen() {
       setHasMore(finalCount > PAGE_SIZE);
       setLoading(false);
     } catch (err: any) {
-      if (err?.name !== 'AbortError') {
-        console.warn('[FoodSearch] Search failed:', err?.message ?? err);
-        // Final retry — try global endpoint as last resort
-        try {
-          await new Promise((r) => setTimeout(r, 1500));
-          const fallbackUrl = buildSearchUrl(searchTerm, { ...region, subdomain: 'world' } as Region, 1);
-          const retryRes = await fetch(fallbackUrl, {
-            signal: controller.signal,
-            headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
-          });
-          if (retryRes.ok) {
-            const retryData = await retryRes.json();
-            const products: SearchProduct[] = (retryData.products ?? []).map(normaliseHit);
-            const sorted = processResults(products, searchTerm);
-            setResults(sorted);
-            setTotalCount(retryData.count ?? 0);
-            setHasMore((retryData.count ?? 0) > PAGE_SIZE);
-            setLoading(false);
-            return;
+      if (err?.name === 'AbortError') return;
+      console.warn('[FoodSearch] Search failed:', err?.message ?? err);
+      // Keep loading state visible and auto-retry after a delay
+      // Max 10 retries (~30s total) before giving up
+      const attempt = (retryCountRef.current ?? 0) + 1;
+      retryCountRef.current = attempt;
+      if (attempt <= 10) {
+        retryTimerRef.current = setTimeout(() => {
+          if (currentTermRef.current === searchTerm) {
+            performSearch(searchTerm, region);
           }
-        } catch (retryErr: any) {
-          if (retryErr?.name === 'AbortError') return;
-        }
-        // All retries exhausted — show server error, not "no results"
+        }, 3000);
+      } else {
+        // After 10 retries (~30s), show error with retry button
+        retryCountRef.current = 0;
         setResults([]);
         setTotalCount(0);
         setHasMore(false);
