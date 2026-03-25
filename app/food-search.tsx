@@ -623,7 +623,7 @@ export default function FoodSearchScreen() {
             </Text>
             <TouchableOpacity
               style={{ backgroundColor: Colors.secondary, borderRadius: Radius.m, paddingVertical: 10, paddingHorizontal: 24 }}
-              onPress={() => { if (submittedQuery) doSearch(submittedQuery, region); }}
+              onPress={() => { if (submittedQuery) performSearch(submittedQuery, region); }}
               activeOpacity={0.8}
             >
               <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700', fontFamily: 'Figtree_700Bold' }}>
