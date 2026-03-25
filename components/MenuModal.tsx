@@ -273,33 +273,22 @@ function SecurityScreen({ goBack, onNavigate }: { goBack: () => void; onNavigate
             <ActivityIndicator size="small" color={Colors.secondary} />
           </View>
         ) : available ? (
-          <>
-            <View style={styles.toggleRow}>
-              <View style={styles.toggleLeft}>
-                <View style={styles.navIcon}>
-                  <MenuFaceIdIcon color={Colors.secondary} />
-                </View>
-                <Text style={styles.navLabel}>{label}</Text>
+          <View style={styles.toggleRow}>
+            <View style={styles.toggleLeft}>
+              <View style={styles.navIcon}>
+                <MenuFaceIdIcon color={Colors.secondary} />
               </View>
-              <Switch
-                value={enabled}
-                onValueChange={handleToggle}
-                trackColor={{ false: '#d6e8e5', true: Colors.accent }}
-                thumbColor={Platform.OS === 'android' ? '#fff' : undefined}
-                ios_backgroundColor="#d6e8e5"
-              />
+              <Text style={styles.navLabel}>{label}</Text>
             </View>
-            <Text style={styles.securityHint}>
-              {enabled
-                ? t('security.enabledHint', { label })
-                : t('security.disabledHint', { label })}
-            </Text>
-          </>
-        ) : (
-          <Text style={styles.securityHint}>
-            {t('security.unavailableHint')}
-          </Text>
-        )}
+            <Switch
+              value={enabled}
+              onValueChange={handleToggle}
+              trackColor={{ false: '#d6e8e5', true: Colors.accent }}
+              thumbColor={Platform.OS === 'android' ? '#fff' : undefined}
+              ios_backgroundColor="#d6e8e5"
+            />
+          </View>
+        ) : null}
         <NavItem icon={<MenuLockIcon color={Colors.secondary} />} label={t('account.changePassword')} onPress={() => onNavigate('password')} chevron />
       </View>
     </>
