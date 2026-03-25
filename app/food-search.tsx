@@ -55,7 +55,7 @@ interface SearchProduct {
   quantity?: string;
 }
 
-const DEBOUNCE_MS = 500;
+const DEBOUNCE_MS = 1200;
 const PAGE_SIZE = 24;
 const SEARCH_FIELDS = 'code,product_name,brands,image_front_small_url,nutriscore_grade,quantity';
 // Use the classic CGI search API with region subdomains — the Search-A-Licious
