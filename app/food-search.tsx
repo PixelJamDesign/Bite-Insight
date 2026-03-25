@@ -225,11 +225,79 @@ export default function FoodSearchScreen() {
     return scored.map((s) => s.product);
   }
 
+  /** UK ↔ US food term synonyms. Each pair is bidirectional. */
+  const FOOD_SYNONYMS: [string, string][] = [
+    ['crisps', 'chips'],
+    ['chips', 'fries'],
+    ['biscuits', 'cookies'],
+    ['biscuit', 'cookie'],
+    ['courgette', 'zucchini'],
+    ['aubergine', 'eggplant'],
+    ['rocket', 'arugula'],
+    ['coriander', 'cilantro'],
+    ['spring onion', 'green onion'],
+    ['spring onions', 'green onions'],
+    ['scone', 'biscuit'],
+    ['jam', 'jelly'],
+    ['jelly', 'jello'],
+    ['swede', 'rutabaga'],
+    ['prawns', 'shrimp'],
+    ['prawn', 'shrimp'],
+    ['mince', 'ground beef'],
+    ['minced beef', 'ground beef'],
+    ['porridge', 'oatmeal'],
+    ['treacle', 'molasses'],
+    ['icing sugar', 'powdered sugar'],
+    ['caster sugar', 'superfine sugar'],
+    ['plain flour', 'all purpose flour'],
+    ['self raising flour', 'self rising flour'],
+    ['rapeseed oil', 'canola oil'],
+    ['sweetcorn', 'corn'],
+    ['sweet corn', 'corn'],
+    ['mangetout', 'snow peas'],
+    ['broad beans', 'fava beans'],
+    ['sultanas', 'golden raisins'],
+    ['streaky bacon', 'bacon strips'],
+    ['back bacon', 'canadian bacon'],
+    ['semi skimmed milk', 'reduced fat milk'],
+    ['skimmed milk', 'skim milk'],
+    ['full fat milk', 'whole milk'],
+    ['double cream', 'heavy cream'],
+    ['single cream', 'light cream'],
+    ['natural yoghurt', 'plain yogurt'],
+    ['yoghurt', 'yogurt'],
+    ['squash', 'cordial'],
+    ['fizzy drink', 'soda'],
+    ['lemonade', 'lemon soda'],
+    ['jacket potato', 'baked potato'],
+    ['fairy cake', 'cupcake'],
+    ['candy floss', 'cotton candy'],
+    ['ice lolly', 'popsicle'],
+  ];
+
+  /** Find synonym alternatives for a search term */
+  function getSynonyms(term: string): string[] {
+    const lower = term.toLowerCase();
+    const results: string[] = [];
+    for (const [a, b] of FOOD_SYNONYMS) {
+      // Exact word match
+      if (lower === a) results.push(b);
+      else if (lower === b) results.push(a);
+      // Partial match: "salt and vinegar crisps" → "salt and vinegar chips"
+      else if (lower.includes(a)) results.push(lower.replace(a, b));
+      else if (lower.includes(b)) results.push(lower.replace(b, a));
+    }
+    return [...new Set(results)];
+  }
+
   /** Generate alternative search terms for fuzzy matching.
    *  e.g. "ploughmans" → ["ploughman's", "ploughmans"], "crisps" → ["crisp"] */
   function getQueryVariants(term: string): string[] {
     const variants: string[] = [];
     const lower = term.toLowerCase();
+
+    // Add synonym variants first (highest value)
+    variants.push(...getSynonyms(lower));
 
     // Add/remove apostrophes: "ploughmans" → "ploughman's", "mans" → "man's"
     if (!lower.includes("'")) {
