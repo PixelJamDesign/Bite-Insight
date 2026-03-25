@@ -1,9 +1,13 @@
 #!/bin/sh
 set -e
 
-# Install Node.js (not pre-installed in Xcode Cloud)
-echo "▸ Installing Node.js via Homebrew"
-brew install node
+# Install Node.js LTS (v22) — avoid bleeding-edge versions that break npm
+echo "▸ Installing Node.js 22 LTS via Homebrew"
+brew install node@22
+export PATH="/usr/local/opt/node@22/bin:$PATH"
+
+echo "▸ Node version: $(node --version)"
+echo "▸ npm version: $(npm --version)"
 
 echo "▸ Installing Node.js dependencies"
 cd "$CI_PRIMARY_REPOSITORY_PATH"
