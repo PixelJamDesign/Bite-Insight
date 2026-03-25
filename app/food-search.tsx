@@ -274,13 +274,24 @@ export default function FoodSearchScreen() {
         headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
       });
 
-      // Retry up to 3 times on rate limit (429) or server error (503) with increasing backoff
-      for (let attempt = 1; attempt <= 3 && (res.status === 429 || res.status === 503); attempt++) {
+      // Retry up to 2 times on rate limit (429) or server error (503) with increasing backoff
+      for (let attempt = 1; attempt <= 2 && (res.status === 429 || res.status === 503); attempt++) {
         await new Promise((r) => setTimeout(r, 1500 * attempt));
         res = await fetch(url, {
           signal: controller.signal,
           headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
         });
+      }
+
+      // If regional endpoint is still failing, try the global endpoint as fallback
+      if (!res.ok && region.subdomain && region.subdomain !== 'world') {
+        console.warn(`[FoodSearch] Regional endpoint failed (${res.status}), falling back to global`);
+        const globalUrl = buildSearchUrl(searchTerm, { ...region, subdomain: 'world' } as Region, 1);
+        const globalRes = await fetch(globalUrl, {
+          signal: controller.signal,
+          headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
+        });
+        if (globalRes.ok) res = globalRes;
       }
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -298,11 +309,11 @@ export default function FoodSearchScreen() {
     } catch (err: any) {
       if (err?.name !== 'AbortError') {
         console.warn('[FoodSearch] Search failed:', err?.message ?? err);
-        // Retry once more after a delay — keep loading state so user sees
-        // the searching animation rather than a premature "no results"
+        // Final retry — try global endpoint as last resort
         try {
-          await new Promise((r) => setTimeout(r, 2000));
-          const retryRes = await fetch(buildSearchUrl(searchTerm, region, 1), {
+          await new Promise((r) => setTimeout(r, 1500));
+          const fallbackUrl = buildSearchUrl(searchTerm, { ...region, subdomain: 'world' } as Region, 1);
+          const retryRes = await fetch(fallbackUrl, {
             signal: controller.signal,
             headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
           });
