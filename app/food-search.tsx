@@ -225,6 +225,39 @@ export default function FoodSearchScreen() {
     return scored.map((s) => s.product);
   }
 
+  /** Generate alternative search terms for fuzzy matching.
+   *  e.g. "ploughmans" → ["ploughman's", "ploughmans"], "crisps" → ["crisp"] */
+  function getQueryVariants(term: string): string[] {
+    const variants: string[] = [];
+    const lower = term.toLowerCase();
+
+    // Add/remove apostrophes: "ploughmans" → "ploughman's", "mans" → "man's"
+    if (!lower.includes("'")) {
+      // Try inserting apostrophe before trailing s
+      if (lower.endsWith('mans')) variants.push(term.slice(0, -1) + "'s");
+      if (lower.endsWith('ns')) variants.push(term.slice(0, -1) + "'s");
+      if (lower.endsWith('es')) variants.push(term.slice(0, -2) + "'s");
+      if (lower.endsWith('s') && !lower.endsWith("'s")) variants.push(term.slice(0, -1) + "'s");
+    } else {
+      // Strip apostrophes: "ploughman's" → "ploughmans"
+      variants.push(term.replace(/'/g, ''));
+    }
+
+    // Try without trailing s: "crisps" → "crisp"
+    if (lower.endsWith('s') && lower.length > 3) variants.push(term.slice(0, -1));
+
+    // Try with trailing s: "sandwich" → "sandwiches", "crisp" → "crisps"
+    if (!lower.endsWith('s')) {
+      variants.push(term + 's');
+      if (lower.endsWith('ch') || lower.endsWith('sh') || lower.endsWith('x')) {
+        variants.push(term + 'es');
+      }
+    }
+
+    // Deduplicate and remove the original
+    return [...new Set(variants)].filter(v => v.toLowerCase() !== lower);
+  }
+
   /** Build the Search-A-Licious query URL */
   function buildSearchUrl(searchTerm: string, region: Region, page: number): string {
     // Classic CGI search — region subdomain handles country filtering natively
@@ -298,13 +331,39 @@ export default function FoodSearchScreen() {
       const data = await res.json();
 
       // Classic API returns `products`
-      const products: SearchProduct[] = (data.products ?? []).map(normaliseHit);
-      const sorted = processResults(products, searchTerm);
+      let products: SearchProduct[] = (data.products ?? []).map(normaliseHit);
+      let sorted = processResults(products, searchTerm);
+      let finalCount = data.count ?? 0;
+
+      // If no results, try query variants (apostrophes, plurals)
+      if (sorted.length === 0) {
+        const variants = getQueryVariants(searchTerm);
+        for (const variant of variants) {
+          if (controller.signal.aborted) break;
+          const variantUrl = buildSearchUrl(variant, region, 1);
+          try {
+            const vRes = await fetch(variantUrl, {
+              signal: controller.signal,
+              headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
+            });
+            if (vRes.ok) {
+              const vData = await vRes.json();
+              const vProducts: SearchProduct[] = (vData.products ?? []).map(normaliseHit);
+              const vSorted = processResults(vProducts, variant);
+              if (vSorted.length > 0) {
+                sorted = vSorted;
+                finalCount = vData.count ?? 0;
+                break; // Use first variant that returns results
+              }
+            }
+          } catch { /* skip failed variants */ }
+        }
+      }
 
       // Update results and loading in one batch — no flash of "no results"
       setResults(sorted);
-      setTotalCount(data.count ?? 0);
-      setHasMore((data.count ?? 0) > PAGE_SIZE);
+      setTotalCount(finalCount);
+      setHasMore(finalCount > PAGE_SIZE);
       setLoading(false);
     } catch (err: any) {
       if (err?.name !== 'AbortError') {
