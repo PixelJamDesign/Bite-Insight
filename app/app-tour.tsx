@@ -738,7 +738,6 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   stepFooterGradient: {
-    paddingHorizontal: 24,
     paddingTop: 16,
     paddingBottom: 40,
   },
@@ -746,6 +745,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
+    marginHorizontal: 24,
   },
   skipOutlineBtn: {
     borderWidth: 2,
