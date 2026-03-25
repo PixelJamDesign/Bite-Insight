@@ -1239,6 +1239,7 @@ export default function ScanResultScreen() {
   const [flaggedNameToIdMap, setFlaggedNameToIdMap] = useState<Record<string, string>>({});
   const [switcherVisible, setSwitcherVisible] = useState(false);
   const [activeFamilyProfile, setActiveFamilyProfile] = useState<FamilyProfile | null>(null);
+  const [hasFamilyMembers, setHasFamilyMembers] = useState(false);
   const [micronutrients, setMicronutrients] = useState<Record<string, number | null>>({});
   const [insightSheetDef, setInsightSheetDef] = useState<{ def: InsightDef; result: ImpactResult } | null>(null);
   const [flaggedSheetIng, setFlaggedSheetIng] = useState<FlaggedIngredient | null>(null);
@@ -1346,6 +1347,18 @@ export default function ScanResultScreen() {
       setFlaggedNameToIdMap(result.flaggedNameToIdMap);
       setFlagReasonMap(result.flagReasonMap);
     });
+  }, [session]);
+
+  // Check if user has any family members
+  useEffect(() => {
+    if (!session?.user) return;
+    supabase
+      .from('family_profiles')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', session.user.id)
+      .then(({ count }) => {
+        setHasFamilyMembers((count ?? 0) > 0);
+      });
   }, [session]);
 
   // Fetch active family member profile when switching
@@ -2332,14 +2345,16 @@ export default function ScanResultScreen() {
                         </View>
                       )}
                     </View>
-                    <TouchableOpacity
-                      style={styles.familySwitchBtn}
-                      activeOpacity={0.7}
-                      onPress={() => setSwitcherVisible(true)}
-                    >
-                      <SwitchIcon width={16} height={16} />
-                      <Text style={styles.familySwitchText}>{t('profile.switch')}</Text>
-                    </TouchableOpacity>
+                    {hasFamilyMembers && (
+                      <TouchableOpacity
+                        style={styles.familySwitchBtn}
+                        activeOpacity={0.7}
+                        onPress={() => setSwitcherVisible(true)}
+                      >
+                        <SwitchIcon width={20} height={20} />
+                        <Text style={styles.familySwitchText}>{t('profile.switch')}</Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
                 </View>
               );
