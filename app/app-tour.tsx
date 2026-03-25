@@ -748,6 +748,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   skipOutlineBtn: {
+    flex: 1,
     borderWidth: 2,
     borderColor: '#00776f',
     borderRadius: 8,
@@ -765,7 +766,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
   },
   nextFilledBtn: {
-    flex: 1,
+    flex: 2,
     backgroundColor: '#00776f',
     borderRadius: 8,
     paddingVertical: 16,
