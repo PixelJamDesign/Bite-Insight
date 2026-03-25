@@ -142,7 +142,7 @@ export function UpsellSheet() {
       <Animated.View
         style={[
           styles.sheet,
-          { transform: [{ translateY: slideAnim }], paddingBottom: insets.bottom + 32 },
+          { transform: [{ translateY: slideAnim }] },
         ]}
       >
         {/* Close button */}
@@ -184,30 +184,30 @@ export function UpsellSheet() {
               Subscription renews automatically. Cancel anytime.
             </Text>
           </View>
-
-          {/* ── CTAs ── */}
-          <View style={styles.ctaSection}>
-            <TouchableOpacity
-              style={[styles.primaryBtn, purchasing && styles.primaryBtnDisabled]}
-              activeOpacity={0.85}
-              onPress={purchasePlus}
-              disabled={purchasing}
-            >
-              {purchasing ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Text style={styles.primaryBtnText}>Upgrade to Bite Insight+</Text>
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.secondaryBtn} onPress={hideUpsell} activeOpacity={0.7}>
-              <Ionicons name="arrow-up" size={16} color="#aad4cd" />
-              <Text style={styles.secondaryBtnText}>No thanks</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.restoreBtn} onPress={restorePurchases} activeOpacity={0.6}>
-              <Text style={styles.restoreBtnText}>Restore purchases</Text>
-            </TouchableOpacity>
-          </View>
         </ScrollView>
+
+        {/* ── Sticky CTAs ── */}
+        <View style={[styles.ctaSection, { paddingBottom: insets.bottom + 16 }]}>
+          <TouchableOpacity
+            style={[styles.primaryBtn, purchasing && styles.primaryBtnDisabled]}
+            activeOpacity={0.85}
+            onPress={purchasePlus}
+            disabled={purchasing}
+          >
+            {purchasing ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.primaryBtnText}>Upgrade to Bite Insight+</Text>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.secondaryBtn} onPress={hideUpsell} activeOpacity={0.7}>
+            <Ionicons name="arrow-up" size={16} color="#aad4cd" />
+            <Text style={styles.secondaryBtnText}>No thanks</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.restoreBtn} onPress={restorePurchases} activeOpacity={0.6}>
+            <Text style={styles.restoreBtnText}>Restore purchases</Text>
+          </TouchableOpacity>
+        </View>
       </Animated.View>
     </Modal>
   );
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
   },
   closeBtn: {
     position: 'absolute',
-    top: 24,
+    top: 16,
     right: 24,
     width: 48,
     height: 48,
@@ -244,9 +244,10 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   scrollContent: {
-    paddingTop: 80,
+    paddingTop: 56,
     paddingHorizontal: 32,
-    gap: 32,
+    paddingBottom: 16,
+    gap: 24,
   },
   // ── Logo + Tagline ──
   logoSection: {
@@ -358,6 +359,9 @@ const styles = StyleSheet.create({
   // ── CTAs ──
   ctaSection: {
     alignItems: 'center',
+    paddingHorizontal: 32,
+    paddingTop: 12,
+    backgroundColor: '#002923',
   },
   primaryBtn: {
     backgroundColor: '#00776f',
