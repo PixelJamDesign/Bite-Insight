@@ -473,7 +473,7 @@ export default function AppTourScreen() {
       </Animated.View>
 
       {/* Footer — Skip + Next side by side */}
-      <Animated.View style={{ opacity: stepFooterOpacity, width: '100%' }}>
+      <Animated.View style={{ opacity: stepFooterOpacity, position: 'absolute', bottom: 0, left: 0, right: 0 }}>
         <LinearGradient
           colors={['rgba(226,241,238,0)', '#e2f1ee']}
           locations={[0, 0.45]}
@@ -740,12 +740,13 @@ const styles = StyleSheet.create({
   stepFooterGradient: {
     paddingTop: 16,
     paddingBottom: 40,
+    paddingLeft: 24,
+    paddingRight: 24,
   },
   stepFooterRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    marginHorizontal: 24,
   },
   skipOutlineBtn: {
     borderWidth: 2,
