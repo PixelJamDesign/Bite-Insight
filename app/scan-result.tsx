@@ -3903,6 +3903,7 @@ const styles = StyleSheet.create({
   impactPanelsRow: {
     flexDirection: 'row',
     gap: Spacing.s,
+    width: '100%',
   },
   impactPanelsCol: {
     flexDirection: 'column',
