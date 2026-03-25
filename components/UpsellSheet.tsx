@@ -314,6 +314,8 @@ const styles = StyleSheet.create({
   // ── Pricing ──
   pricingSection: {
     gap: 0,
+    alignSelf: 'flex-start',
+    width: '100%',
   },
   pricingJust: {
     fontSize: 16,
