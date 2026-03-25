@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { FooterButtonRow } from '@/components/FooterButtonRow';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/auth';
@@ -474,22 +475,13 @@ export default function AppTourScreen() {
 
       {/* Footer — Skip + Next side by side */}
       <Animated.View style={{ opacity: stepFooterOpacity, position: 'absolute', bottom: 0, left: 0, right: 0 }}>
-        <LinearGradient
-          colors={['rgba(226,241,238,0)', '#e2f1ee']}
-          locations={[0, 0.45]}
-          style={[styles.stepFooterGradient, { paddingBottom: insets.bottom + 12 }]}
-        >
-          <View style={styles.stepFooterRow}>
-            <TouchableOpacity style={styles.skipOutlineBtn} onPress={handleSkip} activeOpacity={0.85}>
-              <Text style={styles.skipOutlineBtnText}>{t('buttons.skip')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.nextFilledBtn} onPress={handleNext} activeOpacity={0.85}>
-              <Text style={styles.fullWidthBtnText}>
-                {isLastStep ? t('buttons.finish') : step?.nextStepName ? t('progress.next', { stepName: step.nextStepName }) : t('buttons.next')}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </LinearGradient>
+        <FooterButtonRow
+          secondaryLabel={t('buttons.skip')}
+          primaryLabel={isLastStep ? t('buttons.finish') : step?.nextStepName ? t('progress.next', { stepName: step.nextStepName }) : t('buttons.next')}
+          onSecondaryPress={handleSkip}
+          onPrimaryPress={handleNext}
+          absolute={false}
+        />
       </Animated.View>
     </View>
   );

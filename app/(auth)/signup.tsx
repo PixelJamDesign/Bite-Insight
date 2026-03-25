@@ -20,6 +20,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { FooterButtonRow } from '@/components/FooterButtonRow';
 import * as ImagePicker from 'expo-image-picker';
 import { useTranslation } from 'react-i18next';
 import { supabase, uploadAvatar } from '@/lib/supabase';
@@ -653,33 +654,14 @@ export default function SignUpScreen() {
         </ScrollView>
 
         {/* ── Footer ── */}
-        <View style={styles.footer}>
-          <LinearGradient
-            colors={['rgba(226,241,238,0)', Colors.background]}
-            style={styles.footerFade}
-            pointerEvents="none"
-          />
-          <View style={[styles.footerButtons, { paddingBottom: insets.bottom + 12 }]}>
-            <TouchableOpacity style={styles.backBtn} onPress={handleBack} activeOpacity={0.8}>
-              <Text style={styles.backBtnText}>{step === 1 ? tc('buttons.cancel') : tc('buttons.back')}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.nextBtn}
-              onPress={step === 4 ? handleFinish : handleNext}
-              disabled={loading}
-              activeOpacity={0.88}
-            >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.nextBtnText} numberOfLines={1} adjustsFontSizeToFit>
-                  {nextBtnLabel}
-                </Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
+        <FooterButtonRow
+          secondaryLabel={step === 1 ? tc('buttons.cancel') : tc('buttons.back')}
+          primaryLabel={nextBtnLabel}
+          onSecondaryPress={handleBack}
+          onPrimaryPress={step === 4 ? handleFinish : handleNext}
+          primaryLoading={loading}
+          primaryDisabled={loading}
+        />
       </KeyboardAvoidingView>
     </SafeAreaView>
     <ConditionInfoSheet conditionKey={infoKey} onClose={() => setInfoKey(null)} />
