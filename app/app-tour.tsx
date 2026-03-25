@@ -474,14 +474,21 @@ export default function AppTourScreen() {
       </Animated.View>
 
       {/* Footer — Skip + Next side by side */}
-      <Animated.View style={{ opacity: stepFooterOpacity, paddingHorizontal: 24 }}>
-        <FooterButtonRow
-          secondaryLabel={t('buttons.skip')}
-          primaryLabel={isLastStep ? t('buttons.finish') : step?.nextStepName ? t('progress.next', { stepName: step.nextStepName }) : t('buttons.next')}
-          onSecondaryPress={handleSkip}
-          onPrimaryPress={handleNext}
+      <View style={styles.stepFooter}>
+        <LinearGradient
+          colors={['rgba(226,241,238,0)', '#e2f1ee']}
+          style={styles.stepFooterFade}
+          pointerEvents="none"
         />
-      </Animated.View>
+        <Animated.View style={[styles.stepFooterButtons, { opacity: stepFooterOpacity, paddingBottom: insets.bottom + 12 }]}>
+          <FooterButtonRow
+            secondaryLabel={t('buttons.skip')}
+            primaryLabel={isLastStep ? t('buttons.finish') : step?.nextStepName ? t('progress.next', { stepName: step.nextStepName }) : t('buttons.next')}
+            onSecondaryPress={handleSkip}
+            onPrimaryPress={handleNext}
+          />
+        </Animated.View>
+      </View>
     </View>
   );
 }
@@ -728,42 +735,18 @@ const styles = StyleSheet.create({
     maxWidth: 480,
     height: '100%',
   },
-  stepFooterGradient: {
-    paddingTop: 16,
-    paddingBottom: 40,
-    paddingLeft: 24,
-    paddingRight: 24,
+  stepFooter: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
-  stepFooterRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
+  stepFooterFade: {
+    height: 40,
   },
-  skipOutlineBtn: {
-    borderWidth: 2,
-    borderColor: '#00776f',
-    borderRadius: 8,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: 80,
-  },
-  skipOutlineBtnText: {
-    fontSize: 16,
-    lineHeight: 20,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: '#00776f',
-    letterSpacing: 0,
-  },
-  nextFilledBtn: {
-    flex: 1,
-    backgroundColor: '#00776f',
-    borderRadius: 8,
-    paddingVertical: 16,
+  stepFooterButtons: {
     paddingHorizontal: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
+    paddingTop: 8,
+    backgroundColor: Colors.background,
   },
 });

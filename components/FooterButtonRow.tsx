@@ -6,8 +6,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Radius } from '@/constants/theme';
+import { Colors } from '@/constants/theme';
 
 interface FooterButtonRowProps {
   secondaryLabel: string;
@@ -18,6 +17,10 @@ interface FooterButtonRowProps {
   primaryDisabled?: boolean;
 }
 
+/**
+ * A simple row of two buttons: outline secondary (fixed width) + filled primary (flex).
+ * Matches the disclaimer footer exactly. Parent must provide all positioning and padding.
+ */
 export function FooterButtonRow({
   secondaryLabel,
   primaryLabel,
@@ -26,20 +29,13 @@ export function FooterButtonRow({
   primaryLoading = false,
   primaryDisabled = false,
 }: FooterButtonRowProps) {
-  const insets = useSafeAreaInsets();
-
   return (
-    <View style={[styles.row, { paddingBottom: insets.bottom + 12 }]}>
-      <TouchableOpacity
-        style={styles.secondary}
-        onPress={onSecondaryPress}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.secondaryText}>{secondaryLabel}</Text>
+    <View style={styles.row}>
+      <TouchableOpacity style={styles.back} onPress={onSecondaryPress} activeOpacity={0.8}>
+        <Text style={styles.backText}>{secondaryLabel}</Text>
       </TouchableOpacity>
-
       <TouchableOpacity
-        style={[styles.primary, primaryDisabled && { opacity: 0.6 }]}
+        style={[styles.next, primaryDisabled && { opacity: 0.6 }]}
         onPress={onPrimaryPress}
         disabled={primaryDisabled || primaryLoading}
         activeOpacity={0.88}
@@ -47,7 +43,7 @@ export function FooterButtonRow({
         {primaryLoading ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text style={styles.primaryText} numberOfLines={1} adjustsFontSizeToFit>
+          <Text style={styles.nextText} numberOfLines={1} adjustsFontSizeToFit>
             {primaryLabel}
           </Text>
         )}
@@ -59,34 +55,32 @@ export function FooterButtonRow({
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
-    alignItems: 'center',
     gap: 12,
-    paddingTop: 8,
   },
-  secondary: {
+  back: {
+    width: 91,
     paddingVertical: 16,
-    paddingHorizontal: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: Radius.m,
-    borderWidth: 1.5,
-    borderColor: Colors.primary,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: Colors.secondary,
   },
-  secondaryText: {
+  backText: {
     fontSize: 16,
     fontFamily: 'Figtree_700Bold',
     fontWeight: '700',
-    color: Colors.primary,
+    color: Colors.secondary,
   },
-  primary: {
+  next: {
     flex: 1,
     paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: Radius.m,
+    borderRadius: 8,
     backgroundColor: Colors.secondary,
   },
-  primaryText: {
+  nextText: {
     fontSize: 16,
     fontFamily: 'Figtree_700Bold',
     fontWeight: '700',
