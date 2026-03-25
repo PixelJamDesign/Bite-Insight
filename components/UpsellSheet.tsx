@@ -183,9 +183,6 @@ export function UpsellSheet() {
               <Text style={styles.priceAmount}>£3.99</Text>
               <Text style={styles.priceUnit}> / month</Text>
             </View>
-            <Text style={styles.priceFineprint}>
-              Subscription renews automatically. Cancel anytime.
-            </Text>
           </View>
           <TouchableOpacity
             style={[styles.primaryBtn, purchasing && styles.primaryBtnDisabled]}
@@ -199,6 +196,9 @@ export function UpsellSheet() {
               <Text style={styles.primaryBtnText}>Upgrade to Bite Insight+</Text>
             )}
           </TouchableOpacity>
+          <Text style={styles.priceFineprint}>
+            Subscription renews automatically. Cancel anytime.
+          </Text>
           <TouchableOpacity style={styles.restoreBtn} onPress={restorePurchases} activeOpacity={0.6}>
             <Text style={styles.restoreBtnText}>Restore purchases</Text>
           </TouchableOpacity>
@@ -357,6 +357,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     paddingTop: 12,
     backgroundColor: '#002923',
+    gap: 8,
   },
   primaryBtn: {
     backgroundColor: '#00776f',
