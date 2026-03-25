@@ -403,28 +403,60 @@ export default function FoodSearchScreen() {
       let sorted = processResults(products, searchTerm);
       let finalCount = data.count ?? 0;
 
-      // If no results, try query variants (apostrophes, plurals)
-      if (sorted.length === 0) {
-        const variants = getQueryVariants(searchTerm);
-        for (const variant of variants) {
+      // If few/no results, try synonyms first, then other variants
+      if (sorted.length < 5) {
+        // Try synonyms first (highest value — UK/US term differences)
+        const synonyms = getSynonyms(searchTerm);
+        for (const syn of synonyms) {
           if (controller.signal.aborted) break;
-          const variantUrl = buildSearchUrl(variant, region, 1);
+          const synUrl = buildSearchUrl(syn, region, 1);
           try {
-            const vRes = await fetch(variantUrl, {
+            const sRes = await fetch(synUrl, {
               signal: controller.signal,
               headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
             });
-            if (vRes.ok) {
-              const vData = await vRes.json();
-              const vProducts: SearchProduct[] = (vData.products ?? []).map(normaliseHit);
-              const vSorted = processResults(vProducts, variant);
-              if (vSorted.length > 0) {
-                sorted = vSorted;
-                finalCount = vData.count ?? 0;
-                break; // Use first variant that returns results
+            if (sRes.ok) {
+              const sData = await sRes.json();
+              const sProducts: SearchProduct[] = (sData.products ?? []).map(normaliseHit);
+              const sSorted = processResults(sProducts, syn);
+              if (sSorted.length > 0) {
+                // Merge with existing results, deduplicate by barcode
+                const existingCodes = new Set(sorted.map(p => p.code));
+                const newProducts = sSorted.filter(p => !existingCodes.has(p.code));
+                sorted = [...sorted, ...newProducts];
+                finalCount = Math.max(finalCount, sorted.length);
+                break;
               }
             }
-          } catch { /* skip failed variants */ }
+          } catch { /* skip failed synonyms */ }
+        }
+
+        // If still no results, try apostrophe/plural variants
+        if (sorted.length === 0) {
+          const variants = getQueryVariants(searchTerm);
+          // Filter out synonyms we already tried
+          const synSet = new Set(synonyms.map(s => s.toLowerCase()));
+          const remaining = variants.filter(v => !synSet.has(v.toLowerCase()));
+          for (const variant of remaining) {
+            if (controller.signal.aborted) break;
+            const variantUrl = buildSearchUrl(variant, region, 1);
+            try {
+              const vRes = await fetch(variantUrl, {
+                signal: controller.signal,
+                headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
+              });
+              if (vRes.ok) {
+                const vData = await vRes.json();
+                const vProducts: SearchProduct[] = (vData.products ?? []).map(normaliseHit);
+                const vSorted = processResults(vProducts, variant);
+                if (vSorted.length > 0) {
+                  sorted = vSorted;
+                  finalCount = vData.count ?? 0;
+                  break;
+                }
+              }
+            } catch { /* skip failed variants */ }
+          }
         }
       }
 
@@ -750,7 +782,7 @@ export default function FoodSearchScreen() {
             </Text>
             <TouchableOpacity
               style={{ backgroundColor: Colors.secondary, borderRadius: Radius.m, paddingVertical: 10, paddingHorizontal: 24 }}
-              onPress={() => { if (submittedQuery) performSearch(submittedQuery, region); }}
+              onPress={() => { if (submittedQuery) performSearch(submittedQuery, regionRef.current); }}
               activeOpacity={0.8}
             >
               <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700', fontFamily: 'Figtree_700Bold' }}>
