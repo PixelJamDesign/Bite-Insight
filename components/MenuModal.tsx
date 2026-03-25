@@ -165,7 +165,6 @@ function AccountScreen({ goBack, onGo, onNavigate }: { goBack: () => void; onGo:
           label={t('account.biteInsightPlus')}
           onPress={isPlus ? showMyPlan : showUpsell}
         />
-        <NavItem icon={<MenuLockIcon color={Colors.secondary} />} label={t('account.changePassword')} onPress={() => onNavigate('password')} chevron />
       </View>
     </>
   );
@@ -227,7 +226,7 @@ function HelpSupportScreen({ goBack, onGo }: { goBack: () => void; onGo: (route:
   );
 }
 
-function SecurityScreen({ goBack }: { goBack: () => void }) {
+function SecurityScreen({ goBack, onNavigate }: { goBack: () => void; onNavigate: (s: MenuScreen) => void }) {
   const { t } = useTranslation('menu');
   const { t: tc } = useTranslation('common');
   const [available, setAvailable] = useState(false);
@@ -301,6 +300,7 @@ function SecurityScreen({ goBack }: { goBack: () => void }) {
             {t('security.unavailableHint')}
           </Text>
         )}
+        <NavItem icon={<MenuLockIcon color={Colors.secondary} />} label={t('account.changePassword')} onPress={() => onNavigate('password')} chevron />
       </View>
     </>
   );
@@ -1621,12 +1621,12 @@ export function MenuModal({ onClose, onNavigate }: MenuModalProps) {
       return <><OfflineDatabaseScreen goBack={() => navigate('settings', true)} /><Footer /></>;
     }
     if (s === 'password') {
-      return <><ChangePasswordScreen goBack={() => navigate('account', true)} /><Footer /></>;
+      return <><ChangePasswordScreen goBack={() => navigate('security', true)} /><Footer /></>;
     }
     if (s === 'help') {
       return <><HelpSupportScreen goBack={() => navigate('settings', true)} onGo={handleNavigate} /><Footer /></>;
     }
-    return <><SecurityScreen goBack={() => navigate('settings', true)} /><Footer /></>;
+    return <><SecurityScreen goBack={() => navigate('settings', true)} onNavigate={(s) => navigate(s)} /><Footer /></>;
   }
 
   const sharedScrollProps = {
