@@ -744,11 +744,10 @@ const styles = StyleSheet.create({
   },
   stepFooterRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: 10,
-    width: '100%',
   },
   skipOutlineBtn: {
-    flex: 1,
     borderWidth: 2,
     borderColor: '#00776f',
     borderRadius: 8,
@@ -766,7 +765,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
   },
   nextFilledBtn: {
-    flex: 2,
+    flex: 1,
     backgroundColor: '#00776f',
     borderRadius: 8,
     paddingVertical: 16,
