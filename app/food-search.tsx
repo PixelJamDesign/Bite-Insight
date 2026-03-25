@@ -274,9 +274,9 @@ export default function FoodSearchScreen() {
         headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
       });
 
-      // Retry once on rate limit (429) or server error (503) after a short backoff
-      if (res.status === 429 || res.status === 503) {
-        await new Promise((r) => setTimeout(r, 1500));
+      // Retry up to 3 times on rate limit (429) or server error (503) with increasing backoff
+      for (let attempt = 1; attempt <= 3 && (res.status === 429 || res.status === 503); attempt++) {
+        await new Promise((r) => setTimeout(r, 1500 * attempt));
         res = await fetch(url, {
           signal: controller.signal,
           headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
@@ -606,9 +606,20 @@ export default function FoodSearchScreen() {
             {t('search.showing', { count: totalCount, term: submittedQuery })}
           </Text>
         ) : hasSearched && !loading && results.length === 0 && serverError ? (
-          <Text style={styles.subtitle}>
-            {t('search.serverBusy')}
-          </Text>
+          <View style={{ alignItems: 'center', gap: 12 }}>
+            <Text style={styles.subtitle}>
+              {t('search.serverBusy')}
+            </Text>
+            <TouchableOpacity
+              style={{ backgroundColor: Colors.secondary, borderRadius: Radius.m, paddingVertical: 10, paddingHorizontal: 24 }}
+              onPress={() => { if (submittedQuery) doSearch(submittedQuery, region); }}
+              activeOpacity={0.8}
+            >
+              <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700', fontFamily: 'Figtree_700Bold' }}>
+                {t('search.retry')}
+              </Text>
+            </TouchableOpacity>
+          </View>
         ) : hasSearched && !loading && results.length === 0 ? (
           <Text style={styles.subtitle}>
             {t('search.noResults', { term: submittedQuery })}

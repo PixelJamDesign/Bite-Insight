@@ -1478,20 +1478,28 @@ export default function ScanResultScreen() {
           }).catch(() => {});
 
           // Update Supabase scan history with the product info (fire-and-forget)
+          // Retries after a short delay to handle race condition where the scanner's
+          // background save may not have completed yet when OFF data arrives
           if (session?.user?.id) {
-            (async () => {
+            const resolvedName = fetchedProductName || p.productName;
+            const updateScan = async (attempt = 0): Promise<void> => {
               try {
                 const { data: existing } = await supabase.from('scans').select('id').eq('user_id', session.user.id).eq('barcode', p.barcode).limit(1).single();
                 if (existing) {
                   await supabase.from('scans').update({
-                    product_name: fetchedProductName || p.productName,
+                    product_name: resolvedName,
                     brand: fetchedBrand || p.brand || null,
                     image_url: fetchedImageUrl || p.imageUrl || null,
                     nutriscore_grade: op.nutriscore_grade || op.nutrition_grade_fr || null,
                   }).eq('id', existing.id);
+                } else if (attempt < 3) {
+                  // Record not saved yet by scanner — wait and retry
+                  await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+                  return updateScan(attempt + 1);
                 }
               } catch { /* non-critical */ }
-            })();
+            };
+            updateScan();
           }
         }
       })

@@ -745,6 +745,7 @@ const styles = StyleSheet.create({
   stepFooterRow: {
     flexDirection: 'row',
     gap: 10,
+    justifyContent: 'center',
   },
   skipOutlineBtn: {
     borderWidth: 2,

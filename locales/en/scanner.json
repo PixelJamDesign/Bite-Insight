@@ -41,6 +41,7 @@
     "showing": "Showing {{count}} results for {{term}}",
     "noResults": "No products found for '{{term}}'",
     "serverBusy": "The product database is temporarily busy. Please try again in a moment.",
+    "retry": "Try again",
     "searching": "Searching...",
     "prompt": "Search for a product by name",
     "back": "Back",
