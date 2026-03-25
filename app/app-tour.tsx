@@ -474,13 +474,14 @@ export default function AppTourScreen() {
       </Animated.View>
 
       {/* Footer — Skip + Next side by side */}
-      <Animated.View style={{ opacity: stepFooterOpacity, position: 'absolute', bottom: 0, left: 0, right: 0 }}>
+      <Animated.View style={{ opacity: stepFooterOpacity }}>
         <FooterButtonRow
           secondaryLabel={t('buttons.skip')}
           primaryLabel={isLastStep ? t('buttons.finish') : step?.nextStepName ? t('progress.next', { stepName: step.nextStepName }) : t('buttons.next')}
           onSecondaryPress={handleSkip}
           onPrimaryPress={handleNext}
           absolute={false}
+          showGradient={false}
         />
       </Animated.View>
     </View>
