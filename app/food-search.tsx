@@ -55,7 +55,10 @@ interface SearchProduct {
   quantity?: string;
 }
 
-const DEBOUNCE_MS = 1200;
+// Adaptive debounce — adjusts based on actual typing speed
+const DEBOUNCE_MIN = 800;   // fastest typists still get a comfortable pause
+const DEBOUNCE_MAX = 2000;  // slowest typists get plenty of breathing room
+const DEBOUNCE_DEFAULT = 1200;
 const PAGE_SIZE = 24;
 const SEARCH_FIELDS = 'code,product_name,brands,image_front_small_url,nutriscore_grade,quantity';
 // Use the classic CGI search API with region subdomains — the Search-A-Licious
@@ -97,6 +100,41 @@ export default function FoodSearchScreen() {
   const regionRef = useRef(selectedRegion);
   regionRef.current = selectedRegion;
 
+  // ── Adaptive debounce: measure gaps between keystrokes ──────────────────────
+  const lastKeystrokeRef = useRef<number>(0);
+  const keystrokeGapsRef = useRef<number[]>([]);
+
+  /** Call on every text change to track typing speed */
+  function recordKeystroke() {
+    const now = Date.now();
+    if (lastKeystrokeRef.current > 0) {
+      const gap = now - lastKeystrokeRef.current;
+      // Only count gaps under 3s (ignore pauses where user looked away)
+      if (gap < 3000) {
+        const gaps = keystrokeGapsRef.current;
+        gaps.push(gap);
+        // Keep a rolling window of the last 10 keystrokes
+        if (gaps.length > 10) gaps.shift();
+      }
+    }
+    lastKeystrokeRef.current = now;
+  }
+
+  /** Calculate debounce based on recent typing speed */
+  function getAdaptiveDebounce(): number {
+    const gaps = keystrokeGapsRef.current;
+    if (gaps.length < 3) return DEBOUNCE_DEFAULT;
+
+    // Average gap between keystrokes
+    const avgGap = gaps.reduce((sum, g) => sum + g, 0) / gaps.length;
+
+    // Fast typer (avg < 150ms between keys): short debounce
+    // Slow typer (avg > 400ms between keys): long debounce
+    // Scale linearly between min and max
+    const ratio = Math.min(1, Math.max(0, (avgGap - 100) / 400));
+    return Math.round(DEBOUNCE_MIN + ratio * (DEBOUNCE_MAX - DEBOUNCE_MIN));
+  }
+
   /** Handle region selection — gate premium regions behind Plus (UK always free) */
   function handleRegionSelect(region: Region) {
     if (region.code !== 'gb' && !isPlus) {
@@ -125,6 +163,9 @@ export default function FoodSearchScreen() {
       debounceRef.current = null;
     }
 
+    // Track typing speed on every change
+    recordKeystroke();
+
     const trimmed = query.trim();
 
     // Reset state when input is cleared
@@ -146,11 +187,12 @@ export default function FoodSearchScreen() {
     setHasSearched(true);
     setResults([]);
 
+    const adaptiveDelay = getAdaptiveDebounce();
     debounceRef.current = setTimeout(() => {
       debounceRef.current = null;
       // Always read region from ref (avoids stale closure)
       performSearch(trimmed, regionRef.current);
-    }, DEBOUNCE_MS);
+    }, adaptiveDelay);
 
     return () => {
       if (debounceRef.current) {
