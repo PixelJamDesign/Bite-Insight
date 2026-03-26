@@ -704,7 +704,7 @@ const styles = StyleSheet.create({
   stepContent: {
     paddingHorizontal: 24,
     gap: 8,
-    marginBottom: 0,
+    marginBottom: 30,
   },
   stepTitle: {
     fontSize: 18,
