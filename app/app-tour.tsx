@@ -421,30 +421,28 @@ export default function AppTourScreen() {
 
         {/* Progress dots + next label */}
         <Animated.View style={[styles.progressRow, { opacity: stepDotsOpacity, transform: [{ translateY: stepDotsTranslateY }] }]}>
-          <View style={styles.progressInner}>
-            <View style={styles.dotsRow}>
-              {Array.from({ length: TOTAL_DOTS }).map((_, i) => {
-                if (i < currentIndex) {
-                  // Completed step — teal circle with white checkmark
-                  return (
-                    <View key={i} style={styles.dotCompleted}>
-                      <Svg width={12} height={12} viewBox="0 0 12 12" fill="none">
-                        <Path d="M2.5 6.5L4.5 8.5L9.5 3.5" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-                      </Svg>
-                    </View>
-                  );
-                }
+          <View style={styles.dotsRow}>
+            {Array.from({ length: TOTAL_DOTS }).map((_, i) => {
+              if (i < currentIndex) {
+                // Completed step — teal circle with white checkmark
                 return (
-                  <View
-                    key={i}
-                    style={[
-                      styles.dot,
-                      i === currentIndex ? styles.dotActive : styles.dotInactive,
-                    ]}
-                  />
+                  <View key={i} style={styles.dotCompleted}>
+                    <Svg width={12} height={12} viewBox="0 0 12 12" fill="none">
+                      <Path d="M2.5 6.5L4.5 8.5L9.5 3.5" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                    </Svg>
+                  </View>
                 );
-              })}
-            </View>
+              }
+              return (
+                <View
+                  key={i}
+                  style={[
+                    styles.dot,
+                    i === currentIndex ? styles.dotActive : styles.dotInactive,
+                  ]}
+                />
+              );
+            })}
           </View>
           {step?.nextStepName && (
             <Text style={styles.nextLabel}>
@@ -667,12 +665,9 @@ const styles = StyleSheet.create({
   progressRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    justifyContent: 'space-between',
     paddingHorizontal: 24,
-    marginBottom: 24,
-  },
-  progressInner: {
-    flex: 1,
+    marginBottom: 16,
   },
   dotsRow: {
     flexDirection: 'row',
@@ -709,6 +704,7 @@ const styles = StyleSheet.create({
   stepContent: {
     paddingHorizontal: 24,
     gap: 8,
+    marginBottom: 0,
   },
   stepTitle: {
     fontSize: 18,
