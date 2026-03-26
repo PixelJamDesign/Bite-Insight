@@ -59,7 +59,7 @@ interface SearchProduct {
 const DEBOUNCE_MIN = 300;   // fastest typists
 const DEBOUNCE_MAX = 800;   // slowest typists
 const DEBOUNCE_DEFAULT = 450;
-const PAGE_SIZE = 24;
+const PAGE_SIZE = 10;
 const SEARCH_FIELDS = 'code,product_name,brands,image_front_small_url,nutriscore_grade,quantity';
 // Use the classic CGI search API with region subdomains — the Search-A-Licious
 // endpoint (search.openfoodfacts.org) ignores country filters entirely.
@@ -445,48 +445,62 @@ export default function FoodSearchScreen() {
         };
       }
 
-      // Fire main search + top variants/synonyms in PARALLEL
+      // Fire main search + variants/synonyms in PARALLEL, stream results as they arrive
       const variants = getQueryVariants(searchTerm);
       const synonyms = getSynonyms(searchTerm);
-      const altTerms = [...new Set([...synonyms, ...variants])].slice(0, 3); // max 3 parallel alt searches
+      const altTerms = [...new Set([...synonyms, ...variants])].slice(0, 3);
 
-      const searches = [
-        fetchWithRetry(searchTerm, region),
-        ...altTerms.map(t => fetchWithRetry(t, region).catch(() => null)),
-      ];
+      const seenCodes = new Set<string>();
+      let allDone = 0;
+      const totalSearches = 1 + altTerms.length;
+      let anyResults = false;
 
-      const results = await Promise.all(searches);
-
-      // Process main result
-      const mainResult = results[0];
-      let sorted: SearchProduct[] = [];
-      let finalCount = 0;
-
-      if (mainResult) {
-        sorted = processResults(mainResult.products, searchTerm);
-        finalCount = mainResult.count;
-      }
-
-      // Merge alt results if main had few/no results
-      if (sorted.length < 5) {
-        const existingCodes = new Set(sorted.map(p => p.code));
-        for (let i = 1; i < results.length; i++) {
-          const altResult = results[i];
-          if (!altResult || altResult.products.length === 0) continue;
-          const altSorted = processResults(altResult.products, altTerms[i - 1]);
-          const newProducts = altSorted.filter(p => !existingCodes.has(p.code));
-          for (const p of newProducts) existingCodes.add(p.code);
-          sorted = [...sorted, ...newProducts];
-          finalCount = Math.max(finalCount, sorted.length);
+      /** Merge new products into the displayed results, deduplicating by barcode */
+      function streamResults(products: SearchProduct[], term: string, count: number) {
+        if (controller.signal.aborted) return;
+        const processed = processResults(products, term);
+        const fresh = processed.filter(p => {
+          if (!p.code || seenCodes.has(p.code)) return false;
+          seenCodes.add(p.code);
+          return true;
+        });
+        if (fresh.length > 0) {
+          anyResults = true;
+          setResults(prev => {
+            const merged = [...prev, ...fresh];
+            // Re-sort everything by relevance to the original search term
+            return processResults(merged, searchTerm);
+          });
+          setTotalCount(prev => Math.max(prev, count));
+          setHasMore(count > PAGE_SIZE);
+          // Stop loading as soon as first results appear
+          setLoading(false);
         }
       }
 
-      if (!mainResult && sorted.length === 0) throw new Error('All searches failed');
+      // Launch all searches simultaneously
+      const mainSearch = fetchWithRetry(searchTerm, region).then(result => {
+        allDone++;
+        if (result) {
+          streamResults(result.products, searchTerm, result.count);
+        }
+      }).catch(() => { allDone++; });
 
-      // Update results and loading in one batch
-      setResults(sorted);
-      setTotalCount(finalCount);
-      setHasMore(finalCount > PAGE_SIZE);
+      const altSearches = altTerms.map(term =>
+        fetchWithRetry(term, region).then(result => {
+          allDone++;
+          if (result && result.products.length > 0) {
+            streamResults(result.products, term, result.count);
+          }
+        }).catch(() => { allDone++; })
+      );
+
+      // Wait for all to finish, then finalise
+      await Promise.all([mainSearch, ...altSearches]);
+
+      if (!anyResults) throw new Error('All searches failed');
+
+      // All done — ensure loading is off
       setLoading(false);
     } catch (err: any) {
       if (err?.name === 'AbortError') return;
