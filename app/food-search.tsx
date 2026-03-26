@@ -61,9 +61,10 @@ const DEBOUNCE_MAX = 800;   // slowest typists
 const DEBOUNCE_DEFAULT = 450;
 const PAGE_SIZE = 10;
 const SEARCH_FIELDS = 'code,product_name,brands,image_front_small_url,nutriscore_grade,quantity';
-// Use the classic CGI search API with region subdomains — the Search-A-Licious
-// endpoint (search.openfoodfacts.org) ignores country filters entirely.
-const SEARCH_PATH = 'openfoodfacts.org/cgi/search.pl';
+// Search-a-Licious API — Elasticsearch-backed, much faster than the old CGI endpoint
+const SEARCH_API = 'https://search.openfoodfacts.org/search';
+// Fallback to classic CGI if Search-a-Licious fails
+const SEARCH_CGI_PATH = 'openfoodfacts.org/cgi/search.pl';
 
 export default function FoodSearchScreen() {
   const { t } = useTranslation('scanner');
@@ -371,9 +372,24 @@ export default function FoodSearchScreen() {
     return [...new Set(variants)].filter(v => v.toLowerCase() !== lower);
   }
 
-  /** Build the Search-A-Licious query URL */
+  /** Build Search-a-Licious API URL (Elasticsearch-backed, fast) */
   function buildSearchUrl(searchTerm: string, region: Region, page: number): string {
-    // Classic CGI search — region subdomain handles country filtering natively
+    // Add country filter to query if not global
+    const countryFilter = region.countryTag ? ` countries_tags:"${region.countryTag}"` : '';
+    const q = `${searchTerm}${countryFilter}`;
+    const params = new URLSearchParams({
+      q,
+      page_size: String(PAGE_SIZE),
+      page: String(page),
+      fields: SEARCH_FIELDS,
+      langs: 'en',
+      sort_by: 'unique_scans_n',
+    });
+    return `${SEARCH_API}?${params.toString()}`;
+  }
+
+  /** Build fallback CGI search URL */
+  function buildCgiUrl(searchTerm: string, region: Region, page: number): string {
     const subdomain = region.subdomain || 'world';
     const params = new URLSearchParams({
       search_terms: searchTerm,
@@ -385,7 +401,7 @@ export default function FoodSearchScreen() {
       page_size: String(PAGE_SIZE),
       fields: SEARCH_FIELDS,
     });
-    return `https://${subdomain}.${SEARCH_PATH}?${params.toString()}`;
+    return `https://${subdomain}.${SEARCH_CGI_PATH}?${params.toString()}`;
   }
 
   /** Normalise a product from the Search-A-Licious response.
@@ -418,21 +434,40 @@ export default function FoodSearchScreen() {
       const headers = { 'User-Agent': 'BiteInsight/1.0 (mobile app)' };
       const signal = controller.signal;
 
-      /** Fetch with retry on 429/503, plus global fallback */
+      /** Fetch from Search-a-Licious first, fall back to CGI if it fails */
       async function fetchWithRetry(term: string, reg: Region): Promise<{ products: SearchProduct[]; count: number } | null> {
-        const url = buildSearchUrl(term, reg, 1);
-        let res = await fetch(url, { signal, headers });
-
-        // Retry up to 2 times on 429/503
-        for (let i = 1; i <= 2 && (res.status === 429 || res.status === 503); i++) {
-          await new Promise((r) => setTimeout(r, 1500 * i));
-          res = await fetch(url, { signal, headers });
+        // Try Search-a-Licious (fast Elasticsearch API)
+        try {
+          const url = buildSearchUrl(term, reg, 1);
+          const res = await fetch(url, { signal, headers });
+          if (res.ok) {
+            const data = await res.json();
+            // Search-a-Licious returns "hits" not "products"
+            const items = data.hits ?? data.products ?? [];
+            return {
+              products: items.map(normaliseHit),
+              count: data.count ?? 0,
+            };
+          }
+          console.warn(`[FoodSearch] Search-a-Licious returned ${res.status}, falling back to CGI`);
+        } catch (e: any) {
+          if (e?.name === 'AbortError') throw e;
+          console.warn('[FoodSearch] Search-a-Licious failed, falling back to CGI');
         }
 
-        // Global fallback if regional fails
+        // Fallback: classic CGI endpoint
+        const cgiUrl = buildCgiUrl(term, reg, 1);
+        let res = await fetch(cgiUrl, { signal, headers });
+
+        // Retry on 429/503
+        for (let i = 1; i <= 2 && (res.status === 429 || res.status === 503); i++) {
+          await new Promise((r) => setTimeout(r, 1500 * i));
+          res = await fetch(cgiUrl, { signal, headers });
+        }
+
+        // Global fallback if regional CGI fails
         if (!res.ok && reg.subdomain && reg.subdomain !== 'world') {
-          console.warn(`[FoodSearch] Regional failed (${res.status}), trying global`);
-          const gUrl = buildSearchUrl(term, { ...reg, subdomain: 'world' } as Region, 1);
+          const gUrl = buildCgiUrl(term, { ...reg, subdomain: 'world' } as Region, 1);
           const gRes = await fetch(gUrl, { signal, headers });
           if (gRes.ok) res = gRes;
         }
@@ -547,7 +582,9 @@ export default function FoodSearchScreen() {
 
       if (!res.ok) throw new Error('Network error');
       const data = await res.json();
-      const products: SearchProduct[] = (data.products ?? []).map(normaliseHit);
+      // Search-a-Licious returns "hits", CGI returns "products"
+      const items = data.hits ?? data.products ?? [];
+      const products: SearchProduct[] = items.map(normaliseHit);
 
       if (products.length === 0) {
         setHasMore(false);
