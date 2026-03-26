@@ -671,6 +671,7 @@ const styles = StyleSheet.create({
   },
   dotsRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: 4,
   },
   dot: {
@@ -704,7 +705,7 @@ const styles = StyleSheet.create({
   stepContent: {
     paddingHorizontal: 24,
     gap: 8,
-    marginBottom: 30,
+    marginBottom: 32,
   },
   stepTitle: {
     fontSize: 18,
@@ -723,12 +724,15 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
   },
   videoContainer: {
+    flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 120,
   },
   video: {
     width: '100%',
     maxWidth: 480,
-    height: '100%',
+    flex: 1,
   },
   stepFooter: {
     position: 'absolute',
