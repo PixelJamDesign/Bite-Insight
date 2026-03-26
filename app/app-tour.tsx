@@ -723,9 +723,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
   },
   videoContainer: {
-    flex: 1,
     alignItems: 'center',
-    justifyContent: 'flex-start',
   },
   video: {
     width: '100%',
