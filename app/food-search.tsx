@@ -415,99 +415,75 @@ export default function FoodSearchScreen() {
     currentTermRef.current = searchTerm;
 
     try {
-      const url = buildSearchUrl(searchTerm, region, 1);
+      const headers = { 'User-Agent': 'BiteInsight/1.0 (mobile app)' };
+      const signal = controller.signal;
 
-      let res = await fetch(url, {
-        signal: controller.signal,
-        headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
-      });
+      /** Fetch with retry on 429/503, plus global fallback */
+      async function fetchWithRetry(term: string, reg: Region): Promise<{ products: SearchProduct[]; count: number } | null> {
+        const url = buildSearchUrl(term, reg, 1);
+        let res = await fetch(url, { signal, headers });
 
-      // Retry up to 2 times on rate limit (429) or server error (503) with increasing backoff
-      for (let attempt = 1; attempt <= 2 && (res.status === 429 || res.status === 503); attempt++) {
-        await new Promise((r) => setTimeout(r, 1500 * attempt));
-        res = await fetch(url, {
-          signal: controller.signal,
-          headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
-        });
+        // Retry up to 2 times on 429/503
+        for (let i = 1; i <= 2 && (res.status === 429 || res.status === 503); i++) {
+          await new Promise((r) => setTimeout(r, 1500 * i));
+          res = await fetch(url, { signal, headers });
+        }
+
+        // Global fallback if regional fails
+        if (!res.ok && reg.subdomain && reg.subdomain !== 'world') {
+          console.warn(`[FoodSearch] Regional failed (${res.status}), trying global`);
+          const gUrl = buildSearchUrl(term, { ...reg, subdomain: 'world' } as Region, 1);
+          const gRes = await fetch(gUrl, { signal, headers });
+          if (gRes.ok) res = gRes;
+        }
+
+        if (!res.ok) return null;
+        const data = await res.json();
+        return {
+          products: (data.products ?? []).map(normaliseHit),
+          count: data.count ?? 0,
+        };
       }
 
-      // If regional endpoint is still failing, try the global endpoint as fallback
-      if (!res.ok && region.subdomain && region.subdomain !== 'world') {
-        console.warn(`[FoodSearch] Regional endpoint failed (${res.status}), falling back to global`);
-        const globalUrl = buildSearchUrl(searchTerm, { ...region, subdomain: 'world' } as Region, 1);
-        const globalRes = await fetch(globalUrl, {
-          signal: controller.signal,
-          headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
-        });
-        if (globalRes.ok) res = globalRes;
+      // Fire main search + top variants/synonyms in PARALLEL
+      const variants = getQueryVariants(searchTerm);
+      const synonyms = getSynonyms(searchTerm);
+      const altTerms = [...new Set([...synonyms, ...variants])].slice(0, 3); // max 3 parallel alt searches
+
+      const searches = [
+        fetchWithRetry(searchTerm, region),
+        ...altTerms.map(t => fetchWithRetry(t, region).catch(() => null)),
+      ];
+
+      const results = await Promise.all(searches);
+
+      // Process main result
+      const mainResult = results[0];
+      let sorted: SearchProduct[] = [];
+      let finalCount = 0;
+
+      if (mainResult) {
+        sorted = processResults(mainResult.products, searchTerm);
+        finalCount = mainResult.count;
       }
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-
-      // Classic API returns `products`
-      let products: SearchProduct[] = (data.products ?? []).map(normaliseHit);
-      let sorted = processResults(products, searchTerm);
-      let finalCount = data.count ?? 0;
-
-      // If few/no results, try synonyms first, then other variants
+      // Merge alt results if main had few/no results
       if (sorted.length < 5) {
-        // Try synonyms first (highest value — UK/US term differences)
-        const synonyms = getSynonyms(searchTerm);
-        for (const syn of synonyms) {
-          if (controller.signal.aborted) break;
-          const synUrl = buildSearchUrl(syn, region, 1);
-          try {
-            const sRes = await fetch(synUrl, {
-              signal: controller.signal,
-              headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
-            });
-            if (sRes.ok) {
-              const sData = await sRes.json();
-              const sProducts: SearchProduct[] = (sData.products ?? []).map(normaliseHit);
-              const sSorted = processResults(sProducts, syn);
-              if (sSorted.length > 0) {
-                // Merge with existing results, deduplicate by barcode
-                const existingCodes = new Set(sorted.map(p => p.code));
-                const newProducts = sSorted.filter(p => !existingCodes.has(p.code));
-                sorted = [...sorted, ...newProducts];
-                finalCount = Math.max(finalCount, sorted.length);
-                break;
-              }
-            }
-          } catch { /* skip failed synonyms */ }
-        }
-
-        // If still no results, try apostrophe/plural variants
-        if (sorted.length === 0) {
-          const variants = getQueryVariants(searchTerm);
-          // Filter out synonyms we already tried
-          const synSet = new Set(synonyms.map(s => s.toLowerCase()));
-          const remaining = variants.filter(v => !synSet.has(v.toLowerCase()));
-          for (const variant of remaining) {
-            if (controller.signal.aborted) break;
-            const variantUrl = buildSearchUrl(variant, region, 1);
-            try {
-              const vRes = await fetch(variantUrl, {
-                signal: controller.signal,
-                headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
-              });
-              if (vRes.ok) {
-                const vData = await vRes.json();
-                const vProducts: SearchProduct[] = (vData.products ?? []).map(normaliseHit);
-                const vSorted = processResults(vProducts, variant);
-                if (vSorted.length > 0) {
-                  sorted = vSorted;
-                  finalCount = vData.count ?? 0;
-                  break;
-                }
-              }
-            } catch { /* skip failed variants */ }
-          }
+        const existingCodes = new Set(sorted.map(p => p.code));
+        for (let i = 1; i < results.length; i++) {
+          const altResult = results[i];
+          if (!altResult || altResult.products.length === 0) continue;
+          const altSorted = processResults(altResult.products, altTerms[i - 1]);
+          const newProducts = altSorted.filter(p => !existingCodes.has(p.code));
+          for (const p of newProducts) existingCodes.add(p.code);
+          sorted = [...sorted, ...newProducts];
+          finalCount = Math.max(finalCount, sorted.length);
         }
       }
 
-      // Update results and loading in one batch — no flash of "no results"
+      if (!mainResult && sorted.length === 0) throw new Error('All searches failed');
+
+      // Update results and loading in one batch
       setResults(sorted);
       setTotalCount(finalCount);
       setHasMore(finalCount > PAGE_SIZE);
