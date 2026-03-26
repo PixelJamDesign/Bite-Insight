@@ -56,9 +56,9 @@ interface SearchProduct {
 }
 
 // Adaptive debounce — adjusts based on actual typing speed
-const DEBOUNCE_MIN = 800;   // fastest typists still get a comfortable pause
-const DEBOUNCE_MAX = 2000;  // slowest typists get plenty of breathing room
-const DEBOUNCE_DEFAULT = 1200;
+const DEBOUNCE_MIN = 400;   // fastest typists
+const DEBOUNCE_MAX = 1000;  // slowest typists
+const DEBOUNCE_DEFAULT = 600;
 const PAGE_SIZE = 24;
 const SEARCH_FIELDS = 'code,product_name,brands,image_front_small_url,nutriscore_grade,quantity';
 // Use the classic CGI search API with region subdomains — the Search-A-Licious
