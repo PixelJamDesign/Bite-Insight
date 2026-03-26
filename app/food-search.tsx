@@ -383,7 +383,6 @@ export default function FoodSearchScreen() {
       page: String(page),
       fields: SEARCH_FIELDS,
       langs: 'en',
-      sort_by: 'unique_scans_n',
     });
     return `${SEARCH_API}?${params.toString()}`;
   }
