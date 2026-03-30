@@ -11,6 +11,7 @@ import {
   Image,
   Dimensions,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -199,6 +200,15 @@ export function UpsellSheet() {
           <Text style={styles.priceFineprint}>
             Subscription renews automatically. Cancel anytime.
           </Text>
+          <View style={styles.legalRow}>
+            <TouchableOpacity onPress={() => Linking.openURL('https://biteinsight.co.uk/terms.html')} activeOpacity={0.6}>
+              <Text style={styles.legalLink}>Terms of Use</Text>
+            </TouchableOpacity>
+            <Text style={styles.legalSeparator}>|</Text>
+            <TouchableOpacity onPress={() => Linking.openURL('https://biteinsight.co.uk/privacy.html')} activeOpacity={0.6}>
+              <Text style={styles.legalLink}>Privacy Policy</Text>
+            </TouchableOpacity>
+          </View>
           <TouchableOpacity style={styles.restoreBtn} onPress={restorePurchases} activeOpacity={0.6}>
             <Text style={styles.restoreBtnText}>Restore purchases</Text>
           </TouchableOpacity>
@@ -395,6 +405,25 @@ const styles = StyleSheet.create({
   },
   primaryBtnDisabled: {
     opacity: 0.6,
+  },
+  legalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 8,
+  },
+  legalLink: {
+    fontSize: 12,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
+    color: '#aad4cd',
+    textDecorationLine: 'underline',
+  },
+  legalSeparator: {
+    fontSize: 12,
+    color: '#aad4cd',
+    opacity: 0.5,
   },
   restoreBtn: {
     paddingVertical: 8,
