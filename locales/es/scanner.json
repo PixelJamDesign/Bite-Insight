@@ -26,8 +26,8 @@
   },
   "permission": {
     "title": "Se requiere acceso a la cámara",
-    "description": "BiteInsight necesita acceso a la cámara para escanear etiquetas de alimentos y códigos de barras.",
-    "grantButton": "Conceder acceso"
+    "description": "Bite Insight necesita acceso a la cámara para escanear etiquetas de alimentos y códigos de barras.",
+    "grantButton": "Continuar"
   },
   "alert": {
     "scanFailedTitle": "Error de escaneo",

@@ -26,8 +26,8 @@
   },
   "permission": {
     "title": "需要访问相机",
-    "description": "BiteInsight 需要摄像头访问才能扫描食品标签和条形码。",
-    "grantButton": "授予访问权限"
+    "description": "Bite Insight 需要摄像头访问才能扫描食品标签和条形码。",
+    "grantButton": "继续"
   },
   "alert": {
     "scanFailedTitle": "扫描失败",

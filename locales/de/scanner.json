@@ -26,8 +26,8 @@
   },
   "permission": {
     "title": "Kamerazugriff erforderlich",
-    "description": "BiteInsight benötigt Kamerazugriff, um Lebensmitteletiketten und Barcodes zu scannen.",
-    "grantButton": "Zugriff gewähren"
+    "description": "Bite Insight benötigt Kamerazugriff, um Lebensmitteletiketten und Barcodes zu scannen.",
+    "grantButton": "Weiter"
   },
   "alert": {
     "scanFailedTitle": "Der Scan ist fehlgeschlagen",

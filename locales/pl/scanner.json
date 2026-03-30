@@ -26,8 +26,8 @@
   },
   "permission": {
     "title": "Wymagany dostęp do kamery",
-    "description": "BiteInsight potrzebuje dostępu do kamery, aby skanować etykiety i kody kreskowe żywności.",
-    "grantButton": "Przyznaj dostęp"
+    "description": "Bite Insight potrzebuje dostępu do kamery, aby skanować etykiety i kody kreskowe żywności.",
+    "grantButton": "Kontynuuj"
   },
   "alert": {
     "scanFailedTitle": "Skanowanie nie powiodło się",

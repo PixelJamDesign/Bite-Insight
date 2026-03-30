@@ -26,8 +26,8 @@
   },
   "permission": {
     "title": "カメラへのアクセスが必要です",
-    "description": "BiteInsight では、食品ラベルとバーコードをスキャンするためにカメラにアクセスする必要があります。",
-    "grantButton": "アクセスを許可する"
+    "description": "Bite Insight では、食品ラベルとバーコードをスキャンするためにカメラにアクセスする必要があります。",
+    "grantButton": "続ける"
   },
   "alert": {
     "scanFailedTitle": "スキャンに失敗しました",

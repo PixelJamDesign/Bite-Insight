@@ -26,8 +26,8 @@
   },
   "permission": {
     "title": "카메라 액세스 필요",
-    "description": "BiteInsight는 식품 라벨과 바코드를 스캔하려면 카메라 액세스가 필요합니다.",
-    "grantButton": "액세스 권한 부여"
+    "description": "Bite Insight는 식품 라벨과 바코드를 스캔하려면 카메라 액세스가 필요합니다.",
+    "grantButton": "계속"
   },
   "alert": {
     "scanFailedTitle": "스캔 실패",

@@ -26,8 +26,8 @@
   },
   "permission": {
     "title": "Acesso à câmera necessário",
-    "description": "O BiteInsight precisa de acesso à câmera para escanear rótulos e códigos de barras de alimentos.",
-    "grantButton": "Conceder acesso"
+    "description": "O Bite Insight precisa de acesso à câmera para escanear rótulos e códigos de barras de alimentos.",
+    "grantButton": "Continuar"
   },
   "alert": {
     "scanFailedTitle": "Falha na verificação",

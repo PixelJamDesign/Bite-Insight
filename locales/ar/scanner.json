@@ -26,8 +26,8 @@
   },
   "permission": {
     "title": "الوصول إلى الكاميرا مطلوب",
-    "description": "يحتاج BiteInsight إلى الوصول إلى الكاميرا لمسح ملصقات الطعام والرموز الشريطية.",
-    "grantButton": "منح الوصول"
+    "description": "يحتاج Bite Insight إلى الوصول إلى الكاميرا لمسح ملصقات الطعام والرموز الشريطية.",
+    "grantButton": "متابعة"
   },
   "alert": {
     "scanFailedTitle": "فشل المسح",

@@ -28,8 +28,8 @@
   },
   "permission": {
     "title": "Camera Access Required",
-    "description": "BiteInsight needs camera access to scan food labels and barcodes.",
-    "grantButton": "Grant Access"
+    "description": "Bite Insight needs camera access to scan food labels and barcodes.",
+    "grantButton": "Continue"
   },
   "alert": {
     "scanFailedTitle": "Scan failed",

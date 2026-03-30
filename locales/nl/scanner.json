@@ -26,8 +26,8 @@
   },
   "permission": {
     "title": "Cameratoegang vereist",
-    "description": "BiteInsight heeft cameratoegang nodig om voedseletiketten en streepjescodes te scannen.",
-    "grantButton": "Toegang verlenen"
+    "description": "Bite Insight heeft cameratoegang nodig om voedseletiketten en streepjescodes te scannen.",
+    "grantButton": "Doorgaan"
   },
   "alert": {
     "scanFailedTitle": "Scannen mislukt",

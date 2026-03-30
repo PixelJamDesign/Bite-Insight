@@ -26,8 +26,8 @@
   },
   "permission": {
     "title": "È richiesto l'accesso alla fotocamera",
-    "description": "BiteInsight necessita dell'accesso alla fotocamera per scansionare etichette e codici a barre degli alimenti.",
-    "grantButton": "Concedi l'accesso"
+    "description": "Bite Insight necessita dell'accesso alla fotocamera per scansionare etichette e codici a barre degli alimenti.",
+    "grantButton": "Continua"
   },
   "alert": {
     "scanFailedTitle": "Scansione non riuscita",

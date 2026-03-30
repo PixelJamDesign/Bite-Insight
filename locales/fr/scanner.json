@@ -26,8 +26,8 @@
   },
   "permission": {
     "title": "Accès à la caméra requis",
-    "description": "BiteInsight a besoin d'un accès à la caméra pour scanner les étiquettes alimentaires et les codes-barres.",
-    "grantButton": "Accorder l'accès"
+    "description": "Bite Insight a besoin d'un accès à la caméra pour scanner les étiquettes alimentaires et les codes-barres.",
+    "grantButton": "Continuer"
   },
   "alert": {
     "scanFailedTitle": "Échec de l'analyse",
