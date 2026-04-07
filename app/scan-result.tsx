@@ -610,6 +610,34 @@ const MICRO_THRESHOLDS: Record<string, [number, number, number, number]> = {
   'vitamin-b9_100g':  [15,   30,   60,   100],
 };
 
+// Unit multipliers: OFF API returns all micronutrients in grams per 100g.
+// Multiply raw values by these factors to convert to the display unit used
+// in MICRO_THRESHOLDS (mg, µg, or g).
+const MICRO_UNIT_MULTIPLIERS: Record<string, number> = {
+  // g → mg (×1 000)
+  'sodium_100g':      1_000,
+  'potassium_100g':   1_000,
+  'phosphorus_100g':  1_000,
+  'calcium_100g':     1_000,
+  'iron_100g':        1_000,
+  'magnesium_100g':   1_000,
+  'zinc_100g':        1_000,
+  'copper_100g':      1_000,
+  'manganese_100g':   1_000,
+  'cholesterol_100g': 1_000,
+  'vitamin-c_100g':   1_000,
+  'vitamin-e_100g':   1_000,
+  // g → µg (×1 000 000)
+  'selenium_100g':    1_000_000,
+  'vitamin-a_100g':   1_000_000,
+  'vitamin-d_100g':   1_000_000,
+  'vitamin-k_100g':   1_000_000,
+  'vitamin-b9_100g':  1_000_000,
+  // g → g (×1) — already in grams, no conversion needed
+  'trans-fat_100g':   1,
+  'omega-3-fat_100g': 1,
+};
+
 // Traffic-light colours (same scale as nutri-score)
 const SEV_AMAZING = Extra.positiveGreen; // #009a1f
 const SEV_GOOD    = Extra.goodLime;      // #b8d828
@@ -2129,7 +2157,7 @@ export default function ScanResultScreen() {
     })
     .map((entry) => ({
       ...entry,
-      value: micronutrients[entry.offKey]!,
+      value: micronutrients[entry.offKey]! * (MICRO_UNIT_MULTIPLIERS[entry.offKey] ?? 1),
     }));
   const hasMicroData = Object.values(micronutrients).some((v) => v != null && v > 0);
 
