@@ -608,6 +608,7 @@ const MICRO_THRESHOLDS: Record<string, [number, number, number, number]> = {
   'vitamin-e_100g':   [0.9,  1.8,  3.6,  6],
   'vitamin-k_100g':   [5.6,  11.25,22.5, 37.5],
   'vitamin-b9_100g':  [15,   30,   60,   100],
+  'vitamin-b12_100g': [0.375, 0.75, 1.5, 2.5],
 };
 
 // Unit multipliers: OFF API returns all micronutrients in grams per 100g.
@@ -633,6 +634,7 @@ const MICRO_UNIT_MULTIPLIERS: Record<string, number> = {
   'vitamin-d_100g':   1_000_000,
   'vitamin-k_100g':   1_000_000,
   'vitamin-b9_100g':  1_000_000,
+  'vitamin-b12_100g': 1_000_000,
   // g → g (×1) — already in grams, no conversion needed
   'trans-fat_100g':   1,
   'omega-3-fat_100g': 1,
@@ -1484,6 +1486,7 @@ export default function ScanResultScreen() {
             'manganese_100g': n.manganese_100g ?? null,
             'selenium_100g': n.selenium_100g ?? null,
             'vitamin-b9_100g': n['vitamin-b9_100g'] ?? null,
+            'vitamin-b12_100g': n['vitamin-b12_100g'] ?? null,
             'omega-3-fat_100g': n['omega-3-fat_100g'] ?? null,
             'sodium_100g': n.sodium_100g ?? null,
           });
@@ -1582,6 +1585,7 @@ export default function ScanResultScreen() {
             'manganese_100g': n.manganese_100g ?? null,
             'selenium_100g': n.selenium_100g ?? null,
             'vitamin-b9_100g': n['vitamin-b9_100g'] ?? null,
+            'vitamin-b12_100g': n['vitamin-b12_100g'] ?? null,
             'omega-3-fat_100g': n['omega-3-fat_100g'] ?? null,
             'sodium_100g': n.sodium_100g ?? null,
           });

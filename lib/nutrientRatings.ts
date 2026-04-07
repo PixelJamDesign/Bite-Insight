@@ -215,6 +215,10 @@ export const CONDITION_OVERRIDES: Record<string, Partial<Record<NutrientKey, Par
     saturatedFat:{ low: 1.5, moderate: 5 },
     fiber:       { low: 4,   moderate: 8, inverted: true },
   },
+  osteoporosis: {
+    // High sodium increases urinary calcium excretion (~40 mg Ca lost per 2,300 mg Na)
+    salt: { low: 0.2, moderate: 0.8 },
+  },
 
   // ── Allergies / intolerances ──
   fructose: {

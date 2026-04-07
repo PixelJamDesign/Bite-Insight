@@ -174,7 +174,7 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
       {
         nutrient: 'Sodium',
         offKey: 'sodium_100g',
-        unit: 'g',
+        unit: 'mg',
         reason:
           'High sodium intake increases blood pressure and fluid retention, accelerating kidney damage in CKD',
       },
@@ -209,6 +209,13 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
         reason:
           'CKD disrupts calcium and phosphorus balance, and maintaining calcium intake helps protect bone health',
         userConfirmRequired: true,
+      },
+      {
+        nutrient: 'Vitamin D',
+        offKey: 'vitamin-d_100g',
+        unit: 'µg',
+        reason:
+          'Vitamin D deficiency is near-universal in CKD; the kidneys lose the ability to convert vitamin D to its active form, impairing calcium absorption and bone health',
       },
     ],
   },
@@ -284,6 +291,13 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
           'Omega-3 fatty acids have anti-inflammatory properties that may help reduce intestinal inflammation',
         userConfirmRequired: true,
       },
+      {
+        nutrient: 'Vitamin B12',
+        offKey: 'vitamin-b12_100g',
+        unit: 'µg',
+        reason:
+          'Vitamin B12 is absorbed in the ileum, which is frequently affected in Crohn\'s disease; deficiency is common, especially after ileal resection',
+      },
     ],
   },
 
@@ -345,6 +359,13 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
         reason:
           'Adequate potassium intake supports cardiovascular health and blood pressure control, both critical in diabetes management',
         userConfirmRequired: true,
+      },
+      {
+        nutrient: 'Omega-3',
+        offKey: 'omega-3-fat_100g',
+        unit: 'g',
+        reason:
+          'ADA recommends omega-3 rich foods to reduce cardiovascular risk, which is already elevated in diabetes',
       },
     ],
   },
@@ -454,6 +475,13 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
         reason:
           'Acid suppression may impair zinc absorption; zinc supports tissue repair in the oesophageal lining',
         userConfirmRequired: true,
+      },
+      {
+        nutrient: 'Vitamin B12',
+        offKey: 'vitamin-b12_100g',
+        unit: 'µg',
+        reason:
+          'Long-term PPI use significantly reduces vitamin B12 absorption by suppressing the stomach acid needed to release B12 from food',
       },
     ],
   },
@@ -1225,6 +1253,13 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
           'Vitamin E may decrease free-radical damage to joint linings and support anti-inflammatory processes',
         userConfirmRequired: true,
       },
+      {
+        nutrient: 'Folate',
+        offKey: 'vitamin-b9_100g',
+        unit: 'µg',
+        reason:
+          'Most RA patients take methotrexate, which depletes folate; ACR recommends folic acid supplementation alongside methotrexate treatment',
+      },
     ],
   },
 
@@ -1284,6 +1319,13 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
         reason:
           'While bacteria produce some folate, overall nutritional status is often compromised in SIBO',
         userConfirmRequired: true,
+      },
+      {
+        nutrient: 'Vitamin B12',
+        offKey: 'vitamin-b12_100g',
+        unit: 'µg',
+        reason:
+          'Bacteria in the small intestine consume vitamin B12 before it can be absorbed; B12 deficiency is a classic feature of SIBO',
       },
     ],
   },
