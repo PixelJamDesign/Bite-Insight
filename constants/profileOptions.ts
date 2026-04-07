@@ -37,6 +37,7 @@ export const HEALTH_CONDITION_KEYS = [
   'pcos',
   'preDiabetes',
   'ra',
+  'fibromyalgia',
   'sibo',
   'uc',
 ] as const;
@@ -60,6 +61,9 @@ export const ALLERGY_KEYS = [
   'sesame',
   'shellfish',
   'soy',
+  'aloeVera',
+  'dairy',
+  'raspberry',
   'sulphite',
   'treeNut',
 ] as const;
@@ -81,6 +85,7 @@ export const DIETARY_PREFERENCE_KEYS = [
   'sustainable',
   'weightLoss',
   'whole30',
+  'mediterraneanDiet',
   'vegan',
   'vegetarian',
 ] as const;
@@ -133,6 +138,7 @@ export const HEALTH_CONDITION_LEGACY_MAP: Record<string, HealthConditionKey> = {
   'Coeliac Disease': 'coeliac',
   'Diverticular Disease': 'diverticular',
   'Endometriosis': 'endometriosis',
+  'Fibromyalgia': 'fibromyalgia',
   'Gout': 'gout',
   "Hashimoto's Thyroiditis": 'hashimotos',
   'Hypothyroidism': 'hypothyroidism',
@@ -157,6 +163,9 @@ export const ALLERGY_LEGACY_MAP: Record<string, AllergyKey> = {
   'Sesame Allergy': 'sesame',
   'Shellfish Allergy': 'shellfish',
   'Soy Allergy': 'soy',
+  'Aloe Vera Allergy': 'aloeVera',
+  'Dairy Allergy': 'dairy',
+  'Raspberry Allergy': 'raspberry',
   'Sulphite Sensitivity': 'sulphite',
   'Tree Nut Allergy': 'treeNut',
 };
@@ -175,6 +184,7 @@ export const DIETARY_PREFERENCE_LEGACY_MAP: Record<string, DietaryPreferenceKey>
   'Sustainable / Eco': 'sustainable',
   'Weight Loss': 'weightLoss',
   'Whole30': 'whole30',
+  'Mediterranean Diet': 'mediterraneanDiet',
   'Vegan': 'vegan',
   'Vegetarian': 'vegetarian',
 };

@@ -235,6 +235,13 @@ const HEALTH_CONDITION_REASONS: Record<string, string[]> = {
     'Monitoring carb intake',
     'Makes symptoms worse',
   ],
+  fibromyalgia: [
+    'Worsens pain / fatigue',
+    'Causes inflammation',
+    'Doctor advised to avoid',
+    'Triggers flare-up',
+    'Makes symptoms worse',
+  ],
 };
 
 const GENERIC_CONDITION_REASONS: string[] = [
@@ -288,6 +295,9 @@ const ALLERGY_CLASSIFICATION: Record<string, 'allergy' | 'intolerance' | 'sensit
   sesame: 'allergy',
   shellfish: 'allergy',
   soy: 'allergy',
+  aloeVera: 'allergy',
+  dairy: 'allergy',
+  raspberry: 'allergy',
   sulphite: 'sensitivity',
   treeNut: 'allergy',
 };
@@ -343,6 +353,13 @@ const DIETARY_PREFERENCE_REASONS: Record<string, string[]> = {
     'Causes digestive issues',
     'Skin reaction',
     'Personal choice',
+  ],
+  mediterraneanDiet: [
+    'Not Mediterranean-friendly',
+    'Too processed',
+    'Too high in saturated fat',
+    'High in refined sugar',
+    'Trying to avoid',
   ],
 };
 

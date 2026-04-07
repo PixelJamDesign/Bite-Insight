@@ -1788,6 +1788,52 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
       },
     ],
   },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Fibromyalgia
+  // Sources: NIH, Arthritis Foundation, Journal of Pain Research
+  // ═══════════════════════════════════════════════════════════════════════════
+  Fibromyalgia: {
+    limit: [],
+    boost: [
+      {
+        nutrient: 'Magnesium',
+        offKey: 'magnesium_100g',
+        unit: 'mg',
+        reason:
+          'Magnesium deficiency is common in fibromyalgia; magnesium plays a key role in muscle relaxation, nerve function and sleep quality — all affected in fibromyalgia',
+      },
+      {
+        nutrient: 'Vitamin D',
+        offKey: 'vitamin-d_100g',
+        unit: 'µg',
+        reason:
+          'Low vitamin D levels are consistently found in fibromyalgia patients and correlate with increased pain severity and fatigue',
+      },
+      {
+        nutrient: 'Omega-3',
+        offKey: 'omega-3-fat_100g',
+        unit: 'g',
+        reason:
+          'Omega-3 fatty acids have anti-inflammatory properties that may help reduce widespread pain and improve mood in fibromyalgia',
+      },
+      {
+        nutrient: 'Iron',
+        offKey: 'iron_100g',
+        unit: 'mg',
+        reason:
+          'Iron deficiency can worsen fatigue and cognitive difficulties ("fibro fog") that are hallmarks of fibromyalgia',
+      },
+      {
+        nutrient: 'Vitamin B9 (Folate)',
+        offKey: 'vitamin-b9_100g',
+        unit: 'µg',
+        reason:
+          'Adequate folate supports neurotransmitter synthesis and may help reduce pain sensitivity and fatigue in fibromyalgia',
+        userConfirmRequired: true,
+      },
+    ],
+  },
 };
 
 // ── Helper utilities ────────────────────────────────────────────────────────

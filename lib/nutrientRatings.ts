@@ -77,176 +77,181 @@ export const DEFAULT_THRESHOLDS: Record<NutrientKey, Threshold> = {
 
 // Condition-specific threshold overrides.
 // Each entry provides partial overrides that are merged on top of defaults.
-// Keys must match the health_conditions / allergies / dietary_preferences strings stored in profiles.
+// Keys use the camelCase DB key format matching profileOptions.ts.
 export const CONDITION_OVERRIDES: Record<string, Partial<Record<NutrientKey, Partial<Threshold>>>> = {
   // ── Health conditions ──
-  'Chronic Kidney Disease': {
+  ckd: {
     salt:         { low: 0.1, moderate: 0.3 },
     proteins:     { low: 3,   moderate: 8 },
     saturatedFat: { low: 1,   moderate: 3 },
     sugars:       { low: 2,   moderate: 5 },
   },
-  'Diabetes': {
+  diabetes: {
     sugars:    { low: 2,   moderate: 5 },
     carbs:     { low: 3,   moderate: 15 },
     netCarbs:  { low: 3,   moderate: 15 },
     fiber:     { low: 5,   moderate: 10, inverted: true },
   },
-  'Heart Disease': {
+  heartDisease: {
     fat:         { low: 2,   moderate: 10 },
     saturatedFat:{ low: 1.5, moderate: 5 },
     salt:        { low: 0.2, moderate: 0.8 },
     fiber:       { low: 5,   moderate: 10, inverted: true },
   },
-  'High Cholesterol': {
+  highCholesterol: {
     fat:         { low: 2,   moderate: 10 },
     saturatedFat:{ low: 1.5, moderate: 5 },
     fiber:       { low: 5,   moderate: 10, inverted: true },
   },
-  'Hypertension': {
+  hypertension: {
     salt: { low: 0.1, moderate: 0.6 },
   },
-  'IBS': {
+  ibs: {
     fiber: { low: 1.5, moderate: 3, inverted: true },
   },
-  "Chron's Disease": {
-    fiber: { low: 1.5, moderate: 3, inverted: true },
-    fat:   { low: 2,   moderate: 10 },
-  },
-  'Ulcerative Colitis': {
+  crohns: {
     fiber: { low: 1.5, moderate: 3, inverted: true },
     fat:   { low: 2,   moderate: 10 },
   },
-  'SIBO': {
+  uc: {
+    fiber: { low: 1.5, moderate: 3, inverted: true },
+    fat:   { low: 2,   moderate: 10 },
+  },
+  sibo: {
     fiber:  { low: 1.5, moderate: 3, inverted: true },
     sugars: { low: 2,   moderate: 5 },
   },
-  'Leaky Gut Syndrome': {
+  leakyGut: {
     sugars: { low: 2,  moderate: 8 },
     fiber:  { low: 2,  moderate: 5, inverted: true },
   },
-  'GERD / Acid Reflux': {
+  gerd: {
     fat:         { low: 2,   moderate: 10 },
     saturatedFat:{ low: 1.5, moderate: 5 },
   },
-  'Metabolic Syndrome': {
+  metabolicSyndrome: {
+    // Legacy key — kept for existing users migrated before key rename
     sugars:   { low: 2,   moderate: 5 },
     carbs:    { low: 3,   moderate: 15 },
     netCarbs: { low: 3,   moderate: 15 },
     fat:      { low: 2,   moderate: 10 },
     salt:     { low: 0.1, moderate: 0.6 },
   },
-  'PCOS': {
+  pcos: {
     sugars:   { low: 2,   moderate: 5 },
     carbs:    { low: 3,   moderate: 15 },
     netCarbs: { low: 3,   moderate: 15 },
   },
-  'Eczema / Psoriasis': {
+  eczema: {
     sugars: { low: 3, moderate: 10 },
   },
-  'Migraine / Chronic Headaches': {
+  migraine: {
     sugars: { low: 3, moderate: 10 },
     salt:   { low: 0.2, moderate: 0.8 },
   },
-  'Lupus': {
+  lupus: {
     salt:        { low: 0.2, moderate: 0.8 },
     saturatedFat:{ low: 1.5, moderate: 5 },
   },
-  'Rheumatoid Arthritis': {
+  ra: {
     saturatedFat:{ low: 1.5, moderate: 5 },
     sugars:      { low: 3,   moderate: 10 },
   },
-  'Multiple Sclerosis': {
+  ms: {
     saturatedFat:{ low: 1.5, moderate: 5 },
   },
-  'ME / Chronic Fatigue': {
+  me: {
     sugars: { low: 3, moderate: 10 },
   },
-  'ADHD': {
+  adhd: {
     sugars: { low: 3, moderate: 10 },
   },
-  'Autism': {
+  autism: {
     sugars: { low: 3, moderate: 10 },
   },
-  'Coeliac Disease': {
+  coeliac: {
     // Gluten-free products often high in sodium; flag salt more strictly
     salt: { low: 0.2, moderate: 0.8 },
   },
-  'Hypothyroidism': {
+  hypothyroidism: {
     // Monitor iodine/selenium via ingredients; stricter sugar to support metabolism
     sugars: { low: 3, moderate: 10 },
   },
-  "Hashimoto's Thyroiditis": {
+  hashimotos: {
     // Similar to hypothyroidism + gluten awareness (handled via ingredients)
     sugars: { low: 3, moderate: 10 },
   },
-  'NAFLD': {
+  nafld: {
     sugars:      { low: 2,   moderate: 5 },
     saturatedFat:{ low: 1.5, moderate: 5 },
     fat:         { low: 2,   moderate: 10 },
   },
-  'Pre-diabetes': {
+  preDiabetes: {
     sugars:   { low: 3,   moderate: 8 },
     carbs:    { low: 5,   moderate: 18 },
     netCarbs: { low: 5,   moderate: 18 },
     fiber:    { low: 4,   moderate: 8, inverted: true },
   },
-  'Insulin Resistance': {
+  insulinResistance: {
     sugars:   { low: 2,   moderate: 6 },
     carbs:    { low: 4,   moderate: 16 },
     netCarbs: { low: 4,   moderate: 16 },
     fiber:    { low: 4,   moderate: 8, inverted: true },
   },
-  'Gout': {
+  gout: {
     // High purine flagged via ingredients; stricter on sugar/fructose
     sugars: { low: 2, moderate: 5 },
   },
-  'Diverticular Disease': {
-    // Positive fibre emphasis
+  diverticular: {
     fiber: { low: 5, moderate: 10, inverted: true },
   },
-  'Endometriosis': {
-    // Inflammation focus: stricter sat fat and sugar
+  endometriosis: {
     saturatedFat:{ low: 1.5, moderate: 5 },
     sugars:      { low: 3,   moderate: 10 },
   },
+  fibromyalgia: {
+    // Anti-inflammatory focus; sugar spikes and processed fats worsen pain and fatigue
+    sugars:      { low: 3,   moderate: 10 },
+    saturatedFat:{ low: 1.5, moderate: 5 },
+    fiber:       { low: 4,   moderate: 8, inverted: true },
+  },
 
   // ── Allergies / intolerances ──
-  'Fructose Intolerance': {
+  fructose: {
     sugars: { low: 1, moderate: 3 },
   },
 
-  // ── Dietary preferences (keyed by DIETARY_LABELS display string) ──
-  'Diabetic': {
-    sugars:    { low: 2,   moderate: 5 },
-    carbs:     { low: 3,   moderate: 15 },
-    netCarbs:  { low: 3,   moderate: 15 },
-    fiber:     { low: 5,   moderate: 10, inverted: true },
-  },
-  'Keto': {
+  // ── Dietary preferences ──
+  keto: {
     carbs:    { low: 2,  moderate: 8 },
     netCarbs: { low: 2,  moderate: 8 },
     sugars:   { low: 1,  moderate: 3 },
     fat:      { low: 10, moderate: 25, inverted: true, labels: ['Low', 'Moderate', 'Good'] },
   },
-  'High-Protein / Fitness': {
+  highProtein: {
     proteins: { low: 10, moderate: 20, inverted: true, labels: ['Low', 'Moderate', 'Good'] },
   },
-  'Weight Loss': {
+  weightLoss: {
     energyKcal:  { low: 80,  moderate: 200 },
     sugars:      { low: 3,   moderate: 10 },
     fat:         { low: 2,   moderate: 10 },
     saturatedFat:{ low: 1.5, moderate: 5 },
   },
-  'Post-Bariatric Surgery': {
+  postBariatric: {
     energyKcal: { low: 60,  moderate: 150 },
     sugars:     { low: 2,   moderate: 5 },
     fat:        { low: 2,   moderate: 8 },
     proteins:   { low: 10,  moderate: 20, inverted: true, labels: ['Low', 'Moderate', 'Good'] },
   },
-  'FODMAP Diet': {
+  fodmap: {
     fiber:  { low: 1.5, moderate: 3, inverted: true },
     sugars: { low: 1,   moderate: 3 },
+  },
+  mediterraneanDiet: {
+    // Reward whole foods; flag excess sat fat, sodium, and low fibre
+    saturatedFat:{ low: 1.5, moderate: 5 },
+    salt:        { low: 0.2, moderate: 0.8 },
+    fiber:       { low: 4,   moderate: 8, inverted: true },
   },
 };
 

@@ -216,6 +216,13 @@
       "Doctor advised to avoid",
       "Monitoring carb intake",
       "Makes symptoms worse"
+    ],
+    "fibromyalgia": [
+      "Worsens pain / fatigue",
+      "Causes inflammation",
+      "Doctor advised to avoid",
+      "Triggers flare-up",
+      "Makes symptoms worse"
     ]
   },
   "genericConditionReasons": [
@@ -295,6 +302,13 @@
       "Causes digestive issues",
       "Skin reaction",
       "Personal choice"
+    ],
+    "mediterraneanDiet": [
+      "Not Mediterranean-friendly",
+      "Too processed",
+      "Too high in saturated fat",
+      "High in refined sugar",
+      "Trying to avoid"
     ]
   },
   "genericDietaryReasons": [

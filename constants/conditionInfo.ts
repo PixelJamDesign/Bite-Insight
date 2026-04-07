@@ -147,6 +147,11 @@ export const CONDITION_INFO: Record<string, ConditionInfoEntry> = {
     description:
       'RA is an autoimmune condition that causes painful inflammation in the joints. Omega-3 fatty acids, antioxidants and anti-inflammatory foods may help reduce swelling, while processed foods and too much sugar can make things worse.',
   },
+  fibromyalgia: {
+    fullName: 'Fibromyalgia',
+    description:
+      'Fibromyalgia causes widespread muscle pain, fatigue and cognitive difficulties. While there is no single dietary cure, an anti-inflammatory approach may help manage symptoms. Reducing processed foods, refined sugars and artificial additives, while boosting magnesium, vitamin D and omega-3 intake, is generally recommended.',
+  },
   sibo: {
     fullName: 'Small Intestinal Bacterial Overgrowth (SIBO)',
     description:
@@ -239,6 +244,21 @@ export const CONDITION_INFO: Record<string, ConditionInfoEntry> = {
     description:
       'Sulphites are preservatives used in dried fruits, wine, beer, pickled foods and some processed meats. Sensitivity can trigger asthma-like symptoms, headaches and skin reactions. On labels, they appear as E220 to E228, or as "sulphur dioxide" or "sulphites".',
   },
+  aloeVera: {
+    fullName: 'Aloe Vera Allergy',
+    description:
+      'Aloe vera allergy can cause skin reactions, stomach cramps, or diarrhoea in sensitive individuals. Aloe vera latex (the yellow part beneath the skin) is a stronger irritant than the gel. It is increasingly found in functional drinks, supplements, skincare-adjacent food products and some plant-based products.',
+  },
+  dairy: {
+    fullName: 'Dairy Allergy',
+    description:
+      'A dairy allergy is an immune response to proteins in milk — primarily casein and whey — and is distinct from lactose intolerance. Reactions can range from hives and digestive upset to anaphylaxis. Dairy proteins can be hidden in processed foods labelled as "non-dairy" if they still contain casein or whey.',
+  },
+  raspberry: {
+    fullName: 'Raspberry Allergy',
+    description:
+      'Raspberry allergy is related to salicylates and naturally occurring compounds in the fruit. Reactions can include oral allergy syndrome, hives, digestive upset or, rarely, anaphylaxis. Raspberry flavouring, seeds and extracts may also trigger reactions and are commonly found in desserts, yoghurts, drinks and confectionery.',
+  },
   treeNut: {
     fullName: 'Tree Nut Allergy',
     description:
@@ -310,6 +330,11 @@ export const CONDITION_INFO: Record<string, ConditionInfoEntry> = {
     fullName: 'Whole30',
     description:
       'Whole30 is a 30-day elimination programme that removes sugar, alcohol, grains, legumes, soy and dairy to help identify how different foods affect your body. After the 30 days, foods are gradually reintroduced one at a time.',
+  },
+  mediterraneanDiet: {
+    fullName: 'Mediterranean Diet',
+    description:
+      'The Mediterranean diet is based on the traditional eating patterns of countries bordering the Mediterranean Sea. It emphasises fruits, vegetables, whole grains, legumes, nuts, olive oil and fish, while limiting red meat, processed foods and saturated fats. It is consistently linked to improved heart health, reduced inflammation and longevity.',
   },
   vegan: {
     fullName: 'Vegan',

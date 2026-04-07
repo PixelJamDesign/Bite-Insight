@@ -627,6 +627,27 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
     ],
   },
 
+  fibromyalgia: {
+    keywords: [
+      // Excitotoxins and additives linked to pain amplification
+      'aspartame', 'monosodium glutamate', 'msg', 'e621',
+      'artificial sweetener', 'saccharin', 'sucralose', 'acesulfame',
+      // Processed / refined foods that worsen inflammation and fatigue
+      'white flour', 'refined flour', 'corn syrup', 'high fructose corn syrup',
+      'sugar', 'sucrose', 'glucose syrup', 'maltodextrin',
+      'trans fat', 'partially hydrogenated', 'hydrogenated vegetable oil',
+      // Common dietary triggers reported by fibromyalgia patients
+      'alcohol', 'caffeine', 'artificial colour', 'artificial color',
+    ],
+    ingredientIds: [
+      'en:aspartame', 'en:monosodium-glutamate', 'en:e621',
+      'en:saccharin', 'en:sucralose', 'en:acesulfame-k',
+      'en:sugar', 'en:sucrose', 'en:glucose-syrup',
+      'en:corn-syrup', 'en:high-fructose-corn-syrup', 'en:maltodextrin',
+      'en:white-flour', 'en:hydrogenated-vegetable-oil',
+    ],
+  },
+
   sibo: {
     keywords: [
       // High FODMAP — same as IBS but stricter
@@ -965,6 +986,33 @@ export const DIETARY_PREFERENCE_INGREDIENTS: Record<string, HealthFlagEntry> = {
     ingredientIds: [
       'en:palm-oil', 'en:palm-fat', 'en:palm-kernel-oil',
       'en:hydrogenated-palm-oil',
+    ],
+  },
+
+  mediterraneanDiet: {
+    keywords: [
+      // Processed meats — not aligned with Mediterranean principles
+      'processed meat', 'deli meat', 'hot dog', 'sausage', 'salami', 'pepperoni',
+      'bacon', 'ham', 'luncheon meat',
+      // Trans fats and heavily processed oils
+      'trans fat', 'partially hydrogenated', 'hydrogenated vegetable oil',
+      'hydrogenated fat', 'shortening', 'margarine',
+      // Refined grains and starches
+      'white flour', 'refined flour', 'enriched flour', 'bleached flour',
+      'cornstarch', 'corn starch', 'modified starch',
+      // Excess added sugars
+      'sugar', 'sucrose', 'high fructose corn syrup', 'glucose syrup',
+      'corn syrup', 'invert sugar', 'maltodextrin',
+      // Artificial additives inconsistent with whole-food focus
+      'artificial colour', 'artificial color', 'artificial flavour', 'artificial flavor',
+    ],
+    ingredientIds: [
+      'en:bacon', 'en:ham', 'en:salami', 'en:pepperoni',
+      'en:hydrogenated-vegetable-oil', 'en:hydrogenated-fat',
+      'en:margarine', 'en:shortening',
+      'en:white-flour', 'en:refined-flour', 'en:cornstarch', 'en:modified-starch',
+      'en:sugar', 'en:sucrose', 'en:high-fructose-corn-syrup',
+      'en:glucose-syrup', 'en:corn-syrup', 'en:maltodextrin',
     ],
   },
 };

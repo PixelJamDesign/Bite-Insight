@@ -9,6 +9,7 @@
     "diverticular": "Diverticular Disease",
     "eczema": "Eczema / Psoriasis",
     "endometriosis": "Endometriosis",
+    "fibromyalgia": "Fibromyalgia",
     "gerd": "GERD / Acid Reflux",
     "gout": "Gout",
     "hashimotos": "Hashimoto's Thyroiditis",
@@ -46,6 +47,9 @@
     "sesame": "Sesame Allergy",
     "shellfish": "Shellfish Allergy",
     "soy": "Soy Allergy",
+    "aloeVera": "Aloe Vera Allergy",
+    "dairy": "Dairy Allergy",
+    "raspberry": "Raspberry Allergy",
     "sulphite": "Sulphite Sensitivity",
     "treeNut": "Tree Nut Allergy"
   },
@@ -63,6 +67,7 @@
     "sustainable": "Sustainable / Eco",
     "weightLoss": "Weight Loss",
     "whole30": "Whole30",
+    "mediterraneanDiet": "Mediterranean Diet",
     "vegan": "Vegan",
     "vegetarian": "Vegetarian"
   },

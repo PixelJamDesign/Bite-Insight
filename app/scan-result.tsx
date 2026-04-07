@@ -648,7 +648,7 @@ function getNutrientSeverity(
   // Determine the amount level (independent of direction)
   let rating: AmountRating;
   if (value < a)      rating = 'low';
-  else if (value < b) rating = 'low';
+  else if (value < b) rating = 'moderate';
   else if (value < c) rating = 'moderate';
   else if (value < d) rating = 'high';
   else                rating = 'veryHigh';
