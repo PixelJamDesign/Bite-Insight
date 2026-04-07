@@ -1887,6 +1887,10 @@ export default function ScanResultScreen() {
   //   "30 g"             → "30g"
   //   "(63g)"            → "63g"
   const measurementMatch = servingSize.match(/(\d+(?:\.\d+)?)\s*(g|mg|kg|ml|cl|l|oz|fl\s*oz)\b/i);
+  // Numeric serving weight (g or ml only) — used to scale per-100g micronutrients to per-serving
+  const servingGrams = measurementMatch && /^(g|ml)$/i.test(measurementMatch[2].trim())
+    ? parseFloat(measurementMatch[1])
+    : null;
   // Detect liquid products — use ml/l units instead of g
   const isLiquid = /(ml|cl|litre|liter|fl\s*oz)\b/i.test(quantity + ' ' + servingSize);
 
@@ -2537,7 +2541,9 @@ export default function ScanResultScreen() {
                           </View>
                           <View style={styles.nwRowRight}>
                             <Text style={styles.nwValue}>
-                              {Number(alert.value.toFixed(2))}{alert.unit}/100{baseUnit}
+                              {servingGrams != null
+                                ? `${Number((alert.value * servingGrams / 100).toFixed(2))}${alert.unit} / serving`
+                                : `${Number(alert.value.toFixed(2))}${alert.unit} / 100${baseUnit}`}
                             </Text>
                             <Text style={[styles.nwRating, { color: sev.color, minWidth: ratingColWidth }]} numberOfLines={1}>
                               {tc(`ratings.${sev.rating}`)}
@@ -2567,7 +2573,9 @@ export default function ScanResultScreen() {
                           </View>
                           <View style={styles.nwRowRight}>
                             <Text style={styles.nwValue}>
-                              {Number(alert.value.toFixed(2))}{alert.unit}/100{baseUnit}
+                              {servingGrams != null
+                                ? `${Number((alert.value * servingGrams / 100).toFixed(2))}${alert.unit} / serving`
+                                : `${Number(alert.value.toFixed(2))}${alert.unit} / 100${baseUnit}`}
                             </Text>
                             <Text style={[styles.nwRating, { color: sev.color, minWidth: ratingColWidth }]} numberOfLines={1}>
                               {tc(`ratings.${sev.rating}`)}
@@ -2863,7 +2871,9 @@ export default function ScanResultScreen() {
                           </View>
                           <View style={styles.nwRowRight}>
                             <Text style={styles.nwValue}>
-                              {Number(alert.value.toFixed(2))}{alert.unit}/100{baseUnit}
+                              {servingGrams != null
+                                ? `${Number((alert.value * servingGrams / 100).toFixed(2))}${alert.unit} / serving`
+                                : `${Number(alert.value.toFixed(2))}${alert.unit} / 100${baseUnit}`}
                             </Text>
                             <Text style={[styles.nwRating, { color: sev.color, minWidth: ratingColWidth }]} numberOfLines={1}>
                               {tc(`ratings.${sev.rating}`)}
@@ -2893,7 +2903,9 @@ export default function ScanResultScreen() {
                           </View>
                           <View style={styles.nwRowRight}>
                             <Text style={styles.nwValue}>
-                              {Number(alert.value.toFixed(2))}{alert.unit}/100{baseUnit}
+                              {servingGrams != null
+                                ? `${Number((alert.value * servingGrams / 100).toFixed(2))}${alert.unit} / serving`
+                                : `${Number(alert.value.toFixed(2))}${alert.unit} / 100${baseUnit}`}
                             </Text>
                             <Text style={[styles.nwRating, { color: sev.color, minWidth: ratingColWidth }]} numberOfLines={1}>
                               {tc(`ratings.${sev.rating}`)}
