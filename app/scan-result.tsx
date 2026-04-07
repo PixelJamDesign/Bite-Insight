@@ -695,8 +695,10 @@ function getNutrientSeverity(
     else                 color = SEV_BAD;  // low → danger red (matches "High" for limit)
   }
 
-  // Moderate labels are always orange regardless of direction
-  if (rating === 'moderate') color = SEV_OK;
+  // Moderate colour is direction-aware:
+  //  • limit  → orange (caution, heading towards too much)
+  //  • boost  → lime   (positive progress, you have some of what you need)
+  if (rating === 'moderate') color = direction === 'limit' ? SEV_OK : SEV_GOOD;
 
   return { color, rating };
 }
