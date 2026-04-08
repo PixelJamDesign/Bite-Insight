@@ -304,6 +304,33 @@ function SecurityScreen({ goBack, onNavigate }: { goBack: () => void; onNavigate
 import UnreadEmailIcon from '../assets/icons/unread_email.svg';
 import UnreadNotificationIcon from '../assets/icons/unread_notification.svg';
 
+// ─── Custom Toggle (matches Figma: 48×28 track, 16×16 thumb) ────────────────
+
+const TOGGLE_W = 48;
+const TOGGLE_H = 28;
+const THUMB_SIZE = 16;
+const THUMB_INSET = 6;
+const THUMB_TRAVEL = TOGGLE_W - THUMB_SIZE - THUMB_INSET * 2; // 20px
+
+function CustomToggle({ value, onValueChange }: { value: boolean; onValueChange: (v: boolean) => void }) {
+  const anim = useRef(new Animated.Value(value ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.timing(anim, { toValue: value ? 1 : 0, duration: 200, useNativeDriver: false }).start();
+  }, [value]);
+
+  const trackColor = anim.interpolate({ inputRange: [0, 1], outputRange: ['#aad4cd', '#00776f'] });
+  const thumbX = anim.interpolate({ inputRange: [0, 1], outputRange: [THUMB_INSET, THUMB_INSET + THUMB_TRAVEL] });
+
+  return (
+    <TouchableOpacity activeOpacity={0.8} onPress={() => onValueChange(!value)}>
+      <Animated.View style={{ width: TOGGLE_W, height: TOGGLE_H, borderRadius: TOGGLE_H / 2, backgroundColor: trackColor, justifyContent: 'center' }}>
+        <Animated.View style={{ width: THUMB_SIZE, height: THUMB_SIZE, borderRadius: THUMB_SIZE / 2, backgroundColor: '#fff', position: 'absolute', left: thumbX }} />
+      </Animated.View>
+    </TouchableOpacity>
+  );
+}
+
 type MarketingPrefs = {
   promotional_emails: boolean;
   product_updates: boolean;
@@ -385,12 +412,9 @@ function MarketingPreferencesScreen({ goBack }: { goBack: () => void }) {
                   <Text style={marketingStyles.label}>{item.label}</Text>
                   <Text style={marketingStyles.hint}>{item.hint}</Text>
                 </View>
-                <Switch
+                <CustomToggle
                   value={prefs[item.key]}
                   onValueChange={(v) => handleToggle(item.key, v)}
-                  trackColor={{ false: '#aad4cd', true: Colors.secondary }}
-                  thumbColor="#fff"
-                  ios_backgroundColor="#aad4cd"
                 />
               </View>
             ))}
