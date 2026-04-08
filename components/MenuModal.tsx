@@ -352,7 +352,12 @@ function MarketingPreferencesScreen({ goBack }: { goBack: () => void }) {
   const { t: tc } = useTranslation('common');
   const { session } = useAuth();
   const [prefs, setPrefs] = useState<MarketingPrefs>(DEFAULT_MARKETING_PREFS);
+  const [savedPrefs, setSavedPrefs] = useState<MarketingPrefs>(DEFAULT_MARKETING_PREFS);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const hasChanges = prefs.promotional_emails !== savedPrefs.promotional_emails
+    || prefs.product_updates !== savedPrefs.product_updates;
 
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -363,21 +368,27 @@ function MarketingPreferencesScreen({ goBack }: { goBack: () => void }) {
       .single()
       .then(({ data }) => {
         if (data?.marketing_preferences) {
-          setPrefs({ ...DEFAULT_MARKETING_PREFS, ...(data.marketing_preferences as MarketingPrefs) });
+          const loaded = { ...DEFAULT_MARKETING_PREFS, ...(data.marketing_preferences as MarketingPrefs) };
+          setPrefs(loaded);
+          setSavedPrefs(loaded);
         }
         setLoading(false);
       });
   }, [session?.user?.id]);
 
-  async function handleToggle(key: keyof MarketingPrefs, value: boolean) {
-    const updated = { ...prefs, [key]: value };
-    setPrefs(updated);
-    if (session?.user?.id) {
-      await supabase
-        .from('profiles')
-        .update({ marketing_preferences: updated })
-        .eq('id', session.user.id);
-    }
+  function handleToggle(key: keyof MarketingPrefs, value: boolean) {
+    setPrefs((prev) => ({ ...prev, [key]: value }));
+  }
+
+  async function handleSave() {
+    if (!session?.user?.id) return;
+    setSaving(true);
+    await supabase
+      .from('profiles')
+      .update({ marketing_preferences: prefs })
+      .eq('id', session.user.id);
+    setSavedPrefs(prefs);
+    setSaving(false);
   }
 
   const toggles: { key: keyof MarketingPrefs; label: string; hint: string; Icon: React.FC<{ width: number; height: number }> }[] = [
@@ -425,6 +436,20 @@ function MarketingPreferencesScreen({ goBack }: { goBack: () => void }) {
               </View>
             ))}
           </View>
+          {hasChanges && (
+            <TouchableOpacity
+              style={marketingStyles.saveBtn}
+              onPress={handleSave}
+              disabled={saving}
+              activeOpacity={0.8}
+            >
+              {saving ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={marketingStyles.saveBtnText}>{tc('buttons.save')}</Text>
+              )}
+            </TouchableOpacity>
+          )}
         )}
       </View>
     </>
@@ -462,6 +487,18 @@ const marketingStyles = StyleSheet.create({
     lineHeight: 21,
     letterSpacing: -0.14,
     color: Colors.secondary,
+  },
+  saveBtn: {
+    backgroundColor: Colors.secondary,
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  saveBtnText: {
+    fontFamily: 'Figtree_700Bold',
+    fontSize: 16,
+    color: '#fff',
   },
 });
 
