@@ -16,7 +16,7 @@
       "permissionMessage": "Om een ​​foto te maken is cameratoegang vereist."
     },
     "placeholder": {
-      "age": "Je leeftijd (optioneel)"
+      "dateOfBirth": "Geboortedatum (optioneel)"
     }
   },
   "familyMember": {

@@ -22,6 +22,7 @@
     "@gorhom/bottom-sheet": "^5.2.8",
     "@lottiefiles/dotlottie-react": "^0.13.5",
     "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-community/datetimepicker": "8.6.0",
     "@supabase/supabase-js": "^2.47.0",
     "barcode-detector": "^3.1.0",
     "base64-arraybuffer": "^1.0.2",

@@ -31,6 +31,8 @@ import { DoneAccessory } from '@/components/DoneAccessory';
 import { ConditionInfoSheet } from '@/components/ConditionInfoSheet';
 import { SuggestionSheet, type SuggestionCategory } from '@/components/SuggestionSheet';
 import { CONDITION_INFO } from '@/constants/conditionInfo';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { formatDob, toLocalDateString } from '@/lib/dateOfBirth';
 import Logo from '../../assets/images/logo.svg';
 
 // ── Step keys ────────────────────────────────────────────────────────────────
@@ -61,7 +63,8 @@ export default function SignUpScreen() {
   const [fullName, setFullName]   = useState('');
   const [email, setEmail]         = useState('');
   const [password, setPassword]   = useState('');
-  const [age, setAge]             = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
 
   // Step 2 – Health Conditions
@@ -84,7 +87,7 @@ export default function SignUpScreen() {
   const nameRowRef = useRef<View>(null);
   const emailRowRef = useRef<View>(null);
   const passwordRowRef = useRef<View>(null);
-  const ageRowRef = useRef<View>(null);
+  const dobRowRef = useRef<View>(null);
   const keyboardHeightRef = useRef(0);
   const scrollViewHeightRef = useRef(0);
 
@@ -238,7 +241,7 @@ export default function SignUpScreen() {
         health_conditions: healthConditions,
         allergies,
         dietary_preferences: dietaryPrefs,
-        age: age.trim() ? parseInt(age.trim(), 10) : null,
+        date_of_birth: dateOfBirth ? toLocalDateString(dateOfBirth) : null,
       });
     }
     setLoading(false);
@@ -274,7 +277,7 @@ export default function SignUpScreen() {
       await supabase.from('profiles').upsert({
         id: user.id,
         full_name: fullName,
-        age: age.trim() ? parseInt(age.trim(), 10) : null,
+        date_of_birth: dateOfBirth ? toLocalDateString(dateOfBirth) : null,
       });
     }
     setLoading(false);
@@ -560,29 +563,25 @@ export default function SignUpScreen() {
                       </TouchableOpacity>
                     ) : null}
                   </View>
-                  <View
-                    ref={(ref) => { (ageRowRef as any).current = ref; }}
-                    style={[styles.inputRow, focusedField === 'age' && styles.inputRowFocused]}
+                  <TouchableOpacity
+                    ref={(ref) => { (dobRowRef as any).current = ref; }}
+                    style={[styles.inputRow]}
+                    activeOpacity={0.7}
+                    onPress={() => { Keyboard.dismiss(); setShowDatePicker(true); }}
                   >
                     <BirthdayIcon size={20} color={Colors.primary} />
-                    <TextInput
-                      style={[styles.inputFieldInner, age ? styles.inputFieldBold : null]}
-                      placeholder={ta('signup.placeholder.age')}
-                      placeholderTextColor={`${Colors.primary}50`}
-                      selectionColor={Colors.primary}
-                      keyboardType="number-pad"
-                      inputAccessoryViewID="signup-age"
-                      value={age}
-                      onChangeText={setAge}
-                      onFocus={() => { setFocusedField('age'); scrollInputToCenter(ageRowRef.current); }}
-                      onBlur={() => setFocusedField(null)}
-                    />
-                    {age ? (
-                      <TouchableOpacity onPress={() => setAge('')} hitSlop={8}>
+                    <Text
+                      style={[styles.inputFieldInner, dateOfBirth ? styles.inputFieldBold : { color: `${Colors.primary}50` }]}
+                      numberOfLines={1}
+                    >
+                      {dateOfBirth ? formatDob(toLocalDateString(dateOfBirth)) : ta('signup.placeholder.dateOfBirth')}
+                    </Text>
+                    {dateOfBirth ? (
+                      <TouchableOpacity onPress={() => { setDateOfBirth(null); setShowDatePicker(false); }} hitSlop={8}>
                         <Ionicons name="close" size={18} color={`${Colors.primary}80`} />
                       </TouchableOpacity>
                     ) : null}
-                  </View>
+                  </TouchableOpacity>
                 </View>
               </View>
 
@@ -653,24 +652,26 @@ export default function SignUpScreen() {
           <View style={{ height: 120 }} />
         </ScrollView>
 
-        {/* ── Footer ── */}
-        <View style={styles.footer}>
-          <LinearGradient
-            colors={['rgba(226,241,238,0)', Colors.background]}
-            style={styles.footerFade}
-            pointerEvents="none"
-          />
-          <View style={[styles.footerButtons, { paddingBottom: insets.bottom + 12 }]}>
-            <FooterButtonRow
-              secondaryLabel={step === 1 ? tc('buttons.cancel') : tc('buttons.back')}
-              primaryLabel={nextBtnLabel}
-              onSecondaryPress={handleBack}
-              onPrimaryPress={step === 4 ? handleFinish : handleNext}
-              primaryLoading={loading}
-              primaryDisabled={loading}
+        {/* ── Footer — hidden when date picker is open ── */}
+        {!showDatePicker && (
+          <View style={styles.footer}>
+            <LinearGradient
+              colors={['rgba(226,241,238,0)', Colors.background]}
+              style={styles.footerFade}
+              pointerEvents="none"
             />
+            <View style={[styles.footerButtons, { paddingBottom: insets.bottom + 12 }]}>
+              <FooterButtonRow
+                secondaryLabel={step === 1 ? tc('buttons.cancel') : tc('buttons.back')}
+                primaryLabel={nextBtnLabel}
+                onSecondaryPress={handleBack}
+                onPrimaryPress={step === 4 ? handleFinish : handleNext}
+                primaryLoading={loading}
+                primaryDisabled={loading}
+              />
+            </View>
           </View>
-        </View>
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
     <ConditionInfoSheet conditionKey={infoKey} onClose={() => setInfoKey(null)} />
@@ -679,7 +680,33 @@ export default function SignUpScreen() {
       onClose={() => setSuggestionCategory(null)}
       category={suggestionCategory ?? 'health_condition'}
     />
-    <DoneAccessory id="signup-age" />
+    {showDatePicker && (
+      <View style={pickerOverlay.backdrop}>
+        <View style={[pickerOverlay.sheet, { paddingBottom: insets.bottom + 12 }]}>
+          <View style={pickerOverlay.toolbar}>
+            <TouchableOpacity onPress={() => { setDateOfBirth(null); setShowDatePicker(false); }} activeOpacity={0.7}>
+              <Text style={pickerOverlay.clearText}>{tc('buttons.clear')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setShowDatePicker(false)}
+              activeOpacity={0.7}
+              style={pickerOverlay.doneBtn}
+            >
+              <Text style={pickerOverlay.doneBtnText}>{tc('buttons.done')}</Text>
+            </TouchableOpacity>
+          </View>
+          <DateTimePicker
+            value={dateOfBirth ?? new Date(2000, 0, 1)}
+            mode="date"
+            display="spinner"
+            maximumDate={new Date()}
+            minimumDate={new Date(1920, 0, 1)}
+            style={{ height: 216, alignSelf: 'center', width: '100%' }}
+            onChange={(_e, selected) => { if (selected) setDateOfBirth(selected); }}
+          />
+        </View>
+      </View>
+    )}
     </>
   );
 }
@@ -1059,5 +1086,43 @@ const styles = StyleSheet.create({
     color: Colors.secondary,
     letterSpacing: -0.15,
     textDecorationLine: 'underline',
+  },
+});
+
+const pickerOverlay = StyleSheet.create({
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'flex-end',
+    zIndex: 100,
+  },
+  sheet: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 12,
+  },
+  toolbar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 4,
+  },
+  clearText: {
+    fontFamily: 'Figtree_300Light',
+    fontSize: 15,
+    color: Colors.secondary,
+  },
+  doneBtn: {
+    backgroundColor: Colors.primary,
+    borderRadius: 999,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+  },
+  doneBtnText: {
+    fontFamily: 'Figtree_700Bold',
+    fontSize: 14,
+    color: '#fff',
   },
 });

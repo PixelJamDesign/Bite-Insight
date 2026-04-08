@@ -273,44 +273,50 @@ export default function ScannerScreen() {
       });
 
       // ── Save scan to Supabase in background ─────────────────────────────────
-      (async () => {
-        // Wait for profile upsert + check existing scan in parallel
-        const [, { data: existing }] = await Promise.all([
-          profilePromise,
-          supabase
-            .from('scans')
-            .select('id')
-            .eq('user_id', session?.user.id)
-            .eq('barcode', result.data)
-            .limit(1)
-            .single(),
-        ]);
+      // Only save immediately if we found the product in cache / offline DB.
+      // If the product is still "Unknown", scan-result.tsx will save after the
+      // OFF API fetch succeeds — or skip saving entirely if the product isn't found.
+      const isKnownProduct = productName !== tScan('product.unknownName') && productName !== '';
+      if (isKnownProduct) {
+        (async () => {
+          // Wait for profile upsert + check existing scan in parallel
+          const [, { data: existing }] = await Promise.all([
+            profilePromise,
+            supabase
+              .from('scans')
+              .select('id')
+              .eq('user_id', session?.user.id)
+              .eq('barcode', result.data)
+              .limit(1)
+              .single(),
+          ]);
 
-        if (existing) {
-          await supabase
-            .from('scans')
-            .update({
-              scanned_at: new Date().toISOString(),
-              product_name: productName,
-              brand,
-              image_url: imageUrl,
-              nutriscore_grade: nutriscoreGrade,
-            })
-            .eq('id', existing.id);
-        } else {
-          await supabase
-            .from('scans')
-            .insert({
-              user_id: session?.user.id,
-              barcode: result.data,
-              product_name: productName,
-              brand,
-              image_url: imageUrl,
-              nutriscore_grade: nutriscoreGrade,
-              flagged_count: 0,
-            });
-        }
-      })().catch((err) => console.error('Background scan save failed:', err));
+          if (existing) {
+            await supabase
+              .from('scans')
+              .update({
+                scanned_at: new Date().toISOString(),
+                product_name: productName,
+                brand,
+                image_url: imageUrl,
+                nutriscore_grade: nutriscoreGrade,
+              })
+              .eq('id', existing.id);
+          } else {
+            await supabase
+              .from('scans')
+              .insert({
+                user_id: session?.user.id,
+                barcode: result.data,
+                product_name: productName,
+                brand,
+                image_url: imageUrl,
+                nutriscore_grade: nutriscoreGrade,
+                flagged_count: 0,
+              });
+          }
+        })().catch((err) => console.error('Background scan save failed:', err));
+      }
     } catch (err) {
       console.error('Scan error:', err);
       setProcessing(false);

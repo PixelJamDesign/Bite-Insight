@@ -16,7 +16,7 @@
       "permissionMessage": "É necessário acesso à câmera para tirar uma foto."
     },
     "placeholder": {
-      "age": "Sua idade (opcional)"
+      "dateOfBirth": "Data de nascimento (opcional)"
     }
   },
   "familyMember": {

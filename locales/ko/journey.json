@@ -7,8 +7,8 @@
   "about": {
     "title": "About You",
     "subtitle": "Add a photo and tell us your age.",
-    "ageLabel": "Your age",
-    "agePlaceholder": "Enter your age",
+    "dobLabel": "생년월일",
+    "dobPlaceholder": "생년월일을 선택하세요",
     "continue": "Continue",
     "signOut": "Sign out"
   },

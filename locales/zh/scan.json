@@ -1,6 +1,9 @@
 {
   "product": {
-    "unknownName": "未知产品"
+    "unknownName": "未知产品",
+    "notFound": "未找到产品",
+    "notFoundDescription": "我们在数据库中找不到该产品。请重新扫描或手动搜索。",
+    "notFoundAction": "返回"
   },
   "tab": {
     "overview": "概述",

@@ -1,6 +1,9 @@
 {
   "product": {
-    "unknownName": "Produit inconnu"
+    "unknownName": "Produit inconnu",
+    "notFound": "Produit introuvable",
+    "notFoundDescription": "Nous n'avons pas trouvé ce produit dans notre base de données. Réessayez ou recherchez manuellement.",
+    "notFoundAction": "Retour"
   },
   "tab": {
     "overview": "Aperçu",

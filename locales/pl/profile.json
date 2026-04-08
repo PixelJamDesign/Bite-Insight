@@ -16,7 +16,7 @@
       "permissionMessage": "Aby zrobić zdjęcie, wymagany jest dostęp do aparatu."
     },
     "placeholder": {
-      "age": "Twój wiek (opcjonalnie)"
+      "dateOfBirth": "Data urodzenia (opcjonalnie)"
     }
   },
   "familyMember": {

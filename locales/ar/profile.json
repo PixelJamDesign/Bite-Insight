@@ -16,7 +16,7 @@
       "permissionMessage": "مطلوب الوصول إلى الكاميرا لالتقاط صورة."
     },
     "placeholder": {
-      "age": "عمرك (اختياري)"
+      "dateOfBirth": "تاريخ الميلاد (اختياري)"
     }
   },
   "familyMember": {

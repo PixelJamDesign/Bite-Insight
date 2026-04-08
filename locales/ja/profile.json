@@ -16,7 +16,7 @@
       "permissionMessage": "写真を撮るにはカメラへのアクセスが必要です。"
     },
     "placeholder": {
-      "age": "あなたの年齢 (オプション)"
+      "dateOfBirth": "生年月日（任意）"
     }
   },
   "familyMember": {

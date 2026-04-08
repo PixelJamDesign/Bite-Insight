@@ -16,7 +16,7 @@
       "permissionMessage": "需要使用相机才能拍照。"
     },
     "placeholder": {
-      "age": "您的年龄（可选）"
+      "dateOfBirth": "出生日期（可选）"
     }
   },
   "familyMember": {

@@ -16,7 +16,7 @@
       "permissionMessage": "사진을 촬영하려면 카메라 접근 권한이 필요합니다."
     },
     "placeholder": {
-      "age": "귀하의 나이 (선택 사항)"
+      "dateOfBirth": "생년월일 (선택)"
     }
   },
   "familyMember": {

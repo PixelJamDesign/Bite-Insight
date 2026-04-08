@@ -16,7 +16,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Colors, Spacing, Radius } from '@/constants/theme';
+import { Colors, Spacing, Radius, Typography } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { getCachedProfile, fetchAndCacheProfile } from '@/lib/profileCache';
@@ -1311,6 +1311,7 @@ export default function ScanResultScreen() {
   };
   const [fetched, setFetched] = useState<Partial<OffPayload> | null>(null);
   const [fetchingOff, setFetchingOff] = useState(false);
+  const [productNotFound, setProductNotFound] = useState(false);
 
   // Animated progress bar — simulates progress during OFF fetch, snaps to 100% on completion.
   const progressAnim = useRef(new Animated.Value(0)).current;
@@ -1524,12 +1525,10 @@ export default function ScanResultScreen() {
             offLang: hasEnglishText ? 'en' : (op.lang || op.lc || 'en'),
           }).catch(() => {});
 
-          // Update Supabase scan history with the product info (fire-and-forget)
-          // Retries after a short delay to handle race condition where the scanner's
-          // background save may not have completed yet when OFF data arrives
+          // Save/update Supabase scan history with the product info (fire-and-forget)
           if (session?.user?.id) {
             const resolvedName = fetchedProductName || p.productName;
-            const updateScan = async (attempt = 0): Promise<void> => {
+            const saveScan = async (attempt = 0): Promise<void> => {
               try {
                 const { data: existing } = await supabase.from('scans').select('id').eq('user_id', session.user.id).eq('barcode', p.barcode).limit(1).single();
                 if (existing) {
@@ -1538,19 +1537,30 @@ export default function ScanResultScreen() {
                     brand: fetchedBrand || p.brand || null,
                     image_url: fetchedImageUrl || p.imageUrl || null,
                     nutriscore_grade: op.nutriscore_grade || op.nutrition_grade_fr || null,
+                    scanned_at: new Date().toISOString(),
                   }).eq('id', existing.id);
-                } else if (attempt < 3) {
-                  // Record not saved yet by scanner — wait and retry
-                  await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
-                  return updateScan(attempt + 1);
+                } else {
+                  // Scanner didn't save (product was unknown at scan time) — insert now
+                  await supabase.from('scans').insert({
+                    user_id: session.user.id,
+                    barcode: p.barcode,
+                    product_name: resolvedName,
+                    brand: fetchedBrand || p.brand || null,
+                    image_url: fetchedImageUrl || p.imageUrl || null,
+                    nutriscore_grade: op.nutriscore_grade || op.nutrition_grade_fr || null,
+                    flagged_count: 0,
+                  });
                 }
               } catch { /* non-critical */ }
             };
-            updateScan();
+            saveScan();
           }
+        } else {
+          // OFF API returned no product — flag as not found
+          setProductNotFound(true);
         }
       })
-      .catch(() => {/* silently ignore — the empty state handles no-data */})
+      .catch(() => { setProductNotFound(true); })
       .finally(() => setFetchingOff(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -2192,6 +2202,37 @@ export default function ScanResultScreen() {
 
   function handleBack() {
     pageExit(() => safeBack());
+  }
+
+  // ── Product not found screen ────────────────────────────────────────────────
+  if (productNotFound && !fetched) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+        <View style={styles.stickyHeader}>
+          <View style={styles.backRow}>
+            <TouchableOpacity style={styles.backBtn} onPress={handleBack} activeOpacity={0.7}>
+              <BigBackIcon width={32} height={32} />
+            </TouchableOpacity>
+          </View>
+        </View>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32 }}>
+          <Ionicons name="search-outline" size={64} color={Colors.secondary} style={{ marginBottom: 16, opacity: 0.5 }} />
+          <Text style={{ ...Typography.h3, color: Colors.primary, textAlign: 'center', marginBottom: 8 }}>
+            {t('product.notFound')}
+          </Text>
+          <Text style={{ ...Typography.bodyRegular, color: Colors.secondary, textAlign: 'center', marginBottom: 24 }}>
+            {t('product.notFoundDescription')}
+          </Text>
+          <TouchableOpacity
+            style={{ backgroundColor: Colors.primary, borderRadius: 999, paddingHorizontal: 32, paddingVertical: 14 }}
+            activeOpacity={0.7}
+            onPress={handleBack}
+          >
+            <Text style={{ ...Typography.h5, color: '#fff' }}>{t('product.notFoundAction')}</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
   }
 
   return (

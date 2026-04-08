@@ -16,7 +16,7 @@
       "permissionMessage": "Per scattare una foto è necessario l'accesso alla fotocamera."
     },
     "placeholder": {
-      "age": "La tua età (facoltativo)"
+      "dateOfBirth": "Data di nascita (facoltativo)"
     }
   },
   "familyMember": {

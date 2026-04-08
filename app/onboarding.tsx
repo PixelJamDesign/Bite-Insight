@@ -41,7 +41,8 @@ import {
 } from '@/constants/profileOptions';
 import type { NutrientWatchlistEntry } from '@/lib/types';
 import { CameraIcon, PersonalIcon, EmailIcon, BirthdayIcon, TickIcon, InfoIcon } from '@/components/MenuIcons';
-import { DoneAccessory } from '@/components/DoneAccessory';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { formatDob, toLocalDateString } from '@/lib/dateOfBirth';
 import { ConditionInfoSheet } from '@/components/ConditionInfoSheet';
 import { SuggestionSheet, type SuggestionCategory } from '@/components/SuggestionSheet';
 import { CONDITION_INFO } from '@/constants/conditionInfo';
@@ -166,7 +167,8 @@ export default function OnboardingScreen() {
 
   // About You step
   const [fullName, setFullName] = useState('');
-  const [age, setAge] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [existingAvatar, setExistingAvatar] = useState<string | null>(null);
   const cachedExistingAvatar = useCachedAvatar(existingAvatar);
@@ -182,14 +184,14 @@ export default function OnboardingScreen() {
     if (!session?.user?.id) return;
     supabase
       .from('profiles')
-      .select('full_name, avatar_url, health_conditions, allergies, dietary_preferences, age, nutrient_watchlist')
+      .select('full_name, avatar_url, health_conditions, allergies, dietary_preferences, date_of_birth, nutrient_watchlist')
       .eq('id', session.user.id)
       .single()
       .then(({ data }) => {
         if (!data) return;
         if (data.full_name) setFullName(data.full_name);
         if (data.avatar_url) setExistingAvatar(getAvatarUrl(data.avatar_url));
-        if (data.age != null) setAge(String(data.age));
+        if (data.date_of_birth) setDateOfBirth(new Date(data.date_of_birth + 'T00:00:00'));
         if (data.health_conditions) setHealthConditions(((data.health_conditions as string[]) ?? []).map(normalizeHealthCondition));
         if (data.allergies) setAllergies(((data.allergies as string[]) ?? []).map(normalizeAllergy));
         if (data.dietary_preferences) setDietaryPrefs(((data.dietary_preferences as string[]) ?? []).map(normalizeDietaryPreference));
@@ -268,7 +270,7 @@ export default function OnboardingScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const scrollContainerRef = useRef<View>(null);
   const nameRowRef = useRef<View>(null);
-  const ageRowRef = useRef<View>(null);
+  const dobRowRef = useRef<View>(null);
   const keyboardHeightRef = useRef(0);
   const scrollViewHeightRef = useRef(0);
 
@@ -473,7 +475,7 @@ export default function OnboardingScreen() {
       avatar_url: newAvatarUrl,
       full_name: trimmedName || null,
       display_name: trimmedName ? trimmedName.split(' ')[0] : null,
-      age: age.trim() ? parseInt(age.trim(), 10) : null,
+      date_of_birth: dateOfBirth ? toLocalDateString(dateOfBirth) : null,
     }).eq('id', userId);
   }
 
@@ -889,30 +891,26 @@ export default function OnboardingScreen() {
                       selectTextOnFocus={false}
                     />
                   </View>
-                  <View
-                    ref={(ref) => { (ageRowRef as any).current = ref; }}
-                    style={[styles.inputRow, focusedField === 'age' && styles.inputRowFocused]}
+                  <TouchableOpacity
+                    ref={(ref) => { (dobRowRef as any).current = ref; }}
+                    style={[styles.inputRow]}
+                    activeOpacity={0.7}
+                    onPress={() => { Keyboard.dismiss(); setShowDatePicker(true); }}
                   >
                     <BirthdayIcon size={20} color={Colors.primary} />
-                    <TextInput
-                      style={[styles.inputFieldInner, age ? styles.inputFieldBold : null]}
-                      placeholder={tj('about.agePlaceholder')}
-                      placeholderTextColor={`${Colors.secondary}`}
-                      selectionColor={Colors.primary}
-                      keyboardType="number-pad"
-                      inputAccessoryViewID="onboarding-age"
-                      value={age}
-                      onChangeText={setAge}
-                      onFocus={() => { setFocusedField('age'); scrollInputToCenter(ageRowRef.current); }}
-                      onBlur={() => setFocusedField(null)}
-                    />
+                    <Text
+                      style={[styles.inputFieldInner, dateOfBirth ? styles.inputFieldBold : { color: Colors.secondary }]}
+                      numberOfLines={1}
+                    >
+                      {dateOfBirth ? formatDob(toLocalDateString(dateOfBirth)) : tj('about.dobPlaceholder')}
+                    </Text>
                     <Text style={styles.optionalLabel}>{tc('label.optional')}</Text>
-                    {age ? (
-                      <TouchableOpacity onPress={() => setAge('')} hitSlop={8}>
+                    {dateOfBirth ? (
+                      <TouchableOpacity onPress={() => { setDateOfBirth(null); setShowDatePicker(false); }} hitSlop={8}>
                         <Ionicons name="close" size={18} color={`${Colors.primary}80`} />
                       </TouchableOpacity>
                     ) : null}
-                  </View>
+                  </TouchableOpacity>
                 </View>
               </View>
             </>
@@ -956,24 +954,26 @@ export default function OnboardingScreen() {
           </Animated.View>
         </ScrollView>
 
-        {/* ── Footer ── */}
-        <View style={styles.footer}>
-          <LinearGradient
-            colors={['rgba(226,241,238,0)', Colors.background]}
-            style={styles.footerFade}
-            pointerEvents="none"
-          />
-          <View style={[styles.footerButtons, { paddingBottom: insets.bottom + 12 }]}>
-            <FooterButtonRow
-              secondaryLabel={currentStepKey === 'about' ? tj('about.signOut') : tc('buttons.back')}
-              primaryLabel={isLastStep ? tc('buttons.finish') : t('progress.next', { label: nextLabel })}
-              onSecondaryPress={handleBack}
-              onPrimaryPress={isLastStep ? handleFinish : handleNext}
-              primaryLoading={saving}
-              primaryDisabled={saving}
+        {/* ── Footer — hidden when date picker is open ── */}
+        {!showDatePicker && (
+          <View style={styles.footer}>
+            <LinearGradient
+              colors={['rgba(226,241,238,0)', Colors.background]}
+              style={styles.footerFade}
+              pointerEvents="none"
             />
+            <View style={[styles.footerButtons, { paddingBottom: insets.bottom + 12 }]}>
+              <FooterButtonRow
+                secondaryLabel={currentStepKey === 'about' ? tj('about.signOut') : tc('buttons.back')}
+                primaryLabel={isLastStep ? tc('buttons.finish') : t('progress.next', { label: nextLabel })}
+                onSecondaryPress={handleBack}
+                onPrimaryPress={isLastStep ? handleFinish : handleNext}
+                primaryLoading={saving}
+                primaryDisabled={saving}
+              />
+            </View>
           </View>
-        </View>
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
     <ConditionInfoSheet conditionKey={infoKey} onClose={() => setInfoKey(null)} />
@@ -982,7 +982,33 @@ export default function OnboardingScreen() {
       onClose={() => setSuggestionCategory(null)}
       category={suggestionCategory ?? 'health_condition'}
     />
-    <DoneAccessory id="onboarding-age" />
+    {showDatePicker && (
+      <View style={pickerOverlay.backdrop}>
+        <View style={[pickerOverlay.sheet, { paddingBottom: insets.bottom + 12 }]}>
+          <View style={pickerOverlay.toolbar}>
+            <TouchableOpacity onPress={() => { setDateOfBirth(null); setShowDatePicker(false); }} activeOpacity={0.7}>
+              <Text style={pickerOverlay.clearText}>{tc('buttons.clear')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setShowDatePicker(false)}
+              activeOpacity={0.7}
+              style={pickerOverlay.doneBtn}
+            >
+              <Text style={pickerOverlay.doneBtnText}>{tc('buttons.done')}</Text>
+            </TouchableOpacity>
+          </View>
+          <DateTimePicker
+            value={dateOfBirth ?? new Date(2000, 0, 1)}
+            mode="date"
+            display="spinner"
+            maximumDate={new Date()}
+            minimumDate={new Date(1920, 0, 1)}
+            style={{ height: 216, alignSelf: 'center', width: '100%' }}
+            onChange={(_e, selected) => { if (selected) setDateOfBirth(selected); }}
+          />
+        </View>
+      </View>
+    )}
     </>
   );
 }
@@ -1528,6 +1554,44 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Figtree_700Bold',
     fontWeight: '700',
+    color: '#fff',
+  },
+});
+
+const pickerOverlay = StyleSheet.create({
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'flex-end',
+    zIndex: 100,
+  },
+  sheet: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 12,
+  },
+  toolbar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 4,
+  },
+  clearText: {
+    fontFamily: 'Figtree_300Light',
+    fontSize: 15,
+    color: Colors.secondary,
+  },
+  doneBtn: {
+    backgroundColor: Colors.primary,
+    borderRadius: 999,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+  },
+  doneBtnText: {
+    fontFamily: 'Figtree_700Bold',
+    fontSize: 14,
     color: '#fff',
   },
 });

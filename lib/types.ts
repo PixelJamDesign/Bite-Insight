@@ -35,7 +35,7 @@ export interface UserProfile {
   //   ALTER TABLE profiles ADD COLUMN allergies text[] DEFAULT '{}';
   health_conditions: string[] | null;
   allergies: string[] | null;
-  age: number | null;
+  date_of_birth: string | null;
   is_plus: boolean;
   stripe_customer_id: string | null;
   liked_ingredients: string[] | null;

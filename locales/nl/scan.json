@@ -1,6 +1,9 @@
 {
   "product": {
-    "unknownName": "Onbekend product"
+    "unknownName": "Onbekend product",
+    "notFound": "Product niet gevonden",
+    "notFoundDescription": "We konden dit product niet vinden in onze database. Probeer opnieuw te scannen of zoek handmatig.",
+    "notFoundAction": "Terug"
   },
   "tab": {
     "overview": "Overzicht",

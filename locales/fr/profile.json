@@ -16,7 +16,7 @@
       "permissionMessage": "L'accès à l'appareil photo est requis pour prendre une photo."
     },
     "placeholder": {
-      "age": "Votre âge (facultatif)"
+      "dateOfBirth": "Date de naissance (facultatif)"
     }
   },
   "familyMember": {
