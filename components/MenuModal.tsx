@@ -325,13 +325,12 @@ function CustomToggle({ value, onValueChange }: { value: boolean; onValueChange:
   }, [value]);
 
   const trackBg = anim.interpolate({ inputRange: [0, 1], outputRange: ['#ffffff', '#00776f'] });
-  const trackBorder = anim.interpolate({ inputRange: [0, 1], outputRange: ['#aad4cd', '#00776f'] });
   const thumbColor = anim.interpolate({ inputRange: [0, 1], outputRange: ['#00776f', '#ffffff'] });
   const thumbX = anim.interpolate({ inputRange: [0, 1], outputRange: [THUMB_OFF_X, THUMB_ON_X] });
 
   return (
     <TouchableOpacity activeOpacity={0.8} onPress={() => onValueChange(!value)}>
-      <Animated.View style={{ width: TOGGLE_W, height: TOGGLE_H, borderRadius: 999, backgroundColor: trackBg, borderWidth: 2, borderColor: trackBorder }}>
+      <Animated.View style={{ width: TOGGLE_W, height: TOGGLE_H, borderRadius: 999, backgroundColor: trackBg, borderWidth: 2, borderColor: '#aad4cd' }}>
         <Animated.View style={{ width: THUMB_SIZE, height: THUMB_SIZE, borderRadius: 999, backgroundColor: thumbColor, position: 'absolute', top: 4, left: thumbX }} />
       </Animated.View>
     </TouchableOpacity>
