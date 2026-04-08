@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { Animated, Linking, View, Text } from 'react-native';
 import { Session } from '@supabase/supabase-js';
+import { shouldShowWhatsNew } from './whats-new';
 import {
   Figtree_300Light,
   Figtree_400Regular,
@@ -58,6 +59,8 @@ function stepToSegment(step: OnboardingStep): string {
 const JOURNEY_SEGMENTS = new Set(['onboarding', 'disclaimer', 'app-tour']);
 /** Segments that should NOT be re-accessible after the journey is complete. */
 const LOCKED_JOURNEY_SEGMENTS = new Set(['onboarding', 'disclaimer']);
+/** Segments that the guards should never interfere with. */
+const PASSTHROUGH_SEGMENTS = new Set(['whats-new']);
 
 // ── Auth Guard ──────────────────────────────────────────────────────────────
 
@@ -104,8 +107,8 @@ function JourneyGuard() {
 
   const currentSegment = segments[0] as string;
 
-  // Don't interfere with auth screens or reset-password — AuthGuard handles those
-  if (currentSegment === '(auth)' || currentSegment === 'reset-password') {
+  // Don't interfere with auth screens, reset-password, or passthrough screens
+  if (currentSegment === '(auth)' || currentSegment === 'reset-password' || PASSTHROUGH_SEGMENTS.has(currentSegment)) {
     return null;
   }
 
@@ -122,6 +125,34 @@ function JourneyGuard() {
   }
 
   return null;
+}
+
+// ── What's New Guard ───────────────────────────────────────────────────────
+
+/** Redirects to /whats-new once per app version after the journey is complete. */
+function WhatsNewGuard() {
+  const { session } = useAuth();
+  const segments = useSegments();
+  const navigationState = useRootNavigationState();
+  const { onboardingStep, loading: journeyLoading } = useJourney();
+  const [needsWhatsNew, setNeedsWhatsNew] = useState(false);
+
+  const currentSegment = segments[0] as string;
+
+  useEffect(() => {
+    if (!navigationState?.key || !session || journeyLoading || onboardingStep !== 'complete') {
+      return;
+    }
+    // Re-check every time the user lands on (tabs) — after dismiss,
+    // AsyncStorage will have the current version and this will return false.
+    if (currentSegment === '(tabs)') {
+      shouldShowWhatsNew().then((show) => setNeedsWhatsNew(show));
+    }
+  }, [navigationState?.key, session, journeyLoading, onboardingStep, currentSegment]);
+
+  if (!needsWhatsNew || currentSegment !== '(tabs)') return null;
+
+  return <Redirect href="/whats-new" />;
 }
 
 // Inner component — consumes the SessionContext provided by RootLayout below.
@@ -216,6 +247,7 @@ function RootLayoutInner() {
     <>
       <AuthGuard session={session} />
       <JourneyGuard />
+      <WhatsNewGuard />
       <StatusBar style="dark" />
       <View style={{ flex: 1, backgroundColor: '#e2f1ee' }}>
         <Animated.View style={{ flex: 1, opacity: contentOpacity }}>
@@ -232,6 +264,7 @@ function RootLayoutInner() {
             <Stack.Screen name="family-members" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="add-family-member" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="food-search" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="whats-new" options={{ animation: 'fade' }} />
             <Stack.Screen name="+not-found" />
           </Stack>
         </Animated.View>

@@ -11,7 +11,7 @@
     "logOut": "Log out"
   },
   "footer": {
-    "version": "ver. 1.0.0",
+    "version": "ver. 1.0.1",
     "reportProblem": "Report a problem"
   },
   "ingredients": {
@@ -35,7 +35,18 @@
     "privacyPolicy": "Privacy Policy",
     "cookiePolicy": "Cookie Policy",
     "myData": "My Data",
-    "offlineDatabase": "Offline Database"
+    "offlineDatabase": "Offline Database",
+    "marketingPreferences": "Marketing Preferences"
+  },
+  "marketingPreferences": {
+    "title": "Marketing Preferences",
+    "description": "Choose how you'd like to hear from us. You can change these at any time.",
+    "promotionalEmails": "Promotional Emails",
+    "promotionalHint": "Receive offers and promotions tailored to your preferences.",
+    "productUpdates": "Product Updates",
+    "productUpdatesHint": "Stay informed about new features and improvements.",
+    "newsletter": "Newsletter",
+    "newsletterHint": "Weekly tips, recipes, and health insights."
   },
   "help": {
     "title": "Help & Support",

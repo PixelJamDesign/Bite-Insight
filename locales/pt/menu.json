@@ -11,7 +11,7 @@
     "logOut": "Sair"
   },
   "footer": {
-    "version": "ver. 1.0.0",
+    "version": "ver. 1.0.1",
     "reportProblem": "Informar um problema"
   },
   "ingredients": {
@@ -35,7 +35,8 @@
     "privacyPolicy": "política de Privacidade",
     "cookiePolicy": "Política de Cookies",
     "myData": "Meus dados",
-    "offlineDatabase": "Banco de dados off-line"
+    "offlineDatabase": "Banco de dados off-line",
+    "marketingPreferences": "Preferências de marketing"
   },
   "security": {
     "title": "Segurança",
@@ -135,6 +136,16 @@
       "title": "Senha atualizada",
       "body": "Sua senha foi alterada com sucesso."
     }
+  },
+  "marketingPreferences": {
+    "title": "Preferências de marketing",
+    "description": "Escolha como gostaria de receber as nossas comunicações. Pode alterar estas preferências a qualquer momento.",
+    "promotionalEmails": "E-mails promocionais",
+    "promotionalHint": "Receba ofertas e promoções adaptadas às suas preferências.",
+    "productUpdates": "Atualizações do produto",
+    "productUpdatesHint": "Fique informado sobre novas funcionalidades e melhorias.",
+    "newsletter": "Newsletter",
+    "newsletterHint": "Dicas semanais, receitas e informações de saúde."
   },
   "help": {
     "title": "Ajuda e suporte",

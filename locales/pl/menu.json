@@ -11,7 +11,7 @@
     "logOut": "Wyloguj się"
   },
   "footer": {
-    "version": "wer. 1.0.0",
+    "version": "wer. 1.0.1",
     "reportProblem": "Zgłoś problem"
   },
   "ingredients": {
@@ -35,7 +35,8 @@
     "privacyPolicy": "Polityka prywatności",
     "cookiePolicy": "Polityka plików cookie",
     "myData": "Moje dane",
-    "offlineDatabase": "Baza danych offline"
+    "offlineDatabase": "Baza danych offline",
+    "marketingPreferences": "Preferencje marketingowe"
   },
   "security": {
     "title": "Bezpieczeństwo",
@@ -135,6 +136,16 @@
       "title": "Hasło zaktualizowane",
       "body": "Twoje hasło zostało pomyślnie zmienione."
     }
+  },
+  "marketingPreferences": {
+    "title": "Preferencje marketingowe",
+    "description": "Wybierz, jak chcesz otrzymywać od nas wiadomości. Możesz to zmienić w każdej chwili.",
+    "promotionalEmails": "E-maile promocyjne",
+    "promotionalHint": "Otrzymuj oferty i promocje dopasowane do Twoich preferencji.",
+    "productUpdates": "Aktualizacje produktu",
+    "productUpdatesHint": "Bądź na bieżąco z nowymi funkcjami i ulepszeniami.",
+    "newsletter": "Newsletter",
+    "newsletterHint": "Cotygodniowe porady, przepisy i informacje zdrowotne."
   },
   "help": {
     "title": "Pomoc i wsparcie",

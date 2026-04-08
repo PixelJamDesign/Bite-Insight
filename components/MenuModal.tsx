@@ -42,8 +42,10 @@ import {
   MenuPrivacyIcon,
   MenuCookieIcon,
   MenuDataIcon,
+  MenuOfflineDbIcon,
   MenuChevronRightIcon,
   MenuArrowLeftIcon,
+  EmailIcon,
 } from './MenuIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';
@@ -76,7 +78,7 @@ import {
   ALL_REGIONS,
 } from '@/lib/offlineDatabase';
 
-type MenuScreen = 'main' | 'ingredients' | 'account' | 'settings' | 'security' | 'mydata' | 'password' | 'offlinedb' | 'help';
+type MenuScreen = 'main' | 'ingredients' | 'account' | 'settings' | 'security' | 'mydata' | 'password' | 'offlinedb' | 'help' | 'marketing';
 
 // ─── Shared sub-components ────────────────────────────────────────────────────
 
@@ -190,10 +192,11 @@ function SettingsScreen({ goBack, onNavigate, onOpenPolicy }: { goBack: () => vo
         <NavItem icon={<MenuHelpIcon color={Colors.secondary} />} label={t('settings.helpSupport')} onPress={() => onNavigate('help')} chevron />
         <NavItem icon={<MenuPrivacyIcon color={Colors.secondary} />} label={t('settings.privacyPolicy')} onPress={() => onOpenPolicy('privacy')} />
         <NavItem icon={<MenuCookieIcon color={Colors.secondary} />} label={t('settings.cookiePolicy')} onPress={() => onOpenPolicy('cookie')} />
+        <NavItem icon={<MenuNotificationsIcon color={Colors.secondary} />} label={t('settings.marketingPreferences')} onPress={() => onNavigate('marketing')} chevron />
         <NavItem icon={<MenuDataIcon color={Colors.secondary} />} label={t('settings.myData')} onPress={() => onNavigate('mydata')} chevron />
         {Platform.OS !== 'web' && (
           <NavItem
-            icon={<Ionicons name="cloud-download-outline" size={22} color={Colors.secondary} />}
+            icon={<MenuOfflineDbIcon color={Colors.secondary} size={24} />}
             label={t('settings.offlineDatabase')}
             onPress={isPlus ? () => onNavigate('offlinedb') : showUpsell}
             chevron
@@ -294,6 +297,143 @@ function SecurityScreen({ goBack, onNavigate }: { goBack: () => void; onNavigate
     </>
   );
 }
+
+// ─── Marketing Preferences screen ───────────────────────────────────────────
+
+type MarketingPrefs = {
+  promotional_emails: boolean;
+  product_updates: boolean;
+  newsletter: boolean;
+};
+
+const DEFAULT_MARKETING_PREFS: MarketingPrefs = {
+  promotional_emails: false,
+  product_updates: false,
+  newsletter: false,
+};
+
+function MarketingPreferencesScreen({ goBack }: { goBack: () => void }) {
+  const { t } = useTranslation('menu');
+  const { t: tc } = useTranslation('common');
+  const { session } = useAuth();
+  const [prefs, setPrefs] = useState<MarketingPrefs>(DEFAULT_MARKETING_PREFS);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    supabase
+      .from('profiles')
+      .select('marketing_preferences')
+      .eq('id', session.user.id)
+      .single()
+      .then(({ data }) => {
+        if (data?.marketing_preferences) {
+          setPrefs({ ...DEFAULT_MARKETING_PREFS, ...(data.marketing_preferences as MarketingPrefs) });
+        }
+        setLoading(false);
+      });
+  }, [session?.user?.id]);
+
+  async function handleToggle(key: keyof MarketingPrefs, value: boolean) {
+    const updated = { ...prefs, [key]: value };
+    setPrefs(updated);
+    if (session?.user?.id) {
+      await supabase
+        .from('profiles')
+        .update({ marketing_preferences: updated })
+        .eq('id', session.user.id);
+    }
+  }
+
+  const toggles: { key: keyof MarketingPrefs; label: string; hint: string; icon: React.ReactNode }[] = [
+    {
+      key: 'promotional_emails',
+      label: t('marketingPreferences.promotionalEmails'),
+      hint: t('marketingPreferences.promotionalHint'),
+      icon: <EmailIcon color={Colors.secondary} size={20} />,
+    },
+    {
+      key: 'product_updates',
+      label: t('marketingPreferences.productUpdates'),
+      hint: t('marketingPreferences.productUpdatesHint'),
+      icon: <MenuNotificationsIcon color={Colors.secondary} />,
+    },
+    {
+      key: 'newsletter',
+      label: t('marketingPreferences.newsletter'),
+      hint: t('marketingPreferences.newsletterHint'),
+      icon: <MenuRecipesIcon color={Colors.secondary} />,
+    },
+  ];
+
+  return (
+    <>
+      <View style={styles.subHeader}>
+        <TouchableOpacity style={styles.backBtn} onPress={goBack} activeOpacity={0.7}>
+          <MenuArrowLeftIcon color={Colors.secondary} size={16} />
+          <Text style={styles.backText}>{tc('buttons.back')}</Text>
+        </TouchableOpacity>
+        <Text style={styles.subTitle}>{t('marketingPreferences.title')}</Text>
+      </View>
+      <View style={styles.navList}>
+        <Text style={marketingStyles.description}>{t('marketingPreferences.description')}</Text>
+        {loading ? (
+          <View style={styles.securityLoading}>
+            <ActivityIndicator size="small" color={Colors.secondary} />
+          </View>
+        ) : (
+          toggles.map((item) => (
+            <View key={item.key} style={marketingStyles.toggleCard}>
+              <View style={marketingStyles.toggleTop}>
+                <View style={styles.toggleLeft}>
+                  <View style={styles.navIcon}>{item.icon}</View>
+                  <Text style={styles.navLabel}>{item.label}</Text>
+                </View>
+                <Switch
+                  value={prefs[item.key]}
+                  onValueChange={(v) => handleToggle(item.key, v)}
+                  trackColor={{ false: '#d6e8e5', true: Colors.accent }}
+                  thumbColor={Platform.OS === 'android' ? '#fff' : undefined}
+                  ios_backgroundColor="#d6e8e5"
+                />
+              </View>
+              <Text style={marketingStyles.hint}>{item.hint}</Text>
+            </View>
+          ))
+        )}
+      </View>
+    </>
+  );
+}
+
+const marketingStyles = StyleSheet.create({
+  description: {
+    fontFamily: 'Figtree_300Light',
+    fontSize: 14,
+    lineHeight: 21,
+    color: Colors.secondary,
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+  },
+  toggleCard: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 4,
+  },
+  toggleTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  hint: {
+    fontFamily: 'Figtree_300Light',
+    fontSize: 13,
+    lineHeight: 18,
+    color: Colors.secondary,
+    paddingLeft: 38,
+    opacity: 0.8,
+  },
+});
 
 // ─── My Data screen ──────────────────────────────────────────────────────────
 
@@ -803,7 +943,7 @@ function OfflineDatabaseScreen({ goBack }: { goBack: () => void }) {
                         onPress={() => handleDownload(code)}
                         activeOpacity={0.7}
                       >
-                        <Ionicons name="cloud-download-outline" size={18} color="#fff" />
+                        <MenuOfflineDbIcon color="#fff" size={18} />
                         <Text style={offlineDbStyles.downloadBtnText}>{t('offlineDb.downloadButton')}</Text>
                       </TouchableOpacity>
                     )}
@@ -1602,6 +1742,9 @@ export function MenuModal({ onClose, onNavigate }: MenuModalProps) {
     }
     if (s === 'settings') {
       return <><SettingsScreen goBack={() => navigate('main', true)} onNavigate={(sc) => navigate(sc)} onOpenPolicy={setPolicyType} /><Footer /></>;
+    }
+    if (s === 'marketing') {
+      return <><MarketingPreferencesScreen goBack={() => navigate('settings', true)} /><Footer /></>;
     }
     if (s === 'mydata') {
       return <><MyDataScreen goBack={() => navigate('settings', true)} /><Footer /></>;

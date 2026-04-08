@@ -19,6 +19,7 @@ export const HEALTH_CONDITION_KEYS = [
   'diverticular',
   'eczema',
   'endometriosis',
+  'fibromyalgia',
   'gerd',
   'gout',
   'hashimotos',
@@ -37,7 +38,6 @@ export const HEALTH_CONDITION_KEYS = [
   'pcos',
   'preDiabetes',
   'ra',
-  'fibromyalgia',
   'sibo',
   'uc',
 ] as const;
@@ -46,7 +46,9 @@ export type HealthConditionKey = (typeof HEALTH_CONDITION_KEYS)[number];
 
 // ── Allergies ────────────────────────────────────────────────────────────────
 export const ALLERGY_KEYS = [
+  'aloeVera',
   'celery',
+  'dairy',
   'egg',
   'fish',
   'fructose',
@@ -57,13 +59,11 @@ export const ALLERGY_KEYS = [
   'msg',
   'mustard',
   'peanut',
+  'raspberry',
   'salicylate',
   'sesame',
   'shellfish',
   'soy',
-  'aloeVera',
-  'dairy',
-  'raspberry',
   'sulphite',
   'treeNut',
 ] as const;
@@ -76,18 +76,18 @@ export const DIETARY_PREFERENCE_KEYS = [
   'cleanEating',
   'dairyFree',
   'fodmap',
-  'keto',
   'highProtein',
+  'keto',
+  'mediterraneanDiet',
   'paleo',
   'plantBased',
   'postBariatric',
   'pregnancy',
   'sustainable',
-  'weightLoss',
-  'whole30',
-  'mediterraneanDiet',
   'vegan',
   'vegetarian',
+  'weightLoss',
+  'whole30',
 ] as const;
 
 export type DietaryPreferenceKey = (typeof DIETARY_PREFERENCE_KEYS)[number];

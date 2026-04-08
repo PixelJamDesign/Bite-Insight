@@ -287,6 +287,14 @@ export function MenuDataIcon({ color, size = 22 }: IconProps) {
   );
 }
 
+export function MenuOfflineDbIcon({ color, size = 22 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M6.28571 19C3.91878 19 2 17.1038 2 14.7647C2 12.4256 3.91878 10.5294 6.28571 10.5294C6.56983 10.5294 6.8475 10.5567 7.11616 10.6089M14.3809 8.02721C14.9767 7.81912 15.6178 7.70588 16.2857 7.70588C16.9404 7.70588 17.5693 7.81468 18.1551 8.01498M7.11616 10.6089C6.88706 9.9978 6.7619 9.33687 6.7619 8.64706C6.7619 5.52828 9.32027 3 12.4762 3C15.4159 3 17.8371 5.19371 18.1551 8.01498M7.11616 10.6089C7.68058 10.7184 8.20528 10.9374 8.66666 11.2426M18.1551 8.01498C20.393 8.78024 22 10.8811 22 13.3529C22 16.06 20.0726 18.3221 17.5 18.8722M12 22V16M12 22L14 20M12 22L10 20" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
 // ── Scanner action bar icons ─────────────────────────────────────────────────
 
 export function ActionGalleryIcon({ color, size = 24 }: IconProps) {

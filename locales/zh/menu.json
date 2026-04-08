@@ -11,7 +11,7 @@
     "logOut": "退出"
   },
   "footer": {
-    "version": "版本。 1.0.0",
+    "version": "版本。 1.0.1",
     "reportProblem": "报告问题"
   },
   "ingredients": {
@@ -35,7 +35,8 @@
     "privacyPolicy": "隐私政策",
     "cookiePolicy": "Cookie 政策",
     "myData": "我的数据",
-    "offlineDatabase": "离线数据库"
+    "offlineDatabase": "离线数据库",
+    "marketingPreferences": "营销偏好"
   },
   "security": {
     "title": "安全",
@@ -135,6 +136,16 @@
       "title": "密码已更新",
       "body": "您的密码已成功更改。"
     }
+  },
+  "marketingPreferences": {
+    "title": "营销偏好",
+    "description": "选择您希望如何收到我们的消息。您可以随时更改这些设置。",
+    "promotionalEmails": "促销邮件",
+    "promotionalHint": "接收根据您的偏好定制的优惠和促销信息。",
+    "productUpdates": "产品更新",
+    "productUpdatesHint": "了解新功能和改进。",
+    "newsletter": "新闻通讯",
+    "newsletterHint": "每周提示、食谱和健康资讯。"
   },
   "help": {
     "title": "帮助与支持",

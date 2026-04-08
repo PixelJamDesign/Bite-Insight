@@ -11,7 +11,7 @@
     "logOut": "Abmelden"
   },
   "footer": {
-    "version": "ver. 1.0.0",
+    "version": "ver. 1.0.1",
     "reportProblem": "Melden Sie ein Problem"
   },
   "ingredients": {
@@ -35,7 +35,8 @@
     "privacyPolicy": "Datenschutzrichtlinie",
     "cookiePolicy": "Cookie-Richtlinie",
     "myData": "Meine Daten",
-    "offlineDatabase": "Offline-Datenbank"
+    "offlineDatabase": "Offline-Datenbank",
+    "marketingPreferences": "Marketing-Einstellungen"
   },
   "security": {
     "title": "Sicherheit",
@@ -135,6 +136,16 @@
       "title": "Passwort aktualisiert",
       "body": "Ihr Passwort wurde erfolgreich geändert."
     }
+  },
+  "marketingPreferences": {
+    "title": "Marketing-Einstellungen",
+    "description": "Wähle aus, wie du von uns hören möchtest. Du kannst dies jederzeit ändern.",
+    "promotionalEmails": "Werbe-E-Mails",
+    "promotionalHint": "Erhalte Angebote und Aktionen, die auf deine Vorlieben zugeschnitten sind.",
+    "productUpdates": "Produktaktualisierungen",
+    "productUpdatesHint": "Bleib über neue Funktionen und Verbesserungen informiert.",
+    "newsletter": "Newsletter",
+    "newsletterHint": "Wöchentliche Tipps, Rezepte und Gesundheitsinformationen."
   },
   "help": {
     "title": "Hilfe und Support",

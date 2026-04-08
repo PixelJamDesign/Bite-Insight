@@ -11,7 +11,7 @@
     "logOut": "Uitloggen"
   },
   "footer": {
-    "version": "ver. 1.0.0",
+    "version": "ver. 1.0.1",
     "reportProblem": "Meld een probleem"
   },
   "ingredients": {
@@ -35,7 +35,8 @@
     "privacyPolicy": "Privacybeleid",
     "cookiePolicy": "Cookiebeleid",
     "myData": "Mijn gegevens",
-    "offlineDatabase": "Offlinedatabase"
+    "offlineDatabase": "Offlinedatabase",
+    "marketingPreferences": "Marketingvoorkeuren"
   },
   "security": {
     "title": "Beveiliging",
@@ -135,6 +136,16 @@
       "title": "Wachtwoord bijgewerkt",
       "body": "Uw wachtwoord is succesvol gewijzigd."
     }
+  },
+  "marketingPreferences": {
+    "title": "Marketingvoorkeuren",
+    "description": "Kies hoe je van ons wilt horen. Je kunt dit op elk moment wijzigen.",
+    "promotionalEmails": "Promotionele e-mails",
+    "promotionalHint": "Ontvang aanbiedingen en promoties afgestemd op jouw voorkeuren.",
+    "productUpdates": "Productupdates",
+    "productUpdatesHint": "Blijf op de hoogte van nieuwe functies en verbeteringen.",
+    "newsletter": "Nieuwsbrief",
+    "newsletterHint": "Wekelijkse tips, recepten en gezondheidsinformatie."
   },
   "help": {
     "title": "Hulp en ondersteuning",

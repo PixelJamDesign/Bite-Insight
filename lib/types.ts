@@ -42,6 +42,11 @@ export interface UserProfile {
   disliked_ingredients: string[] | null;
   flagged_ingredients: string[] | null;
   nutrient_watchlist: NutrientWatchlistEntry[] | null;
+  marketing_preferences: {
+    promotional_emails: boolean;
+    product_updates: boolean;
+    newsletter: boolean;
+  } | null;
   onboarding_step: OnboardingStep;
   created_at: string;
 }

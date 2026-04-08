@@ -11,7 +11,7 @@
     "logOut": "ログアウト"
   },
   "footer": {
-    "version": "バージョン1.0.0",
+    "version": "バージョン1.0.1",
     "reportProblem": "問題を報告する"
   },
   "ingredients": {
@@ -35,7 +35,8 @@
     "privacyPolicy": "プライバシーポリシー",
     "cookiePolicy": "クッキーポリシー",
     "myData": "私のデータ",
-    "offlineDatabase": "オフラインデータベース"
+    "offlineDatabase": "オフラインデータベース",
+    "marketingPreferences": "マーケティング設定"
   },
   "security": {
     "title": "安全",
@@ -135,6 +136,16 @@
       "title": "パスワードが更新されました",
       "body": "パスワードは正常に変更されました。"
     }
+  },
+  "marketingPreferences": {
+    "title": "マーケティング設定",
+    "description": "お知らせの受け取り方を選択してください。いつでも変更できます。",
+    "promotionalEmails": "プロモーションメール",
+    "promotionalHint": "お好みに合わせたオファーやプロモーションを受け取ります。",
+    "productUpdates": "製品アップデート",
+    "productUpdatesHint": "新機能や改善点に関する情報をお届けします。",
+    "newsletter": "ニュースレター",
+    "newsletterHint": "週刊のヒント、レシピ、健康情報。"
   },
   "help": {
     "title": "ヘルプとサポート",

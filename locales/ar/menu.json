@@ -11,7 +11,7 @@
     "logOut": "تسجيل الخروج"
   },
   "footer": {
-    "version": "الاصدار. 1.0.0",
+    "version": "الاصدار. 1.0.1",
     "reportProblem": "الإبلاغ عن مشكلة"
   },
   "ingredients": {
@@ -35,7 +35,8 @@
     "privacyPolicy": "سياسة الخصوصية",
     "cookiePolicy": "سياسة ملفات تعريف الارتباط",
     "myData": "بياناتي",
-    "offlineDatabase": "قاعدة بيانات غير متصل"
+    "offlineDatabase": "قاعدة بيانات غير متصل",
+    "marketingPreferences": "تفضيلات التسويق"
   },
   "security": {
     "title": "حماية",
@@ -135,6 +136,16 @@
       "title": "تم تحديث كلمة المرور",
       "body": "لقد تم تغيير كلمة المرور الخاصة بك بنجاح."
     }
+  },
+  "marketingPreferences": {
+    "title": "تفضيلات التسويق",
+    "description": "اختر كيف تريد أن نتواصل معك. يمكنك تغيير هذه الإعدادات في أي وقت.",
+    "promotionalEmails": "رسائل ترويجية",
+    "promotionalHint": "احصل على عروض وترويجات مخصصة لتفضيلاتك.",
+    "productUpdates": "تحديثات المنتج",
+    "productUpdatesHint": "ابقَ على اطلاع بالميزات والتحسينات الجديدة.",
+    "newsletter": "النشرة الإخبارية",
+    "newsletterHint": "نصائح أسبوعية ووصفات ومعلومات صحية."
   },
   "help": {
     "title": "المساعدة والدعم",

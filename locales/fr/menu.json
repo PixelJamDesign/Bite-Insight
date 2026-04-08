@@ -11,7 +11,7 @@
     "logOut": "Se déconnecter"
   },
   "footer": {
-    "version": "ver. 1.0.0",
+    "version": "ver. 1.0.1",
     "reportProblem": "Signaler un problème"
   },
   "ingredients": {
@@ -35,7 +35,8 @@
     "privacyPolicy": "politique de confidentialité",
     "cookiePolicy": "Politique en matière de cookies",
     "myData": "Mes données",
-    "offlineDatabase": "Base de données hors ligne"
+    "offlineDatabase": "Base de données hors ligne",
+    "marketingPreferences": "Préférences marketing"
   },
   "security": {
     "title": "Sécurité",
@@ -135,6 +136,16 @@
       "title": "Mot de passe mis à jour",
       "body": "Votre mot de passe a été modifié avec succès."
     }
+  },
+  "marketingPreferences": {
+    "title": "Préférences marketing",
+    "description": "Choisissez comment vous souhaitez recevoir nos communications. Vous pouvez modifier ces choix à tout moment.",
+    "promotionalEmails": "E-mails promotionnels",
+    "promotionalHint": "Recevez des offres et promotions adaptées à vos préférences.",
+    "productUpdates": "Mises à jour produit",
+    "productUpdatesHint": "Restez informé des nouvelles fonctionnalités et améliorations.",
+    "newsletter": "Newsletter",
+    "newsletterHint": "Conseils hebdomadaires, recettes et informations santé."
   },
   "help": {
     "title": "Aide et assistance",

@@ -11,7 +11,7 @@
     "logOut": "Finalizar la sesión"
   },
   "footer": {
-    "version": "ver. 1.0.0",
+    "version": "ver. 1.0.1",
     "reportProblem": "Informar un problema"
   },
   "ingredients": {
@@ -35,7 +35,8 @@
     "privacyPolicy": "política de privacidad",
     "cookiePolicy": "Política de cookies",
     "myData": "Mis datos",
-    "offlineDatabase": "Base de datos sin conexión"
+    "offlineDatabase": "Base de datos sin conexión",
+    "marketingPreferences": "Preferencias de marketing"
   },
   "security": {
     "title": "Seguridad",
@@ -135,6 +136,16 @@
       "title": "Contraseña actualizada",
       "body": "Su contraseña ha sido cambiada exitosamente."
     }
+  },
+  "marketingPreferences": {
+    "title": "Preferencias de marketing",
+    "description": "Elige cómo quieres que nos comuniquemos contigo. Puedes cambiar esto en cualquier momento.",
+    "promotionalEmails": "Correos promocionales",
+    "promotionalHint": "Recibe ofertas y promociones adaptadas a tus preferencias.",
+    "productUpdates": "Actualizaciones del producto",
+    "productUpdatesHint": "Mantente informado sobre nuevas funciones y mejoras.",
+    "newsletter": "Boletín informativo",
+    "newsletterHint": "Consejos semanales, recetas e información de salud."
   },
   "help": {
     "title": "Ayuda y soporte",
