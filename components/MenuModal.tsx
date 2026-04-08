@@ -42,6 +42,7 @@ import {
   MenuPrivacyIcon,
   MenuCookieIcon,
   MenuDataIcon,
+  MenuMarketingIcon,
   MenuOfflineDbIcon,
   MenuChevronRightIcon,
   MenuArrowLeftIcon,
@@ -192,7 +193,7 @@ function SettingsScreen({ goBack, onNavigate, onOpenPolicy }: { goBack: () => vo
         <NavItem icon={<MenuHelpIcon color={Colors.secondary} />} label={t('settings.helpSupport')} onPress={() => onNavigate('help')} chevron />
         <NavItem icon={<MenuPrivacyIcon color={Colors.secondary} />} label={t('settings.privacyPolicy')} onPress={() => onOpenPolicy('privacy')} />
         <NavItem icon={<MenuCookieIcon color={Colors.secondary} />} label={t('settings.cookiePolicy')} onPress={() => onOpenPolicy('cookie')} />
-        <NavItem icon={<MenuNotificationsIcon color={Colors.secondary} />} label={t('settings.marketingPreferences')} onPress={() => onNavigate('marketing')} chevron />
+        <NavItem icon={<MenuMarketingIcon color={Colors.secondary} />} label={t('settings.marketingPreferences')} onPress={() => onNavigate('marketing')} chevron />
         <NavItem icon={<MenuDataIcon color={Colors.secondary} />} label={t('settings.myData')} onPress={() => onNavigate('mydata')} chevron />
         {Platform.OS !== 'web' && (
           <NavItem
