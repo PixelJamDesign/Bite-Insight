@@ -306,11 +306,16 @@ import UnreadNotificationIcon from '../assets/icons/unread_notification.svg';
 
 // ─── Custom Toggle (matches Figma: 48×28 track, 16×16 thumb) ────────────────
 
+// Custom toggle matching Figma exactly:
+// Track: 48×28, borderRadius 999 (pill)
+// Handle: 16×16 ellipse
+// OFF state: track #aad4cd, handle #00776f at x=6
+// ON state:  track #00776f, handle #ffffff at x=26
 const TOGGLE_W = 48;
 const TOGGLE_H = 28;
 const THUMB_SIZE = 16;
-const THUMB_INSET = 6;
-const THUMB_TRAVEL = TOGGLE_W - THUMB_SIZE - THUMB_INSET * 2; // 20px
+const THUMB_OFF_X = 6;
+const THUMB_ON_X = 26;
 
 function CustomToggle({ value, onValueChange }: { value: boolean; onValueChange: (v: boolean) => void }) {
   const anim = useRef(new Animated.Value(value ? 1 : 0)).current;
@@ -320,12 +325,13 @@ function CustomToggle({ value, onValueChange }: { value: boolean; onValueChange:
   }, [value]);
 
   const trackColor = anim.interpolate({ inputRange: [0, 1], outputRange: ['#aad4cd', '#00776f'] });
-  const thumbX = anim.interpolate({ inputRange: [0, 1], outputRange: [THUMB_INSET, THUMB_INSET + THUMB_TRAVEL] });
+  const thumbColor = anim.interpolate({ inputRange: [0, 1], outputRange: ['#00776f', '#ffffff'] });
+  const thumbX = anim.interpolate({ inputRange: [0, 1], outputRange: [THUMB_OFF_X, THUMB_ON_X] });
 
   return (
     <TouchableOpacity activeOpacity={0.8} onPress={() => onValueChange(!value)}>
-      <Animated.View style={{ width: TOGGLE_W, height: TOGGLE_H, borderRadius: TOGGLE_H / 2, backgroundColor: trackColor, justifyContent: 'center' }}>
-        <Animated.View style={{ width: THUMB_SIZE, height: THUMB_SIZE, borderRadius: THUMB_SIZE / 2, backgroundColor: '#fff', position: 'absolute', left: thumbX }} />
+      <Animated.View style={{ width: TOGGLE_W, height: TOGGLE_H, borderRadius: 999, backgroundColor: trackColor }}>
+        <Animated.View style={{ width: THUMB_SIZE, height: THUMB_SIZE, borderRadius: 999, backgroundColor: thumbColor, position: 'absolute', top: 6, left: thumbX }} />
       </Animated.View>
     </TouchableOpacity>
   );
