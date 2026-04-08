@@ -139,13 +139,10 @@
   },
   "marketingPreferences": {
     "title": "营销偏好",
-    "description": "选择您希望如何收到我们的消息。您可以随时更改这些设置。",
     "promotionalEmails": "促销邮件",
-    "promotionalHint": "接收根据您的偏好定制的优惠和促销信息。",
+    "promotionalHint": "在您的收件箱中接收来自Bite Insight的优惠和促销信息。",
     "productUpdates": "产品更新",
-    "productUpdatesHint": "了解新功能和改进。",
-    "newsletter": "新闻通讯",
-    "newsletterHint": "每周提示、食谱和健康资讯。"
+    "productUpdatesHint": "及时了解新功能发布公告。"
   },
   "help": {
     "title": "帮助与支持",

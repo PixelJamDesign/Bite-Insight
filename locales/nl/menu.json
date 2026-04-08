@@ -139,13 +139,10 @@
   },
   "marketingPreferences": {
     "title": "Marketingvoorkeuren",
-    "description": "Kies hoe je van ons wilt horen. Je kunt dit op elk moment wijzigen.",
     "promotionalEmails": "Promotionele e-mails",
-    "promotionalHint": "Ontvang aanbiedingen en promoties afgestemd op jouw voorkeuren.",
+    "promotionalHint": "Ontvang aanbiedingen en promoties van Bite Insight in je inbox.",
     "productUpdates": "Productupdates",
-    "productUpdatesHint": "Blijf op de hoogte van nieuwe functies en verbeteringen.",
-    "newsletter": "Nieuwsbrief",
-    "newsletterHint": "Wekelijkse tips, recepten en gezondheidsinformatie."
+    "productUpdatesHint": "Blijf op de hoogte van nieuwe functie-aankondigingen."
   },
   "help": {
     "title": "Hulp en ondersteuning",

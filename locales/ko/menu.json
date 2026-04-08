@@ -139,13 +139,10 @@
   },
   "marketingPreferences": {
     "title": "마케팅 설정",
-    "description": "알림 수신 방법을 선택하세요. 언제든지 변경할 수 있습니다.",
     "promotionalEmails": "프로모션 이메일",
-    "promotionalHint": "맞춤형 할인 및 프로모션을 받아보세요.",
+    "promotionalHint": "Bite Insight의 할인 및 프로모션을 받은편지함에서 받아보세요.",
     "productUpdates": "제품 업데이트",
-    "productUpdatesHint": "새로운 기능과 개선 사항에 대한 정보를 받아보세요.",
-    "newsletter": "뉴스레터",
-    "newsletterHint": "주간 팁, 레시피 및 건강 정보."
+    "productUpdatesHint": "새로운 기능 발표 소식을 받아보세요."
   },
   "help": {
     "title": "도움말 및 지원",

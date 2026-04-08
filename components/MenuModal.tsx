@@ -193,7 +193,7 @@ function SettingsScreen({ goBack, onNavigate, onOpenPolicy }: { goBack: () => vo
         <NavItem icon={<MenuHelpIcon color={Colors.secondary} />} label={t('settings.helpSupport')} onPress={() => onNavigate('help')} chevron />
         <NavItem icon={<MenuPrivacyIcon color={Colors.secondary} />} label={t('settings.privacyPolicy')} onPress={() => onOpenPolicy('privacy')} />
         <NavItem icon={<MenuCookieIcon color={Colors.secondary} />} label={t('settings.cookiePolicy')} onPress={() => onOpenPolicy('cookie')} />
-        <NavItem icon={<MenuMarketingIcon color={Colors.secondary} />} label={t('settings.marketingPreferences')} onPress={() => onNavigate('marketing')} chevron />
+        <NavItem icon={<MenuMarketingIcon color={Colors.secondary} size={24} />} label={t('settings.marketingPreferences')} onPress={() => onNavigate('marketing')} chevron />
         <NavItem icon={<MenuDataIcon color={Colors.secondary} />} label={t('settings.myData')} onPress={() => onNavigate('mydata')} chevron />
         {Platform.OS !== 'web' && (
           <NavItem
@@ -301,16 +301,17 @@ function SecurityScreen({ goBack, onNavigate }: { goBack: () => void; onNavigate
 
 // ─── Marketing Preferences screen ───────────────────────────────────────────
 
+import UnreadEmailIcon from '../assets/icons/unread_email.svg';
+import UnreadNotificationIcon from '../assets/icons/unread_notification.svg';
+
 type MarketingPrefs = {
   promotional_emails: boolean;
   product_updates: boolean;
-  newsletter: boolean;
 };
 
 const DEFAULT_MARKETING_PREFS: MarketingPrefs = {
   promotional_emails: false,
   product_updates: false,
-  newsletter: false,
 };
 
 function MarketingPreferencesScreen({ goBack }: { goBack: () => void }) {
@@ -346,24 +347,18 @@ function MarketingPreferencesScreen({ goBack }: { goBack: () => void }) {
     }
   }
 
-  const toggles: { key: keyof MarketingPrefs; label: string; hint: string; icon: React.ReactNode }[] = [
+  const toggles: { key: keyof MarketingPrefs; label: string; hint: string; Icon: React.FC<{ width: number; height: number }> }[] = [
     {
       key: 'promotional_emails',
       label: t('marketingPreferences.promotionalEmails'),
       hint: t('marketingPreferences.promotionalHint'),
-      icon: <EmailIcon color={Colors.secondary} size={20} />,
+      Icon: UnreadEmailIcon,
     },
     {
       key: 'product_updates',
       label: t('marketingPreferences.productUpdates'),
       hint: t('marketingPreferences.productUpdatesHint'),
-      icon: <MenuNotificationsIcon color={Colors.secondary} />,
-    },
-    {
-      key: 'newsletter',
-      label: t('marketingPreferences.newsletter'),
-      hint: t('marketingPreferences.newsletterHint'),
-      icon: <MenuRecipesIcon color={Colors.secondary} />,
+      Icon: UnreadNotificationIcon,
     },
   ];
 
@@ -377,30 +372,29 @@ function MarketingPreferencesScreen({ goBack }: { goBack: () => void }) {
         <Text style={styles.subTitle}>{t('marketingPreferences.title')}</Text>
       </View>
       <View style={styles.navList}>
-        <Text style={marketingStyles.description}>{t('marketingPreferences.description')}</Text>
         {loading ? (
           <View style={styles.securityLoading}>
             <ActivityIndicator size="small" color={Colors.secondary} />
           </View>
         ) : (
-          toggles.map((item) => (
-            <View key={item.key} style={marketingStyles.toggleCard}>
-              <View style={marketingStyles.toggleTop}>
-                <View style={styles.toggleLeft}>
-                  <View style={styles.navIcon}>{item.icon}</View>
-                  <Text style={styles.navLabel}>{item.label}</Text>
+          <View style={marketingStyles.cards}>
+            {toggles.map((item) => (
+              <View key={item.key} style={marketingStyles.card}>
+                <item.Icon width={24} height={24} />
+                <View style={marketingStyles.textCol}>
+                  <Text style={marketingStyles.label}>{item.label}</Text>
+                  <Text style={marketingStyles.hint}>{item.hint}</Text>
                 </View>
                 <Switch
                   value={prefs[item.key]}
                   onValueChange={(v) => handleToggle(item.key, v)}
-                  trackColor={{ false: '#d6e8e5', true: Colors.accent }}
-                  thumbColor={Platform.OS === 'android' ? '#fff' : undefined}
-                  ios_backgroundColor="#d6e8e5"
+                  trackColor={{ false: '#aad4cd', true: Colors.secondary }}
+                  thumbColor="#fff"
+                  ios_backgroundColor="#aad4cd"
                 />
               </View>
-              <Text style={marketingStyles.hint}>{item.hint}</Text>
-            </View>
-          ))
+            ))}
+          </View>
         )}
       </View>
     </>
@@ -408,31 +402,36 @@ function MarketingPreferencesScreen({ goBack }: { goBack: () => void }) {
 }
 
 const marketingStyles = StyleSheet.create({
-  description: {
-    fontFamily: 'Figtree_300Light',
-    fontSize: 14,
-    lineHeight: 21,
-    color: Colors.secondary,
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-  },
-  toggleCard: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+  cards: {
     gap: 4,
   },
-  toggleTop: {
+  card: {
+    backgroundColor: Colors.background,
+    borderWidth: 1,
+    borderColor: '#aad4cd',
+    borderRadius: 12,
+    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 16,
+  },
+  textCol: {
+    flex: 1,
+    gap: 4,
+  },
+  label: {
+    fontFamily: 'Figtree_700Bold',
+    fontSize: 16,
+    lineHeight: 17.6,
+    letterSpacing: -0.32,
+    color: Colors.primary,
   },
   hint: {
     fontFamily: 'Figtree_300Light',
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 14,
+    lineHeight: 21,
+    letterSpacing: -0.14,
     color: Colors.secondary,
-    paddingLeft: 38,
-    opacity: 0.8,
   },
 });
 

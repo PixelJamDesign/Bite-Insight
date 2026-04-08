@@ -139,13 +139,10 @@
   },
   "marketingPreferences": {
     "title": "マーケティング設定",
-    "description": "お知らせの受け取り方を選択してください。いつでも変更できます。",
     "promotionalEmails": "プロモーションメール",
-    "promotionalHint": "お好みに合わせたオファーやプロモーションを受け取ります。",
+    "promotionalHint": "Bite Insightからのオファーやプロモーションを受信トレイで受け取ります。",
     "productUpdates": "製品アップデート",
-    "productUpdatesHint": "新機能や改善点に関する情報をお届けします。",
-    "newsletter": "ニュースレター",
-    "newsletterHint": "週刊のヒント、レシピ、健康情報。"
+    "productUpdatesHint": "新機能のお知らせをいち早くお届けします。"
   },
   "help": {
     "title": "ヘルプとサポート",

@@ -139,13 +139,10 @@
   },
   "marketingPreferences": {
     "title": "Préférences marketing",
-    "description": "Choisissez comment vous souhaitez recevoir nos communications. Vous pouvez modifier ces choix à tout moment.",
     "promotionalEmails": "E-mails promotionnels",
-    "promotionalHint": "Recevez des offres et promotions adaptées à vos préférences.",
+    "promotionalHint": "Recevez des offres et promotions de Bite Insight dans votre boîte de réception.",
     "productUpdates": "Mises à jour produit",
-    "productUpdatesHint": "Restez informé des nouvelles fonctionnalités et améliorations.",
-    "newsletter": "Newsletter",
-    "newsletterHint": "Conseils hebdomadaires, recettes et informations santé."
+    "productUpdatesHint": "Restez informé des annonces de nouvelles fonctionnalités."
   },
   "help": {
     "title": "Aide et assistance",

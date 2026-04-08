@@ -45,7 +45,6 @@ export interface UserProfile {
   marketing_preferences: {
     promotional_emails: boolean;
     product_updates: boolean;
-    newsletter: boolean;
   } | null;
   onboarding_step: OnboardingStep;
   created_at: string;
