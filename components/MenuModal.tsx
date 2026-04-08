@@ -421,35 +421,37 @@ function MarketingPreferencesScreen({ goBack }: { goBack: () => void }) {
             <ActivityIndicator size="small" color={Colors.secondary} />
           </View>
         ) : (
-          <View style={marketingStyles.cards}>
-            {toggles.map((item) => (
-              <View key={item.key} style={marketingStyles.card}>
-                <item.Icon width={24} height={24} />
-                <View style={marketingStyles.textCol}>
-                  <Text style={marketingStyles.label}>{item.label}</Text>
-                  <Text style={marketingStyles.hint}>{item.hint}</Text>
+          <>
+            <View style={marketingStyles.cards}>
+              {toggles.map((item) => (
+                <View key={item.key} style={marketingStyles.card}>
+                  <item.Icon width={24} height={24} />
+                  <View style={marketingStyles.textCol}>
+                    <Text style={marketingStyles.label}>{item.label}</Text>
+                    <Text style={marketingStyles.hint}>{item.hint}</Text>
+                  </View>
+                  <CustomToggle
+                    value={prefs[item.key]}
+                    onValueChange={(v) => handleToggle(item.key, v)}
+                  />
                 </View>
-                <CustomToggle
-                  value={prefs[item.key]}
-                  onValueChange={(v) => handleToggle(item.key, v)}
-                />
-              </View>
-            ))}
-          </View>
-          {hasChanges && (
-            <TouchableOpacity
-              style={marketingStyles.saveBtn}
-              onPress={handleSave}
-              disabled={saving}
-              activeOpacity={0.8}
-            >
-              {saving ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Text style={marketingStyles.saveBtnText}>{tc('buttons.save')}</Text>
-              )}
-            </TouchableOpacity>
-          )}
+              ))}
+            </View>
+            {hasChanges && (
+              <TouchableOpacity
+                style={marketingStyles.saveBtn}
+                onPress={handleSave}
+                disabled={saving}
+                activeOpacity={0.8}
+              >
+                {saving ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={marketingStyles.saveBtnText}>{tc('buttons.save')}</Text>
+                )}
+              </TouchableOpacity>
+            )}
+          </>
         )}
       </View>
     </>
