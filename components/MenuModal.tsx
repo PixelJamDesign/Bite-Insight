@@ -308,9 +308,9 @@ import UnreadNotificationIcon from '../assets/icons/unread_notification.svg';
 
 // Custom toggle matching Figma exactly:
 // Track: 48×28, borderRadius 999 (pill)
-// Handle: 16×16 ellipse
-// OFF state: track #aad4cd, handle #00776f at x=6
-// ON state:  track #00776f, handle #ffffff at x=26
+// Handle: 16×16 ellipse at y=6
+// OFF: track fill #FFFFFF, border 2px #AAD4CD, handle #00776F at x=6
+// ON:  track fill #00776F, no border, handle #FFFFFF at x=26
 const TOGGLE_W = 48;
 const TOGGLE_H = 28;
 const THUMB_SIZE = 16;
@@ -324,14 +324,15 @@ function CustomToggle({ value, onValueChange }: { value: boolean; onValueChange:
     Animated.timing(anim, { toValue: value ? 1 : 0, duration: 200, useNativeDriver: false }).start();
   }, [value]);
 
-  const trackColor = anim.interpolate({ inputRange: [0, 1], outputRange: ['#aad4cd', '#00776f'] });
+  const trackBg = anim.interpolate({ inputRange: [0, 1], outputRange: ['#ffffff', '#00776f'] });
+  const trackBorder = anim.interpolate({ inputRange: [0, 1], outputRange: ['#aad4cd', '#00776f'] });
   const thumbColor = anim.interpolate({ inputRange: [0, 1], outputRange: ['#00776f', '#ffffff'] });
   const thumbX = anim.interpolate({ inputRange: [0, 1], outputRange: [THUMB_OFF_X, THUMB_ON_X] });
 
   return (
     <TouchableOpacity activeOpacity={0.8} onPress={() => onValueChange(!value)}>
-      <Animated.View style={{ width: TOGGLE_W, height: TOGGLE_H, borderRadius: 999, backgroundColor: trackColor }}>
-        <Animated.View style={{ width: THUMB_SIZE, height: THUMB_SIZE, borderRadius: 999, backgroundColor: thumbColor, position: 'absolute', top: 6, left: thumbX }} />
+      <Animated.View style={{ width: TOGGLE_W, height: TOGGLE_H, borderRadius: 999, backgroundColor: trackBg, borderWidth: 2, borderColor: trackBorder }}>
+        <Animated.View style={{ width: THUMB_SIZE, height: THUMB_SIZE, borderRadius: 999, backgroundColor: thumbColor, position: 'absolute', top: 4, left: thumbX }} />
       </Animated.View>
     </TouchableOpacity>
   );
