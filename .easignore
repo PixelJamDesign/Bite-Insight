@@ -1,0 +1,41 @@
+# ── Dependencies & caches ──
+node_modules/
+.expo/
+
+# ── Build output ──
+dist/
+web-build/
+
+# ── Git history (not needed for EAS build) ──
+.git/
+
+# ── Scripts & generated data ──
+scripts/output/
+generate_references_pdf.py
+generate-references-pdf.py
+
+# ── Documentation / non-build files ──
+*.pdf
+bug-tracker.html
+bugs.json
+CLAUDE.md
+README.md
+
+# ── Secrets ──
+.env
+.env.local
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# ── OS junk ──
+.DS_Store
+Thumbs.db
+
+# ── Supabase local (not needed for app build) ──
+supabase/
+
+# ── Claude Code ──
+.claude/
