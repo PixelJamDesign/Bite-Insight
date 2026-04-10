@@ -33,5 +33,29 @@
     ],
     "updatedAt": "2026-02-25T18:41:09.305Z",
     "resolution": "Moved the drag handle from before the checkbox (left side) to after the rowInfo (right side) in the EditRow component. Increased the reorder icon size from 22 to 30 and the handle touch target from 28px to 36x36px."
+  },
+  {
+    "id": "BUG-AND-0001",
+    "title": "Updates screen bottom button too close to device nav bar",
+    "description": "On Android, the bottom action button on the Updates screen overlaps or sits too close to the device footer/navigation bar. Needs additional bottom padding to account for the Android system navigation bar inset.",
+    "steps": "1. Open the app on Android\n2. Navigate to the Updates screen\n3. Observe the bottom button is clipped by or sitting on top of the device navigation bar",
+    "priority": "high",
+    "status": "fixed",
+    "files": ["app/whats-new.tsx"],
+    "createdAt": "2026-04-10T00:00:00.000Z",
+    "updatedAt": "2026-04-10T00:00:00.000Z",
+    "resolution": "Added useSafeAreaInsets() hook and applied Math.max(insets.bottom, Spacing.l) as dynamic paddingBottom on the absolutely-positioned footer, replacing the hardcoded Spacing.l value. This ensures the button clears the Android gesture nav bar on all device configurations."
+  },
+  {
+    "id": "BUG-AND-0002",
+    "title": "Screen transition fade causes grey halo on panels",
+    "description": "The fade/crossfade animation between screens causes panel/card components to display a grey shadow halo during the transition. This is an Android-specific rendering artefact — likely caused by the screen background colour bleeding through or opacity compositing on the animated screen container.",
+    "steps": "1. Open the app on Android\n2. Navigate between screens that use the fade transition\n3. Observe grey halo/shadow around panel/card components during the fade",
+    "priority": "medium",
+    "status": "fixed",
+    "files": ["app/_layout.tsx"],
+    "createdAt": "2026-04-10T00:00:00.000Z",
+    "updatedAt": "2026-04-10T00:00:00.000Z",
+    "resolution": "Added backgroundColor: '#e2f1ee' to the Stack screenOptions contentStyle. Without this, Android's compositing layer defaults to grey during crossfade, creating a halo around elements. Matching the app background colour eliminates the artefact."
   }
 ]

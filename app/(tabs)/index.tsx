@@ -507,7 +507,7 @@ export default function HomeDashboard() {
         })()}
         </Animated.View>
 
-        <View style={{ height: 120 }} />
+        <View style={{ height: 120 + (Platform.OS === 'android' ? insets.bottom : 0) }} />
       </ScrollView>
       </Animated.View>
 

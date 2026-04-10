@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Animated,
+  Platform,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -75,7 +76,7 @@ export function ScreenLayout({ title, headerExtension, children }: ScreenLayoutP
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={[]}>
+    <SafeAreaView style={[styles.safeArea, Platform.OS === 'android' && { paddingBottom: insets.bottom }]} edges={[]}>
       {/* ── Main content column ─────────────────────────────────────────── */}
       <View style={styles.column}>
         {/* Title sits directly below the gradient header */}

@@ -1831,7 +1831,7 @@ export function MenuModal({ onClose, onNavigate }: MenuModalProps) {
   }
 
   const sharedScrollProps = {
-    contentContainerStyle: [styles.scrollContent, { paddingTop: headerHeight }] as any,
+    contentContainerStyle: [styles.scrollContent, { paddingTop: headerHeight, paddingBottom: 32 + (Platform.OS === 'android' ? insets.bottom : 0) }] as any,
     showsVerticalScrollIndicator: false,
   };
 
@@ -1909,7 +1909,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingBottom: 32,
     gap: 24,
     flexGrow: 1,
   },

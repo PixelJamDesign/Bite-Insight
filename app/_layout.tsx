@@ -251,7 +251,7 @@ function RootLayoutInner() {
       <StatusBar style="dark" />
       <View style={{ flex: 1, backgroundColor: '#e2f1ee' }}>
         <Animated.View style={{ flex: 1, opacity: contentOpacity }}>
-          <Stack screenOptions={{ headerShown: false, animation: 'fade', contentStyle: { flex: 1, padding: 0, margin: 0 } }}>
+          <Stack screenOptions={{ headerShown: false, animation: 'fade', contentStyle: { flex: 1, padding: 0, margin: 0, backgroundColor: '#e2f1ee' } }}>
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="onboarding" />

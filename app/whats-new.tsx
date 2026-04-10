@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -113,6 +113,7 @@ export default function WhatsNewScreen() {
   const router = useRouter();
   const { session } = useAuth();
   const { t: tc } = useTranslation('common');
+  const insets = useSafeAreaInsets();
 
   const [firstName, setFirstName] = useState<string>('');
 
@@ -218,7 +219,7 @@ export default function WhatsNewScreen() {
           style={styles.footerFade}
           pointerEvents="none"
         />
-        <View style={styles.footerInner}>
+        <View style={[styles.footerInner, { paddingBottom: Math.max(insets.bottom, Spacing.l) }]}>
           <TouchableOpacity
             style={styles.ctaBtn}
             onPress={dismiss}
@@ -402,7 +403,6 @@ const styles = StyleSheet.create({
   footerInner: {
     paddingHorizontal: Spacing.m,
     paddingTop: Spacing.xs,
-    paddingBottom: Spacing.l,
     backgroundColor: Colors.background,
   },
   ctaBtn: {
