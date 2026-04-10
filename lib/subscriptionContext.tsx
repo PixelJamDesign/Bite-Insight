@@ -60,16 +60,20 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         Purchases.logIn(userId).catch(() => {});
         Purchases.addCustomerInfoUpdateListener((info) => {
           const active = !!info.entitlements.active['plus'];
-          setIsPlus(active);
-          // Sync RevenueCat subscription status → Supabase
-          supabase
-            .from('profiles')
-            .update({ is_plus: active })
-            .eq('id', userId)
-            .then(({ error }) => {
-              if (error) console.warn('[RC→Supabase] sync failed:', error.message);
-              else console.log('[RC→Supabase] is_plus =', active);
-            });
+          if (active) {
+            // Only sync to Supabase when RevenueCat confirms an active entitlement.
+            // Never write false — RevenueCat may simply have no record of a
+            // subscription that was granted via another channel (manual, promo, etc.).
+            setIsPlus(true);
+            supabase
+              .from('profiles')
+              .update({ is_plus: true })
+              .eq('id', userId)
+              .then(({ error }) => {
+                if (error) console.warn('[RC→Supabase] sync failed:', error.message);
+                else console.log('[RC→Supabase] is_plus = true');
+              });
+          }
         });
       } catch (e) {
         // Expo Go or unconfigured environment — RC unavailable, fall through to Supabase
@@ -181,12 +185,13 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       // ── Native: ask StoreKit / Google Play to restore transactions ─────────
       const customerInfo = await Purchases.restorePurchases();
       const active = !!customerInfo.entitlements.active['plus'];
-      setIsPlus(active);
-      // Sync restored status to Supabase
-      await supabase
-        .from('profiles')
-        .update({ is_plus: active })
-        .eq('id', session.user.id);
+      if (active) {
+        setIsPlus(true);
+        await supabase
+          .from('profiles')
+          .update({ is_plus: true })
+          .eq('id', session.user.id);
+      }
     } else {
       // ── Web: re-fetch from Supabase (webhook should have already updated it)
       const { data } = await supabase
