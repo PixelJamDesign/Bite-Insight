@@ -13,6 +13,7 @@ import {
   StyleSheet,
   Image,
   Animated,
+  Modal,
   type LayoutChangeEvent,
 } from 'react-native';
 import { router } from 'expo-router';
@@ -680,7 +681,7 @@ export default function SignUpScreen() {
       onClose={() => setSuggestionCategory(null)}
       category={suggestionCategory ?? 'health_condition'}
     />
-    {showDatePicker && (
+    <Modal visible={showDatePicker} transparent animationType="slide" onRequestClose={() => setShowDatePicker(false)}>
       <View style={pickerOverlay.backdrop}>
         <View style={[pickerOverlay.sheet, { paddingBottom: insets.bottom + 12 }]}>
           <View style={pickerOverlay.toolbar}>
@@ -706,7 +707,7 @@ export default function SignUpScreen() {
           />
         </View>
       </View>
-    )}
+    </Modal>
     </>
   );
 }

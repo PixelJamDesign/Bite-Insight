@@ -982,7 +982,7 @@ export default function OnboardingScreen() {
       onClose={() => setSuggestionCategory(null)}
       category={suggestionCategory ?? 'health_condition'}
     />
-    {showDatePicker && (
+    <Modal visible={showDatePicker} transparent animationType="slide" onRequestClose={() => setShowDatePicker(false)}>
       <View style={pickerOverlay.backdrop}>
         <View style={[pickerOverlay.sheet, { paddingBottom: insets.bottom + 12 }]}>
           <View style={pickerOverlay.toolbar}>
@@ -1008,7 +1008,7 @@ export default function OnboardingScreen() {
           />
         </View>
       </View>
-    )}
+    </Modal>
     </>
   );
 }
