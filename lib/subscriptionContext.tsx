@@ -16,6 +16,7 @@ if (Platform.OS !== 'web') {
 interface SubscriptionContextValue {
   isPlus: boolean;
   purchasing: boolean;
+  priceString: string | null;
   purchasePlus: () => Promise<void>;
   restorePurchases: () => Promise<void>;
 }
@@ -23,6 +24,7 @@ interface SubscriptionContextValue {
 const SubscriptionContext = createContext<SubscriptionContextValue>({
   isPlus: false,
   purchasing: false,
+  priceString: null,
   purchasePlus: async () => {},
   restorePurchases: async () => {},
 });
@@ -31,6 +33,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const { session } = useAuth();
   const [isPlus, setIsPlus] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
+  const [priceString, setPriceString] = useState<string | null>(null);
   // Tracks whether Purchases.configure() has actually succeeded this session.
   // Guards purchasePlus / restorePurchases so they never call into an
   // unconfigured SDK (Expo Go, placeholder key, or configure() threw).
@@ -58,6 +61,12 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         rcConfigured.current = true;
         if (__DEV__ && LOG_LEVEL) Purchases.setLogLevel(LOG_LEVEL.DEBUG);
         Purchases.logIn(userId).catch(() => {});
+        // Fetch the monthly price from the store so the upsell sheet can display it
+        Purchases.getOfferings().then((offerings) => {
+          const pkg = offerings.current?.monthly ?? offerings.current?.availablePackages[0];
+          if (pkg) setPriceString(pkg.product.priceString);
+        }).catch(() => {});
+
         Purchases.addCustomerInfoUpdateListener((info) => {
           const active = !!info.entitlements.active['plus'];
           if (active) {
@@ -204,7 +213,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <SubscriptionContext.Provider value={{ isPlus, purchasing, purchasePlus, restorePurchases }}>
+    <SubscriptionContext.Provider value={{ isPlus, purchasing, priceString, purchasePlus, restorePurchases }}>
       {children}
     </SubscriptionContext.Provider>
   );

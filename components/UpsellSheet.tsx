@@ -65,7 +65,7 @@ function FeatureRow({
 
 export function UpsellSheet() {
   const { visible, hideUpsell } = useUpsellSheet();
-  const { isPlus, purchasing, purchasePlus, restorePurchases } = useSubscription();
+  const { isPlus, purchasing, priceString, purchasePlus, restorePurchases } = useSubscription();
 
   // When purchase completes (isPlus flips to true while the sheet is open),
   // dismiss the sheet and navigate to the success screen.
@@ -181,7 +181,7 @@ export function UpsellSheet() {
           <View style={styles.pricingSection}>
             <Text style={styles.pricingJust}>Just</Text>
             <View style={styles.priceRow}>
-              <Text style={styles.priceAmount}>£3.99</Text>
+              <Text style={styles.priceAmount}>{priceString ?? '£3.99'}</Text>
               <Text style={styles.priceUnit}> / month</Text>
             </View>
           </View>

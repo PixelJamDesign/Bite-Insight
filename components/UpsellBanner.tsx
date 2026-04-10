@@ -7,7 +7,7 @@ import BiteInsightPlusLogo from '../assets/images/logo-biteinsight-plus.svg';
 
 export function UpsellBanner() {
   const { showUpsell } = useUpsellSheet();
-  const { isPlus } = useSubscription();
+  const { isPlus, priceString } = useSubscription();
   if (isPlus) return null;
   return (
     <LinearGradient
@@ -18,7 +18,7 @@ export function UpsellBanner() {
     >
       <BiteInsightPlusLogo width={145} height={38} />
       <Text style={styles.tagline}>
-        Get all the Plus+ features{'\n'}for just £3.99 a month
+        Get all the Plus+ features{'\n'}for just {priceString ?? '£3.99'} a month
       </Text>
       <TouchableOpacity style={styles.btn} activeOpacity={0.85} onPress={showUpsell}>
         <Text style={styles.btnText}>Upgrade today</Text>

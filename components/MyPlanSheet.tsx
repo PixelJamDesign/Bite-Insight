@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useMyPlanSheet } from '@/lib/myPlanSheetContext';
 import { useAuth } from '@/lib/auth';
+import { useSubscription } from '@/lib/subscriptionContext';
 import { supabase } from '@/lib/supabase';
 import BiteInsightPlusLogo from '../assets/images/logo-biteinsight-plus.svg';
 
@@ -42,6 +43,7 @@ function StatCard({
 export function MyPlanSheet() {
   const { visible, hideMyPlan } = useMyPlanSheet();
   const { session } = useAuth();
+  const { priceString } = useSubscription();
   const insets = useSafeAreaInsets();
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
@@ -195,7 +197,7 @@ export function MyPlanSheet() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Your plan</Text>
             <View style={styles.priceRow}>
-              <Text style={styles.priceAmount}>£3.99</Text>
+              <Text style={styles.priceAmount}>{priceString ?? '£3.99'}</Text>
               <Text style={styles.priceUnit}> / month</Text>
             </View>
             <Text style={styles.renewText}>
