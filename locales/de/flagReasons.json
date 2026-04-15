@@ -225,6 +225,13 @@
       "2": "Verursacht Verdauungsprobleme",
       "3": "Hautreaktion",
       "4": "Persönliche Wahl"
+    },
+    "halal": {
+      "0": "Enthält haram Zutat",
+      "1": "Aus Schweinefleisch gewonnene Zutat",
+      "2": "Enthält Alkohol",
+      "3": "Nicht-halal tierisches Derivat",
+      "4": "Nicht halal-zertifiziert"
     }
   },
   "genericDietaryReasons": {

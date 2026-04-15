@@ -677,6 +677,59 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
 // ── Dietary Preferences ──────────────────────────────────────────────────────
 
 export const DIETARY_PREFERENCE_INGREDIENTS: Record<string, HealthFlagEntry> = {
+  halal: {
+    keywords: [
+      // Pork & pork derivatives
+      'pork', 'pork fat', 'pork gelatin', 'pork gelatine', 'pork meat',
+      'bacon', 'bacon fat', 'bacon bits', 'ham', 'prosciutto', 'pancetta',
+      'salami', 'chorizo', 'pepperoni', 'lard', 'lard oil',
+      'pork rind', 'pork rinds', 'pork crackling', 'chicharron',
+      'pork sausage', 'bratwurst',
+      'pepsin', 'porcine pepsin',
+      // Generic gelatin (may be pork-derived)
+      'gelatin', 'gelatine', 'gelatin powder',
+      // Alcohol & alcohol-derived
+      'alcohol', 'ethanol', 'ethyl alcohol',
+      'wine', 'red wine', 'white wine', 'wine vinegar', 'sherry',
+      'beer', 'ale', 'lager', 'stout', 'malt liquor',
+      'rum', 'brandy', 'cognac', 'whisky', 'whiskey', 'bourbon',
+      'vodka', 'gin', 'tequila', 'liqueur', 'kirsch', 'amaretto',
+      'cooking wine', 'marsala', 'port', 'champagne',
+      // Animal fats / derivatives (non-specified source)
+      'animal fat', 'animal shortening', 'tallow', 'dripping',
+      'suet', 'bone marrow',
+      // E-numbers commonly derived from pork / non-halal sources
+      'e120', 'cochineal', 'carmine', 'carminic acid',
+      'e441', 'e542',
+      'e904', 'shellac',
+      'e471',  // mono- and diglycerides (often animal-derived)
+      'e472', 'e472a', 'e472b', 'e472c', 'e472e',
+      'e473', 'e474', 'e475', 'e476', 'e477', 'e478',
+      'e481', 'e482', 'e483',
+      'e491', 'e492', 'e493', 'e494', 'e495',
+      // Other potentially haram ingredients
+      'rennet', 'animal rennet',
+      'l-cysteine',
+      'blood', 'blood plasma', 'blood meal',
+    ],
+    ingredientIds: [
+      'en:pork', 'en:pork-fat', 'en:pork-meat', 'en:pork-gelatin',
+      'en:bacon', 'en:ham', 'en:prosciutto', 'en:pancetta',
+      'en:salami', 'en:chorizo', 'en:pepperoni', 'en:lard',
+      'en:pork-rind', 'en:pork-sausage',
+      'en:gelatin', 'en:gelatine', 'en:gelatin-powder',
+      'en:alcohol', 'en:ethanol', 'en:wine', 'en:red-wine', 'en:white-wine',
+      'en:beer', 'en:rum', 'en:brandy', 'en:cognac', 'en:whisky',
+      'en:vodka', 'en:gin', 'en:liqueur', 'en:cooking-wine',
+      'en:animal-fat', 'en:tallow', 'en:suet', 'en:dripping',
+      'en:cochineal', 'en:carmine', 'en:shellac',
+      'en:e120', 'en:e441', 'en:e542', 'en:e904',
+      'en:e471', 'en:e472', 'en:e473', 'en:e474', 'en:e475', 'en:e476',
+      'en:e481', 'en:e482', 'en:e491', 'en:e492',
+      'en:rennet', 'en:l-cysteine',
+    ],
+  },
+
   keto: {
     keywords: [
       'sugar', 'sucrose', 'glucose', 'glucose syrup', 'glucose-fructose syrup',

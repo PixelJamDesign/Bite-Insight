@@ -76,6 +76,7 @@ export const DIETARY_PREFERENCE_KEYS = [
   'cleanEating',
   'dairyFree',
   'fodmap',
+  'halal',
   'highProtein',
   'keto',
   'mediterraneanDiet',

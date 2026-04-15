@@ -338,6 +338,7 @@ export function FlaggedIngredientSheet({
   const FLAG_REASON_TEXT_LOCAL: Record<FlagReason, { title: string; body: string }> = {
     vegan: { title: t('flagReason.veganTitle'), body: t('flagReason.veganBody') },
     vegetarian: { title: t('flagReason.vegetarianTitle'), body: t('flagReason.vegetarianBody') },
+    halal: { title: t('flagReason.halalTitle', 'Not Halal'), body: t('flagReason.halalBody', 'This ingredient may not be permissible under halal dietary guidelines. It could be pork-derived, contain alcohol, or come from a non-halal animal source.') },
     user_flagged: { title: t('flagReason.userFlaggedTitle'), body: t('flagReason.userFlaggedBody') },
     additive_concern: { title: t('flagReason.additiveConcernTitle', 'Additive of Concern'), body: '' },
     health_condition: { title: t('flagReason.healthConditionTitle', 'Flagged for Your Health'), body: healthConditionBody },
@@ -381,6 +382,10 @@ export function FlaggedIngredientSheet({
   if (display?.flagReason === 'vegetarian') {
     const vegLabel = tpo('dietaryTags.vegetarian', { defaultValue: 'Vegetarian' });
     if (!profileTags.includes(vegLabel)) profileTags.unshift(vegLabel);
+  }
+  if (display?.flagReason === 'halal' || display?.healthConditionKey === 'halal') {
+    const halalLabel = tpo('dietaryPreferences.halal', { defaultValue: 'Halal' });
+    if (!profileTags.includes(halalLabel)) profileTags.unshift(halalLabel);
   }
 
   return (

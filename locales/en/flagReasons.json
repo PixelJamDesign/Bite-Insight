@@ -303,6 +303,13 @@
       "Skin reaction",
       "Personal choice"
     ],
+    "halal": [
+      "Contains haram ingredient",
+      "Pork-derived ingredient",
+      "Contains alcohol",
+      "Non-halal animal derivative",
+      "Not halal certified"
+    ],
     "mediterraneanDiet": [
       "Not Mediterranean-friendly",
       "Too processed",

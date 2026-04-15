@@ -225,6 +225,13 @@
       "2": "Veroorzaakt spijsverteringsproblemen",
       "3": "Huidreactie",
       "4": "Persoonlijke keuze"
+    },
+    "halal": {
+      "0": "Bevat haram ingrediënt",
+      "1": "Van varkensvlees afgeleid ingrediënt",
+      "2": "Bevat alcohol",
+      "3": "Niet-halal dierlijk derivaat",
+      "4": "Niet halal-gecertificeerd"
     }
   },
   "genericDietaryReasons": {

@@ -165,6 +165,8 @@
     "veganBody": "This ingredient is not vegan, which conflicts with your dietary preferences.",
     "vegetarianTitle": "Not vegetarian",
     "vegetarianBody": "This ingredient is not vegetarian, which conflicts with your dietary preferences.",
+    "halalTitle": "Not Halal",
+    "halalBody": "This ingredient may not be permissible under halal dietary guidelines. It could be pork-derived, contain alcohol, or come from a non-halal animal source.",
     "healthConditionTitle": "Health condition",
     "healthConditionBody": "This ingredient may be harmful based on your health conditions or dietary preferences.",
     "healthConditionBodySpecific": "This ingredient may be harmful for people with {{condition}}.",

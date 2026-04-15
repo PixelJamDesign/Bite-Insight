@@ -225,6 +225,13 @@
       "2": "Provoque des problèmes digestifs",
       "3": "Réaction cutanée",
       "4": "Choix personnel"
+    },
+    "halal": {
+      "0": "Contient un ingrédient haram",
+      "1": "Ingrédient dérivé du porc",
+      "2": "Contient de l'alcool",
+      "3": "Dérivé animal non halal",
+      "4": "Non certifié halal"
     }
   },
   "genericDietaryReasons": {

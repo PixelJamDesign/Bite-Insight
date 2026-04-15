@@ -1190,6 +1190,7 @@ export default function ScanResultScreen() {
     cleanEating: tpo('dietaryPreferences.cleanEating'),
     dairyFree: tpo('dietaryPreferences.dairyFree'),
     fodmap: tpo('dietaryPreferences.fodmap'),
+    halal: tpo('dietaryPreferences.halal'),
     highProtein: tpo('dietaryPreferences.highProtein'),
     paleo: tpo('dietaryPreferences.paleo'),
     plantBased: tpo('dietaryPreferences.plantBased'),
@@ -1308,6 +1309,7 @@ export default function ScanResultScreen() {
     productName: string;
     brand: string;
     imageUrl: string;
+    labelsTags: string[];
   };
   const [fetched, setFetched] = useState<Partial<OffPayload> | null>(null);
   const [fetchingOff, setFetchingOff] = useState(false);
@@ -1465,6 +1467,7 @@ export default function ScanResultScreen() {
             categoriesTags: (op.categories_tags ?? []).join(','),
             ingredientsJson: op.ingredients ? JSON.stringify(preferEnglishIngredients(op.ingredients)) : '',
             offLang: op.ingredients_text_en ? 'en' : (op.lang || op.lc || 'en'),
+            labelsTags: op.labels_tags ?? [],
           });
           // Check if user has hit 20 scans — trigger review prompt if so
           recheckAfterScan();
@@ -2159,6 +2162,15 @@ export default function ScanResultScreen() {
     : profile?.dietary_preferences ?? [];
   const nutrientThresholds = buildThresholds(activeConditions, activeAllergies, activeDietaryLabels);
 
+  // ── Halal certification from OFF labels_tags ──────────────────────────────
+  const userWantsHalal = activeDietaryLabels.includes('halal' as any);
+  const isHalalCertified = (fetched?.labelsTags ?? []).some(
+    (tag: string) => tag.toLowerCase().includes('halal'),
+  );
+  const hasHaramIngredients = userWantsHalal && categorised.harmful.some(
+    (ing) => ing.healthConditionKey === 'halal',
+  );
+
   // Rating column width is measured from an invisible "Moderate" label rendered off-screen.
   // This ensures consistent column width across all rows AND scales with accessibility font size.
   const ratingMinWidth = ratingColWidth;
@@ -2319,6 +2331,28 @@ export default function ScanResultScreen() {
                 );
               })}
             </View>
+          </View>
+        )}
+
+        {/* ── Halal status badge (only shown if user has halal preference) ── */}
+        {userWantsHalal && !fetchingOff && (
+          <View style={styles.halalRow}>
+            {isHalalCertified ? (
+              <View style={styles.halalBadgeCertified}>
+                <Ionicons name="checkmark-circle" size={18} color="#fff" />
+                <Text style={styles.halalBadgeText}>Halal Certified</Text>
+              </View>
+            ) : hasHaramIngredients ? (
+              <View style={styles.halalBadgeWarning}>
+                <Ionicons name="warning" size={18} color="#fff" />
+                <Text style={styles.halalBadgeText}>Contains potentially haram ingredients</Text>
+              </View>
+            ) : (
+              <View style={styles.halalBadgeUnknown}>
+                <Ionicons name="help-circle" size={18} color={Colors.primary} />
+                <Text style={styles.halalBadgeUnknownText}>No halal certification data available</Text>
+              </View>
+            )}
           </View>
         )}
 
@@ -3814,6 +3848,55 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0,0,0,0.29)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
+  },
+
+  // Halal badge
+  halalRow: {
+    paddingHorizontal: 20,
+    marginBottom: 4,
+  },
+  halalBadgeCertified: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#009a1f',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  halalBadgeWarning: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.status.negative,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  halalBadgeUnknown: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.surface.tertiary,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  halalBadgeText: {
+    fontFamily: 'Figtree_700Bold',
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#fff',
+    letterSpacing: -0.28,
+    lineHeight: 17,
+  },
+  halalBadgeUnknownText: {
+    fontFamily: 'Figtree_300Light',
+    fontSize: 14,
+    fontWeight: '300',
+    color: Colors.primary,
+    letterSpacing: -0.14,
+    lineHeight: 17,
   },
 
   // Tab bar

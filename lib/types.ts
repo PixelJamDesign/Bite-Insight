@@ -6,7 +6,8 @@ export type DietaryTag =
   | 'vegetarian'
   | 'lactose'
   | 'pescatarian'
-  | 'kosher';
+  | 'kosher'
+  | 'halal';
 
 export interface NutrientWatchlistEntry {
   offKey: string;        // e.g. "potassium_100g"

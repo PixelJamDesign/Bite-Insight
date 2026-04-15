@@ -225,6 +225,13 @@
       "2": "Powoduje problemy trawienne",
       "3": "Reakcja skórna",
       "4": "Osobisty wybór"
+    },
+    "halal": {
+      "0": "Zawiera składnik haram",
+      "1": "Składnik pochodzenia wieprzowego",
+      "2": "Zawiera alkohol",
+      "3": "Pochodna zwierzęca nie-halal",
+      "4": "Brak certyfikatu halal"
     }
   },
   "genericDietaryReasons": {

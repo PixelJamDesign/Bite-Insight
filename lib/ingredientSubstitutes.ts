@@ -3,7 +3,7 @@
 // getSubstitutes checks the ingredient against ALL maps relevant to the
 // active profile and returns the first match.
 
-export type FlagReason = 'vegan' | 'vegetarian' | 'user_flagged' | 'additive_concern' | 'health_condition';
+export type FlagReason = 'vegan' | 'vegetarian' | 'halal' | 'user_flagged' | 'additive_concern' | 'health_condition';
 
 export const DIETARY_SUBSTITUTES: Record<string, Record<string, string[]>> = {
   vegan: {
@@ -28,6 +28,25 @@ export const DIETARY_SUBSTITUTES: Record<string, Record<string, string[]>> = {
     cochineal: ['Beetroot powder', 'Paprika extract'],
     'l-cysteine': ['Synthetic L-cysteine', 'Fermented L-cysteine'],
     anchov: ['Capers', 'Seaweed flakes', 'Miso paste'],
+  },
+  halal: {
+    gelatin: ['Halal gelatin', 'Agar-agar', 'Pectin', 'Carrageenan'],
+    gelatine: ['Halal gelatine', 'Agar-agar', 'Pectin', 'Carrageenan'],
+    lard: ['Vegetable oil', 'Coconut oil', 'Olive oil'],
+    pork: ['Halal chicken', 'Halal beef', 'Halal lamb'],
+    bacon: ['Turkey bacon (halal)', 'Beef bacon (halal)'],
+    pepperoni: ['Halal beef pepperoni', 'Halal turkey pepperoni'],
+    ham: ['Halal turkey ham', 'Halal beef slices'],
+    wine: ['Grape juice', 'Non-alcoholic wine', 'Vinegar'],
+    beer: ['Non-alcoholic malt drink'],
+    rum: ['Rum flavouring (non-alcoholic)'],
+    brandy: ['Vanilla extract (non-alcoholic)'],
+    alcohol: ['Non-alcoholic alternative'],
+    carmine: ['Beetroot powder', 'Paprika extract'],
+    cochineal: ['Beetroot powder', 'Paprika extract'],
+    shellac: ['Zein coating', 'Carnauba wax'],
+    rennet: ['Vegetarian rennet', 'Microbial rennet'],
+    'l-cysteine': ['Synthetic L-cysteine', 'Fermented L-cysteine'],
   },
   vegetarian: {
     gelatin: ['Agar-agar', 'Pectin', 'Carrageenan'],

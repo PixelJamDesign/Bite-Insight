@@ -21,6 +21,7 @@ export const Colors = {
     lactose: '#fff9c4',
     pescatarian: '#b3e5fc',
     kosher: '#d4b8e0',
+    halal: '#8bc9a3',
   },
   stroke: {
     primary: '#ffffff',
