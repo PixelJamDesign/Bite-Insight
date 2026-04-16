@@ -95,12 +95,28 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     // ── Fetch current subscription status from Supabase ─────────────────────
     supabase
       .from('profiles')
-      .select('is_plus, is_vip')
+      .select('is_plus, is_vip, plus_expires_at')
       .eq('id', userId)
       .single()
       .then(({ data }) => {
         setIsVip(data?.is_vip ?? false);
-        setIsPlus(data?.is_plus ?? data?.is_vip ?? false);
+
+        // Check if points-redeemed Plus has expired
+        let plus = data?.is_plus ?? false;
+        if (plus && !data?.is_vip && data?.plus_expires_at) {
+          const expiry = new Date(data.plus_expires_at);
+          if (expiry < new Date()) {
+            // Expired — clear Plus in Supabase
+            plus = false;
+            supabase
+              .from('profiles')
+              .update({ is_plus: false })
+              .eq('id', userId)
+              .then(() => {});
+          }
+        }
+
+        setIsPlus(plus || (data?.is_vip ?? false));
       });
 
     // ── Real-time listener — fires when stripe-webhook / revenuecat-webhook

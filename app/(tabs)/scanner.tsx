@@ -13,6 +13,7 @@ import { useAuth } from '@/lib/auth';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { useUpsellSheet } from '@/lib/upsellSheetContext';
 import { useRegion, REGIONS, FLAG_IMAGES, PlusTag } from '@/lib/regionContext';
+import { recordActivity, awardScanPoints } from '@/lib/gamification';
 import type { Region } from '@/lib/regionContext';
 import { Colors, Spacing, Shadows } from '@/constants/theme';
 import { ActionSearchIcon, ActionGalleryIcon, ActionChevronDownIcon, ActionCheckIcon } from '@/components/MenuIcons';
@@ -314,6 +315,11 @@ export default function ScannerScreen() {
                 nutriscore_grade: nutriscoreGrade,
                 flagged_count: 0,
               });
+          }
+          // Award streak + points in background
+          if (session?.user.id) {
+            recordActivity(session.user.id).catch(() => {});
+            awardScanPoints(session.user.id).catch(() => {});
           }
         })().catch((err) => console.error('Background scan save failed:', err));
       }

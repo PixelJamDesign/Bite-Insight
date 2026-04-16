@@ -35,6 +35,7 @@ import { useRegion, REGIONS, FLAG_IMAGES, PlusTag } from '@/lib/regionContext';
 import type { Region } from '@/lib/regionContext';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
+import { recordActivity, awardSearchPoints } from '@/lib/gamification';
 
 // ─── Nutriscore colours ─────────────────────────────────────────────────────
 const NUTRISCORE_COLORS: Record<string, string> = {
@@ -536,6 +537,12 @@ export default function FoodSearchScreen() {
 
       // All done — ensure loading is off
       setLoading(false);
+
+      // Award gamification points for a successful search (fire-and-forget)
+      if (session?.user?.id) {
+        recordActivity(session.user.id).catch(() => {});
+        awardSearchPoints(session.user.id).catch(() => {});
+      }
     } catch (err: any) {
       if (err?.name === 'AbortError') return;
       console.warn('[FoodSearch] Search failed:', err?.message ?? err);
