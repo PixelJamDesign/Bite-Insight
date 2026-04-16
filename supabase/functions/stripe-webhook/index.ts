@@ -122,6 +122,16 @@ Deno.serve(async (req) => {
   }
 
   if (userId) {
+    // Never downgrade VIP users — they have lifetime access regardless of subscription state
+    if (!isPlus) {
+      const { data: profile } = await supabase.from('profiles').select('is_vip').eq('id', userId).single();
+      if (profile?.is_vip) {
+        console.log(`[stripe-webhook] Skipping downgrade for VIP user ${userId}`);
+        return new Response(JSON.stringify({ received: true }), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+    }
     const update: Record<string, unknown> = { is_plus: isPlus };
     if (renewalDate !== null || event.type === 'customer.subscription.deleted') {
       update.subscription_renewal_date = renewalDate;

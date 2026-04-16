@@ -32,6 +32,7 @@ const SubscriptionContext = createContext<SubscriptionContextValue>({
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const { session } = useAuth();
   const [isPlus, setIsPlus] = useState(false);
+  const [isVip, setIsVip] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
   const [priceString, setPriceString] = useState<string | null>(null);
   // Tracks whether Purchases.configure() has actually succeeded this session.
@@ -94,10 +95,13 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     // ── Fetch current subscription status from Supabase ─────────────────────
     supabase
       .from('profiles')
-      .select('is_plus')
+      .select('is_plus, is_vip')
       .eq('id', userId)
       .single()
-      .then(({ data }) => setIsPlus(data?.is_plus ?? false));
+      .then(({ data }) => {
+        setIsVip(data?.is_vip ?? false);
+        setIsPlus(data?.is_plus ?? data?.is_vip ?? false);
+      });
 
     // ── Real-time listener — fires when stripe-webhook / revenuecat-webhook
     //    updates profiles.is_plus after a successful purchase or cancellation ─
@@ -111,7 +115,11 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
           table: 'profiles',
           filter: `id=eq.${userId}`,
         },
-        (payload) => setIsPlus((payload.new as { is_plus: boolean }).is_plus ?? false),
+        (payload) => {
+          const row = payload.new as { is_plus: boolean; is_vip?: boolean };
+          if (row.is_vip) { setIsVip(true); setIsPlus(true); return; }
+          setIsPlus(row.is_plus ?? false);
+        },
       )
       .subscribe();
 
@@ -213,7 +221,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <SubscriptionContext.Provider value={{ isPlus, purchasing, priceString, purchasePlus, restorePurchases }}>
+    <SubscriptionContext.Provider value={{ isPlus: isPlus || isVip, purchasing, priceString, purchasePlus, restorePurchases }}>
       {children}
     </SubscriptionContext.Provider>
   );

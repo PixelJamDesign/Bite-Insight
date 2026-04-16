@@ -68,7 +68,13 @@ Deno.serve(async (req) => {
     }
     await supabase.from('profiles').update(update).eq('id', userId);
   } else if (INACTIVE_EVENTS.has(eventType)) {
-    await supabase.from('profiles').update({ is_plus: false, subscription_renewal_date: null }).eq('id', userId);
+    // Never downgrade VIP users — they have lifetime access regardless of subscription state
+    const { data: profile } = await supabase.from('profiles').select('is_vip').eq('id', userId).single();
+    if (profile?.is_vip) {
+      console.log(`[revenuecat-webhook] Skipping downgrade for VIP user ${userId}`);
+    } else {
+      await supabase.from('profiles').update({ is_plus: false, subscription_renewal_date: null }).eq('id', userId);
+    }
   }
 
   return new Response(JSON.stringify({ received: true }), {
