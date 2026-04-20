@@ -10,6 +10,8 @@
  */
 import { supabase } from './supabase';
 import { computeNutriscore } from './nutriscore';
+import { getCachedProduct } from './productCache';
+import type { CachedProduct } from './productCache';
 import type {
   Recipe,
   RecipeIngredient,
@@ -408,11 +410,73 @@ export async function duplicateRecipe(
 // ── Snapshot helper ──────────────────────────────────────────────────────────
 
 /**
- * Builds a ProductSnapshot from a Scan row (from the user's scan history).
- * Note: scans don't store per-100g nutrition data — we only save barcode,
- * name, brand, image, ingredients & nutriscore. So nutrition_per_100g will
- * be empty unless we fetch from OFF first. Callers that need nutrition
- * should use buildProductSnapshot() with OFF data.
+ * Builds a ProductSnapshot from a CachedProduct (the SQLite cache that
+ * scanner.tsx writes to). This is the primary source when adding ingredients
+ * from scan history — the cache has per-100g nutrition, allergens, and
+ * traces.
+ */
+function snapshotFromCached(cached: CachedProduct, scanIngredients: Scan['ingredients'] = []): ProductSnapshot {
+  return {
+    product_name: cached.productName,
+    brand: cached.brand,
+    image_url: cached.imageUrl,
+    nutriscore_grade: cached.nutriscoreGrade,
+    nutrition_per_100g: {
+      energy_kcal: cached.energyKcal ?? undefined,
+      fat_g: cached.fat ?? undefined,
+      saturated_fat_g: cached.saturatedFat ?? undefined,
+      carbs_g: cached.carbs ?? undefined,
+      sugars_g: cached.sugars ?? undefined,
+      fiber_g: cached.fiber ?? undefined,
+      protein_g: cached.proteins ?? undefined,
+      salt_g: cached.salt ?? undefined,
+    },
+    allergens: cached.allergens
+      ? cached.allergens.split(',').map((a) => a.trim()).filter(Boolean)
+      : [],
+    ingredients: (scanIngredients ?? []).map((i) => ({
+      id: i.id,
+      name: i.name,
+      is_flagged: i.is_flagged,
+      dietary_tags: i.dietary_tags,
+    })),
+  };
+}
+
+/**
+ * Async snapshot builder from a Scan — looks up the product cache so we
+ * populate nutrition data. Falls back to a bare snapshot (no nutrition)
+ * if the cache has no entry. Use this from the recipe builder.
+ */
+export async function snapshotFromScanAsync(scan: Scan): Promise<ProductSnapshot> {
+  try {
+    const cached = await getCachedProduct(scan.barcode);
+    if (cached) {
+      return snapshotFromCached(cached, scan.ingredients);
+    }
+  } catch (e) {
+    console.warn('[recipes] snapshotFromScanAsync cache lookup failed:', e);
+  }
+  // Fallback — no cache hit, minimal snapshot
+  return {
+    product_name: scan.product_name,
+    brand: scan.brand,
+    image_url: scan.image_url,
+    nutriscore_grade: scan.nutriscore_grade,
+    nutrition_per_100g: {},
+    allergens: [],
+    ingredients: (scan.ingredients ?? []).map((i) => ({
+      id: i.id,
+      name: i.name,
+      is_flagged: i.is_flagged,
+      dietary_tags: i.dietary_tags,
+    })),
+  };
+}
+
+/**
+ * Sync snapshot from a Scan — used when you already have nutrition data
+ * attached (rare). Prefer snapshotFromScanAsync() for most cases.
  */
 export function snapshotFromScan(scan: Scan): ProductSnapshot {
   return {

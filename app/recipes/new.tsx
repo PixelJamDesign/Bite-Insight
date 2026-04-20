@@ -23,7 +23,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/lib/auth';
 import { useRecipeBuilder } from '@/lib/useRecipeBuilder';
-import { getRecipe, snapshotFromScan } from '@/lib/recipes';
+import { getRecipe, snapshotFromScanAsync } from '@/lib/recipes';
 import { supabase } from '@/lib/supabase';
 import { formatQuantity } from '@/constants/quantityUnits';
 import { NUTRISCORE_COLORS, NUTRISCORE_VERDICT } from '@/lib/nutriscore';
@@ -31,6 +31,7 @@ import { Colors, Spacing, Radius, Shadows, Typography } from '@/constants/theme'
 import type { Scan, QuantityUnit } from '@/lib/types';
 import { ScanPickerSheet } from '@/components/ScanPickerSheet';
 import { QuantityPickerSheet } from '@/components/QuantityPickerSheet';
+import { AddIngredientSheet, type AddSource } from '@/components/AddIngredientSheet';
 import { safeBack } from '@/lib/safeBack';
 
 export default function RecipeBuilderScreen() {
@@ -43,6 +44,7 @@ export default function RecipeBuilderScreen() {
   const builder = useRecipeBuilder();
   const [loadingInitial, setLoadingInitial] = useState(isEditing);
   const [saving, setSaving] = useState(false);
+  const [addSheetOpen, setAddSheetOpen] = useState(false);
   const [scanPickerOpen, setScanPickerOpen] = useState(false);
   const [quantityEditing, setQuantityEditing] = useState<string | null>(null);
 
@@ -69,12 +71,19 @@ export default function RecipeBuilderScreen() {
     try {
       if (isEditing && editingId) {
         const ok = await builder.saveAsUpdate(editingId);
-        if (ok) router.back();
-        else Alert.alert('Save failed', 'Please try again.');
+        if (ok) {
+          // Return to the detail view that sent us here
+          router.back();
+        } else {
+          Alert.alert('Save failed', 'Please try again.');
+        }
       } else {
         const id = await builder.save(session.user.id);
         if (id) {
-          router.replace(`/recipes/${id}` as any);
+          // Return to the Recipes tab — user can tap the new card to see
+          // the detail view. Feels more natural than landing on detail
+          // with no context of the list.
+          router.replace('/(tabs)/recipes' as never);
         } else {
           Alert.alert('Save failed', 'Please try again.');
         }
@@ -84,16 +93,35 @@ export default function RecipeBuilderScreen() {
     }
   }
 
-  function handleAddScan(scan: Scan) {
+  async function handleAddScan(scan: Scan) {
+    const snapshot = await snapshotFromScanAsync(scan);
     builder.addIngredient({
       barcode: scan.barcode,
       scan_id: scan.id,
       quantity_value: 100,
       quantity_unit: 'g',
       quantity_display: null,
-      product_snapshot: snapshotFromScan(scan),
+      product_snapshot: snapshot,
     });
     setScanPickerOpen(false);
+  }
+
+  function handleAddSourceSelected(source: AddSource) {
+    setAddSheetOpen(false);
+    if (source === 'history') {
+      // Give the add sheet a moment to dismiss before showing the next sheet
+      setTimeout(() => setScanPickerOpen(true), 180);
+    } else if (source === 'search') {
+      Alert.alert(
+        'Coming soon',
+        'Searching the Open Food Facts database from the recipe builder is on the way. For now, scan the product first or add it from scan history.',
+      );
+    } else if (source === 'scan') {
+      Alert.alert(
+        'Coming soon',
+        'Scanning a barcode directly from the builder is on the way. For now, scan the product from the Scan tab, then add it from scan history.',
+      );
+    }
   }
 
   const editingIngredient = builder.ingredients.find(
@@ -198,7 +226,16 @@ export default function RecipeBuilderScreen() {
 
           {/* Ingredients section */}
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Ingredients</Text>
+            <View style={styles.sectionTitleRow}>
+              <Text style={styles.sectionTitle}>Ingredients</Text>
+              <TouchableOpacity
+                style={styles.sectionAddBtn}
+                onPress={() => setAddSheetOpen(true)}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="add" size={22} color={Colors.secondary} />
+              </TouchableOpacity>
+            </View>
             <Text style={styles.sectionCount}>
               {builder.ingredients.length} {builder.ingredients.length === 1 ? 'item' : 'items'}
             </Text>
@@ -236,15 +273,17 @@ export default function RecipeBuilderScreen() {
             </View>
           ))}
 
-          {/* Add ingredient */}
-          <TouchableOpacity
-            style={styles.addIngBtn}
-            onPress={() => setScanPickerOpen(true)}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="add-circle-outline" size={22} color={Colors.secondary} />
-            <Text style={styles.addIngBtnText}>Add from scan history</Text>
-          </TouchableOpacity>
+          {/* Add ingredient — only show if list is empty as an affordance */}
+          {builder.ingredients.length === 0 && (
+            <TouchableOpacity
+              style={styles.addIngBtn}
+              onPress={() => setAddSheetOpen(true)}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="add-circle-outline" size={22} color={Colors.secondary} />
+              <Text style={styles.addIngBtnText}>Add an ingredient</Text>
+            </TouchableOpacity>
+          )}
         </ScrollView>
 
         {/* Save bar */}
@@ -272,6 +311,13 @@ export default function RecipeBuilderScreen() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+
+      {/* Add ingredient source picker */}
+      <AddIngredientSheet
+        visible={addSheetOpen}
+        onClose={() => setAddSheetOpen(false)}
+        onPick={handleAddSourceSelected}
+      />
 
       {/* Scan picker sheet */}
       <ScanPickerSheet
@@ -479,15 +525,29 @@ const styles = StyleSheet.create({
 
   // Section heading
   sectionHeader: {
+    paddingHorizontal: 4,
+    marginTop: Spacing.xs,
+    gap: 2,
+  },
+  sectionTitleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 4,
-    marginTop: Spacing.xs,
   },
   sectionTitle: {
     ...Typography.h4,
     color: Colors.primary,
+  },
+  sectionAddBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.surface.secondary,
+    borderWidth: 1,
+    borderColor: '#aad4cd',
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadows.level4,
   },
   sectionCount: {
     fontSize: 13,
