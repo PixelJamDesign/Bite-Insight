@@ -50,6 +50,23 @@ import {
 } from '@/lib/ingredientsCleaner';
 import type { IngredientNode } from '@/lib/ingredientsCleaner';
 import { safeBack } from '@/lib/safeBack';
+import { AddToRecipeSheet } from '@/components/AddToRecipeSheet';
+import { buildProductSnapshot } from '@/lib/recipes';
+
+/** Coerce a value to number, falling back to a query-param source */
+function toNum(primary: unknown, fallback: unknown): number | undefined {
+  if (typeof primary === 'number' && Number.isFinite(primary)) return primary;
+  if (typeof primary === 'string' && primary !== '') {
+    const n = Number(primary);
+    if (Number.isFinite(n)) return n;
+  }
+  if (typeof fallback === 'string' && fallback !== '') {
+    const n = Number(fallback);
+    if (Number.isFinite(n)) return n;
+  }
+  if (typeof fallback === 'number' && Number.isFinite(fallback)) return fallback;
+  return undefined;
+}
 import { ALLERGY_KEYWORDS, type AllergyEntry } from '@/lib/allergenKeywords';
 import { getDerivatives } from '@/lib/ingredientDerivatives';
 import { getAdditiveSeverity, computeAdditiveSeverity, type AdditiveEntry } from '@/constants/additiveSeverity';
@@ -1121,6 +1138,9 @@ export default function ScanResultScreen() {
   const { t: tc } = useTranslation('common');
   const { t: tpo } = useTranslation('profileOptions');
   const { showReviewPrompt, recheckAfterScan, dismissReviewPrompt, completeReviewPrompt } = useReviewPrompt();
+
+  // Add-to-recipe sheet state
+  const [addToRecipeOpen, setAddToRecipeOpen] = useState(false);
 
   // Page-level entrance/exit animation
   const { opacity: pageOpacity, translateX: pageTranslateX, animateExit: pageExit } = usePageTransition();
@@ -2260,11 +2280,21 @@ export default function ScanResultScreen() {
       <Animated.View style={{ flex: 1, opacity: pageOpacity, transform: [{ translateX: pageTranslateX }] }}>
       {/* ── Sticky Header (back, product info, nutri-score, tabs) ── */}
       <View style={styles.stickyHeader}>
-        {/* Back button */}
+        {/* Back button + Add-to-recipe */}
         <View style={styles.backRow}>
           <TouchableOpacity style={styles.backBtn} onPress={handleBack} activeOpacity={0.7}>
             <BigBackIcon width={32} height={32} />
           </TouchableOpacity>
+          {session?.user?.id && (
+            <TouchableOpacity
+              style={styles.addToRecipeBtn}
+              onPress={() => setAddToRecipeOpen(true)}
+              activeOpacity={0.7}
+              hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
+            >
+              <Ionicons name="add" size={24} color={Colors.primary} />
+            </TouchableOpacity>
+          )}
         </View>
 
         <View style={styles.stickyContent}>
@@ -3619,6 +3649,34 @@ export default function ScanResultScreen() {
         userProfile={profile}
       />
 
+      {/* ── Add to recipe sheet ── */}
+      <AddToRecipeSheet
+        visible={addToRecipeOpen}
+        onClose={() => setAddToRecipeOpen(false)}
+        barcode={typeof p.barcode === 'string' ? p.barcode : null}
+        snapshot={buildProductSnapshot({
+          product_name: String(fetched?.productName || p.productName || t('product.unknownName')),
+          brand: (fetched?.brand || (typeof p.brand === 'string' ? p.brand : null)) || null,
+          image_url: (fetched?.imageUrl || (typeof p.imageUrl === 'string' ? p.imageUrl : null)) || null,
+          nutriscore_grade: ((fetched?.nutriscoreGrade as string | undefined) || (typeof p.nutriscoreGrade === 'string' ? p.nutriscoreGrade : null)) || null,
+          nutriments: {
+            energy_kcal: toNum(fetched?.energyKcal, p.energyKcal),
+            fat_g: toNum(fetched?.fat, p.fat),
+            saturated_fat_g: toNum(fetched?.saturatedFat, p.saturatedFat),
+            carbs_g: toNum(fetched?.carbs, p.carbs),
+            sugars_g: toNum(fetched?.sugars, p.sugars),
+            fiber_g: toNum(fetched?.fiber, p.fiber),
+            protein_g: toNum(fetched?.proteins, p.proteins),
+            salt_g: toNum(fetched?.salt, p.salt),
+          },
+          allergens: (
+            (fetched?.allergens as string[] | undefined) ??
+            (typeof p.allergens === 'string' ? p.allergens.split(',').filter(Boolean) : [])
+          ),
+          ingredients: [],
+        })}
+      />
+
       {/* ── Flagged ingredient detail sheet ── */}
       <FlaggedIngredientSheet
         ingredient={flaggedSheetIng}
@@ -3699,6 +3757,9 @@ const styles = StyleSheet.create({
 
   // Back button (Figma node 3263-6137 — plain icon, no circle bg)
   backRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: Spacing.s,
     paddingTop: Spacing.l,
     paddingBottom: 2,
@@ -3708,6 +3769,21 @@ const styles = StyleSheet.create({
     height: 32,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  addToRecipeBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.surface.tertiary,
+    borderWidth: 1,
+    borderColor: Colors.stroke.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#444770',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 3,
   },
 
   // Scroll

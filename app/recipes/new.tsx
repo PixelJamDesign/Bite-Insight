@@ -1,9 +1,14 @@
 /**
- * Recipe Builder — MINIMAL PLACEHOLDER UI (design will change 100%)
+ * Recipe Builder — reads/writes the DraftRecipeContext.
  *
- * Used for both creating new recipes and editing existing ones. For edit
- * mode, pass `?id=<recipeId>` via the query — the screen loads the existing
- * recipe and uses `saveAsUpdate` instead of `save`.
+ * For NEW recipes: if there's no draft, we call startNew() on mount so
+ * state is available. If there IS already a draft (e.g. user was adding
+ * ingredients via scan-result or search pick mode), we keep it.
+ *
+ * For EDIT mode (?id=<id>): if the draft is already for this recipe, we
+ * keep it; otherwise we hydrate from the DB.
+ *
+ * UI is intentionally minimal — design will be replaced.
  */
 import { useEffect, useState } from 'react';
 import {
@@ -22,13 +27,12 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/lib/auth';
-import { useRecipeBuilder } from '@/lib/useRecipeBuilder';
+import { useDraftRecipe } from '@/lib/draftRecipeContext';
 import { getRecipe, snapshotFromScanAsync } from '@/lib/recipes';
-import { supabase } from '@/lib/supabase';
 import { formatQuantity } from '@/constants/quantityUnits';
-import { NUTRISCORE_COLORS, NUTRISCORE_VERDICT } from '@/lib/nutriscore';
+import { NUTRISCORE_COLORS } from '@/lib/nutriscore';
 import { Colors, Spacing, Radius, Shadows, Typography } from '@/constants/theme';
-import type { Scan, QuantityUnit } from '@/lib/types';
+import type { Scan } from '@/lib/types';
 import { ScanPickerSheet } from '@/components/ScanPickerSheet';
 import { QuantityPickerSheet } from '@/components/QuantityPickerSheet';
 import { AddIngredientSheet, type AddSource } from '@/components/AddIngredientSheet';
@@ -41,48 +45,52 @@ export default function RecipeBuilderScreen() {
   const isEditing = Boolean(editingId);
   const insets = useSafeAreaInsets();
 
-  const builder = useRecipeBuilder();
+  const draft = useDraftRecipe();
   const [loadingInitial, setLoadingInitial] = useState(isEditing);
   const [saving, setSaving] = useState(false);
   const [addSheetOpen, setAddSheetOpen] = useState(false);
   const [scanPickerOpen, setScanPickerOpen] = useState(false);
   const [quantityEditing, setQuantityEditing] = useState<string | null>(null);
 
-  // Hydrate from existing recipe if editing
+  // ── Draft bootstrap ───────────────────────────────────────────────────────
+  // On mount, ensure we have the right kind of draft for the route we're on.
   useEffect(() => {
-    if (!isEditing || !editingId) return;
-    let mounted = true;
     (async () => {
-      const r = await getRecipe(editingId);
-      if (mounted && r) builder.hydrateFromRecipe(r);
-      if (mounted) setLoadingInitial(false);
+      if (isEditing && editingId) {
+        // Edit mode — if the existing draft is already for this recipe, keep it.
+        // Otherwise hydrate from DB into a fresh edit draft.
+        if (draft.draft?.mode === 'edit' && draft.draft.editingRecipeId === editingId) {
+          setLoadingInitial(false);
+          return;
+        }
+        const r = await getRecipe(editingId);
+        if (r) draft.startEdit(r);
+        setLoadingInitial(false);
+      } else {
+        // New recipe mode — if a draft already exists (user came in from
+        // scan-result / pick mode), keep it. Otherwise start fresh.
+        if (!draft.draft) draft.startNew();
+        setLoadingInitial(false);
+      }
     })();
-    return () => { mounted = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEditing, editingId]);
 
   async function handleSave() {
     if (!session?.user?.id) return;
-    if (!builder.canSave) {
+    if (!draft.canSave) {
       Alert.alert('Cannot save', 'Add a name and at least one ingredient.');
       return;
     }
     setSaving(true);
     try {
       if (isEditing && editingId) {
-        const ok = await builder.saveAsUpdate(editingId);
-        if (ok) {
-          // Return to the detail view that sent us here
-          router.back();
-        } else {
-          Alert.alert('Save failed', 'Please try again.');
-        }
+        const ok = await draft.saveAsUpdate();
+        if (ok) router.back();
+        else Alert.alert('Save failed', 'Please try again.');
       } else {
-        const id = await builder.save(session.user.id);
+        const id = await draft.save(session.user.id);
         if (id) {
-          // Return to the Recipes tab — user can tap the new card to see
-          // the detail view. Feels more natural than landing on detail
-          // with no context of the list.
           router.replace('/(tabs)/recipes' as never);
         } else {
           Alert.alert('Save failed', 'Please try again.');
@@ -93,9 +101,32 @@ export default function RecipeBuilderScreen() {
     }
   }
 
+  function handleCancel() {
+    if (draft.hasDraft && draft.draft && draft.draft.ingredients.length > 0) {
+      Alert.alert(
+        'Discard changes?',
+        'Your draft recipe will be lost.',
+        [
+          { text: 'Keep editing', style: 'cancel' },
+          {
+            text: 'Discard',
+            style: 'destructive',
+            onPress: () => {
+              draft.clear();
+              safeBack();
+            },
+          },
+        ],
+      );
+    } else {
+      draft.clear();
+      safeBack();
+    }
+  }
+
   async function handleAddScan(scan: Scan) {
     const snapshot = await snapshotFromScanAsync(scan);
-    builder.addIngredient({
+    draft.addIngredient({
       barcode: scan.barcode,
       scan_id: scan.id,
       quantity_value: 100,
@@ -109,29 +140,19 @@ export default function RecipeBuilderScreen() {
   function handleAddSourceSelected(source: AddSource) {
     setAddSheetOpen(false);
     if (source === 'history') {
-      // Give the add sheet a moment to dismiss before showing the next sheet
       setTimeout(() => setScanPickerOpen(true), 180);
     } else if (source === 'search') {
-      Alert.alert(
-        'Coming soon',
-        'Searching the Open Food Facts database from the recipe builder is on the way. For now, scan the product first or add it from scan history.',
-      );
+      // Navigate to food search in pick mode — screen reads addToRecipe=1
+      // query param and adds selected items to the draft via context.
+      router.push('/food-search?addToRecipe=1' as never);
     } else if (source === 'scan') {
-      Alert.alert(
-        'Coming soon',
-        'Scanning a barcode directly from the builder is on the way. For now, scan the product from the Scan tab, then add it from scan history.',
-      );
+      router.push('/(tabs)/scanner?addToRecipe=1' as never);
     }
   }
 
-  const editingIngredient = builder.ingredients.find(
-    (i) => i._localId === quantityEditing,
-  );
-  const nutriColor = builder.nutriscore
-    ? NUTRISCORE_COLORS[builder.nutriscore as keyof typeof NUTRISCORE_COLORS]
-    : null;
+  const d = draft.draft;
 
-  if (loadingInitial) {
+  if (loadingInitial || !d) {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.loadingWrap}>
@@ -141,6 +162,11 @@ export default function RecipeBuilderScreen() {
     );
   }
 
+  const editingIngredient = d.ingredients.find((i) => i._localId === quantityEditing);
+  const nutriColor = draft.nutriscore
+    ? NUTRISCORE_COLORS[draft.nutriscore as keyof typeof NUTRISCORE_COLORS]
+    : null;
+
   return (
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView
@@ -149,11 +175,7 @@ export default function RecipeBuilderScreen() {
       >
         {/* Header */}
         <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-          <TouchableOpacity
-            onPress={() => safeBack()}
-            style={styles.backBtn}
-            activeOpacity={0.8}
-          >
+          <TouchableOpacity onPress={handleCancel} style={styles.backBtn} activeOpacity={0.8}>
             <Ionicons name="chevron-back" size={24} color={Colors.primary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{isEditing ? 'Edit recipe' : 'New recipe'}</Text>
@@ -165,13 +187,13 @@ export default function RecipeBuilderScreen() {
           contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Name */}
+          {/* Name + Servings */}
           <View style={styles.card}>
             <Text style={styles.fieldLabel}>Recipe name</Text>
             <TextInput
               style={styles.input}
-              value={builder.name}
-              onChangeText={builder.setName}
+              value={d.name}
+              onChangeText={draft.setName}
               placeholder="e.g. Chicken & rice bowl"
               placeholderTextColor="#99b8b3"
               returnKeyType="done"
@@ -181,19 +203,19 @@ export default function RecipeBuilderScreen() {
             <View style={styles.stepperRow}>
               <TouchableOpacity
                 style={styles.stepperBtn}
-                onPress={() => builder.setServings(Math.max(1, builder.servings - 1))}
+                onPress={() => draft.setServings(Math.max(1, d.servings - 1))}
               >
                 <Ionicons name="remove" size={22} color={Colors.secondary} />
               </TouchableOpacity>
               <View style={styles.stepperValue}>
-                <Text style={styles.stepperNumber}>{builder.servings}</Text>
+                <Text style={styles.stepperNumber}>{d.servings}</Text>
                 <Text style={styles.stepperUnit}>
-                  {builder.servings === 1 ? 'serving' : 'servings'}
+                  {d.servings === 1 ? 'serving' : 'servings'}
                 </Text>
               </View>
               <TouchableOpacity
                 style={styles.stepperBtn}
-                onPress={() => builder.setServings(builder.servings + 1)}
+                onPress={() => draft.setServings(d.servings + 1)}
               >
                 <Ionicons name="add" size={22} color={Colors.secondary} />
               </TouchableOpacity>
@@ -201,23 +223,23 @@ export default function RecipeBuilderScreen() {
           </View>
 
           {/* Live Nutrition Preview */}
-          {builder.ingredients.length > 0 && (
+          {d.ingredients.length > 0 && (
             <View style={styles.previewCard}>
               <View style={styles.previewHeader}>
                 <Text style={styles.previewTitle}>Live nutrition</Text>
                 <Text style={styles.previewPer}>per serving</Text>
               </View>
               <View style={styles.previewStats}>
-                <PreviewStat label="Kcal" value={String(builder.totals.total_kcal)} />
-                <PreviewStat label="Protein" value={`${builder.totals.total_protein_g}g`} />
-                <PreviewStat label="Carbs" value={`${builder.totals.total_carbs_g}g`} />
-                <PreviewStat label="Fat" value={`${builder.totals.total_fat_g}g`} />
+                <PreviewStat label="Kcal" value={String(draft.totals.total_kcal)} />
+                <PreviewStat label="Protein" value={`${draft.totals.total_protein_g}g`} />
+                <PreviewStat label="Carbs" value={`${draft.totals.total_carbs_g}g`} />
+                <PreviewStat label="Fat" value={`${draft.totals.total_fat_g}g`} />
               </View>
-              {builder.nutriscore && nutriColor && (
+              {draft.nutriscore && nutriColor && (
                 <View style={styles.previewNutriRow}>
                   <Text style={styles.previewNutriLabel}>Estimated Nutri-score</Text>
                   <View style={[styles.nutriBadge, { backgroundColor: nutriColor }]}>
-                    <Text style={styles.nutriBadgeText}>{builder.nutriscore.toUpperCase()}</Text>
+                    <Text style={styles.nutriBadgeText}>{draft.nutriscore.toUpperCase()}</Text>
                   </View>
                 </View>
               )}
@@ -237,11 +259,11 @@ export default function RecipeBuilderScreen() {
               </TouchableOpacity>
             </View>
             <Text style={styles.sectionCount}>
-              {builder.ingredients.length} {builder.ingredients.length === 1 ? 'item' : 'items'}
+              {d.ingredients.length} {d.ingredients.length === 1 ? 'item' : 'items'}
             </Text>
           </View>
 
-          {builder.ingredients.map((ing) => (
+          {d.ingredients.map((ing) => (
             <View key={ing._localId} style={styles.ingRow}>
               <View style={styles.ingThumb}>
                 <Ionicons name="nutrition-outline" size={20} color={Colors.secondary} />
@@ -266,15 +288,14 @@ export default function RecipeBuilderScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.ingRemove}
-                onPress={() => builder.removeIngredient(ing._localId)}
+                onPress={() => draft.removeIngredient(ing._localId)}
               >
                 <Ionicons name="close" size={18} color={Colors.secondary} />
               </TouchableOpacity>
             </View>
           ))}
 
-          {/* Add ingredient — only show if list is empty as an affordance */}
-          {builder.ingredients.length === 0 && (
+          {d.ingredients.length === 0 && (
             <TouchableOpacity
               style={styles.addIngBtn}
               onPress={() => setAddSheetOpen(true)}
@@ -288,17 +309,13 @@ export default function RecipeBuilderScreen() {
 
         {/* Save bar */}
         <View style={[styles.saveBar, { paddingBottom: insets.bottom + 16 }]}>
-          <TouchableOpacity
-            style={styles.cancelBtn}
-            onPress={() => safeBack()}
-            activeOpacity={0.85}
-          >
+          <TouchableOpacity style={styles.cancelBtn} onPress={handleCancel} activeOpacity={0.85}>
             <Text style={styles.cancelBtnText}>Cancel</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.saveBtn, !builder.canSave && styles.saveBtnDisabled]}
+            style={[styles.saveBtn, !draft.canSave && styles.saveBtnDisabled]}
             onPress={handleSave}
-            disabled={!builder.canSave || saving}
+            disabled={!draft.canSave || saving}
             activeOpacity={0.85}
           >
             {saving ? (
@@ -312,21 +329,17 @@ export default function RecipeBuilderScreen() {
         </View>
       </KeyboardAvoidingView>
 
-      {/* Add ingredient source picker */}
+      {/* Sheets */}
       <AddIngredientSheet
         visible={addSheetOpen}
         onClose={() => setAddSheetOpen(false)}
         onPick={handleAddSourceSelected}
       />
-
-      {/* Scan picker sheet */}
       <ScanPickerSheet
         visible={scanPickerOpen}
         onClose={() => setScanPickerOpen(false)}
         onPick={handleAddScan}
       />
-
-      {/* Quantity picker sheet */}
       <QuantityPickerSheet
         visible={Boolean(editingIngredient)}
         value={editingIngredient?.quantity_value ?? 100}
@@ -334,7 +347,7 @@ export default function RecipeBuilderScreen() {
         onClose={() => setQuantityEditing(null)}
         onSave={(value, unit) => {
           if (quantityEditing) {
-            builder.updateIngredient(quantityEditing, {
+            draft.updateIngredient(quantityEditing, {
               quantity_value: value,
               quantity_unit: unit,
             });
@@ -380,11 +393,7 @@ const styles = StyleSheet.create({
     color: Colors.primary,
   },
 
-  scroll: {
-    padding: Spacing.s,
-    paddingBottom: 140,
-    gap: Spacing.s,
-  },
+  scroll: { padding: Spacing.s, paddingBottom: 140, gap: Spacing.s },
 
   card: {
     backgroundColor: Colors.surface.secondary,
@@ -413,11 +422,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
   },
-  stepperRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
+  stepperRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   stepperBtn: {
     width: 44,
     height: 44,
@@ -428,17 +433,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  stepperValue: {
-    flex: 1,
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 6,
-  },
-  stepperNumber: {
-    ...Typography.h3,
-    color: Colors.primary,
-  },
+  stepperValue: { flex: 1, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 6 },
+  stepperNumber: { ...Typography.h3, color: Colors.primary },
   stepperUnit: {
     fontSize: 13,
     fontWeight: '300',
@@ -446,7 +442,6 @@ const styles = StyleSheet.create({
     color: Colors.secondary,
   },
 
-  // Preview card (dark)
   previewCard: {
     backgroundColor: Colors.primary,
     borderRadius: Radius.l,
@@ -472,13 +467,8 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_300Light',
     color: '#aad4cd',
   },
-  previewStats: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  previewStatItem: {
-    flex: 1,
-  },
+  previewStats: { flexDirection: 'row', gap: 8 },
+  previewStatItem: { flex: 1 },
   previewStatValue: {
     fontSize: 18,
     fontWeight: '700',
@@ -523,21 +513,9 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 
-  // Section heading
-  sectionHeader: {
-    paddingHorizontal: 4,
-    marginTop: Spacing.xs,
-    gap: 2,
-  },
-  sectionTitleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  sectionTitle: {
-    ...Typography.h4,
-    color: Colors.primary,
-  },
+  sectionHeader: { paddingHorizontal: 4, marginTop: Spacing.xs, gap: 2 },
+  sectionTitleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  sectionTitle: { ...Typography.h4, color: Colors.primary },
   sectionAddBtn: {
     width: 36,
     height: 36,
@@ -556,7 +534,6 @@ const styles = StyleSheet.create({
     color: Colors.accent,
   },
 
-  // Ingredient row
   ingRow: {
     backgroundColor: Colors.surface.secondary,
     borderRadius: Radius.m,
@@ -577,10 +554,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  ingInfo: {
-    flex: 1,
-    gap: 2,
-  },
+  ingInfo: { flex: 1, gap: 2 },
   ingName: {
     fontSize: 14,
     fontWeight: '700',
@@ -605,14 +579,8 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
   },
-  ingRemove: {
-    width: 28,
-    height: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  ingRemove: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
 
-  // Add ingredient button
   addIngBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -632,7 +600,6 @@ const styles = StyleSheet.create({
     color: Colors.secondary,
   },
 
-  // Save bar
   saveBar: {
     flexDirection: 'row',
     gap: 10,
@@ -664,9 +631,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.m,
     ...Shadows.level3,
   },
-  saveBtnDisabled: {
-    opacity: 0.5,
-  },
+  saveBtnDisabled: { opacity: 0.5 },
   saveBtnText: {
     ...Typography.h5,
     color: '#fff',

@@ -21,6 +21,8 @@ import { SubscriptionProvider } from '@/lib/subscriptionContext';
 import { ActiveFamilyProvider } from '@/lib/activeFamilyContext';
 import { RegionProvider } from '@/lib/regionContext';
 import { MenuProvider } from '@/lib/menuContext';
+import { DraftRecipeProvider } from '@/lib/draftRecipeContext';
+import { ToastProvider } from '@/lib/toastContext';
 import { JourneyProvider, useJourney } from '@/lib/journeyContext';
 import type { OnboardingStep } from '@/lib/types';
 import { UpsellSheet } from '@/components/UpsellSheet';
@@ -289,9 +291,13 @@ export default function RootLayout() {
                 <UpsellSheetProvider>
                   <MyPlanSheetProvider>
                     <MenuProvider>
-                      <TransitionProvider>
-                        <RootLayoutInner />
-                      </TransitionProvider>
+                      <DraftRecipeProvider>
+                        <ToastProvider>
+                          <TransitionProvider>
+                            <RootLayoutInner />
+                          </TransitionProvider>
+                        </ToastProvider>
+                      </DraftRecipeProvider>
                     </MenuProvider>
                   </MyPlanSheetProvider>
                 </UpsellSheetProvider>
