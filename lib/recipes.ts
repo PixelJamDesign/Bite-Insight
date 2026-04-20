@@ -9,12 +9,14 @@
  * recipes once Phase 3 Community ships).
  */
 import { supabase } from './supabase';
+import { computeNutriscore } from './nutriscore';
 import type {
   Recipe,
   RecipeIngredient,
   RecipeWithIngredients,
   ProductSnapshot,
   QuantityUnit,
+  Scan,
 } from './types';
 
 // ── Nutrition math ───────────────────────────────────────────────────────────
@@ -123,6 +125,53 @@ export function computeRecipeTotals(
   };
 }
 
+/**
+ * Computes total weight of the recipe (all ingredient grams summed) so we
+ * can derive per-100g values for Nutri-score.
+ */
+export function computeTotalWeightGrams(
+  ingredients: Array<{ quantity_value: number; quantity_unit: QuantityUnit }>,
+): number {
+  return ingredients.reduce(
+    (sum, ing) => sum + quantityToGrams(ing.quantity_value, ing.quantity_unit),
+    0,
+  );
+}
+
+/**
+ * Computes a Nutri-score grade for a recipe. Requires per-serving totals
+ * (pass in what `computeRecipeTotals` returns), the servings count, and the
+ * total grams of the recipe.
+ */
+export function computeRecipeNutriscore(
+  totals: {
+    total_kcal: number;
+    total_sat_fat_g: number;
+    total_sugars_g: number;
+    total_salt_g: number;
+    total_fiber_g: number;
+    total_protein_g: number;
+  },
+  servings: number,
+  totalWeightGrams: number,
+): string | null {
+  const finishedWeight = totalWeightGrams;
+  if (finishedWeight <= 0) return null;
+
+  // Back out total-for-whole-recipe, then divide by (weight/100) for per-100g
+  const per100g = (perServing: number) =>
+    (perServing * servings) / (finishedWeight / 100);
+
+  return computeNutriscore({
+    energy_kcal_100g: per100g(totals.total_kcal),
+    sat_fat_g_100g: per100g(totals.total_sat_fat_g),
+    sugars_g_100g: per100g(totals.total_sugars_g),
+    salt_g_100g: per100g(totals.total_salt_g),
+    fiber_g_100g: per100g(totals.total_fiber_g),
+    protein_g_100g: per100g(totals.total_protein_g),
+  });
+}
+
 // ── CRUD ─────────────────────────────────────────────────────────────────────
 
 /** Lists the current user's recipes, most recently updated first. */
@@ -200,6 +249,8 @@ export async function createRecipe(
     })),
     recipe.servings,
   );
+  const totalWeight = computeTotalWeightGrams(ingredients);
+  const nutriscore = computeRecipeNutriscore(totals, recipe.servings, totalWeight);
 
   // Insert recipe first
   const { data: inserted, error: recipeErr } = await supabase
@@ -214,7 +265,7 @@ export async function createRecipe(
       method: recipe.method ?? [],
       tags: recipe.tags ?? [],
       ...totals,
-      nutriscore_grade: null, // TODO: compute from totals
+      nutriscore_grade: nutriscore,
     })
     .select('id')
     .single();
@@ -355,6 +406,30 @@ export async function duplicateRecipe(
 }
 
 // ── Snapshot helper ──────────────────────────────────────────────────────────
+
+/**
+ * Builds a ProductSnapshot from a Scan row (from the user's scan history).
+ * Note: scans don't store per-100g nutrition data — we only save barcode,
+ * name, brand, image, ingredients & nutriscore. So nutrition_per_100g will
+ * be empty unless we fetch from OFF first. Callers that need nutrition
+ * should use buildProductSnapshot() with OFF data.
+ */
+export function snapshotFromScan(scan: Scan): ProductSnapshot {
+  return {
+    product_name: scan.product_name,
+    brand: scan.brand,
+    image_url: scan.image_url,
+    nutriscore_grade: scan.nutriscore_grade,
+    nutrition_per_100g: {},
+    allergens: [],
+    ingredients: (scan.ingredients ?? []).map((i) => ({
+      id: i.id,
+      name: i.name,
+      is_flagged: i.is_flagged,
+      dietary_tags: i.dietary_tags,
+    })),
+  };
+}
 
 /**
  * Builds a ProductSnapshot from a scan or OFF API response.
