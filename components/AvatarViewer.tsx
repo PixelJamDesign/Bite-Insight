@@ -10,7 +10,7 @@ import {
   Text,
   StyleSheet,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography } from '@/constants/theme';
 
@@ -22,19 +22,11 @@ interface Props {
 }
 
 export function AvatarViewer({ visible, uri, initials, onClose }: Props) {
+  const insets = useSafeAreaInsets();
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.backdrop}>
-        <SafeAreaView style={{ flex: 1 }}>
-          <TouchableOpacity
-            style={styles.closeBtn}
-            onPress={onClose}
-            activeOpacity={0.85}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Ionicons name="close" size={24} color="#fff" />
-          </TouchableOpacity>
-
+        <SafeAreaView style={{ flex: 1 }} edges={[]}>
           <View style={styles.centerArea}>
             <TouchableOpacity
               style={styles.imageTouch}
@@ -50,6 +42,26 @@ export function AvatarViewer({ visible, uri, initials, onClose }: Props) {
               )}
             </TouchableOpacity>
           </View>
+
+          {/* Close button — matches the header menu button style + position
+              from components/ScreenLayout.tsx so it feels like the same
+              control users already know. Close icon instead of hamburger. */}
+          <View
+            style={[
+              styles.headerBar,
+              { paddingTop: insets.top + 24 },
+            ]}
+            pointerEvents="box-none"
+          >
+            <View style={{ flex: 1 }} />
+            <TouchableOpacity
+              style={styles.closeBtn}
+              onPress={onClose}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="close" size={24} color={Colors.primary} />
+            </TouchableOpacity>
+          </View>
         </SafeAreaView>
       </View>
     </Modal>
@@ -61,17 +73,36 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.92)',
   },
-  closeBtn: {
+  // Mirrors styles.headerBar in components/ScreenLayout.tsx — same positioning
+  // and spacing so the close button sits exactly where the menu button does.
+  headerBar: {
     position: 'absolute',
-    top: 16,
-    right: 16,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    top: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    paddingBottom: 16,
+    zIndex: 20,
+    elevation: 20,
+  },
+  // Same dimensions, radius, border, shadow as styles.menuBtn in ScreenLayout.
+  closeBtn: {
+    width: 48,
+    height: 48,
+    backgroundColor: Colors.surface.tertiary,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.stroke.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 2,
+    shadowColor: '#444770',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 6,
   },
   centerArea: {
     flex: 1,
