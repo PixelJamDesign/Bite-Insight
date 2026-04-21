@@ -1,12 +1,14 @@
 /**
- * Recipes tab — MINIMAL PLACEHOLDER UI (design will change 100%)
+ * Recipes tab — first-screen implementation from Figma node 4788-11615.
  *
- * Shows the user's recipe list, an empty state, and an FAB to create a new
- * recipe. Wired to `useRecipes()` with realtime updates. All visuals use
- * existing design tokens but layouts are rough — intentionally replaceable
- * once final designs land.
+ * Layout:
+ *   Header (ScreenLayout)
+ *   Page title block: "Recipes" + filter tabs + recipe count
+ *   Main area: recipe grid when populated, friendly empty state otherwise
+ *   Sticky bottom CTA (gradient fade) — "Create your first recipe" when empty,
+ *   "+ New recipe" when recipes exist
  */
-import { useMemo } from 'react';
+import { useState } from 'react';
 import {
   View,
   Text,
@@ -16,40 +18,85 @@ import {
   Image,
   ActivityIndicator,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Colors, Spacing, Radius, Shadows, Typography } from '@/constants/theme';
 import { ScreenLayout } from '@/components/ScreenLayout';
+import { PlusBadge } from '@/components/PlusBadge';
 import { useRecipes } from '@/lib/useRecipes';
 import { NUTRISCORE_COLORS } from '@/lib/nutriscore';
 import type { Recipe } from '@/lib/types';
 
+type TabKey = 'my' | 'community';
+
 export default function RecipesScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { recipes, loading, refresh } = useRecipes();
+  const [activeTab, setActiveTab] = useState<TabKey>('my');
+
+  const isEmpty = recipes.length === 0;
+
+  const titleExtension = (
+    <View style={styles.titleExtension}>
+      {/* Filter tabs */}
+      <View style={styles.filterRow}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'my' && styles.tabActive]}
+          onPress={() => setActiveTab('my')}
+          activeOpacity={0.8}
+        >
+          <Text
+            style={[
+              styles.tabLabel,
+              activeTab === 'my' ? styles.tabLabelActive : styles.tabLabelInactive,
+            ]}
+          >
+            My recipes
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'community' && styles.tabActive]}
+          onPress={() => setActiveTab('community')}
+          activeOpacity={0.8}
+        >
+          <Text
+            style={[
+              styles.tabLabel,
+              activeTab === 'community' ? styles.tabLabelActive : styles.tabLabelInactive,
+            ]}
+          >
+            Community recipes
+          </Text>
+          <PlusBadge size="small" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Recipe count */}
+      <View style={styles.countRow}>
+        <Text style={styles.countPrefix}>Currently you have</Text>
+        <Text style={styles.countValue}>
+          {recipes.length} {recipes.length === 1 ? 'recipe' : 'recipes'}
+        </Text>
+      </View>
+    </View>
+  );
 
   return (
-    <ScreenLayout title="Recipes">
-      <View style={styles.content}>
-        {/* Placeholder segmented control */}
-        <View style={styles.segmented}>
-          <View style={[styles.segItem, styles.segActive]}>
-            <Text style={styles.segActiveText}>My Recipes</Text>
-          </View>
-          <View style={[styles.segItem, styles.segLocked]}>
-            <View style={styles.plusPill}>
-              <Text style={styles.plusPillText}>PLUS</Text>
-            </View>
-            <Text style={styles.segLockedText}>Community</Text>
-          </View>
-        </View>
-
-        {loading && recipes.length === 0 ? (
+    <ScreenLayout title="Recipes" headerExtension={titleExtension}>
+      <View style={styles.root}>
+        {/* Main area */}
+        {loading && isEmpty ? (
           <View style={styles.loadingWrap}>
             <ActivityIndicator color={Colors.secondary} />
           </View>
-        ) : recipes.length === 0 ? (
-          <EmptyState onCreate={() => router.push('/recipes/new' as never)} />
+        ) : activeTab === 'community' ? (
+          <CommunityComingSoon />
+        ) : isEmpty ? (
+          <EmptyState />
         ) : (
           <FlatList
             data={recipes}
@@ -68,15 +115,29 @@ export default function RecipesScreen() {
           />
         )}
 
-        {/* FAB — only show when there are recipes */}
-        {recipes.length > 0 && (
-          <TouchableOpacity
-            style={styles.fab}
-            onPress={() => router.push('/recipes/new' as never)}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="add" size={28} color="#fff" />
-          </TouchableOpacity>
+        {/* Sticky footer CTA — only visible on the My Recipes tab */}
+        {activeTab === 'my' && (
+          <View style={[styles.footerWrap, { paddingBottom: insets.bottom + 16 }]} pointerEvents="box-none">
+            <LinearGradient
+              colors={[
+                'rgba(226,241,238,0)',
+                Colors.background,
+                Colors.background,
+              ]}
+              locations={[0, 0.24, 1]}
+              style={styles.footerGradient}
+              pointerEvents="none"
+            />
+            <TouchableOpacity
+              style={styles.footerCta}
+              onPress={() => router.push('/recipes/new' as never)}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.footerCtaText}>
+                {isEmpty ? 'Create your first recipe' : '+ New recipe'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         )}
       </View>
     </ScreenLayout>
@@ -85,20 +146,46 @@ export default function RecipesScreen() {
 
 // ── Empty State ──────────────────────────────────────────────────────────────
 
-function EmptyState({ onCreate }: { onCreate: () => void }) {
+function EmptyState() {
   return (
     <View style={styles.emptyWrap}>
-      <View style={styles.emptyIconBg}>
-        <Ionicons name="restaurant-outline" size={56} color={Colors.secondary} />
+      <View style={styles.emptyIconOuter}>
+        <View style={styles.emptyIconInner}>
+          <Ionicons name="restaurant-outline" size={36} color={Colors.secondary} />
+        </View>
+        {/* Subtle ring around the icon to match the Figma double-ring treatment */}
+        <View style={styles.emptyIconRing} pointerEvents="none" />
       </View>
-      <Text style={styles.emptyTitle}>No recipes yet</Text>
-      <Text style={styles.emptyBody}>
-        Build recipes from items you've scanned. See full nutrition, Nutri-score, and how the recipe fits everyone in your household.
-      </Text>
-      <TouchableOpacity style={styles.emptyCta} onPress={onCreate} activeOpacity={0.85}>
-        <Ionicons name="add" size={20} color="#fff" />
-        <Text style={styles.emptyCtaText}>Create your first recipe</Text>
-      </TouchableOpacity>
+      <View style={styles.emptyText}>
+        <Text style={styles.emptyTitle}>No recipes in your recipe book</Text>
+        <Text style={styles.emptyBody}>
+          Create recipes from the foods you've scanned, with clear nutrition info,
+          Nutri-Score, and insights tailored to you.
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+// ── Community Coming Soon ────────────────────────────────────────────────────
+
+function CommunityComingSoon() {
+  return (
+    <View style={styles.emptyWrap}>
+      <View style={styles.emptyIconOuter}>
+        <View style={styles.emptyIconInner}>
+          <Ionicons name="people-outline" size={36} color={Colors.secondary} />
+        </View>
+        <View style={styles.emptyIconRing} pointerEvents="none" />
+      </View>
+      <View style={styles.emptyText}>
+        <Text style={styles.emptyTitle}>Community recipes are coming soon</Text>
+        <Text style={styles.emptyBody}>
+          Share your own recipes and discover ones from people with similar
+          health conditions, allergies and dietary preferences. Available to
+          Plus subscribers soon.
+        </Text>
+      </View>
     </View>
   );
 }
@@ -114,7 +201,11 @@ function RecipeCard({ recipe, onPress }: { recipe: Recipe; onPress: () => void }
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>
       <View style={styles.cardCover}>
         {recipe.cover_image_url ? (
-          <Image source={{ uri: recipe.cover_image_url }} style={styles.cardImage} resizeMode="cover" />
+          <Image
+            source={{ uri: recipe.cover_image_url }}
+            style={styles.cardImage}
+            resizeMode="cover"
+          />
         ) : (
           <Ionicons name="restaurant-outline" size={44} color={Colors.accent} />
         )}
@@ -144,118 +235,141 @@ function RecipeCard({ recipe, onPress }: { recipe: Recipe; onPress: () => void }
 // ── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  content: {
+  root: {
     flex: 1,
-    paddingTop: Spacing.s,
   },
-  segmented: {
+
+  // Sits right under the "Recipes" title from ScreenLayout
+  titleExtension: {
+    paddingHorizontal: Spacing.m,
+    paddingBottom: Spacing.s,
+  },
+
+  // Filter tabs row
+  filterRow: {
     flexDirection: 'row',
-    marginHorizontal: Spacing.s,
-    marginBottom: Spacing.s,
-    backgroundColor: Colors.surface.tertiary,
-    borderRadius: Radius.full,
-    padding: 4,
-    gap: 2,
+    alignItems: 'center',
+    gap: 4,
+    marginTop: Spacing.xs,
   },
-  segItem: {
-    flex: 1,
-    paddingVertical: 10,
+  tab: {
+    height: 30,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
+    paddingHorizontal: Spacing.xs,
+    paddingVertical: 4,
     borderRadius: Radius.full,
+    borderWidth: 2,
+    borderColor: 'transparent',
   },
-  segActive: {
-    backgroundColor: '#fff',
-    ...Shadows.level4,
+  tabActive: {
+    backgroundColor: '#e4f1ef',
+    borderColor: '#aad4cd',
   },
-  segLocked: {
-    opacity: 0.55,
+  tabLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    letterSpacing: -0.32,
+    lineHeight: 18,
   },
-  segActiveText: {
-    ...Typography.label,
+  tabLabelActive: {
     color: Colors.primary,
   },
-  segLockedText: {
-    ...Typography.label,
+  tabLabelInactive: {
     color: Colors.secondary,
-    fontSize: 12,
   },
-  plusPill: {
-    backgroundColor: Colors.primary,
-    paddingHorizontal: 5,
-    paddingVertical: 2,
-    borderRadius: Radius.full,
+
+  // Count row
+  countRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 4,
+    marginTop: Spacing.xs,
   },
-  plusPillText: {
-    fontSize: 8,
+  countPrefix: {
+    ...Typography.bodyRegular,
+    fontFamily: 'Figtree_300Light',
+    color: Colors.secondary,
+  },
+  countValue: {
+    fontSize: 16,
     fontWeight: '700',
-    color: '#fff',
     fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.32,
+    lineHeight: 18,
   },
+
+  // Loading
   loadingWrap: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingBottom: 100,
   },
 
-  // Empty state
+  // Empty state (shared by My Recipes empty + Community Coming Soon)
   emptyWrap: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: Spacing.m,
-    paddingBottom: 100,
     gap: Spacing.s,
+    paddingHorizontal: Spacing.m + Spacing.m, // matches Figma inner margin
+    paddingBottom: 160, // clear the footer CTA area
   },
-  emptyIconBg: {
-    width: 96,
-    height: 96,
-    borderRadius: Radius.full,
-    backgroundColor: Colors.surface.tertiary,
+  emptyIconOuter: {
+    width: 73,
+    height: 73,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.s,
+    position: 'relative',
+  },
+  emptyIconInner: {
+    width: 64,
+    height: 64,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyIconRing: {
+    position: 'absolute',
+    width: 73,
+    height: 73,
+    borderRadius: 36.5,
+    borderWidth: 2,
+    borderColor: Colors.secondary,
+    opacity: 0.2,
+  },
+  emptyText: {
+    alignItems: 'center',
+    gap: Spacing.m,
+    width: '100%',
   },
   emptyTitle: {
-    ...Typography.h3,
+    fontSize: 20,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
     textAlign: 'center',
+    lineHeight: 30,
   },
   emptyBody: {
     ...Typography.bodyRegular,
     fontFamily: 'Figtree_300Light',
     color: Colors.secondary,
     textAlign: 'center',
-    marginBottom: Spacing.s,
-  },
-  emptyCta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: Colors.primary,
-    paddingHorizontal: Spacing.m,
-    paddingVertical: 14,
-    borderRadius: Radius.m,
-    ...Shadows.level3,
-  },
-  emptyCtaText: {
-    ...Typography.h5,
-    color: '#fff',
-    fontFamily: 'Figtree_700Bold',
+    maxWidth: 260,
   },
 
   // Grid
   gridContent: {
     paddingHorizontal: Spacing.s,
+    paddingTop: Spacing.s,
     paddingBottom: 140,
     gap: 12,
   },
-  gridRow: {
-    gap: 12,
-  },
+  gridRow: { gap: 12 },
   card: {
     flex: 1,
     backgroundColor: Colors.surface.secondary,
@@ -273,10 +387,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'relative',
   },
-  cardImage: {
-    width: '100%',
-    height: '100%',
-  },
+  cardImage: { width: '100%', height: '100%' },
   nutriPill: {
     position: 'absolute',
     top: 8,
@@ -294,10 +405,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
   },
-  cardInfo: {
-    padding: 12,
-    gap: 4,
-  },
+  cardInfo: { padding: 12, gap: 4 },
   cardName: {
     ...Typography.h6,
     color: Colors.primary,
@@ -321,17 +429,37 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_300Light',
   },
 
-  // FAB
-  fab: {
+  // Sticky footer CTA
+  footerWrap: {
     position: 'absolute',
-    right: Spacing.m,
-    bottom: 120,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: Colors.primary,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: Spacing.m,
+    paddingTop: 60, // space taken by the gradient fade
+  },
+  footerGradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+  },
+  footerCta: {
+    backgroundColor: Colors.secondary,
+    borderRadius: Radius.m,
+    paddingHorizontal: Spacing.m,
+    paddingVertical: Spacing.s,
     alignItems: 'center',
     justifyContent: 'center',
-    ...Shadows.level2,
+    ...Shadows.level3,
+  },
+  footerCtaText: {
+    fontSize: 16,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: '#fff',
+    letterSpacing: 0,
+    lineHeight: 20,
   },
 });
