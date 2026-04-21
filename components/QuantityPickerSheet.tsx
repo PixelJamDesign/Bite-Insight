@@ -53,6 +53,18 @@ export function QuantityPickerSheet({ visible, value, unit, onClose, onSave }: P
     setLocalValue(next.toFixed(meta.precision));
   }
 
+  /**
+   * When the user switches unit, reset the value to a sensible default:
+   *   - Units / Packs → 1 (you're counting items)
+   *   - Everything else (g, ml, tbsp, tsp, cup) → 100
+   */
+  function handleUnitChange(nextUnit: QuantityUnit) {
+    setLocalUnit(nextUnit);
+    const defaultValue = nextUnit === 'unit' || nextUnit === 'pack' ? 1 : 100;
+    const nextMeta = QUANTITY_UNITS.find((u) => u.key === nextUnit);
+    setLocalValue(defaultValue.toFixed(nextMeta?.precision ?? 0));
+  }
+
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.backdrop}>
@@ -96,7 +108,7 @@ export function QuantityPickerSheet({ visible, value, unit, onClose, onSave }: P
               <TouchableOpacity
                 key={u.key}
                 style={[styles.unitPill, localUnit === u.key && styles.unitPillActive]}
-                onPress={() => setLocalUnit(u.key)}
+                onPress={() => handleUnitChange(u.key)}
               >
                 <Text
                   style={[
