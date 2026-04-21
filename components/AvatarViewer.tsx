@@ -59,7 +59,7 @@ export function AvatarViewer({ visible, uri, initials, onClose }: Props) {
               onPress={onClose}
               activeOpacity={0.8}
             >
-              <Ionicons name="close" size={24} color={Colors.primary} />
+              <Ionicons name="close" size={24} color="#fff" />
             </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -71,7 +71,8 @@ export function AvatarViewer({ visible, uri, initials, onClose }: Props) {
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.92)',
+    // Dark-teal tint at ~92% opacity so the app's primary colour carries through
+    backgroundColor: 'rgba(2, 52, 50, 0.92)',
   },
   // Mirrors styles.headerBar in components/ScreenLayout.tsx — same positioning
   // and spacing so the close button sits exactly where the menu button does.
@@ -88,21 +89,17 @@ const styles = StyleSheet.create({
     zIndex: 20,
     elevation: 20,
   },
-  // Same dimensions, radius, border, shadow as styles.menuBtn in ScreenLayout.
+  // Same dimensions + radius as styles.menuBtn in ScreenLayout, but
+  // transparent with a white border to read well over the dark-teal tint.
   closeBtn: {
     width: 48,
     height: 48,
-    backgroundColor: Colors.surface.tertiary,
+    backgroundColor: 'transparent',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Colors.stroke.primary,
+    borderColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#444770',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 6,
   },
   centerArea: {
     flex: 1,
