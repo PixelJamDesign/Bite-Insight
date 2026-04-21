@@ -10,6 +10,7 @@ import {
   LayoutAnimation,
   Platform,
   Animated,
+  ActivityIndicator,
 } from 'react-native';
 import { useFadeIn } from '@/lib/useFadeIn';
 import { useFocusFadeIn } from '@/lib/useFocusFadeIn';
@@ -36,6 +37,8 @@ import { UpsellBanner } from '@/components/UpsellBanner';
 import { PlusBadge } from '@/components/PlusBadge';
 import { CameraIcon } from '@/components/MenuIcons';
 import { FlagReasonSheet } from '@/components/FlagReasonSheet';
+import { useAvatarPicker } from '@/lib/useAvatarPicker';
+import { uploadAvatar } from '@/lib/supabase';
 import { LottieLoader } from '@/components/LottieLoader';
 import {
   HEALTH_CONDITION_LEGACY_MAP,
@@ -178,7 +181,25 @@ export default function HomeDashboard() {
   const { t } = useTranslation('dashboard');
   const { t: tc } = useTranslation('common');
   const { t: tpo } = useTranslation('profileOptions');
-  const { session, avatarUrl } = useAuth();
+  const { session, avatarUrl, setAvatarUrl } = useAuth();
+  const pickAvatar = useAvatarPicker();
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  async function handleAvatarPick() {
+    if (!session?.user?.id) return;
+    pickAvatar(async (localUri) => {
+      setUploadingAvatar(true);
+      try {
+        const uploaded = await uploadAvatar(session.user.id, localUri);
+        if (uploaded) {
+          setAvatarUrl(uploaded);
+          setAvatarLoadError(false);
+        }
+      } finally {
+        setUploadingAvatar(false);
+      }
+    });
+  }
   const { isPlus } = useSubscription();
   const { menuOpen, menuVisible, openMenu, closeMenu, closeMenuInstant } = useMenu();
   const router = useRouter();
@@ -356,14 +377,15 @@ export default function HomeDashboard() {
 
         {/* ── Greeting + Profile ── */}
         <Animated.View style={[styles.greetingRow, { opacity: fadeGreeting.opacity, transform: [{ translateY: fadeGreeting.translateY }] }]}>
-          <TouchableOpacity
-            style={styles.avatarWrap}
-            onPress={() => router.push('/edit-profile' as never)}
-            activeOpacity={0.85}
-            accessibilityRole="button"
-            accessibilityLabel="Edit profile"
-          >
-            <View style={[styles.avatarLarge, focusAnim.showElevation && Shadows.level2]}>
+          <View style={styles.avatarWrap}>
+            {/* Image taps go to edit-profile */}
+            <TouchableOpacity
+              style={[styles.avatarLarge, focusAnim.showElevation && Shadows.level2]}
+              onPress={() => router.push('/edit-profile' as never)}
+              activeOpacity={0.85}
+              accessibilityRole="button"
+              accessibilityLabel="Edit profile"
+            >
               {avatarUrl && !avatarLoadError ? (
                 <Image
                   source={{ uri: avatarUrl }}
@@ -373,11 +395,24 @@ export default function HomeDashboard() {
               ) : (
                 <Text style={styles.avatarInitials}>{initials}</Text>
               )}
-            </View>
-            <View style={styles.avatarEditBadge}>
-              <CameraIcon color="#fff" size={20} />
-            </View>
-          </TouchableOpacity>
+            </TouchableOpacity>
+            {/* Camera badge taps trigger the photo picker + upload */}
+            <TouchableOpacity
+              style={styles.avatarEditBadge}
+              onPress={handleAvatarPick}
+              disabled={uploadingAvatar}
+              activeOpacity={0.85}
+              accessibilityRole="button"
+              accessibilityLabel="Change profile photo"
+              hitSlop={{ top: 6, right: 6, bottom: 6, left: 6 }}
+            >
+              {uploadingAvatar ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <CameraIcon color="#fff" size={20} />
+              )}
+            </TouchableOpacity>
+          </View>
 
           <View style={styles.greetingText}>
             <Text style={styles.greeting}>{getGreeting(tc)}</Text>

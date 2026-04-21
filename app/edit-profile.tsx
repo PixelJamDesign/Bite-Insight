@@ -23,7 +23,6 @@ import { safeBack } from '@/lib/safeBack';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as ImagePicker from 'expo-image-picker';
 import { useTranslation } from 'react-i18next';
 import { supabase, getAvatarUrl, uploadAvatar } from '@/lib/supabase';
 import { useCachedAvatar } from '@/lib/useCachedAvatar';
@@ -37,6 +36,8 @@ import {
 } from '@/constants/profileOptions';
 import type { NutrientWatchlistEntry } from '@/lib/types';
 import { CameraIcon, PersonalIcon, EmailIcon, BirthdayIcon, TickIcon, InfoIcon } from '@/components/MenuIcons';
+import { AvatarViewer } from '@/components/AvatarViewer';
+import { useAvatarPicker } from '@/lib/useAvatarPicker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { formatDob, toLocalDateString } from '@/lib/dateOfBirth';
 import { ConditionInfoSheet } from '@/components/ConditionInfoSheet';
@@ -399,40 +400,14 @@ export default function EditProfileScreen() {
     ]).start(() => onComplete());
   }
 
-  // ── Avatar picker ────────────────────────────────────────────────────────────
-  function pickAvatar() {
-    Alert.alert(tp('editProfile.avatar.alertTitle'), tp('editProfile.avatar.alertMessage'), [
-      {
-        text: tp('editProfile.avatar.takePhoto'),
-        onPress: async () => {
-          const { status } = await ImagePicker.requestCameraPermissionsAsync();
-          if (status !== 'granted') {
-            Alert.alert(tp('editProfile.avatar.permissionTitle'), tp('editProfile.avatar.permissionMessage'));
-            return;
-          }
-          const result = await ImagePicker.launchCameraAsync({
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 0.8,
-          });
-          if (!result.canceled) setAvatarUri(result.assets[0].uri);
-        },
-      },
-      {
-        text: tp('editProfile.avatar.chooseFromLibrary'),
-        onPress: async () => {
-          const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ['images'],
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 0.8,
-          });
-          if (!result.canceled) setAvatarUri(result.assets[0].uri);
-        },
-      },
-      { text: tc('buttons.cancel'), style: 'cancel' },
-    ]);
+  // ── Avatar picker (shared hook — see lib/useAvatarPicker.ts) ────────────────
+  const pickAvatar = useAvatarPicker();
+  function handleAvatarPick() {
+    pickAvatar((uri) => setAvatarUri(uri));
   }
+
+  // ── Fullscreen avatar viewer ────────────────────────────────────────────────
+  const [avatarViewerOpen, setAvatarViewerOpen] = useState(false);
 
   // ── Navigation ───────────────────────────────────────────────────────────────
   function handleNext() {
@@ -799,18 +774,33 @@ export default function EditProfileScreen() {
           {/* ── Step: About you ── */}
           {currentStepKey === 'about' && (
             <>
-              <TouchableOpacity style={styles.avatarContainer} onPress={pickAvatar} activeOpacity={0.85}>
-                <View style={styles.avatarCircle}>
+              <View style={styles.avatarContainer}>
+                {/* Tap the image to see it larger */}
+                <TouchableOpacity
+                  style={styles.avatarCircle}
+                  onPress={() => setAvatarViewerOpen(true)}
+                  activeOpacity={0.85}
+                  accessibilityRole="button"
+                  accessibilityLabel="View profile photo"
+                >
                   {displayAvatar ? (
                     <Image source={{ uri: displayAvatar }} style={styles.avatarImage} />
                   ) : (
                     <Text style={styles.avatarInitials}>{getInitials(fullName)}</Text>
                   )}
-                </View>
-                <View style={styles.cameraBadge}>
+                </TouchableOpacity>
+                {/* Tap the camera to change photo */}
+                <TouchableOpacity
+                  style={styles.cameraBadge}
+                  onPress={handleAvatarPick}
+                  activeOpacity={0.85}
+                  accessibilityRole="button"
+                  accessibilityLabel="Change profile photo"
+                  hitSlop={{ top: 6, right: 6, bottom: 6, left: 6 }}
+                >
                   <CameraIcon size={20} color="#fff" />
-                </View>
-              </TouchableOpacity>
+                </TouchableOpacity>
+              </View>
 
               <View style={[styles.card, styles.cardWithAvatar]}>
                 <View style={styles.cardHeader}>
@@ -964,6 +954,12 @@ export default function EditProfileScreen() {
       visible={!!suggestionCategory}
       onClose={() => setSuggestionCategory(null)}
       category={suggestionCategory ?? 'health_condition'}
+    />
+    <AvatarViewer
+      visible={avatarViewerOpen}
+      uri={displayAvatar}
+      initials={getInitials(fullName)}
+      onClose={() => setAvatarViewerOpen(false)}
     />
     <Modal visible={showDatePicker} transparent animationType="slide" onRequestClose={() => setShowDatePicker(false)}>
       <View style={pickerOverlay.backdrop}>
