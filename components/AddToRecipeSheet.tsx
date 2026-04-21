@@ -19,7 +19,7 @@ import {
   ActivityIndicator,
   TextInput,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
@@ -42,7 +42,6 @@ export function AddToRecipeSheet({ visible, onClose, snapshot, barcode }: Props)
   const { session } = useAuth();
   const draft = useDraftRecipe();
   const { showToast } = useToast();
-  const insets = useSafeAreaInsets();
 
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(false);
@@ -244,7 +243,7 @@ export function AddToRecipeSheet({ visible, onClose, snapshot, barcode }: Props)
             <FlatList
               data={filteredRecipes}
               keyExtractor={(r) => r.id}
-              contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
+              contentContainerStyle={{ paddingBottom: Spacing.m }}
               renderItem={({ item }) => (
                 <TouchableOpacity
                   style={styles.recipeRow}
@@ -285,7 +284,7 @@ const styles = StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' },
   backdropTouch: { flex: 1 },
   sheet: {
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surface.secondary,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '85%',

@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
   },
   backdropTouch: { flex: 1 },
   sheet: {
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surface.secondary,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     ...Shadows.level3,
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
   },
   options: {
     paddingHorizontal: Spacing.s,
-    paddingBottom: Spacing.s,
+    paddingBottom: Spacing.m,   // breathing room above the safe-area inset
     gap: 8,
   },
   row: {

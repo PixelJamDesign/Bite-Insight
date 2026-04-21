@@ -13,7 +13,7 @@ import {
   Image,
   ActivityIndicator,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
@@ -28,7 +28,6 @@ interface Props {
 
 export function ScanPickerSheet({ visible, onClose, onPick }: Props) {
   const { session } = useAuth();
-  const insets = useSafeAreaInsets();
   const [scans, setScans] = useState<Scan[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -78,7 +77,7 @@ export function ScanPickerSheet({ visible, onClose, onPick }: Props) {
             <FlatList
               data={scans}
               keyExtractor={(s) => s.id}
-              contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
+              contentContainerStyle={{ paddingBottom: Spacing.m }}
               renderItem={({ item }) => (
                 <TouchableOpacity
                   style={styles.row}
@@ -116,7 +115,7 @@ const styles = StyleSheet.create({
   },
   backdropTouch: { flex: 1 },
   sheet: {
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surface.secondary,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '85%',
