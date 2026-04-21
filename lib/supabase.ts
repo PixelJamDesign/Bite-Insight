@@ -76,6 +76,7 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 
 const AVATAR_BUCKET = 'make-2527d42e-avatars';
 const INGREDIENT_BUCKET = 'ingredients';
+const RECIPE_COVER_BUCKET = 'recipe-covers';
 
 /**
  * Resolves an avatar_url from the profiles table to a full public URL.
@@ -134,4 +135,32 @@ export async function uploadAvatar(userId: string, localUri: string, skipProfile
   }
 
   return publicUrl;
+}
+
+/**
+ * Uploads a recipe cover image to the recipe-covers bucket.
+ * File path format: `{userId}/{timestamp}.jpeg` — the leading user-id folder
+ * is required by the bucket's RLS policies (see 20260421 migration).
+ * Returns the public URL, or null on failure.
+ */
+export async function uploadRecipeCover(
+  userId: string,
+  localUri: string,
+): Promise<string | null> {
+  const fileName = `${userId}/${Date.now()}.jpeg`;
+
+  const base64 = await FileSystem.readAsStringAsync(localUri, {
+    encoding: 'base64',
+  });
+
+  const { error } = await supabase.storage
+    .from(RECIPE_COVER_BUCKET)
+    .upload(fileName, decode(base64), { contentType: 'image/jpeg', upsert: true });
+
+  if (error) {
+    console.warn('[recipe-cover] upload failed:', error.message);
+    return null;
+  }
+
+  return supabase.storage.from(RECIPE_COVER_BUCKET).getPublicUrl(fileName).data.publicUrl;
 }

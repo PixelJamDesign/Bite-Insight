@@ -27,9 +27,11 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '@/lib/auth';
 import { useDraftRecipe } from '@/lib/draftRecipeContext';
 import { getRecipe, snapshotFromScanAsync } from '@/lib/recipes';
+import { uploadRecipeCover } from '@/lib/supabase';
 import { formatQuantity } from '@/constants/quantityUnits';
 import { NUTRISCORE_COLORS } from '@/lib/nutriscore';
 import { Colors, Spacing, Radius, Shadows, Typography } from '@/constants/theme';
@@ -52,6 +54,7 @@ export default function RecipeBuilderScreen() {
   const [addSheetOpen, setAddSheetOpen] = useState(false);
   const [scanPickerOpen, setScanPickerOpen] = useState(false);
   const [quantityEditing, setQuantityEditing] = useState<string | null>(null);
+  const [uploadingCover, setUploadingCover] = useState(false);
 
   // ── Draft bootstrap ───────────────────────────────────────────────────────
   // On mount, ensure we have the right kind of draft for the route we're on.
@@ -151,6 +154,65 @@ export default function RecipeBuilderScreen() {
     }
   }
 
+  // ── Cover photo picker ────────────────────────────────────────────────────
+  function pickCoverPhoto() {
+    const options = [
+      {
+        text: 'Take photo',
+        onPress: async () => {
+          const { status } = await ImagePicker.requestCameraPermissionsAsync();
+          if (status !== 'granted') {
+            Alert.alert('Camera access needed', 'Enable camera access in Settings to take a recipe photo.');
+            return;
+          }
+          const result = await ImagePicker.launchCameraAsync({
+            allowsEditing: true,
+            aspect: [16, 10],
+            quality: 0.8,
+          });
+          if (!result.canceled) await uploadCoverFromUri(result.assets[0].uri);
+        },
+      },
+      {
+        text: 'Choose from library',
+        onPress: async () => {
+          const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            allowsEditing: true,
+            aspect: [16, 10],
+            quality: 0.8,
+          });
+          if (!result.canceled) await uploadCoverFromUri(result.assets[0].uri);
+        },
+      },
+    ];
+    if (draft.draft?.coverImageUrl) {
+      options.push({
+        text: 'Remove photo',
+        onPress: async () => {
+          draft.setCoverImageUrl(null);
+        },
+      });
+    }
+    options.push({ text: 'Cancel', style: 'cancel' } as any);
+    Alert.alert('Recipe photo', 'Choose how to add a cover photo.', options as any);
+  }
+
+  async function uploadCoverFromUri(localUri: string) {
+    if (!session?.user?.id) return;
+    setUploadingCover(true);
+    try {
+      const publicUrl = await uploadRecipeCover(session.user.id, localUri);
+      if (publicUrl) {
+        draft.setCoverImageUrl(publicUrl);
+      } else {
+        Alert.alert('Upload failed', 'Could not upload the photo. Please try again.');
+      }
+    } finally {
+      setUploadingCover(false);
+    }
+  }
+
   const d = draft.draft;
 
   if (loadingInitial || !d) {
@@ -188,6 +250,42 @@ export default function RecipeBuilderScreen() {
           contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
         >
+          {/* Cover photo */}
+          <TouchableOpacity
+            style={styles.coverCard}
+            onPress={pickCoverPhoto}
+            activeOpacity={0.85}
+            disabled={uploadingCover}
+          >
+            {d.coverImageUrl ? (
+              <>
+                <Image source={{ uri: d.coverImageUrl }} style={styles.coverImage} resizeMode="cover" />
+                <View style={styles.coverEditBadge}>
+                  <Ionicons name="pencil" size={16} color={Colors.primary} />
+                </View>
+              </>
+            ) : (
+              <View style={styles.coverEmpty}>
+                <View style={styles.coverEmptyIcon}>
+                  {uploadingCover ? (
+                    <ActivityIndicator color={Colors.secondary} />
+                  ) : (
+                    <Ionicons name="image-outline" size={28} color={Colors.secondary} />
+                  )}
+                </View>
+                <Text style={styles.coverEmptyText}>
+                  {uploadingCover ? 'Uploading…' : 'Add a cover photo'}
+                </Text>
+                <Text style={styles.coverEmptyHint}>Tap to take or choose a photo</Text>
+              </View>
+            )}
+            {uploadingCover && d.coverImageUrl && (
+              <View style={styles.coverOverlay}>
+                <ActivityIndicator color="#fff" />
+              </View>
+            )}
+          </TouchableOpacity>
+
           {/* Name + Servings */}
           <View style={styles.card}>
             <Text style={styles.fieldLabel}>Recipe name</Text>
@@ -403,6 +501,71 @@ const styles = StyleSheet.create({
   },
 
   scroll: { padding: Spacing.s, paddingBottom: 140, gap: Spacing.s },
+
+  // Cover photo
+  coverCard: {
+    width: '100%',
+    aspectRatio: 16 / 10,
+    backgroundColor: Colors.surface.secondary,
+    borderRadius: Radius.l,
+    borderWidth: 2,
+    borderColor: '#aad4cd',
+    borderStyle: 'dashed',
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadows.level4,
+  },
+  coverImage: {
+    width: '100%',
+    height: '100%',
+  },
+  coverEmpty: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingHorizontal: Spacing.s,
+  },
+  coverEmptyIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: Colors.surface.tertiary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  coverEmptyText: {
+    fontSize: 15,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.secondary,
+    letterSpacing: -0.3,
+  },
+  coverEmptyHint: {
+    fontSize: 12,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
+    color: Colors.secondary,
+  },
+  coverEditBadge: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadows.level3,
+  },
+  coverOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 
   card: {
     backgroundColor: Colors.surface.secondary,
