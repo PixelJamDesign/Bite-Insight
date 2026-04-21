@@ -33,6 +33,7 @@ import { DailyInsightCard } from '@/components/DailyInsightCard';
 import { useMenu } from '@/lib/menuContext';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { UpsellBanner } from '@/components/UpsellBanner';
+import { PlusBadge } from '@/components/PlusBadge';
 import { FlagReasonSheet } from '@/components/FlagReasonSheet';
 import { LottieLoader } from '@/components/LottieLoader';
 import {
@@ -368,7 +369,14 @@ export default function HomeDashboard() {
 
           <View style={styles.greetingText}>
             <Text style={styles.greeting}>{getGreeting(tc)}</Text>
-            <Text style={styles.name}>{firstName}</Text>
+            <View style={styles.nameRow}>
+              <Text style={styles.name} numberOfLines={1}>{firstName}</Text>
+              {isPlus && (
+                <View style={styles.plusBadgeWrap}>
+                  <PlusBadge />
+                </View>
+              )}
+            </View>
             {((profile?.dietary_preferences ?? []).length > 0 ||
               (profile?.health_conditions ?? []).length > 0 ||
               (profile?.allergies ?? []).length > 0) && (
@@ -676,13 +684,24 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
     lineHeight: 18,
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
   name: {
+    flex: 1,
     fontSize: 30,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
     letterSpacing: -0.6,
     lineHeight: 36,
+  },
+  plusBadgeWrap: {
+    paddingTop: 4,
+    flexShrink: 0,
   },
   tagsRow: {
     flexDirection: 'row',
