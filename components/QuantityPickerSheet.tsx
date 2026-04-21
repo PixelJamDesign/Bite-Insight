@@ -55,12 +55,12 @@ export function QuantityPickerSheet({ visible, value, unit, onClose, onSave }: P
 
   /**
    * When the user switches unit, reset the value to a sensible default:
-   *   - Units / Packs → 1 (you're counting items)
-   *   - Everything else (g, ml, tbsp, tsp, cup) → 100
+   *   - Grams / Millilitres → 100 (weight/volume defaults)
+   *   - Everything else (units, packs, tbsp, tsp, cup) → 1
    */
   function handleUnitChange(nextUnit: QuantityUnit) {
     setLocalUnit(nextUnit);
-    const defaultValue = nextUnit === 'unit' || nextUnit === 'pack' ? 1 : 100;
+    const defaultValue = nextUnit === 'g' || nextUnit === 'ml' ? 100 : 1;
     const nextMeta = QUANTITY_UNITS.find((u) => u.key === nextUnit);
     setLocalValue(defaultValue.toFixed(nextMeta?.precision ?? 0));
   }
