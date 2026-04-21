@@ -3,6 +3,7 @@ export const Colors = {
   primary: '#023432',
   secondary: '#00776f',
   accent: '#3b9586',
+  avocadoSkin: '#002923',
   surface: {
     secondary: '#ffffff',
     tertiary: '#f1f8f7',

@@ -10,6 +10,7 @@ import {
   LayoutAnimation,
   Platform,
   Animated,
+  ActivityIndicator,
 } from 'react-native';
 import { useFadeIn } from '@/lib/useFadeIn';
 import { useFocusFadeIn } from '@/lib/useFocusFadeIn';
@@ -33,7 +34,11 @@ import { DailyInsightCard } from '@/components/DailyInsightCard';
 import { useMenu } from '@/lib/menuContext';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { UpsellBanner } from '@/components/UpsellBanner';
+import { PlusBadge } from '@/components/PlusBadge';
+import { CameraIcon } from '@/components/MenuIcons';
 import { FlagReasonSheet } from '@/components/FlagReasonSheet';
+import { useAvatarPicker } from '@/lib/useAvatarPicker';
+import { uploadAvatar } from '@/lib/supabase';
 import { LottieLoader } from '@/components/LottieLoader';
 import {
   HEALTH_CONDITION_LEGACY_MAP,
@@ -176,7 +181,25 @@ export default function HomeDashboard() {
   const { t } = useTranslation('dashboard');
   const { t: tc } = useTranslation('common');
   const { t: tpo } = useTranslation('profileOptions');
-  const { session, avatarUrl } = useAuth();
+  const { session, avatarUrl, setAvatarUrl } = useAuth();
+  const pickAvatar = useAvatarPicker();
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  async function handleAvatarPick() {
+    if (!session?.user?.id) return;
+    pickAvatar(async (localUri) => {
+      setUploadingAvatar(true);
+      try {
+        const uploaded = await uploadAvatar(session.user.id, localUri);
+        if (uploaded) {
+          setAvatarUrl(uploaded);
+          setAvatarLoadError(false);
+        }
+      } finally {
+        setUploadingAvatar(false);
+      }
+    });
+  }
   const { isPlus } = useSubscription();
   const { menuOpen, menuVisible, openMenu, closeMenu, closeMenuInstant } = useMenu();
   const router = useRouter();
@@ -354,40 +377,103 @@ export default function HomeDashboard() {
 
         {/* ── Greeting + Profile ── */}
         <Animated.View style={[styles.greetingRow, { opacity: fadeGreeting.opacity, transform: [{ translateY: fadeGreeting.translateY }] }]}>
-          <View style={[styles.avatarLarge, focusAnim.showElevation && Shadows.level2]}>
-            {avatarUrl && !avatarLoadError ? (
-              <Image
-                source={{ uri: avatarUrl }}
-                style={styles.avatarImage}
-                onError={() => setAvatarLoadError(true)}
-              />
-            ) : (
-              <Text style={styles.avatarInitials}>{initials}</Text>
-            )}
+          <View style={styles.avatarWrap}>
+            {/* Image taps go to edit-profile */}
+            <TouchableOpacity
+              style={[styles.avatarLarge, focusAnim.showElevation && Shadows.level2]}
+              onPress={() => router.push('/edit-profile' as never)}
+              activeOpacity={0.85}
+              accessibilityRole="button"
+              accessibilityLabel="Edit profile"
+            >
+              {avatarUrl && !avatarLoadError ? (
+                <Image
+                  source={{ uri: avatarUrl }}
+                  style={styles.avatarImage}
+                  onError={() => setAvatarLoadError(true)}
+                />
+              ) : (
+                <Text style={styles.avatarInitials}>{initials}</Text>
+              )}
+            </TouchableOpacity>
+            {/* Camera badge taps trigger the photo picker + upload */}
+            <TouchableOpacity
+              style={styles.avatarEditBadge}
+              onPress={handleAvatarPick}
+              disabled={uploadingAvatar}
+              activeOpacity={0.85}
+              accessibilityRole="button"
+              accessibilityLabel="Change profile photo"
+              hitSlop={{ top: 6, right: 6, bottom: 6, left: 6 }}
+            >
+              {uploadingAvatar ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <CameraIcon color="#fff" size={20} />
+              )}
+            </TouchableOpacity>
           </View>
 
           <View style={styles.greetingText}>
             <Text style={styles.greeting}>{getGreeting(tc)}</Text>
-            <Text style={styles.name}>{firstName}</Text>
+            <View style={styles.nameRow}>
+              <Text style={styles.name} numberOfLines={1}>{firstName}</Text>
+              {isPlus && (
+                <View style={styles.plusBadgeWrap}>
+                  <PlusBadge />
+                </View>
+              )}
+            </View>
             {((profile?.dietary_preferences ?? []).length > 0 ||
               (profile?.health_conditions ?? []).length > 0 ||
-              (profile?.allergies ?? []).length > 0) && (
-              <View style={styles.tagsRow}>
-                {(profile?.dietary_preferences ?? []).map((tag) => (
-                  <DietaryTag key={tag} tag={tag} />
-                ))}
-                {(profile?.health_conditions ?? []).map((condition) => (
-                  <View key={condition} style={styles.genericChip}>
-                    <Text style={styles.genericChipLabel}>{tpo(`healthConditions.${condition}`, { defaultValue: condition })}</Text>
-                  </View>
-                ))}
-                {(profile?.allergies ?? []).map((allergy) => (
-                  <View key={allergy} style={[styles.genericChip, styles.allergyChip]}>
-                    <Text style={styles.genericChipLabel}>{tpo(`allergies.${allergy}`, { defaultValue: allergy })}</Text>
-                  </View>
-                ))}
-              </View>
-            )}
+              (profile?.allergies ?? []).length > 0) && (() => {
+              // Combine all tags in display-priority order (dietary, then conditions, then allergies)
+              // and cap the visible count. Extra tags collapse into a "+N" overflow chip so
+              // the row stays tidy when the profile has lots of selections.
+              const MAX_VISIBLE = 2;
+              const diet = (profile?.dietary_preferences ?? []).map((tag) => ({
+                key: `d:${tag}`, type: 'dietary' as const, value: tag,
+              }));
+              const conds = (profile?.health_conditions ?? []).map((c) => ({
+                key: `h:${c}`, type: 'condition' as const, value: c,
+              }));
+              const algs = (profile?.allergies ?? []).map((a) => ({
+                key: `a:${a}`, type: 'allergy' as const, value: a,
+              }));
+              const all = [...diet, ...conds, ...algs];
+              const visible = all.slice(0, MAX_VISIBLE);
+              const overflow = all.length - visible.length;
+              return (
+                <View style={styles.tagsRow}>
+                  {visible.map((t) => {
+                    if (t.type === 'dietary') {
+                      return <DietaryTag key={t.key} tag={t.value as any} />;
+                    }
+                    if (t.type === 'condition') {
+                      return (
+                        <View key={t.key} style={styles.genericChip}>
+                          <Text style={styles.genericChipLabel}>
+                            {tpo(`healthConditions.${t.value}`, { defaultValue: t.value })}
+                          </Text>
+                        </View>
+                      );
+                    }
+                    return (
+                      <View key={t.key} style={[styles.genericChip, styles.allergyChip]}>
+                        <Text style={styles.genericChipLabel}>
+                          {tpo(`allergies.${t.value}`, { defaultValue: t.value })}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                  {overflow > 0 && (
+                    <View style={styles.overflowChip}>
+                      <Text style={styles.overflowChipLabel}>+{overflow}</Text>
+                    </View>
+                  )}
+                </View>
+              );
+            })()}
           </View>
         </Animated.View>
 
@@ -642,6 +728,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 16,
   },
+  // Outer wrapper — lets the camera badge extend outside the circle.
+  // Size matches the avatar so the badge positions correctly against its edge.
+  avatarWrap: {
+    width: 120,
+    height: 120,
+    position: 'relative',
+  },
   avatarLarge: {
     width: 120,
     height: 120,
@@ -652,6 +745,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
+  },
+  // Camera badge floating on the bottom-right of the avatar. Signals tap-to-edit.
+  avatarEditBadge: {
+    position: 'absolute',
+    right: -4,
+    bottom: -4,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.secondary,
+    borderWidth: 3,
+    borderColor: Colors.stroke.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadows.level2,
   },
   avatarImage: {
     width: '100%',
@@ -676,13 +784,24 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
     lineHeight: 18,
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
   name: {
+    flex: 1,
     fontSize: 30,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
     letterSpacing: -0.6,
     lineHeight: 36,
+  },
+  plusBadgeWrap: {
+    paddingTop: 4,
+    flexShrink: 0,
   },
   tagsRow: {
     flexDirection: 'row',
@@ -699,6 +818,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#B8DFD6',
   },
   genericChipLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.26,
+  },
+  // "+N" overflow pill matches the other tag chips visually.
+  overflowChip: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: '#B8DFD6',
+  },
+  overflowChipLabel: {
     fontSize: 13,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
