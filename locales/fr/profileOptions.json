@@ -18,7 +18,8 @@
     "pcos": "SOPK",
     "ra": "Polyarthrite rhumatoïde",
     "sibo": "SIBO",
-    "uc": "Rectocolite hémorragique"
+    "uc": "Rectocolite hémorragique",
+    "noGallbladder": "Sans vésicule biliaire"
   },
   "allergies": {
     "celery": "Allergie au céleri",

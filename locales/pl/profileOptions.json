@@ -18,7 +18,8 @@
     "pcos": "PCOS",
     "ra": "Reumatoidalne zapalenie stawów",
     "sibo": "SIBO",
-    "uc": "Wrzodziejące zapalenie okrężnicy"
+    "uc": "Wrzodziejące zapalenie okrężnicy",
+    "noGallbladder": "Brak woreczka żółciowego"
   },
   "allergies": {
     "celery": "Alergia na seler",

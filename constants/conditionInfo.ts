@@ -132,6 +132,11 @@ export const CONDITION_INFO: Record<string, ConditionInfoEntry> = {
     description:
       'NAFLD is a build-up of extra fat in the liver that is not caused by alcohol. It is closely tied to obesity, insulin resistance and high sugar intake. Reducing added sugars, refined carbs and saturated fats can help reverse it in its early stages.',
   },
+  noGallbladder: {
+    fullName: 'No Gallbladder (Post-Cholecystectomy)',
+    description:
+      "Without a gallbladder, bile drips continuously into the small intestine instead of releasing in bursts when you eat. That makes large amounts of fat — especially fried foods, high-fat dairy, and fatty meats — hard to digest and often causes bloating, diarrhoea or discomfort. Eating smaller, lower-fat meals and choosing unsaturated fats (like olive oil and omega-3s) is usually far better tolerated.",
+  },
   pcos: {
     fullName: 'Polycystic Ovary Syndrome (PCOS)',
     description:

@@ -35,6 +35,7 @@ export const HEALTH_CONDITION_KEYS = [
   'migraine',
   'ms',
   'nafld',
+  'noGallbladder',
   'pcos',
   'preDiabetes',
   'ra',
@@ -145,6 +146,8 @@ export const HEALTH_CONDITION_LEGACY_MAP: Record<string, HealthConditionKey> = {
   'Hypothyroidism': 'hypothyroidism',
   'Insulin Resistance': 'insulinResistance',
   'NAFLD': 'nafld',
+  'No Gallbladder': 'noGallbladder',
+  'Post-Cholecystectomy': 'noGallbladder',
   'Pre-diabetes': 'preDiabetes',
 };
 

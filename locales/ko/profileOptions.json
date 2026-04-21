@@ -18,7 +18,8 @@
     "pcos": "PCOS",
     "ra": "류머티스성 관절염",
     "sibo": "시보",
-    "uc": "궤양성 대장염"
+    "uc": "궤양성 대장염",
+    "noGallbladder": "담낭 없음"
   },
   "allergies": {
     "celery": "셀러리 알레르기",
