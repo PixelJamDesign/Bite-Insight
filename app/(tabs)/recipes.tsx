@@ -37,10 +37,6 @@ export default function RecipesScreen() {
             <Text style={styles.segActiveText}>My Recipes</Text>
           </View>
           <View style={[styles.segItem, styles.segLocked]}>
-            <Ionicons name="lock-closed" size={10} color={Colors.secondary} />
-            <Text style={styles.segLockedText}>Suggestions</Text>
-          </View>
-          <View style={[styles.segItem, styles.segLocked]}>
             <View style={styles.plusPill}>
               <Text style={styles.plusPillText}>PLUS</Text>
             </View>
