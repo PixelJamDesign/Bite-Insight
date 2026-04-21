@@ -18,7 +18,8 @@
     "pcos": "SOP",
     "ra": "Artrite reumatoide",
     "sibo": "SIBO",
-    "uc": "Colite ulcerativa"
+    "uc": "Colite ulcerativa",
+    "noGallbladder": "Sem vesícula biliar"
   },
   "allergies": {
     "celery": "Alergia ao aipo",

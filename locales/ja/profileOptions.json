@@ -18,7 +18,8 @@
     "pcos": "PCOS",
     "ra": "関節リウマチ",
     "sibo": "シボ",
-    "uc": "潰瘍性大腸炎"
+    "uc": "潰瘍性大腸炎",
+    "noGallbladder": "胆嚢なし"
   },
   "allergies": {
     "celery": "セロリアレルギー",

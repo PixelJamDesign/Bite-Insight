@@ -18,7 +18,8 @@
     "pcos": "PCOS",
     "ra": "Artrite reumatoide",
     "sibo": "SIBO",
-    "uc": "Colite ulcerosa"
+    "uc": "Colite ulcerosa",
+    "noGallbladder": "Senza cistifellea"
   },
   "allergies": {
     "celery": "Allergia al sedano",

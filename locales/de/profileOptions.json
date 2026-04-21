@@ -18,7 +18,8 @@
     "pcos": "PCOS",
     "ra": "Rheumatoide Arthritis",
     "sibo": "SIBO",
-    "uc": "Colitis ulcerosa"
+    "uc": "Colitis ulcerosa",
+    "noGallbladder": "Keine Gallenblase"
   },
   "allergies": {
     "celery": "Sellerie-Allergie",

@@ -1785,7 +1785,47 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // 30. Pre-diabetes
+  // 30. No Gallbladder (post-cholecystectomy)
+  // ═══════════════════════════════════════════════════════════════════════════
+  'No Gallbladder': {
+    limit: [
+      {
+        nutrient: 'Trans Fat',
+        offKey: 'trans-fat_100g',
+        unit: 'g',
+        reason:
+          'Without a gallbladder, bile drips continuously rather than releasing in bursts when you eat. Trans fats are the hardest type of fat to digest in this situation',
+      },
+      {
+        nutrient: 'Cholesterol',
+        offKey: 'cholesterol_100g',
+        unit: 'mg',
+        reason:
+          'Dietary cholesterol adds more work for your bile system and can worsen bile acid malabsorption after gallbladder removal',
+        userConfirmRequired: true,
+      },
+    ],
+    boost: [
+      {
+        nutrient: 'Omega-3',
+        offKey: 'omega-3-fat_100g',
+        unit: 'g',
+        reason:
+          'Unsaturated fats like omega-3 are anti-inflammatory and generally easier to digest than saturated or trans fats',
+      },
+      {
+        nutrient: 'Vitamin D',
+        offKey: 'vitamin-d_100g',
+        unit: 'µg',
+        reason:
+          'Fat-soluble vitamin absorption can be impaired after gallbladder removal. Vitamin D deficiency is notably more common in this group',
+        userConfirmRequired: true,
+      },
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 31. Pre-diabetes
   // ═══════════════════════════════════════════════════════════════════════════
   'Pre-diabetes': {
     limit: [

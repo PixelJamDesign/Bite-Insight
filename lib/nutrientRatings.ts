@@ -186,6 +186,13 @@ export const CONDITION_OVERRIDES: Record<string, Partial<Record<NutrientKey, Par
     saturatedFat:{ low: 1.5, moderate: 5 },
     fat:         { low: 2,   moderate: 10 },
   },
+  noGallbladder: {
+    // Fat is the biggest driver of post-cholecystectomy discomfort. Tighter
+    // than heartDisease because the mechanism is direct digestive failure
+    // (bile doesn't release in a bolus), not long-term cardiovascular risk.
+    fat:         { low: 1.5, moderate: 8 },
+    saturatedFat:{ low: 1,   moderate: 4 },
+  },
   preDiabetes: {
     sugars:   { low: 3,   moderate: 8 },
     carbs:    { low: 5,   moderate: 18 },

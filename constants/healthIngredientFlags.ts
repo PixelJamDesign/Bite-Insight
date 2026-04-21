@@ -338,6 +338,38 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
     ],
   },
 
+  noGallbladder: {
+    keywords: [
+      // Fried / high-fat preparations (hardest without stored bile)
+      'fried', 'deep fried', 'breaded', 'battered', 'crumbed',
+      // Trans / hydrogenated fats
+      'trans fat', 'partially hydrogenated', 'hydrogenated vegetable oil',
+      'hydrogenated fat', 'shortening',
+      // High-fat dairy
+      'cream', 'double cream', 'heavy cream', 'clotted cream',
+      'mascarpone', 'creme fraiche', 'sour cream',
+      'whole milk', 'full-fat milk', 'full fat milk',
+      'butter', 'ghee', 'margarine',
+      'cheddar', 'brie', 'camembert', 'stilton', 'gorgonzola',
+      // Fatty cuts of meat / processed meats
+      'lard', 'beef dripping', 'tallow', 'bacon', 'pork belly',
+      'sausage', 'salami', 'chorizo', 'pepperoni',
+      'duck fat', 'goose fat', 'streaky bacon',
+      // Coconut oil & tropical oils (high saturated fat)
+      'coconut oil', 'coconut cream', 'palm oil', 'palm kernel oil',
+      // Rich desserts
+      'pastry', 'puff pastry', 'shortcrust pastry', 'buttery',
+    ],
+    ingredientIds: [
+      'en:hydrogenated-vegetable-oil', 'en:hydrogenated-fat', 'en:shortening',
+      'en:cream', 'en:double-cream', 'en:heavy-cream',
+      'en:butter', 'en:ghee', 'en:margarine',
+      'en:cheddar', 'en:brie', 'en:camembert',
+      'en:lard', 'en:bacon', 'en:sausage', 'en:salami', 'en:chorizo',
+      'en:coconut-oil', 'en:palm-oil', 'en:palm-kernel-oil',
+    ],
+  },
+
   pcos: {
     keywords: [
       'sugar', 'sucrose', 'glucose', 'glucose syrup', 'fructose',
