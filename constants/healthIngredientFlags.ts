@@ -338,6 +338,59 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
     ],
   },
 
+  pregnancy: {
+    keywords: [
+      // High-mercury fish
+      'shark', 'swordfish', 'marlin', 'king mackerel', 'tilefish',
+      'tuna steak', 'bigeye tuna', 'yellowfin tuna',
+      // Raw / undercooked
+      'raw fish', 'sushi', 'sashimi', 'raw egg', 'raw eggs', 'runny egg',
+      'carpaccio', 'tartare', 'steak tartare', 'beef tartare',
+      'raw milk', 'unpasteurised milk', 'unpasteurized milk',
+      'raw cheese', 'unpasteurised cheese', 'unpasteurized cheese',
+      // Soft / mould-ripened cheeses (unless cooked)
+      'brie', 'camembert', 'roquefort', 'gorgonzola', 'danish blue',
+      "chevre", 'goat cheese',
+      // Pâté + liver
+      'pate', 'pâté', 'liver', 'foie gras',
+      // Deli / cured meats
+      'parma ham', 'prosciutto', 'chorizo', 'salami', 'pepperoni',
+      'deli meat', 'cold cuts',
+      // Alcohol
+      'alcohol', 'wine', 'beer', 'cider', 'spirits', 'vodka', 'gin',
+      'whisky', 'rum', 'liqueur', 'brandy',
+      // Caffeine heavy
+      'energy drink', 'guarana',
+      // Sprouts (salmonella risk)
+      'raw sprouts', 'alfalfa sprouts', 'beansprouts',
+    ],
+    ingredientIds: [
+      'en:shark', 'en:swordfish', 'en:marlin', 'en:king-mackerel',
+      'en:raw-fish', 'en:sushi', 'en:raw-egg',
+      'en:raw-milk', 'en:unpasteurised-milk',
+      'en:brie', 'en:camembert', 'en:roquefort', 'en:gorgonzola',
+      'en:pate', 'en:liver', 'en:foie-gras',
+      'en:parma-ham', 'en:prosciutto', 'en:salami', 'en:chorizo',
+      'en:alcohol', 'en:wine', 'en:beer',
+    ],
+  },
+
+  breastfeeding: {
+    keywords: [
+      // Alcohol transfers into breast milk
+      'alcohol', 'wine', 'beer', 'spirits', 'vodka', 'gin', 'whisky',
+      'rum', 'liqueur', 'brandy',
+      // High mercury still relevant
+      'shark', 'swordfish', 'marlin', 'king mackerel',
+      // Large amounts of caffeine
+      'energy drink', 'guarana',
+    ],
+    ingredientIds: [
+      'en:alcohol', 'en:wine', 'en:beer',
+      'en:shark', 'en:swordfish', 'en:marlin',
+    ],
+  },
+
   noGallbladder: {
     keywords: [
       // Fried / high-fat preparations (hardest without stored bile)

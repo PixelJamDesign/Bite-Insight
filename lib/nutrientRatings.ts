@@ -193,6 +193,22 @@ export const CONDITION_OVERRIDES: Record<string, Partial<Record<NutrientKey, Par
     fat:         { low: 1.5, moderate: 8 },
     saturatedFat:{ low: 1,   moderate: 4 },
   },
+  pregnancy: {
+    // Tighter on added sugars and salt, encourage higher fibre to counter
+    // pregnancy-related constipation.
+    sugars:      { low: 3,   moderate: 10 },
+    saturatedFat:{ low: 1.5, moderate: 5 },
+    salt:        { low: 0.2, moderate: 1.0 },
+    fiber:       { low: 4,   moderate: 8, inverted: true },
+  },
+  // Applied when pregnancy_status = 'breastfeeding'. Reads like pregnancy
+  // but slightly more permissive on caffeine-adjacent intake via salt.
+  breastfeeding: {
+    sugars:      { low: 3,   moderate: 10 },
+    saturatedFat:{ low: 1.5, moderate: 5 },
+    salt:        { low: 0.2, moderate: 1.2 },
+    fiber:       { low: 4,   moderate: 8, inverted: true },
+  },
   preDiabetes: {
     sugars:   { low: 3,   moderate: 8 },
     carbs:    { low: 5,   moderate: 18 },

@@ -19,7 +19,8 @@
     "ra": "Reumatoïde artritis",
     "sibo": "SIBO",
     "uc": "Colitis ulcerosa",
-    "noGallbladder": "Geen galblaas"
+    "noGallbladder": "Geen galblaas",
+    "pregnancy": "Zwangerschap"
   },
   "allergies": {
     "celery": "Selderijallergie",
@@ -51,7 +52,6 @@
     "paleo": "Paleo",
     "plantBased": "Plantaardig",
     "postBariatric": "Post-bariatrische chirurgie",
-    "pregnancy": "Zwangerschapsveilig dieet",
     "sustainable": "Duurzaam / Eco",
     "weightLoss": "Gewichtsverlies",
     "whole30": "Geheel30",

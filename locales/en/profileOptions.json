@@ -30,7 +30,8 @@
     "preDiabetes": "Pre-diabetes",
     "ra": "Rheumatoid Arthritis",
     "sibo": "SIBO",
-    "uc": "Ulcerative Colitis"
+    "uc": "Ulcerative Colitis",
+    "pregnancy": "Pregnancy"
   },
   "allergies": {
     "celery": "Celery Allergy",
@@ -65,7 +66,6 @@
     "paleo": "Paleo",
     "plantBased": "Plant-Based",
     "postBariatric": "Post-Bariatric Surgery",
-    "pregnancy": "Pregnancy-safe Diet",
     "sustainable": "Sustainable / Eco",
     "weightLoss": "Weight Loss",
     "whole30": "Whole30",

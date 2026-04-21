@@ -19,7 +19,8 @@
     "ra": "类风湿关节炎",
     "sibo": "西博",
     "uc": "溃疡性结肠炎",
-    "noGallbladder": "无胆囊"
+    "noGallbladder": "无胆囊",
+    "pregnancy": "怀孕"
   },
   "allergies": {
     "celery": "芹菜过敏",
@@ -51,7 +52,6 @@
     "paleo": "古",
     "plantBased": "植物性",
     "postBariatric": "减肥手术后",
-    "pregnancy": "怀孕期安全饮食",
     "sustainable": "可持续/生态",
     "weightLoss": "减肥",
     "whole30": "整体30",

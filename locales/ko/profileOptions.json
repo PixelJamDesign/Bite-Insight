@@ -19,7 +19,8 @@
     "ra": "류머티스성 관절염",
     "sibo": "시보",
     "uc": "궤양성 대장염",
-    "noGallbladder": "담낭 없음"
+    "noGallbladder": "담낭 없음",
+    "pregnancy": "임신"
   },
   "allergies": {
     "celery": "셀러리 알레르기",
@@ -51,7 +52,6 @@
     "paleo": "팔레오",
     "plantBased": "식물 기반",
     "postBariatric": "비만 수술 후 수술",
-    "pregnancy": "임신에 안전한 식단",
     "sustainable": "지속 가능/친환경",
     "weightLoss": "체중 감량",
     "whole30": "전체30",

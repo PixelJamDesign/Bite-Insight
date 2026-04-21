@@ -19,7 +19,8 @@
     "ra": "Artrite reumatoide",
     "sibo": "SIBO",
     "uc": "Colite ulcerativa",
-    "noGallbladder": "Sem vesícula biliar"
+    "noGallbladder": "Sem vesícula biliar",
+    "pregnancy": "Gravidez"
   },
   "allergies": {
     "celery": "Alergia ao aipo",
@@ -51,7 +52,6 @@
     "paleo": "Paleo",
     "plantBased": "Baseado em plantas",
     "postBariatric": "Cirurgia Pós-Bariátrica",
-    "pregnancy": "Dieta segura para gravidez",
     "sustainable": "Sustentável / Ecológico",
     "weightLoss": "Perda de peso",
     "whole30": "Inteiro30",
