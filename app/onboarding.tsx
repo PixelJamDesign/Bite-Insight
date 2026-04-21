@@ -47,9 +47,14 @@ import { ConditionInfoSheet } from '@/components/ConditionInfoSheet';
 import { SuggestionSheet, type SuggestionCategory } from '@/components/SuggestionSheet';
 import { CONDITION_INFO } from '@/constants/conditionInfo';
 import Logo from '../assets/images/logo.svg';
+import { IbsSubtypePicker } from '@/components/IbsSubtypePicker';
+import { PregnancyStep } from '@/components/PregnancyStep';
+import { ConflictReviewStep } from '@/components/ConflictReviewStep';
+import { detectProfileConflicts } from '@/lib/profileConflicts';
+import type { IbsSubtype, PregnancyStatus } from '@/lib/types';
 
 // ── Step types ────────────────────────────────────────────────────────────────
-type StepKey = 'about' | 'health' | 'nutrients' | 'allergies' | 'dietary';
+type StepKey = 'about' | 'health' | 'ibsSubtype' | 'pregnancy' | 'nutrients' | 'allergies' | 'dietary' | 'conflicts';
 
 // ── Condition key helpers ──────────────────────────────────────────────────
 // CONDITION_NUTRIENT_MAP uses legacy English keys ("Diabetes") while the
@@ -178,6 +183,9 @@ export default function OnboardingScreen() {
   const [healthConditions, setHealthConditions] = useState<string[]>([]);
   const [allergies, setAllergies] = useState<string[]>([]);
   const [dietaryPrefs, setDietaryPrefs] = useState<string[]>([]);
+  const [ibsSubtype, setIbsSubtype] = useState<IbsSubtype | null>(null);
+  const [pregnancyStatus, setPregnancyStatus] = useState<PregnancyStatus | null>(null);
+  const [pregnancyDueDate, setPregnancyDueDate] = useState<string | null>(null);
 
   // ── Load existing profile data (for resume after app closure) ──────────────
   useEffect(() => {
@@ -244,14 +252,34 @@ export default function OnboardingScreen() {
       }));
   }
 
+  const hasIbs = healthConditions.includes('ibs');
+  const hasPregnancy = healthConditions.includes('pregnancy');
+
+  const conflictResult = useMemo(
+    () =>
+      detectProfileConflicts({
+        healthConditions,
+        allergies,
+        dietaryPreferences: dietaryPrefs,
+        ibsSubtype,
+        pregnancyStatus,
+      }),
+    [healthConditions, allergies, dietaryPrefs, ibsSubtype, pregnancyStatus],
+  );
+  const showConflictStep =
+    conflictResult.hardConflicts.length > 0 || conflictResult.redundancies.length > 0;
+
   // ── Dynamic step sequence ──────────────────────────────────────────────────
   const stepSequence: StepKey[] = useMemo(() => [
     'about',
     'health',
+    ...(hasIbs ? ['ibsSubtype' as StepKey] : []),
+    ...(hasPregnancy ? ['pregnancy' as StepKey] : []),
     ...(showNutrientStep ? ['nutrients' as StepKey] : []),
     'allergies',
     'dietary',
-  ], [showNutrientStep]);
+    ...(showConflictStep ? ['conflicts' as StepKey] : []),
+  ], [hasIbs, hasPregnancy, showNutrientStep, showConflictStep]);
 
   const currentStepKey = stepSequence[pos] ?? 'about';
   const isLastStep = pos === stepSequence.length - 1;
@@ -325,7 +353,9 @@ export default function OnboardingScreen() {
 
   // Step progress animation (7 dots max to support all possible steps)
   const stepAnim    = useRef(new Animated.Value(1)).current;
-  const dotPops     = useRef([0, 1, 2, 3, 4, 5, 6].map(() => new Animated.Value(1))).current;
+  // Max possible steps: about, health, ibsSubtype, pregnancy, nutrients,
+  // allergies, dietary, conflicts = 8.
+  const dotPops     = useRef(Array.from({ length: 8 }, () => new Animated.Value(1))).current;
   const prevStepRef = useRef(1);
 
   // Animate step tracker on step change
@@ -485,8 +515,29 @@ export default function OnboardingScreen() {
     if (currentStepKey === 'about') {
       await saveAboutData();
     }
+    if (currentStepKey === 'ibsSubtype' && !ibsSubtype) {
+      Alert.alert('Pick an option', 'Please pick the IBS subtype that fits best, or choose "I\'m not sure".');
+      return;
+    }
+    if (currentStepKey === 'pregnancy') {
+      if (!pregnancyStatus) {
+        Alert.alert('Pick an option', "Please tell us whether you're currently pregnant or breastfeeding.");
+        return;
+      }
+      if (!pregnancyDueDate) {
+        Alert.alert(
+          'Date needed',
+          pregnancyStatus === 'pregnant' ? 'Please pick your due date.' : "Please pick your baby's birth date.",
+        );
+        return;
+      }
+    }
     animateExit('forward', () => setPos(p => p + 1));
   }
+
+  // Block save while hard conflicts remain unresolved
+  const saveBlocked =
+    currentStepKey === 'conflicts' && conflictResult.hardConflicts.length > 0;
 
   function handleBack() {
     if (currentStepKey === 'about') {
@@ -502,13 +553,18 @@ export default function OnboardingScreen() {
     setSaving(true);
     const userId = session?.user?.id;
     if (userId) {
+      // Apply Tier 2 (redundancy) auto-resolutions before saving
+      const resolved = conflictResult.resolved;
       const { error } = await supabase
         .from('profiles')
         .update({
-          health_conditions: healthConditions,
-          allergies,
-          dietary_preferences: dietaryPrefs,
+          health_conditions: resolved.healthConditions,
+          allergies: resolved.allergies,
+          dietary_preferences: resolved.dietaryPreferences,
           nutrient_watchlist: buildFinalWatchlist(),
+          ibs_subtype: hasIbs ? ibsSubtype : null,
+          pregnancy_status: hasPregnancy ? pregnancyStatus : null,
+          pregnancy_due_date: hasPregnancy ? pregnancyDueDate : null,
         })
         .eq('id', userId);
       if (error) {
@@ -945,6 +1001,38 @@ export default function OnboardingScreen() {
               {currentStepKey === 'dietary' && renderChips(DIETARY_PREFERENCE_KEYS, 'dietaryPreferences', dietaryPrefs, key =>
                 setDietaryPrefs(prev => toggle(prev, key))
               )}
+
+              {/* IBS Subtype (conditional follow-up to Health) */}
+              {currentStepKey === 'ibsSubtype' && (
+                <IbsSubtypePicker value={ibsSubtype} onChange={setIbsSubtype} />
+              )}
+
+              {/* Pregnancy (conditional follow-up to Health) */}
+              {currentStepKey === 'pregnancy' && (
+                <PregnancyStep
+                  status={pregnancyStatus}
+                  dueDate={pregnancyDueDate}
+                  onChange={(s, d) => { setPregnancyStatus(s); setPregnancyDueDate(d); }}
+                />
+              )}
+
+              {/* Conflict Review (only when conflicts detected) */}
+              {currentStepKey === 'conflicts' && (
+                <ConflictReviewStep
+                  hardConflicts={conflictResult.hardConflicts}
+                  redundancies={conflictResult.redundancies}
+                  onResolve={(_id, category, key) => {
+                    if (category === 'health') setHealthConditions(prev => prev.filter(k => k !== key));
+                    if (category === 'allergy') setAllergies(prev => prev.filter(k => k !== key));
+                    if (category === 'dietary') setDietaryPrefs(prev => prev.filter(k => k !== key));
+                  }}
+                  labelFor={(category, key) => {
+                    if (category === 'health') return tpo(`healthConditions.${key}` as any) || key;
+                    if (category === 'allergy') return tpo(`allergies.${key}` as any) || key;
+                    return tpo(`dietaryPreferences.${key}` as any) || key;
+                  }}
+                />
+              )}
             </View>
           )}
 
@@ -969,7 +1057,7 @@ export default function OnboardingScreen() {
                 onSecondaryPress={handleBack}
                 onPrimaryPress={isLastStep ? handleFinish : handleNext}
                 primaryLoading={saving}
-                primaryDisabled={saving}
+                primaryDisabled={saving || saveBlocked}
               />
             </View>
           </View>

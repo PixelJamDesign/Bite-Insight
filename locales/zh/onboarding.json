@@ -6,7 +6,10 @@
     "health": "健康状况",
     "nutrients": "营养素观察清单",
     "allergies": "过敏",
-    "dietary": "饮食偏好"
+    "dietary": "饮食偏好",
+    "ibsSubtype": "IBS类型",
+    "pregnancy": "怀孕",
+    "conflicts": "检查"
   },
   "question": {
     "healthCondition": "您有健康状况吗？",

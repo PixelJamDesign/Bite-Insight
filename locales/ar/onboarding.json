@@ -6,7 +6,10 @@
     "health": "الظروف الصحية",
     "nutrients": "قائمة مراقبة المغذيات",
     "allergies": "الحساسية",
-    "dietary": "التفضيلات الغذائية"
+    "dietary": "التفضيلات الغذائية",
+    "ibsSubtype": "نوع القولون العصبي",
+    "pregnancy": "الحمل",
+    "conflicts": "مراجعة"
   },
   "question": {
     "healthCondition": "هل لديك أي حالة صحية؟",

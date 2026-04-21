@@ -6,7 +6,10 @@
     "health": "Warunki zdrowotne",
     "nutrients": "Lista obserwowanych składników odżywczych",
     "allergies": "Alergie",
-    "dietary": "Preferencje dietetyczne"
+    "dietary": "Preferencje dietetyczne",
+    "ibsSubtype": "Typ IBS",
+    "pregnancy": "Ciąża",
+    "conflicts": "Sprawdź"
   },
   "question": {
     "healthCondition": "Czy masz jakieś problemy zdrowotne?",

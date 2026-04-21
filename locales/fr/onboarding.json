@@ -6,7 +6,10 @@
     "health": "Problèmes de santé",
     "nutrients": "Liste de surveillance des nutriments",
     "allergies": "Allergies",
-    "dietary": "Préférences alimentaires"
+    "dietary": "Préférences alimentaires",
+    "ibsSubtype": "Type de SII",
+    "pregnancy": "Grossesse",
+    "conflicts": "Vérifier"
   },
   "question": {
     "healthCondition": "Avez-vous un problème de santé ?",
