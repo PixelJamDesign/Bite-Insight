@@ -71,7 +71,8 @@
     "whole30": "Whole30",
     "mediterraneanDiet": "Mediterranean Diet",
     "vegan": "Vegan",
-    "vegetarian": "Vegetarian"
+    "vegetarian": "Vegetarian",
+    "lowFiber": "Low Fibre"
   },
   "dietaryTags": {
     "diabetic": "Diabetic",

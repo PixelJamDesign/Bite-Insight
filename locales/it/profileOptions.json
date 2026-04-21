@@ -56,7 +56,8 @@
     "weightLoss": "Perdita di peso",
     "whole30": "Intero30",
     "vegan": "Vegano",
-    "vegetarian": "Vegetariano"
+    "vegetarian": "Vegetariano",
+    "lowFiber": "Povero di fibre"
   },
   "dietaryTags": {
     "diabetic": "Diabetico",

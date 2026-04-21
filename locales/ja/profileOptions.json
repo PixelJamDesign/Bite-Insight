@@ -56,7 +56,8 @@
     "weightLoss": "減量",
     "whole30": "全体30",
     "vegan": "ビーガン",
-    "vegetarian": "ベジタリアン"
+    "vegetarian": "ベジタリアン",
+    "lowFiber": "低繊維質"
   },
   "dietaryTags": {
     "diabetic": "糖尿病患者",

@@ -56,7 +56,8 @@
     "weightLoss": "Gewichtsverlust",
     "whole30": "Ganze30",
     "vegan": "Vegan",
-    "vegetarian": "Vegetarier"
+    "vegetarian": "Vegetarier",
+    "lowFiber": "Ballaststoffarm"
   },
   "dietaryTags": {
     "diabetic": "Diabetiker",
