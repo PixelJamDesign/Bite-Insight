@@ -186,6 +186,29 @@ export const CONDITION_OVERRIDES: Record<string, Partial<Record<NutrientKey, Par
     saturatedFat:{ low: 1.5, moderate: 5 },
     fat:         { low: 2,   moderate: 10 },
   },
+  noGallbladder: {
+    // Fat is the biggest driver of post-cholecystectomy discomfort. Tighter
+    // than heartDisease because the mechanism is direct digestive failure
+    // (bile doesn't release in a bolus), not long-term cardiovascular risk.
+    fat:         { low: 1.5, moderate: 8 },
+    saturatedFat:{ low: 1,   moderate: 4 },
+  },
+  pregnancy: {
+    // Tighter on added sugars and salt, encourage higher fibre to counter
+    // pregnancy-related constipation.
+    sugars:      { low: 3,   moderate: 10 },
+    saturatedFat:{ low: 1.5, moderate: 5 },
+    salt:        { low: 0.2, moderate: 1.0 },
+    fiber:       { low: 4,   moderate: 8, inverted: true },
+  },
+  // Applied when pregnancy_status = 'breastfeeding'. Reads like pregnancy
+  // but slightly more permissive on caffeine-adjacent intake via salt.
+  breastfeeding: {
+    sugars:      { low: 3,   moderate: 10 },
+    saturatedFat:{ low: 1.5, moderate: 5 },
+    salt:        { low: 0.2, moderate: 1.2 },
+    fiber:       { low: 4,   moderate: 8, inverted: true },
+  },
   preDiabetes: {
     sugars:   { low: 3,   moderate: 8 },
     carbs:    { low: 5,   moderate: 18 },
@@ -226,6 +249,12 @@ export const CONDITION_OVERRIDES: Record<string, Partial<Record<NutrientKey, Par
   },
 
   // ── Dietary preferences ──
+  lowFiber: {
+    // Flip the fibre scale: more fibre = worse rating (not inverted).
+    // Default fibre was inverted (higher=better); here we want lower=better.
+    // Values per 100g.
+    fiber: { low: 1.5, moderate: 3 },
+  },
   keto: {
     carbs:    { low: 2,  moderate: 8 },
     netCarbs: { low: 2,  moderate: 8 },

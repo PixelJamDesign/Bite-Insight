@@ -18,7 +18,9 @@
     "pcos": "PCOS",
     "ra": "Rheumatoide Arthritis",
     "sibo": "SIBO",
-    "uc": "Colitis ulcerosa"
+    "uc": "Colitis ulcerosa",
+    "noGallbladder": "Keine Gallenblase",
+    "pregnancy": "Schwangerschaft"
   },
   "allergies": {
     "celery": "Sellerie-Allergie",
@@ -50,12 +52,12 @@
     "paleo": "Paläo",
     "plantBased": "Auf pflanzlicher Basis",
     "postBariatric": "Postbariatrische Chirurgie",
-    "pregnancy": "Schwangerschaftssichere Ernährung",
     "sustainable": "Nachhaltig / Öko",
     "weightLoss": "Gewichtsverlust",
     "whole30": "Ganze30",
     "vegan": "Vegan",
-    "vegetarian": "Vegetarier"
+    "vegetarian": "Vegetarier",
+    "lowFiber": "Ballaststoffarm"
   },
   "dietaryTags": {
     "diabetic": "Diabetiker",

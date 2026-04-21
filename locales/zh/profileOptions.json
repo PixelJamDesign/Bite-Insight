@@ -18,7 +18,9 @@
     "pcos": "多囊卵巢综合症",
     "ra": "类风湿关节炎",
     "sibo": "西博",
-    "uc": "溃疡性结肠炎"
+    "uc": "溃疡性结肠炎",
+    "noGallbladder": "无胆囊",
+    "pregnancy": "怀孕"
   },
   "allergies": {
     "celery": "芹菜过敏",
@@ -50,12 +52,12 @@
     "paleo": "古",
     "plantBased": "植物性",
     "postBariatric": "减肥手术后",
-    "pregnancy": "怀孕期安全饮食",
     "sustainable": "可持续/生态",
     "weightLoss": "减肥",
     "whole30": "整体30",
     "vegan": "素食主义者",
-    "vegetarian": "素食"
+    "vegetarian": "素食",
+    "lowFiber": "低纤维"
   },
   "dietaryTags": {
     "diabetic": "糖尿病患者",

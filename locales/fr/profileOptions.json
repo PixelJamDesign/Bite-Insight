@@ -18,7 +18,9 @@
     "pcos": "SOPK",
     "ra": "Polyarthrite rhumatoïde",
     "sibo": "SIBO",
-    "uc": "Rectocolite hémorragique"
+    "uc": "Rectocolite hémorragique",
+    "noGallbladder": "Sans vésicule biliaire",
+    "pregnancy": "Grossesse"
   },
   "allergies": {
     "celery": "Allergie au céleri",
@@ -50,12 +52,12 @@
     "paleo": "Paléo",
     "plantBased": "À base de plantes",
     "postBariatric": "Chirurgie post-bariatrique",
-    "pregnancy": "Régime sans danger pour la grossesse",
     "sustainable": "Durable / Écologique",
     "weightLoss": "Perte de poids",
     "whole30": "Entier30",
     "vegan": "Végétalien",
-    "vegetarian": "Végétarien"
+    "vegetarian": "Végétarien",
+    "lowFiber": "Pauvre en fibres"
   },
   "dietaryTags": {
     "diabetic": "Diabétique",

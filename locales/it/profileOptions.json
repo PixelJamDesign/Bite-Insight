@@ -18,7 +18,9 @@
     "pcos": "PCOS",
     "ra": "Artrite reumatoide",
     "sibo": "SIBO",
-    "uc": "Colite ulcerosa"
+    "uc": "Colite ulcerosa",
+    "noGallbladder": "Senza cistifellea",
+    "pregnancy": "Gravidanza"
   },
   "allergies": {
     "celery": "Allergia al sedano",
@@ -50,12 +52,12 @@
     "paleo": "Paleo",
     "plantBased": "A base vegetale",
     "postBariatric": "Chirurgia post-bariatrica",
-    "pregnancy": "Dieta sicura per la gravidanza",
     "sustainable": "Sostenibile/Eco",
     "weightLoss": "Perdita di peso",
     "whole30": "Intero30",
     "vegan": "Vegano",
-    "vegetarian": "Vegetariano"
+    "vegetarian": "Vegetariano",
+    "lowFiber": "Povero di fibre"
   },
   "dietaryTags": {
     "diabetic": "Diabetico",

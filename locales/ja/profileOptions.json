@@ -18,7 +18,9 @@
     "pcos": "PCOS",
     "ra": "関節リウマチ",
     "sibo": "シボ",
-    "uc": "潰瘍性大腸炎"
+    "uc": "潰瘍性大腸炎",
+    "noGallbladder": "胆嚢なし",
+    "pregnancy": "妊娠中"
   },
   "allergies": {
     "celery": "セロリアレルギー",
@@ -50,12 +52,12 @@
     "paleo": "パレオ",
     "plantBased": "植物由来",
     "postBariatric": "肥満手術後",
-    "pregnancy": "妊娠しても安全な食事",
     "sustainable": "持続可能/エコ",
     "weightLoss": "減量",
     "whole30": "全体30",
     "vegan": "ビーガン",
-    "vegetarian": "ベジタリアン"
+    "vegetarian": "ベジタリアン",
+    "lowFiber": "低繊維質"
   },
   "dietaryTags": {
     "diabetic": "糖尿病患者",

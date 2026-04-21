@@ -6,7 +6,10 @@
     "health": "Condições de saúde",
     "nutrients": "Lista de nutrientes",
     "allergies": "Alergias",
-    "dietary": "Preferências Dietéticas"
+    "dietary": "Preferências Dietéticas",
+    "ibsSubtype": "Tipo de SII",
+    "pregnancy": "Gravidez",
+    "conflicts": "Rever"
   },
   "question": {
     "healthCondition": "Você tem algum problema de saúde?",

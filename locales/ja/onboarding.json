@@ -6,7 +6,10 @@
     "health": "健康状態",
     "nutrients": "栄養素ウォッチリスト",
     "allergies": "アレルギー",
-    "dietary": "食事の好み"
+    "dietary": "食事の好み",
+    "ibsSubtype": "IBSのタイプ",
+    "pregnancy": "妊娠",
+    "conflicts": "確認"
   },
   "question": {
     "healthCondition": "健康状態はありますか？",

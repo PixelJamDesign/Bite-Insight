@@ -24,6 +24,9 @@ export type OnboardingStep =
   | 'app_tour'
   | 'complete';
 
+export type IbsSubtype = 'C' | 'D' | 'M' | 'unsure';
+export type PregnancyStatus = 'pregnant' | 'breastfeeding';
+
 export interface UserProfile {
   id: string;
   email: string;
@@ -48,6 +51,12 @@ export interface UserProfile {
     product_updates: boolean;
   } | null;
   onboarding_step: OnboardingStep;
+  // IBS subtype (only meaningful when health_conditions contains 'ibs')
+  ibs_subtype: IbsSubtype | null;
+  // Pregnancy tracking
+  pregnancy_due_date: string | null;
+  pregnancy_status: PregnancyStatus | null;
+  pregnancy_prompt_dismissed_at: string | null;
   created_at: string;
 }
 
@@ -97,6 +106,9 @@ export interface FamilyProfile {
   health_conditions: string[];
   allergies: string[];
   nutrient_watchlist: NutrientWatchlistEntry[];
+  ibs_subtype: IbsSubtype | null;
+  pregnancy_due_date: string | null;
+  pregnancy_status: PregnancyStatus | null;
   created_at: string;
   updated_at: string;
 }

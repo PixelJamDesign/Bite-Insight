@@ -18,7 +18,9 @@
     "pcos": "PCOS",
     "ra": "Reumatoidalne zapalenie stawów",
     "sibo": "SIBO",
-    "uc": "Wrzodziejące zapalenie okrężnicy"
+    "uc": "Wrzodziejące zapalenie okrężnicy",
+    "noGallbladder": "Brak woreczka żółciowego",
+    "pregnancy": "Ciąża"
   },
   "allergies": {
     "celery": "Alergia na seler",
@@ -50,12 +52,12 @@
     "paleo": "Paleo",
     "plantBased": "Na bazie roślin",
     "postBariatric": "Po operacji bariatrycznej",
-    "pregnancy": "Dieta bezpieczna w ciąży",
     "sustainable": "Zrównoważony / Eko",
     "weightLoss": "Utrata wagi",
     "whole30": "Całość 30",
     "vegan": "Wegańskie",
-    "vegetarian": "Wegetariański"
+    "vegetarian": "Wegetariański",
+    "lowFiber": "Niska zawartość błonnika"
   },
   "dietaryTags": {
     "diabetic": "Cukrzycowy",

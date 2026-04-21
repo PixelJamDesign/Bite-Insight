@@ -132,6 +132,16 @@ export const CONDITION_INFO: Record<string, ConditionInfoEntry> = {
     description:
       'NAFLD is a build-up of extra fat in the liver that is not caused by alcohol. It is closely tied to obesity, insulin resistance and high sugar intake. Reducing added sugars, refined carbs and saturated fats can help reverse it in its early stages.',
   },
+  noGallbladder: {
+    fullName: 'No Gallbladder',
+    description:
+      "Without a gallbladder, bile drips into the small intestine continuously instead of releasing in bursts when you eat. That makes large amounts of fat hard to digest, especially fried foods, high-fat dairy and fatty meats. You might notice bloating, diarrhoea or general discomfort after rich meals. Eating smaller, lower-fat meals and choosing unsaturated fats like olive oil and omega-3s is usually much better tolerated.",
+  },
+  pregnancy: {
+    fullName: 'Pregnancy',
+    description:
+      "Pregnancy shifts your nutritional needs quite a bit. Folate, iron, calcium, iodine, choline and omega-3s all become more important, and some everyday foods like high mercury fish, unpasteurised dairy, pâté and deli meats are best avoided. With this turned on, we'll watch for those and suggest alternatives where we can. We'll also check in with you around your due date to see how things have progressed.",
+  },
   pcos: {
     fullName: 'Polycystic Ovary Syndrome (PCOS)',
     description:
@@ -291,6 +301,11 @@ export const CONDITION_INFO: Record<string, ConditionInfoEntry> = {
     description:
       'A ketogenic or low-carb diet significantly reduces carbohydrate intake and replaces it with fat, pushing the body into a state called ketosis. This preference will flag high-carb products and highlight those that fit within a low-carb framework.',
   },
+  lowFiber: {
+    fullName: 'Low Fibre',
+    description:
+      "A low fibre diet is usually something a doctor recommends rather than a lifestyle choice. It's often used during an IBS or IBD flare, after bowel surgery, during chemotherapy, or to prepare for a colonoscopy. With this turned on, high fibre foods like wholegrains, beans, nuts, seeds and the skins of raw fruit and veg will be flagged. Talk to your healthcare provider if you're not sure whether this is right for you.",
+  },
   highProtein: {
     fullName: 'High-Protein / Fitness',
     description:
@@ -310,11 +325,6 @@ export const CONDITION_INFO: Record<string, ConditionInfoEntry> = {
     fullName: 'Post-Bariatric Surgery',
     description:
       'After bariatric (weight loss) surgery, the stomach is much smaller and nutrient absorption changes. Meals need to be small, high in protein and low in sugar. This preference helps identify suitable products and flags those that could cause dumping syndrome or discomfort.',
-  },
-  pregnancy: {
-    fullName: 'Pregnancy-Safe Diet',
-    description:
-      'During pregnancy, certain foods carry higher risks (soft cheeses, raw fish, high-mercury seafood, liver, certain deli meats). This preference helps flag ingredients to avoid and highlights foods rich in folate, iron, calcium and other key nutrients for a healthy pregnancy.',
   },
   sustainable: {
     fullName: 'Sustainable / Eco',

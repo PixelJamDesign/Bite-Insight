@@ -25,11 +25,13 @@
     "migraine": "Migraine / Headaches",
     "ms": "Multiple Sclerosis",
     "nafld": "NAFLD",
+    "noGallbladder": "No Gallbladder",
     "pcos": "PCOS",
     "preDiabetes": "Pre-diabetes",
     "ra": "Rheumatoid Arthritis",
     "sibo": "SIBO",
-    "uc": "Ulcerative Colitis"
+    "uc": "Ulcerative Colitis",
+    "pregnancy": "Pregnancy"
   },
   "allergies": {
     "celery": "Celery Allergy",
@@ -64,13 +66,13 @@
     "paleo": "Paleo",
     "plantBased": "Plant-Based",
     "postBariatric": "Post-Bariatric Surgery",
-    "pregnancy": "Pregnancy-safe Diet",
     "sustainable": "Sustainable / Eco",
     "weightLoss": "Weight Loss",
     "whole30": "Whole30",
     "mediterraneanDiet": "Mediterranean Diet",
     "vegan": "Vegan",
-    "vegetarian": "Vegetarian"
+    "vegetarian": "Vegetarian",
+    "lowFiber": "Low Fibre"
   },
   "dietaryTags": {
     "diabetic": "Diabetic",

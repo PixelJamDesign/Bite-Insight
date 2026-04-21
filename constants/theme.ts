@@ -3,6 +3,7 @@ export const Colors = {
   primary: '#023432',
   secondary: '#00776f',
   accent: '#3b9586',
+  avocadoSkin: '#002923',
   surface: {
     secondary: '#ffffff',
     tertiary: '#f1f8f7',
@@ -22,6 +23,7 @@ export const Colors = {
     pescatarian: '#b3e5fc',
     kosher: '#d4b8e0',
     halal: '#8bc9a3',
+    lowFiber: '#ffe8c4',
   },
   stroke: {
     primary: '#ffffff',

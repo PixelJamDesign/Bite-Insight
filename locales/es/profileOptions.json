@@ -18,7 +18,9 @@
     "pcos": "SOP",
     "ra": "Artritis reumatoide",
     "sibo": "SIBO",
-    "uc": "Colitis ulcerosa"
+    "uc": "Colitis ulcerosa",
+    "noGallbladder": "Sin vesícula biliar",
+    "pregnancy": "Embarazo"
   },
   "allergies": {
     "celery": "Alergia al apio",
@@ -50,12 +52,12 @@
     "paleo": "Paleo",
     "plantBased": "A base de plantas",
     "postBariatric": "Cirugía posbariátrica",
-    "pregnancy": "Dieta segura para el embarazo",
     "sustainable": "Sostenible / Ecológico",
     "weightLoss": "Pérdida de peso",
     "whole30": "entero30",
     "vegan": "vegano",
-    "vegetarian": "Vegetariano"
+    "vegetarian": "Vegetariano",
+    "lowFiber": "Bajo en fibra"
   },
   "dietaryTags": {
     "diabetic": "Diabético",

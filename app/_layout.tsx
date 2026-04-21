@@ -27,6 +27,7 @@ import { JourneyProvider, useJourney } from '@/lib/journeyContext';
 import type { OnboardingStep } from '@/lib/types';
 import { UpsellSheet } from '@/components/UpsellSheet';
 import { MyPlanSheet } from '@/components/MyPlanSheet';
+import { PregnancyStatusPrompt, shouldShowPregnancyPrompt } from '@/components/PregnancyStatusPrompt';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { prefetchFoodImages } from '@/components/FoodCarousel';
 
@@ -276,8 +277,37 @@ function RootLayoutInner() {
       </View>
       <UpsellSheet />
       <MyPlanSheet />
+      <PregnancyPromptGate />
     </>
   );
+}
+
+// ── Pregnancy auto-prompt gate ──────────────────────────────────────────────
+// Checks the profile once per session (after journey complete) and surfaces
+// the post-due-date prompt if the user's due date has passed by the grace
+// period and they haven't been prompted since.
+function PregnancyPromptGate() {
+  const { session } = useAuth();
+  const [visible, setVisible] = useState(false);
+  const checkedRef = useRef(false);
+
+  useEffect(() => {
+    if (!session?.user?.id || checkedRef.current) return;
+    checkedRef.current = true;
+    (async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('pregnancy_status, pregnancy_due_date, pregnancy_prompt_dismissed_at')
+        .eq('id', session.user.id)
+        .single();
+      if (!data) return;
+      if (shouldShowPregnancyPrompt(data as any)) {
+        setVisible(true);
+      }
+    })();
+  }, [session?.user?.id]);
+
+  return <PregnancyStatusPrompt visible={visible} onClose={() => setVisible(false)} />;
 }
 
 export default function RootLayout() {
