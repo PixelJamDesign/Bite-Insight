@@ -6,7 +6,10 @@
     "health": "Gezondheidsomstandigheden",
     "nutrients": "Nutriënten-watchlist",
     "allergies": "allergieën",
-    "dietary": "Dieetvoorkeuren"
+    "dietary": "Dieetvoorkeuren",
+    "ibsSubtype": "PDS-type",
+    "pregnancy": "Zwangerschap",
+    "conflicts": "Controleren"
   },
   "question": {
     "healthCondition": "Heeft u een gezondheidsprobleem?",

@@ -37,6 +37,7 @@ export const HEALTH_CONDITION_KEYS = [
   'nafld',
   'noGallbladder',
   'pcos',
+  'pregnancy',
   'preDiabetes',
   'ra',
   'sibo',
@@ -85,7 +86,6 @@ export const DIETARY_PREFERENCE_KEYS = [
   'paleo',
   'plantBased',
   'postBariatric',
-  'pregnancy',
   'sustainable',
   'vegan',
   'vegetarian',
@@ -149,6 +149,8 @@ export const HEALTH_CONDITION_LEGACY_MAP: Record<string, HealthConditionKey> = {
   'NAFLD': 'nafld',
   'No Gallbladder': 'noGallbladder',
   'Post-Cholecystectomy': 'noGallbladder',
+  'Pregnancy': 'pregnancy',
+  'Pregnancy-safe Diet': 'pregnancy',
   'Pre-diabetes': 'preDiabetes',
 };
 
@@ -187,7 +189,6 @@ export const DIETARY_PREFERENCE_LEGACY_MAP: Record<string, DietaryPreferenceKey>
   'Paleo': 'paleo',
   'Plant-Based': 'plantBased',
   'Post-Bariatric Surgery': 'postBariatric',
-  'Pregnancy-safe Diet': 'pregnancy',
   'Sustainable / Eco': 'sustainable',
   'Weight Loss': 'weightLoss',
   'Whole30': 'whole30',

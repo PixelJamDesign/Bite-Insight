@@ -6,7 +6,10 @@
     "health": "Health Conditions",
     "nutrients": "Nutrient Watchlist",
     "allergies": "Allergies",
-    "dietary": "Dietary Preferences"
+    "dietary": "Dietary Preferences",
+    "ibsSubtype": "IBS Type",
+    "pregnancy": "Pregnancy Details",
+    "conflicts": "Review"
   },
   "question": {
     "healthCondition": "Do you have any health condition?",

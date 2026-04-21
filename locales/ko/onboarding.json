@@ -6,7 +6,10 @@
     "health": "건강 상태",
     "nutrients": "영양소 관심 목록",
     "allergies": "알레르기",
-    "dietary": "선호하는 식단"
+    "dietary": "선호하는 식단",
+    "ibsSubtype": "IBS 유형",
+    "pregnancy": "임신",
+    "conflicts": "확인"
   },
   "question": {
     "healthCondition": "건강상의 문제가 있나요?",

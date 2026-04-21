@@ -1825,7 +1825,118 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // 31. Pre-diabetes
+  // 31. Pregnancy
+  // ═══════════════════════════════════════════════════════════════════════════
+  Pregnancy: {
+    limit: [
+      {
+        nutrient: 'Caffeine',
+        offKey: 'caffeine_100g',
+        unit: 'mg',
+        reason:
+          'Keeping caffeine below 200 mg per day during pregnancy is linked to lower risk of miscarriage and low birth weight',
+      },
+      {
+        nutrient: 'Trans Fat',
+        offKey: 'trans-fat_100g',
+        unit: 'g',
+        reason:
+          'Trans fats have been linked to increased risk of pregnancy complications and can negatively affect fetal development',
+      },
+    ],
+    boost: [
+      {
+        nutrient: 'Folate',
+        offKey: 'vitamin-b9_100g',
+        unit: 'µg',
+        reason:
+          'Folate (vitamin B9) plays a critical role in preventing neural tube defects during the first trimester',
+      },
+      {
+        nutrient: 'Iron',
+        offKey: 'iron_100g',
+        unit: 'mg',
+        reason:
+          'Blood volume nearly doubles during pregnancy. Iron supports the extra red blood cells needed for mother and baby',
+      },
+      {
+        nutrient: 'Calcium',
+        offKey: 'calcium_100g',
+        unit: 'mg',
+        reason:
+          'Calcium is essential for your baby’s bones and teeth, and helps protect your own stores during pregnancy and breastfeeding',
+      },
+      {
+        nutrient: 'Omega-3',
+        offKey: 'omega-3-fat_100g',
+        unit: 'g',
+        reason:
+          "Omega-3 fats, especially DHA, support your baby's brain and eye development through pregnancy and breastfeeding",
+      },
+      {
+        nutrient: 'Vitamin D',
+        offKey: 'vitamin-d_100g',
+        unit: 'µg',
+        reason:
+          'Vitamin D supports healthy bone development for your baby. Many pregnant people in the UK are recommended to supplement',
+      },
+      {
+        nutrient: 'Fibre',
+        offKey: 'fiber_100g',
+        unit: 'g',
+        reason:
+          'Constipation is very common during pregnancy. A fibre-rich diet helps keep things moving comfortably',
+      },
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 32. Breastfeeding
+  // ═══════════════════════════════════════════════════════════════════════════
+  Breastfeeding: {
+    limit: [
+      {
+        nutrient: 'Caffeine',
+        offKey: 'caffeine_100g',
+        unit: 'mg',
+        reason:
+          'Caffeine passes into breast milk. Keeping intake moderate (below about 300 mg per day) helps prevent irritability and poor sleep in your baby',
+      },
+    ],
+    boost: [
+      {
+        nutrient: 'Iron',
+        offKey: 'iron_100g',
+        unit: 'mg',
+        reason:
+          'Iron needs stay high after birth, especially if you lost blood during delivery. Adequate intake supports your energy and recovery',
+      },
+      {
+        nutrient: 'Calcium',
+        offKey: 'calcium_100g',
+        unit: 'mg',
+        reason:
+          'Calcium supports your bone health while breastfeeding. If intake is low, your body pulls calcium from your own stores to supply milk',
+      },
+      {
+        nutrient: 'Omega-3',
+        offKey: 'omega-3-fat_100g',
+        unit: 'g',
+        reason:
+          "Omega-3s transfer into breast milk and support your baby's ongoing brain and eye development",
+      },
+      {
+        nutrient: 'Vitamin D',
+        offKey: 'vitamin-d_100g',
+        unit: 'µg',
+        reason:
+          'Breast milk is typically low in vitamin D. Maintaining your own levels helps both you and your baby',
+      },
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 33. Pre-diabetes
   // ═══════════════════════════════════════════════════════════════════════════
   'Pre-diabetes': {
     limit: [

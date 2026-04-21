@@ -44,6 +44,11 @@ import { ConditionInfoSheet } from '@/components/ConditionInfoSheet';
 import { SuggestionSheet, type SuggestionCategory } from '@/components/SuggestionSheet';
 import { LottieLoader } from '@/components/LottieLoader';
 import { CONDITION_INFO } from '@/constants/conditionInfo';
+import { IbsSubtypePicker } from '@/components/IbsSubtypePicker';
+import { PregnancyStep } from '@/components/PregnancyStep';
+import { ConflictReviewStep } from '@/components/ConflictReviewStep';
+import { detectProfileConflicts, type Conflict } from '@/lib/profileConflicts';
+import type { IbsSubtype, PregnancyStatus } from '@/lib/types';
 import Logo from '../assets/images/logo.svg';
 
 // ── Condition key helpers ──────────────────────────────────────────────────────
@@ -56,7 +61,7 @@ function conditionMapKey(conditionKey: string): string {
 }
 
 // ── Step types ────────────────────────────────────────────────────────────────
-type StepKey = 'about' | 'health' | 'nutrients' | 'allergies' | 'dietary';
+type StepKey = 'about' | 'health' | 'ibsSubtype' | 'pregnancy' | 'nutrients' | 'allergies' | 'dietary' | 'conflicts';
 
 // ── Nutrient types ──────────────────────────────────────────────────────────
 type UniqueNutrient = {
@@ -170,24 +175,54 @@ export default function EditProfileScreen() {
   // Step 2 – Health Conditions
   const [healthConditions, setHealthConditions] = useState<string[]>([]);
 
+  // Step 2a – IBS subtype (only shown when IBS is in healthConditions)
+  const [ibsSubtype, setIbsSubtype] = useState<IbsSubtype | null>(null);
+
+  // Step 2b – Pregnancy (only shown when Pregnancy is in healthConditions)
+  const [pregnancyStatus, setPregnancyStatus] = useState<PregnancyStatus | null>(null);
+  const [pregnancyDueDate, setPregnancyDueDate] = useState<string | null>(null);
+
   // Step 3 – Allergies
   const [allergies, setAllergies] = useState<string[]>([]);
 
   // Step 4 – Dietary Preferences
   const [dietaryPrefs, setDietaryPrefs] = useState<string[]>([]);
 
+  // Conflict review state — populated when user reaches the conflicts step
+  const [hardConflicts, setHardConflicts] = useState<Conflict[]>([]);
+  const [redundancies, setRedundancies] = useState<Conflict[]>([]);
+
   // ── Nutrient watchlist ──────────────────────────────────────────────────────
   const [nutrientChoices, setNutrientChoices] = useState<Record<string, 'limit' | 'boost' | 'none'>>({});
 
   const showNutrientStep = healthConditions.length > 0;
+  const hasIbs = healthConditions.includes('ibs');
+  const hasPregnancy = healthConditions.includes('pregnancy');
+
+  // Compute conflicts against the current selection
+  const conflictResult = useMemo(
+    () =>
+      detectProfileConflicts({
+        healthConditions,
+        allergies,
+        dietaryPreferences: dietaryPrefs,
+        ibsSubtype,
+        pregnancyStatus,
+      }),
+    [healthConditions, allergies, dietaryPrefs, ibsSubtype, pregnancyStatus],
+  );
+  const showConflictStep = conflictResult.hardConflicts.length > 0 || conflictResult.redundancies.length > 0;
 
   const stepSequence: StepKey[] = useMemo(() => [
     'about',
     'health',
+    ...(hasIbs ? ['ibsSubtype' as StepKey] : []),
+    ...(hasPregnancy ? ['pregnancy' as StepKey] : []),
     ...(showNutrientStep ? ['nutrients' as StepKey] : []),
     'allergies',
     'dietary',
-  ], [showNutrientStep]);
+    ...(showConflictStep ? ['conflicts' as StepKey] : []),
+  ], [hasIbs, hasPregnancy, showNutrientStep, showConflictStep]);
 
   const totalSteps = stepSequence.length;
   const currentStepKey = stepSequence[step - 1] ?? 'about';
@@ -275,7 +310,7 @@ export default function EditProfileScreen() {
     if (!session?.user?.id) return;
     supabase
       .from('profiles')
-      .select('full_name, avatar_url, health_conditions, allergies, dietary_preferences, date_of_birth, nutrient_watchlist')
+      .select('full_name, avatar_url, health_conditions, allergies, dietary_preferences, date_of_birth, nutrient_watchlist, ibs_subtype, pregnancy_status, pregnancy_due_date')
       .eq('id', session.user.id)
       .single()
       .then(({ data, error }) => {
@@ -287,6 +322,9 @@ export default function EditProfileScreen() {
           setAllergies(((data.allergies as string[]) ?? []).map(normalizeAllergy));
           setDietaryPrefs(((data.dietary_preferences as string[]) ?? []).map(normalizeDietaryPreference));
           setDateOfBirth(data.date_of_birth ? new Date(data.date_of_birth + 'T00:00:00') : null);
+          setIbsSubtype((data.ibs_subtype as IbsSubtype | null) ?? null);
+          setPregnancyStatus((data.pregnancy_status as PregnancyStatus | null) ?? null);
+          setPregnancyDueDate((data.pregnancy_due_date as string | null) ?? null);
 
           // Pre-load existing nutrient watchlist choices
           const existing = (data.nutrient_watchlist as NutrientWatchlistEntry[] | null) ?? [];
@@ -324,7 +362,10 @@ export default function EditProfileScreen() {
 
   // Step progress animation (5 dots max to support optional nutrient step)
   const stepAnim    = useRef(new Animated.Value(1)).current;
-  const dotPops     = useRef([0, 1, 2, 3, 4].map(() => new Animated.Value(1))).current;
+  // Max possible steps: about, health, ibsSubtype, pregnancy, nutrients,
+  // allergies, dietary, conflicts = 8. Sized to the max so dynamic step
+  // counts (e.g. after toggling IBS or Pregnancy) never index past the end.
+  const dotPops     = useRef(Array.from({ length: 8 }, () => new Animated.Value(1))).current;
   const prevStepRef = useRef(1);
 
   // Animate step tracker on step change
@@ -341,6 +382,9 @@ export default function EditProfileScreen() {
 
     if (step > prev) {
       const doneIdx = prev - 1;
+      // Skip animation if the dot is out of range (shouldn't happen now we
+      // size dotPops to the max step count, but stays safe if more steps are added)
+      if (!dotPops[doneIdx]) return;
       Animated.sequence([
         Animated.spring(dotPops[doneIdx], {
           toValue: 1.2,
@@ -415,8 +459,25 @@ export default function EditProfileScreen() {
       Alert.alert(tp('editProfile.alert.nameRequiredTitle'), tp('editProfile.alert.nameRequiredMessage'));
       return;
     }
+    if (currentStepKey === 'ibsSubtype' && !ibsSubtype) {
+      Alert.alert('Pick an option', 'Please pick the IBS subtype that fits best, or choose "I\'m not sure".');
+      return;
+    }
+    if (currentStepKey === 'pregnancy') {
+      if (!pregnancyStatus) {
+        Alert.alert('Pick an option', 'Please tell us whether you\'re currently pregnant or breastfeeding.');
+        return;
+      }
+      if (!pregnancyDueDate) {
+        Alert.alert('Date needed', pregnancyStatus === 'pregnant' ? 'Please pick your due date.' : 'Please pick your baby\'s birth date.');
+        return;
+      }
+    }
     animateExit('forward', () => setStep(s => Math.min(s + 1, totalSteps)));
   }
+
+  // Save blocked while hard conflicts remain unresolved
+  const saveBlocked = currentStepKey === 'conflicts' && conflictResult.hardConflicts.length > 0;
 
   function handleBack() {
     if (step === 1) safeBack();
@@ -437,16 +498,22 @@ export default function EditProfileScreen() {
       }
     }
 
+    // Apply Tier 2 (redundancy) auto-resolutions before saving
+    const resolved = conflictResult.resolved;
+
     const { error } = await supabase
       .from('profiles')
       .update({
         full_name: fullName.trim(),
         avatar_url: newAvatarUrl,
-        health_conditions: healthConditions,
-        allergies,
-        dietary_preferences: dietaryPrefs,
+        health_conditions: resolved.healthConditions,
+        allergies: resolved.allergies,
+        dietary_preferences: resolved.dietaryPreferences,
         date_of_birth: dateOfBirth ? toLocalDateString(dateOfBirth) : null,
         nutrient_watchlist: buildFinalWatchlist(),
+        ibs_subtype: hasIbs ? ibsSubtype : null,
+        pregnancy_status: hasPregnancy ? pregnancyStatus : null,
+        pregnancy_due_date: hasPregnancy ? pregnancyDueDate : null,
       })
       .eq('id', session.user.id);
 
@@ -468,7 +535,7 @@ export default function EditProfileScreen() {
             const animHeight = stepAnim.interpolate({ inputRange: [s - 1, s, s + 1], outputRange: [10, 10, 20], extrapolate: 'clamp' });
             const animRadius = stepAnim.interpolate({ inputRange: [s - 1, s, s + 1], outputRange: [5,  5,  10], extrapolate: 'clamp' });
             return (
-              <Animated.View key={s} style={{ transform: [{ scale: dotPops[s - 1] }] }}>
+              <Animated.View key={s} style={{ transform: [{ scale: dotPops[s - 1] ?? 1 }] }}>
                 <Animated.View style={{ width: animWidth, height: animHeight, borderRadius: animRadius, backgroundColor: bgColor, alignItems: 'center', justifyContent: 'center' }}>
                   {isDone && <TickIcon size={10} color="#fff" />}
                 </Animated.View>
@@ -878,6 +945,42 @@ export default function EditProfileScreen() {
             </View>
           )}
 
+          {/* ── Step: IBS Subtype (conditional follow-up to Health) ── */}
+          {currentStepKey === 'ibsSubtype' && (
+            <View style={styles.card}>
+              <IbsSubtypePicker value={ibsSubtype} onChange={setIbsSubtype} />
+            </View>
+          )}
+
+          {/* ── Step: Pregnancy (conditional follow-up to Health) ── */}
+          {currentStepKey === 'pregnancy' && (
+            <View style={styles.card}>
+              <PregnancyStep
+                status={pregnancyStatus}
+                dueDate={pregnancyDueDate}
+                onChange={(s, d) => { setPregnancyStatus(s); setPregnancyDueDate(d); }}
+              />
+            </View>
+          )}
+
+          {/* ── Step: Conflict Review (only shown when conflicts detected) ── */}
+          {currentStepKey === 'conflicts' && (
+            <ConflictReviewStep
+              hardConflicts={conflictResult.hardConflicts}
+              redundancies={conflictResult.redundancies}
+              onResolve={(_id, category, key) => {
+                if (category === 'health') setHealthConditions(prev => prev.filter(k => k !== key));
+                if (category === 'allergy') setAllergies(prev => prev.filter(k => k !== key));
+                if (category === 'dietary') setDietaryPrefs(prev => prev.filter(k => k !== key));
+              }}
+              labelFor={(category, key) => {
+                if (category === 'health') return tpo(`healthConditions.${key}` as any) || key;
+                if (category === 'allergy') return tpo(`allergies.${key}` as any) || key;
+                return tpo(`dietaryPreferences.${key}` as any) || key;
+              }}
+            />
+          )}
+
           {/* ── Step: Nutrient Watchlist ── */}
           {currentStepKey === 'nutrients' && (
             <View style={styles.nutrientCard}>
@@ -931,9 +1034,9 @@ export default function EditProfileScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.nextBtn}
+                style={[styles.nextBtn, saveBlocked && { opacity: 0.5 }]}
                 onPress={isLastStep ? handleSave : handleNext}
-                disabled={saving}
+                disabled={saving || saveBlocked}
                 activeOpacity={0.88}
               >
                 {saving ? (

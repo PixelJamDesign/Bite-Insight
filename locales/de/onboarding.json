@@ -6,7 +6,10 @@
     "health": "Gesundheitszustand",
     "nutrients": "Nährstoff-Beobachtungsliste",
     "allergies": "Allergien",
-    "dietary": "Ernährungspräferenzen"
+    "dietary": "Ernährungspräferenzen",
+    "ibsSubtype": "RDS-Typ",
+    "pregnancy": "Schwangerschaft",
+    "conflicts": "Prüfen"
   },
   "question": {
     "healthCondition": "Haben Sie gesundheitliche Probleme?",
