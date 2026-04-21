@@ -71,8 +71,8 @@ export function AvatarViewer({ visible, uri, initials, onClose }: Props) {
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    // Dark-teal tint at ~92% opacity so the app's primary colour carries through
-    backgroundColor: 'rgba(2, 52, 50, 0.92)',
+    // Avocado-skin (#002923) at 95% opacity — design token from Figma
+    backgroundColor: 'rgba(0, 41, 35, 0.95)',
   },
   // Mirrors styles.headerBar in components/ScreenLayout.tsx — same positioning
   // and spacing so the close button sits exactly where the menu button does.
