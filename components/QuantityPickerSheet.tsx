@@ -86,13 +86,16 @@ export function QuantityPickerSheet({ visible, value, unit, onClose, onSave }: P
             >
               <Ionicons name="remove" size={22} color={Colors.secondary} />
             </TouchableOpacity>
-            <TextInput
-              style={styles.valueInput}
-              value={localValue}
-              onChangeText={setLocalValue}
-              keyboardType="decimal-pad"
-              textAlign="center"
-            />
+            <View style={styles.valueInputWrap}>
+              <TextInput
+                style={styles.valueInput}
+                value={localValue}
+                onChangeText={setLocalValue}
+                keyboardType="decimal-pad"
+                textAlign="right"
+              />
+              <Text style={styles.valueUnit}>{meta.shortLabel}</Text>
+            </View>
             <TouchableOpacity
               style={styles.stepperBtn}
               onPress={() => adjust(meta.step)}
@@ -186,17 +189,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  valueInput: {
+  valueInputWrap: {
     flex: 1,
-    fontSize: 32,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'center',
+    gap: 6,
     paddingVertical: 10,
-    backgroundColor: Colors.surface.secondary,
+    paddingHorizontal: 12,
+    backgroundColor: Colors.surface.tertiary,
     borderRadius: Radius.m,
     borderWidth: 1,
     borderColor: '#aad4cd',
+  },
+  valueInput: {
+    fontSize: 32,
+    lineHeight: 40,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    minWidth: 60,
+    padding: 0,
+  },
+  valueUnit: {
+    fontSize: 18,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.secondary,
+    letterSpacing: -0.36,
   },
   unitLabel: {
     fontSize: 12,
