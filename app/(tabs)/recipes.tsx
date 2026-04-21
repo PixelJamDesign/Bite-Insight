@@ -118,7 +118,7 @@ function RecipeCard({ recipe, onPress }: { recipe: Recipe; onPress: () => void }
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>
       <View style={styles.cardCover}>
         {recipe.cover_image_url ? (
-          <Image source={{ uri: recipe.cover_image_url }} style={styles.cardImage} />
+          <Image source={{ uri: recipe.cover_image_url }} style={styles.cardImage} resizeMode="cover" />
         ) : (
           <Ionicons name="restaurant-outline" size={44} color={Colors.accent} />
         )}

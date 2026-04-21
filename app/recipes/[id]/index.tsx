@@ -4,6 +4,7 @@
  * Shows a saved recipe with nutrition totals, Nutri-score, household
  * impact table, and action bar.
  */
+import { useState } from 'react';
 import {
   View,
   Text,
@@ -22,6 +23,8 @@ import { deleteRecipe, duplicateRecipe, computeTotalWeightGrams } from '@/lib/re
 import { useAuth } from '@/lib/auth';
 import { NutritionTable } from '@/components/NutritionTable';
 import type { NutrientKey } from '@/lib/nutrientRatings';
+import { NutritionModeToggle, type NutritionMode } from '@/components/NutritionModeToggle';
+import { RecipeActionsSheet } from '@/components/RecipeActionsSheet';
 import {
   NUTRISCORE_COLORS,
   NUTRISCORE_VERDICT,
@@ -37,6 +40,8 @@ export default function RecipeDetailScreen() {
   const { session } = useAuth();
   const insets = useSafeAreaInsets();
   const { recipe, loading, household } = useRecipe(id);
+  const [nutritionMode, setNutritionMode] = useState<NutritionMode>('serving');
+  const [actionsOpen, setActionsOpen] = useState(false);
 
   if (loading) {
     return (
@@ -87,6 +92,18 @@ export default function RecipeDetailScreen() {
     salt: toPer100(currentRecipe.total_salt_g),
   };
 
+  // Per-serving values (as stored on the recipe row)
+  const perServingValues: Partial<Record<NutrientKey, number | null>> = {
+    energyKcal: currentRecipe.total_kcal,
+    fat: currentRecipe.total_fat_g,
+    saturatedFat: currentRecipe.total_sat_fat_g,
+    carbs: currentRecipe.total_carbs_g,
+    sugars: currentRecipe.total_sugars_g,
+    fiber: currentRecipe.total_fiber_g,
+    proteins: currentRecipe.total_protein_g,
+    salt: currentRecipe.total_salt_g,
+  };
+
   async function handleDelete() {
     Alert.alert(
       'Delete recipe',
@@ -117,13 +134,13 @@ export default function RecipeDetailScreen() {
     <SafeAreaView style={styles.safe} edges={['bottom']}>
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: 120 }}
+        contentContainerStyle={{ paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Hero */}
         <View style={styles.hero}>
           {currentRecipe.cover_image_url ? (
-            <Image source={{ uri: currentRecipe.cover_image_url }} style={styles.heroImage} />
+            <Image source={{ uri: currentRecipe.cover_image_url }} style={styles.heroImage} resizeMode="cover" />
           ) : (
             <Ionicons name="restaurant-outline" size={96} color={Colors.accent} />
           )}
@@ -132,6 +149,13 @@ export default function RecipeDetailScreen() {
             onPress={() => safeBack()}
           >
             <Ionicons name="chevron-back" size={22} color={Colors.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.heroMenu, { top: insets.top + 8 }]}
+            onPress={() => setActionsOpen(true)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="ellipsis-horizontal" size={22} color={Colors.primary} />
           </TouchableOpacity>
         </View>
 
@@ -149,26 +173,25 @@ export default function RecipeDetailScreen() {
         </View>
 
         <View style={styles.content}>
-          {/* Nutrition rows — reusable NutritionTable component */}
+          {/* Nutrition section with per-serving / per-100g toggle */}
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Nutrition</Text>
-            <Text style={styles.sectionSubtitle}>Per 100g of the finished recipe</Text>
           </View>
 
-          <NutritionTable valuesPer100g={per100g} />
+          <NutritionModeToggle
+            mode={nutritionMode}
+            onChange={setNutritionMode}
+            servingLabel={`Per serving (${currentRecipe.servings})`}
+          />
 
-          {/* Per-serving summary */}
-          <View style={styles.perServingCard}>
-            <Text style={styles.perServingLabel}>
-              Per serving ({currentRecipe.servings} {currentRecipe.servings === 1 ? 'serving' : 'servings'} total)
-            </Text>
-            <View style={styles.perServingStats}>
-              <PerServingStat value={`${currentRecipe.total_kcal ?? 0}`} label="kcal" />
-              <PerServingStat value={`${currentRecipe.total_protein_g ?? 0}g`} label="protein" />
-              <PerServingStat value={`${currentRecipe.total_carbs_g ?? 0}g`} label="carbs" />
-              <PerServingStat value={`${currentRecipe.total_fat_g ?? 0}g`} label="fat" />
-            </View>
-          </View>
+          {nutritionMode === 'serving' ? (
+            <NutritionTable
+              valuesPer100g={perServingValues}
+              showRating={false}
+            />
+          ) : (
+            <NutritionTable valuesPer100g={per100g} />
+          )}
 
           {/* Nutri-score */}
           {grade && (
@@ -244,35 +267,20 @@ export default function RecipeDetailScreen() {
         </View>
       </ScrollView>
 
-      {/* Action bar */}
-      <View style={[styles.actionBar, { paddingBottom: insets.bottom + 16 }]}>
-        <TouchableOpacity
-          style={styles.actionBtn}
-          onPress={() => router.push(`/recipes/${currentRecipe.id}/edit` as never)}
-        >
-          <Ionicons name="pencil-outline" size={20} color={Colors.secondary} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionBtn} onPress={handleDuplicate}>
-          <Ionicons name="copy-outline" size={20} color={Colors.secondary} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionBtn} onPress={handleDelete}>
-          <Ionicons name="trash-outline" size={20} color={Colors.status.negative} />
-        </TouchableOpacity>
-      </View>
+      {/* Actions sheet (Edit / Duplicate / Delete) — opened via the "…" button in the hero */}
+      <RecipeActionsSheet
+        visible={actionsOpen}
+        onClose={() => setActionsOpen(false)}
+        onEdit={() => router.push(`/recipes/${currentRecipe.id}/edit` as never)}
+        onDuplicate={handleDuplicate}
+        onDelete={handleDelete}
+      />
     </SafeAreaView>
   );
 }
 
 // ── Sub-components ───────────────────────────────────────────────────────────
 
-function PerServingStat({ value, label }: { value: string; label: string }) {
-  return (
-    <View style={styles.perServingStatItem}>
-      <Text style={styles.perServingStatValue}>{value}</Text>
-      <Text style={styles.perServingStatLabel}>{label}</Text>
-    </View>
-  );
-}
 
 /**
  * Tappable ingredient row — opens scan-result for the product, pre-filled
@@ -403,6 +411,15 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     ...Shadows.level3,
   },
+  heroMenu: {
+    position: 'absolute',
+    right: 16,
+    width: 40, height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    alignItems: 'center', justifyContent: 'center',
+    ...Shadows.level3,
+  },
 
   // Title card
   titleCard: {
@@ -449,37 +466,6 @@ const styles = StyleSheet.create({
   },
 
   // Nutrition rows
-  // Per-serving summary card (shown below the per-100g NutritionTable)
-  perServingCard: {
-    backgroundColor: Colors.primary,
-    borderRadius: Radius.l,
-    padding: Spacing.s,
-    gap: 12,
-  },
-  perServingLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: '#aad4cd',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-  },
-  perServingStats: { flexDirection: 'row', gap: 8 },
-  perServingStatItem: { flex: 1 },
-  perServingStatValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: '#fff',
-    letterSpacing: -0.36,
-  },
-  perServingStatLabel: {
-    fontSize: 11,
-    fontWeight: '300',
-    fontFamily: 'Figtree_300Light',
-    color: '#aad4cd',
-    marginTop: 2,
-  },
 
   // Nutri-score
   nutriCard: {
@@ -663,24 +649,4 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
 
-  // Action bar
-  actionBar: {
-    flexDirection: 'row',
-    gap: 10,
-    padding: Spacing.s,
-    backgroundColor: Colors.background,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(170, 212, 205, 0.4)',
-  },
-  actionBtn: {
-    flex: 1,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.surface.secondary,
-    borderWidth: 1,
-    borderColor: '#aad4cd',
-    borderRadius: Radius.m,
-    ...Shadows.level4,
-  },
 });

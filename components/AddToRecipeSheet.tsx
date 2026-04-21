@@ -253,7 +253,7 @@ export function AddToRecipeSheet({ visible, onClose, snapshot, barcode }: Props)
                 >
                   <View style={styles.recipeThumb}>
                     {item.cover_image_url ? (
-                      <Image source={{ uri: item.cover_image_url }} style={styles.recipeThumbImage} />
+                      <Image source={{ uri: item.cover_image_url }} style={styles.recipeThumbImage} resizeMode="cover" />
                     ) : (
                       <Ionicons name="restaurant-outline" size={18} color={Colors.secondary} />
                     )}

@@ -39,6 +39,7 @@ import type { Scan } from '@/lib/types';
 import { ScanPickerSheet } from '@/components/ScanPickerSheet';
 import { QuantityPickerSheet } from '@/components/QuantityPickerSheet';
 import { AddIngredientSheet, type AddSource } from '@/components/AddIngredientSheet';
+import { NutritionModeToggle, type NutritionMode } from '@/components/NutritionModeToggle';
 import { safeBack } from '@/lib/safeBack';
 
 export default function RecipeBuilderScreen() {
@@ -55,6 +56,8 @@ export default function RecipeBuilderScreen() {
   const [scanPickerOpen, setScanPickerOpen] = useState(false);
   const [quantityEditing, setQuantityEditing] = useState<string | null>(null);
   const [uploadingCover, setUploadingCover] = useState(false);
+  // Per-serving is the default — user can toggle to per-100g for ratios
+  const [nutritionMode, setNutritionMode] = useState<NutritionMode>('serving');
 
   // ── Draft bootstrap ───────────────────────────────────────────────────────
   // On mount, ensure we have the right kind of draft for the route we're on.
@@ -326,13 +329,44 @@ export default function RecipeBuilderScreen() {
             <View style={styles.previewCard}>
               <View style={styles.previewHeader}>
                 <Text style={styles.previewTitle}>Live nutrition</Text>
-                <Text style={styles.previewPer}>per serving</Text>
+              </View>
+              <View style={styles.previewToggle}>
+                <NutritionModeToggle
+                  mode={nutritionMode}
+                  onChange={setNutritionMode}
+                />
               </View>
               <View style={styles.previewStats}>
-                <PreviewStat label="Kcal" value={String(draft.totals.total_kcal)} />
-                <PreviewStat label="Protein" value={`${draft.totals.total_protein_g}g`} />
-                <PreviewStat label="Carbs" value={`${draft.totals.total_carbs_g}g`} />
-                <PreviewStat label="Fat" value={`${draft.totals.total_fat_g}g`} />
+                {(() => {
+                  // Per-100g is (per-serving × servings) / (totalWeight/100)
+                  const per100Factor =
+                    draft.totalWeightG > 0
+                      ? (d.servings * 100) / draft.totalWeightG
+                      : 0;
+                  const scale = (n: number) =>
+                    nutritionMode === 'serving' ? n : n * per100Factor;
+                  const round = (n: number) => Math.round(n * 10) / 10;
+                  return (
+                    <>
+                      <PreviewStat
+                        label="Kcal"
+                        value={String(Math.round(scale(draft.totals.total_kcal)))}
+                      />
+                      <PreviewStat
+                        label="Protein"
+                        value={`${round(scale(draft.totals.total_protein_g))}g`}
+                      />
+                      <PreviewStat
+                        label="Carbs"
+                        value={`${round(scale(draft.totals.total_carbs_g))}g`}
+                      />
+                      <PreviewStat
+                        label="Fat"
+                        value={`${round(scale(draft.totals.total_fat_g))}g`}
+                      />
+                    </>
+                  );
+                })()}
               </View>
               {draft.nutriscore && nutriColor && (
                 <View style={styles.previewNutriRow}>
@@ -624,7 +658,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 14,
+    marginBottom: 12,
   },
   previewTitle: {
     fontSize: 14,
@@ -633,11 +667,8 @@ const styles = StyleSheet.create({
     color: '#fff',
     letterSpacing: -0.28,
   },
-  previewPer: {
-    fontSize: 11,
-    fontWeight: '300',
-    fontFamily: 'Figtree_300Light',
-    color: '#aad4cd',
+  previewToggle: {
+    marginBottom: 14,
   },
   previewStats: { flexDirection: 'row', gap: 8 },
   previewStatItem: { flex: 1 },
