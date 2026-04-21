@@ -22,6 +22,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -266,7 +267,15 @@ export default function RecipeBuilderScreen() {
           {d.ingredients.map((ing) => (
             <View key={ing._localId} style={styles.ingRow}>
               <View style={styles.ingThumb}>
-                <Ionicons name="nutrition-outline" size={20} color={Colors.secondary} />
+                {ing.product_snapshot.image_url ? (
+                  <Image
+                    source={{ uri: ing.product_snapshot.image_url }}
+                    style={styles.ingThumbImage}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <Ionicons name="nutrition-outline" size={20} color={Colors.secondary} />
+                )}
               </View>
               <View style={styles.ingInfo}>
                 <Text style={styles.ingName} numberOfLines={1}>
@@ -553,6 +562,11 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface.tertiary,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  ingThumbImage: {
+    width: '100%',
+    height: '100%',
   },
   ingInfo: { flex: 1, gap: 2 },
   ingName: {

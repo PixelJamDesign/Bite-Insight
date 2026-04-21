@@ -18,8 +18,10 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useRecipe } from '@/lib/useRecipes';
-import { deleteRecipe, duplicateRecipe } from '@/lib/recipes';
+import { deleteRecipe, duplicateRecipe, computeTotalWeightGrams } from '@/lib/recipes';
 import { useAuth } from '@/lib/auth';
+import { NutritionTable } from '@/components/NutritionTable';
+import type { NutrientKey } from '@/lib/nutrientRatings';
 import {
   NUTRISCORE_COLORS,
   NUTRISCORE_VERDICT,
@@ -28,7 +30,7 @@ import {
 import { formatQuantity } from '@/constants/quantityUnits';
 import { Colors, Spacing, Radius, Shadows, Typography } from '@/constants/theme';
 import { safeBack } from '@/lib/safeBack';
-import type { HouseholdImpactRow } from '@/lib/types';
+import type { HouseholdImpactRow, RecipeIngredient } from '@/lib/types';
 
 export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -66,6 +68,24 @@ export default function RecipeDetailScreen() {
   const currentRecipe = recipe;
   const grade = currentRecipe.nutriscore_grade as NutriscoreGrade | null;
   const grades: NutriscoreGrade[] = ['a', 'b', 'c', 'd', 'e'];
+
+  // ── Compute per-100g values from per-serving totals ─────────────────────
+  // Per-serving × servings ÷ (totalWeight / 100) = per 100g.
+  const totalWeightG = computeTotalWeightGrams(currentRecipe.ingredients);
+  const toPer100 = (perServing: number | null | undefined): number | null => {
+    if (perServing == null || totalWeightG <= 0) return null;
+    return (perServing * currentRecipe.servings) / (totalWeightG / 100);
+  };
+  const per100g: Partial<Record<NutrientKey, number | null>> = {
+    energyKcal: toPer100(currentRecipe.total_kcal),
+    fat: toPer100(currentRecipe.total_fat_g),
+    saturatedFat: toPer100(currentRecipe.total_sat_fat_g),
+    carbs: toPer100(currentRecipe.total_carbs_g),
+    sugars: toPer100(currentRecipe.total_sugars_g),
+    fiber: toPer100(currentRecipe.total_fiber_g),
+    proteins: toPer100(currentRecipe.total_protein_g),
+    salt: toPer100(currentRecipe.total_salt_g),
+  };
 
   async function handleDelete() {
     Alert.alert(
@@ -129,20 +149,25 @@ export default function RecipeDetailScreen() {
         </View>
 
         <View style={styles.content}>
-          {/* Nutrition rows */}
+          {/* Nutrition rows — reusable NutritionTable component */}
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Nutrition per serving</Text>
+            <Text style={styles.sectionTitle}>Nutrition</Text>
+            <Text style={styles.sectionSubtitle}>Per 100g of the finished recipe</Text>
           </View>
 
-          <View style={styles.nutrRows}>
-            <NutrRow label="Calories" value={`${currentRecipe.total_kcal ?? 0}`} />
-            <NutrRow label="Protein" value={`${currentRecipe.total_protein_g ?? 0}g`} />
-            <NutrRow label="Carbs" value={`${currentRecipe.total_carbs_g ?? 0}g`} />
-            <NutrRow label="Fat" value={`${currentRecipe.total_fat_g ?? 0}g`} />
-            <NutrRow label="Sat Fat" value={`${currentRecipe.total_sat_fat_g ?? 0}g`} />
-            <NutrRow label="Sugars" value={`${currentRecipe.total_sugars_g ?? 0}g`} />
-            <NutrRow label="Fibre" value={`${currentRecipe.total_fiber_g ?? 0}g`} />
-            <NutrRow label="Salt" value={`${currentRecipe.total_salt_g ?? 0}g`} />
+          <NutritionTable valuesPer100g={per100g} />
+
+          {/* Per-serving summary */}
+          <View style={styles.perServingCard}>
+            <Text style={styles.perServingLabel}>
+              Per serving ({currentRecipe.servings} {currentRecipe.servings === 1 ? 'serving' : 'servings'} total)
+            </Text>
+            <View style={styles.perServingStats}>
+              <PerServingStat value={`${currentRecipe.total_kcal ?? 0}`} label="kcal" />
+              <PerServingStat value={`${currentRecipe.total_protein_g ?? 0}g`} label="protein" />
+              <PerServingStat value={`${currentRecipe.total_carbs_g ?? 0}g`} label="carbs" />
+              <PerServingStat value={`${currentRecipe.total_fat_g ?? 0}g`} label="fat" />
+            </View>
           </View>
 
           {/* Nutri-score */}
@@ -214,31 +239,7 @@ export default function RecipeDetailScreen() {
             <Text style={styles.sectionTitle}>Ingredients</Text>
           </View>
           {currentRecipe.ingredients.map((ing) => (
-            <View key={ing.id} style={styles.ingRow}>
-              <View style={styles.ingThumb}>
-                {ing.product_snapshot.image_url ? (
-                  <Image
-                    source={{ uri: ing.product_snapshot.image_url }}
-                    style={styles.ingThumbImage}
-                  />
-                ) : (
-                  <Ionicons name="nutrition-outline" size={20} color={Colors.secondary} />
-                )}
-              </View>
-              <View style={styles.ingInfo}>
-                <Text style={styles.ingName} numberOfLines={1}>
-                  {ing.product_snapshot.product_name}
-                </Text>
-                {ing.product_snapshot.brand && (
-                  <Text style={styles.ingBrand} numberOfLines={1}>
-                    {ing.product_snapshot.brand}
-                  </Text>
-                )}
-              </View>
-              <Text style={styles.ingQty}>
-                {formatQuantity(Number(ing.quantity_value), ing.quantity_unit)}
-              </Text>
-            </View>
+            <IngredientRow key={ing.id} ingredient={ing} />
           ))}
         </View>
       </ScrollView>
@@ -264,12 +265,78 @@ export default function RecipeDetailScreen() {
 
 // ── Sub-components ───────────────────────────────────────────────────────────
 
-function NutrRow({ label, value }: { label: string; value: string }) {
+function PerServingStat({ value, label }: { value: string; label: string }) {
   return (
-    <View style={styles.nutrRow}>
-      <Text style={styles.nutrRowLabel}>{label}</Text>
-      <Text style={styles.nutrRowValue}>{value}</Text>
+    <View style={styles.perServingStatItem}>
+      <Text style={styles.perServingStatValue}>{value}</Text>
+      <Text style={styles.perServingStatLabel}>{label}</Text>
     </View>
+  );
+}
+
+/**
+ * Tappable ingredient row — opens scan-result for the product, pre-filled
+ * with the snapshot data so nutrition loads instantly. Only tappable when
+ * we have a barcode to look up; otherwise the row is inert (but still
+ * visible).
+ */
+function IngredientRow({ ingredient: ing }: { ingredient: RecipeIngredient }) {
+  const hasBarcode = Boolean(ing.barcode);
+  const snap = ing.product_snapshot;
+  const n = snap.nutrition_per_100g ?? {};
+
+  function openScanResult() {
+    if (!hasBarcode) return;
+    router.push({
+      pathname: '/scan-result',
+      params: {
+        scanId: '',
+        productName: snap.product_name ?? '',
+        brand: snap.brand ?? '',
+        imageUrl: snap.image_url ?? '',
+        barcode: ing.barcode!,
+        quantity: '',
+        nutriscoreGrade: snap.nutriscore_grade ?? '',
+        energyKcal: n.energy_kcal != null ? String(n.energy_kcal) : '',
+        carbs: n.carbs_g != null ? String(n.carbs_g) : '',
+        sugars: n.sugars_g != null ? String(n.sugars_g) : '',
+        fiber: n.fiber_g != null ? String(n.fiber_g) : '',
+        fat: n.fat_g != null ? String(n.fat_g) : '',
+        saturatedFat: n.saturated_fat_g != null ? String(n.saturated_fat_g) : '',
+        proteins: n.protein_g != null ? String(n.protein_g) : '',
+        salt: n.salt_g != null ? String(n.salt_g) : '',
+        allergens: (snap.allergens ?? []).join(','),
+      },
+    });
+  }
+
+  const Container = hasBarcode ? TouchableOpacity : View;
+
+  return (
+    <Container
+      style={styles.ingRow}
+      {...(hasBarcode ? { onPress: openScanResult, activeOpacity: 0.85 } : {})}
+    >
+      <View style={styles.ingThumb}>
+        {snap.image_url ? (
+          <Image source={{ uri: snap.image_url }} style={styles.ingThumbImage} />
+        ) : (
+          <Ionicons name="nutrition-outline" size={20} color={Colors.secondary} />
+        )}
+      </View>
+      <View style={styles.ingInfo}>
+        <Text style={styles.ingName} numberOfLines={1}>{snap.product_name}</Text>
+        {snap.brand && (
+          <Text style={styles.ingBrand} numberOfLines={1}>{snap.brand}</Text>
+        )}
+      </View>
+      <Text style={styles.ingQty}>
+        {formatQuantity(Number(ing.quantity_value), ing.quantity_unit)}
+      </Text>
+      {hasBarcode && (
+        <Ionicons name="chevron-forward" size={16} color={Colors.secondary} style={styles.ingChevron} />
+      )}
+    </Container>
   );
 }
 
@@ -382,27 +449,36 @@ const styles = StyleSheet.create({
   },
 
   // Nutrition rows
-  nutrRows: { gap: 4 },
-  nutrRow: {
-    backgroundColor: Colors.surface.tertiary,
-    borderRadius: Radius.m,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+  // Per-serving summary card (shown below the per-100g NutritionTable)
+  perServingCard: {
+    backgroundColor: Colors.primary,
+    borderRadius: Radius.l,
+    padding: Spacing.s,
+    gap: 12,
   },
-  nutrRowLabel: {
-    fontSize: 15,
+  perServingLabel: {
+    fontSize: 12,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
+    color: '#aad4cd',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
-  nutrRowValue: {
-    fontSize: 15,
+  perServingStats: { flexDirection: 'row', gap: 8 },
+  perServingStatItem: { flex: 1 },
+  perServingStatValue: {
+    fontSize: 18,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
+    color: '#fff',
+    letterSpacing: -0.36,
+  },
+  perServingStatLabel: {
+    fontSize: 11,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
+    color: '#aad4cd',
+    marginTop: 2,
   },
 
   // Nutri-score
@@ -582,6 +658,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.secondary,
+  },
+  ingChevron: {
+    marginLeft: 4,
   },
 
   // Action bar
