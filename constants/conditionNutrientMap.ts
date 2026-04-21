@@ -1794,14 +1794,14 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
         offKey: 'trans-fat_100g',
         unit: 'g',
         reason:
-          'Without a gallbladder, bile drips continuously rather than releasing in bursts, making large amounts of fat — especially trans fats — hard to digest',
+          'Without a gallbladder, bile drips continuously rather than releasing in bursts when you eat. Trans fats are the hardest type of fat to digest in this situation',
       },
       {
         nutrient: 'Cholesterol',
         offKey: 'cholesterol_100g',
         unit: 'mg',
         reason:
-          'Dietary cholesterol adds load to an already-stressed bile pathway post-cholecystectomy and can worsen bile acid malabsorption symptoms',
+          'Dietary cholesterol adds more work for your bile system and can worsen bile acid malabsorption after gallbladder removal',
         userConfirmRequired: true,
       },
     ],
@@ -1811,14 +1811,14 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
         offKey: 'omega-3-fat_100g',
         unit: 'g',
         reason:
-          'Unsaturated fats like omega-3 are anti-inflammatory and generally easier to digest than saturated or trans fats without a gallbladder',
+          'Unsaturated fats like omega-3 are anti-inflammatory and generally easier to digest than saturated or trans fats',
       },
       {
         nutrient: 'Vitamin D',
         offKey: 'vitamin-d_100g',
         unit: 'µg',
         reason:
-          'Fat-soluble vitamin absorption can be impaired post-cholecystectomy. Vitamin D deficiency is notably more common in this group',
+          'Fat-soluble vitamin absorption can be impaired after gallbladder removal. Vitamin D deficiency is notably more common in this group',
         userConfirmRequired: true,
       },
     ],
