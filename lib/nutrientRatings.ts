@@ -233,6 +233,12 @@ export const CONDITION_OVERRIDES: Record<string, Partial<Record<NutrientKey, Par
   },
 
   // ── Dietary preferences ──
+  lowFiber: {
+    // Flip the fibre scale: more fibre = worse rating (not inverted).
+    // Default fibre was inverted (higher=better); here we want lower=better.
+    // Values per 100g.
+    fiber: { low: 1.5, moderate: 3 },
+  },
   keto: {
     carbs:    { low: 2,  moderate: 8 },
     netCarbs: { low: 2,  moderate: 8 },

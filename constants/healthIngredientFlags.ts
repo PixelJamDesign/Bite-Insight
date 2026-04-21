@@ -762,6 +762,52 @@ export const DIETARY_PREFERENCE_INGREDIENTS: Record<string, HealthFlagEntry> = {
     ],
   },
 
+  lowFiber: {
+    keywords: [
+      // Whole grains / bran
+      'bran', 'wheat bran', 'oat bran', 'rice bran',
+      'wholemeal', 'whole-wheat', 'whole wheat', 'wholegrain', 'whole grain',
+      'brown rice', 'brown bread', 'wholemeal bread', 'wholegrain bread',
+      'wholewheat pasta', 'wholegrain pasta',
+      'rolled oats', 'porridge oats', 'steel cut oats', 'oatmeal',
+      'barley', 'bulgur', 'spelt', 'rye', 'quinoa', 'buckwheat', 'millet',
+      // Legumes
+      'lentils', 'red lentils', 'green lentils', 'brown lentils',
+      'chickpeas', 'garbanzo', 'black beans', 'kidney beans',
+      'pinto beans', 'cannellini beans', 'butter beans', 'haricot beans',
+      'split peas', 'mung beans', 'edamame', 'soybeans',
+      // Nuts and seeds
+      'almonds', 'walnuts', 'pecans', 'pistachios', 'hazelnuts',
+      'chia seeds', 'chia', 'flaxseed', 'flax seed', 'linseed',
+      'pumpkin seeds', 'sunflower seeds', 'sesame seeds', 'poppy seeds',
+      // High-fibre fruits / veg
+      'raspberries', 'blackberries', 'blueberries',
+      'pears', 'apples with skin', 'prunes', 'dried apricots', 'figs',
+      'dates', 'dried dates', 'raisins', 'sultanas',
+      'broccoli', 'brussels sprouts', 'cauliflower', 'kale', 'spinach',
+      'cabbage', 'artichoke', 'globe artichoke',
+      'peas', 'frozen peas', 'sweetcorn',
+      'sweet potato', 'sweet potato with skin',
+      // High-fibre cereals and products
+      'bran flakes', 'all-bran', 'shredded wheat', 'weetabix', 'muesli', 'granola',
+      'psyllium', 'psyllium husk', 'inulin', 'fos',
+      // Popcorn and high-fibre snacks
+      'popcorn',
+    ],
+    ingredientIds: [
+      'en:bran', 'en:wheat-bran', 'en:oat-bran',
+      'en:wholemeal-flour', 'en:whole-wheat-flour', 'en:wholegrain',
+      'en:brown-rice', 'en:wholemeal-bread',
+      'en:rolled-oats', 'en:oatmeal',
+      'en:barley', 'en:bulgur', 'en:spelt', 'en:rye', 'en:quinoa',
+      'en:lentils', 'en:chickpeas', 'en:black-beans', 'en:kidney-beans',
+      'en:almonds', 'en:walnuts', 'en:chia-seeds', 'en:flaxseed',
+      'en:broccoli', 'en:brussels-sprouts', 'en:cauliflower', 'en:kale',
+      'en:psyllium', 'en:inulin',
+      'en:popcorn',
+    ],
+  },
+
   keto: {
     keywords: [
       'sugar', 'sucrose', 'glucose', 'glucose syrup', 'glucose-fructose syrup',

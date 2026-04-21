@@ -296,6 +296,11 @@ export const CONDITION_INFO: Record<string, ConditionInfoEntry> = {
     description:
       'A ketogenic or low-carb diet significantly reduces carbohydrate intake and replaces it with fat, pushing the body into a state called ketosis. This preference will flag high-carb products and highlight those that fit within a low-carb framework.',
   },
+  lowFiber: {
+    fullName: 'Low Fibre',
+    description:
+      "A low fibre diet is usually something a doctor recommends rather than a lifestyle choice. It's often used during an IBS or IBD flare, after bowel surgery, during chemotherapy, or to prepare for a colonoscopy. With this turned on, high fibre foods like wholegrains, beans, nuts, seeds and the skins of raw fruit and veg will be flagged. Talk to your healthcare provider if you're not sure whether this is right for you.",
+  },
   highProtein: {
     fullName: 'High-Protein / Fitness',
     description:

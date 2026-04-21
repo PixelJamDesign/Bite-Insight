@@ -23,6 +23,7 @@ export const Colors = {
     pescatarian: '#b3e5fc',
     kosher: '#d4b8e0',
     halal: '#8bc9a3',
+    lowFiber: '#ffe8c4',
   },
   stroke: {
     primary: '#ffffff',
