@@ -355,7 +355,13 @@ export default function HomeDashboard() {
 
         {/* ── Greeting + Profile ── */}
         <Animated.View style={[styles.greetingRow, { opacity: fadeGreeting.opacity, transform: [{ translateY: fadeGreeting.translateY }] }]}>
-          <View style={[styles.avatarLarge, focusAnim.showElevation && Shadows.level2]}>
+          <TouchableOpacity
+            style={[styles.avatarLarge, focusAnim.showElevation && Shadows.level2]}
+            onPress={() => router.push('/edit-profile' as never)}
+            activeOpacity={0.85}
+            accessibilityRole="button"
+            accessibilityLabel="Edit profile"
+          >
             {avatarUrl && !avatarLoadError ? (
               <Image
                 source={{ uri: avatarUrl }}
@@ -365,7 +371,7 @@ export default function HomeDashboard() {
             ) : (
               <Text style={styles.avatarInitials}>{initials}</Text>
             )}
-          </View>
+          </TouchableOpacity>
 
           <View style={styles.greetingText}>
             <Text style={styles.greeting}>{getGreeting(tc)}</Text>
