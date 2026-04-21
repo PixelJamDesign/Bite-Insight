@@ -39,6 +39,13 @@ export default function RecipesScreen() {
 
   const isEmpty = recipes.length === 0;
 
+  // Floating tab bar pill is 60px tall with 32px of gradient padding above
+  // and (insets.bottom + 8) below. The CTA sits just above that, with a
+  // small gap. Content scroll areas pad out far enough to clear everything.
+  const tabBarClearance = 32 + 60 + 8 + insets.bottom;
+  const footerCtaHeight = 52; // button height incl. padding
+  const contentBottomPadding = tabBarClearance + footerCtaHeight + 24;
+
   const titleExtension = (
     <View style={styles.titleExtension}>
       {/* Filter tabs */}
@@ -94,9 +101,9 @@ export default function RecipesScreen() {
             <ActivityIndicator color={Colors.secondary} />
           </View>
         ) : activeTab === 'community' ? (
-          <CommunityComingSoon />
+          <CommunityComingSoon bottomSpace={tabBarClearance} />
         ) : isEmpty ? (
-          <EmptyState />
+          <EmptyState bottomSpace={contentBottomPadding} />
         ) : (
           <FlatList
             data={recipes}
@@ -104,7 +111,10 @@ export default function RecipesScreen() {
             refreshing={loading}
             onRefresh={refresh}
             numColumns={2}
-            contentContainerStyle={styles.gridContent}
+            contentContainerStyle={[
+              styles.gridContent,
+              { paddingBottom: contentBottomPadding },
+            ]}
             columnWrapperStyle={styles.gridRow}
             renderItem={({ item }) => (
               <RecipeCard
@@ -115,9 +125,10 @@ export default function RecipesScreen() {
           />
         )}
 
-        {/* Sticky footer CTA — only visible on the My Recipes tab */}
+        {/* Sticky footer CTA — only visible on the My Recipes tab.
+            Sits just above the floating tab bar pill. */}
         {activeTab === 'my' && (
-          <View style={[styles.footerWrap, { paddingBottom: insets.bottom + 16 }]} pointerEvents="box-none">
+          <View style={[styles.footerWrap, { bottom: tabBarClearance }]} pointerEvents="box-none">
             <LinearGradient
               colors={[
                 'rgba(226,241,238,0)',
@@ -146,9 +157,9 @@ export default function RecipesScreen() {
 
 // ── Empty State ──────────────────────────────────────────────────────────────
 
-function EmptyState() {
+function EmptyState({ bottomSpace }: { bottomSpace: number }) {
   return (
-    <View style={styles.emptyWrap}>
+    <View style={[styles.emptyWrap, { paddingBottom: bottomSpace }]}>
       <View style={styles.emptyIconOuter}>
         <View style={styles.emptyIconInner}>
           <Ionicons name="restaurant-outline" size={36} color={Colors.secondary} />
@@ -169,9 +180,9 @@ function EmptyState() {
 
 // ── Community Coming Soon ────────────────────────────────────────────────────
 
-function CommunityComingSoon() {
+function CommunityComingSoon({ bottomSpace }: { bottomSpace: number }) {
   return (
-    <View style={styles.emptyWrap}>
+    <View style={[styles.emptyWrap, { paddingBottom: bottomSpace }]}>
       <View style={styles.emptyIconOuter}>
         <View style={styles.emptyIconInner}>
           <Ionicons name="people-outline" size={36} color={Colors.secondary} />
@@ -310,14 +321,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
-  // Empty state (shared by My Recipes empty + Community Coming Soon)
+  // Empty state (shared by My Recipes empty + Community Coming Soon).
+  // paddingBottom is applied dynamically by the caller so the centred
+  // content shifts up to stay clear of the tab bar + CTA.
   emptyWrap: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.s,
     paddingHorizontal: Spacing.m + Spacing.m, // matches Figma inner margin
-    paddingBottom: 160, // clear the footer CTA area
   },
   emptyIconOuter: {
     width: 73,
@@ -362,11 +374,11 @@ const styles = StyleSheet.create({
     maxWidth: 260,
   },
 
-  // Grid
+  // Grid. paddingBottom is applied dynamically per render to clear the
+  // tab bar + floating CTA.
   gridContent: {
     paddingHorizontal: Spacing.s,
     paddingTop: Spacing.s,
-    paddingBottom: 140,
     gap: 12,
   },
   gridRow: { gap: 12 },
@@ -429,14 +441,14 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_300Light',
   },
 
-  // Sticky footer CTA
+  // Sticky footer CTA. `bottom` is set per render so it clears the floating
+  // tab bar. The 60px paddingTop is the gradient-fade allowance.
   footerWrap: {
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: 0,
     paddingHorizontal: Spacing.m,
-    paddingTop: 60, // space taken by the gradient fade
+    paddingTop: 60,
   },
   footerGradient: {
     position: 'absolute',
