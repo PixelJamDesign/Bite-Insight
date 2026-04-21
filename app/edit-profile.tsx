@@ -808,7 +808,7 @@ export default function EditProfileScreen() {
                   )}
                 </View>
                 <View style={styles.cameraBadge}>
-                  <CameraIcon size={16} color="#fff" />
+                  <CameraIcon size={20} color="#fff" />
                 </View>
               </TouchableOpacity>
 
@@ -1095,8 +1095,8 @@ const styles = StyleSheet.create({
   },
   cameraBadge: {
     position: 'absolute',
-    bottom: 0,
-    right: 0,
+    bottom: -4,
+    right: -4,
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -1105,6 +1105,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 3,
     borderColor: '#fff',
+    ...Shadows.level2,
   },
 
   card: {
