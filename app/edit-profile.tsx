@@ -361,7 +361,10 @@ export default function EditProfileScreen() {
 
   // Step progress animation (5 dots max to support optional nutrient step)
   const stepAnim    = useRef(new Animated.Value(1)).current;
-  const dotPops     = useRef([0, 1, 2, 3, 4].map(() => new Animated.Value(1))).current;
+  // Max possible steps: about, health, ibsSubtype, pregnancy, nutrients,
+  // allergies, dietary, conflicts = 8. Sized to the max so dynamic step
+  // counts (e.g. after toggling IBS or Pregnancy) never index past the end.
+  const dotPops     = useRef(Array.from({ length: 8 }, () => new Animated.Value(1))).current;
   const prevStepRef = useRef(1);
 
   // Animate step tracker on step change
@@ -378,6 +381,9 @@ export default function EditProfileScreen() {
 
     if (step > prev) {
       const doneIdx = prev - 1;
+      // Skip animation if the dot is out of range (shouldn't happen now we
+      // size dotPops to the max step count, but stays safe if more steps are added)
+      if (!dotPops[doneIdx]) return;
       Animated.sequence([
         Animated.spring(dotPops[doneIdx], {
           toValue: 1.2,
@@ -554,7 +560,7 @@ export default function EditProfileScreen() {
             const animHeight = stepAnim.interpolate({ inputRange: [s - 1, s, s + 1], outputRange: [10, 10, 20], extrapolate: 'clamp' });
             const animRadius = stepAnim.interpolate({ inputRange: [s - 1, s, s + 1], outputRange: [5,  5,  10], extrapolate: 'clamp' });
             return (
-              <Animated.View key={s} style={{ transform: [{ scale: dotPops[s - 1] }] }}>
+              <Animated.View key={s} style={{ transform: [{ scale: dotPops[s - 1] ?? 1 }] }}>
                 <Animated.View style={{ width: animWidth, height: animHeight, borderRadius: animRadius, backgroundColor: bgColor, alignItems: 'center', justifyContent: 'center' }}>
                   {isDone && <TickIcon size={10} color="#fff" />}
                 </Animated.View>
