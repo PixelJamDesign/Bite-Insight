@@ -110,24 +110,22 @@ export default function RecipesScreen() {
             keyExtractor={(r) => r.id}
             refreshing={loading}
             onRefresh={refresh}
-            numColumns={2}
             contentContainerStyle={[
-              styles.gridContent,
+              styles.listContent,
               { paddingBottom: contentBottomPadding },
             ]}
-            columnWrapperStyle={styles.gridRow}
             renderItem={({ item }) => (
               <RecipeCard
                 recipe={item}
                 onPress={() => router.push(`/recipes/${item.id}` as never)}
               />
             )}
+            ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
           />
         )}
 
-        {/* Sticky footer CTA — only visible on the My Recipes tab.
-            Sits just above the floating tab bar pill. */}
-        {activeTab === 'my' && (
+        {/* Empty-state CTA (full-width) — shown only when there are no recipes */}
+        {activeTab === 'my' && isEmpty && !loading && (
           <View style={[styles.footerWrap, { bottom: tabBarClearance }]} pointerEvents="box-none">
             <LinearGradient
               colors={[
@@ -144,11 +142,20 @@ export default function RecipesScreen() {
               onPress={() => router.push('/recipes/new' as never)}
               activeOpacity={0.85}
             >
-              <Text style={styles.footerCtaText}>
-                {isEmpty ? 'Create your first recipe' : '+ New recipe'}
-              </Text>
+              <Text style={styles.footerCtaText}>Create your first recipe</Text>
             </TouchableOpacity>
           </View>
+        )}
+
+        {/* Populated-state FAB — floating 52px teal + button, bottom-right */}
+        {activeTab === 'my' && !isEmpty && (
+          <TouchableOpacity
+            style={[styles.fab, { bottom: tabBarClearance + 8 }]}
+            onPress={() => router.push('/recipes/new' as never)}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="add" size={24} color="#fff" />
+          </TouchableOpacity>
         )}
       </View>
     </ScreenLayout>
@@ -204,12 +211,12 @@ function CommunityComingSoon({ bottomSpace }: { bottomSpace: number }) {
 // ── Recipe Card ──────────────────────────────────────────────────────────────
 
 function RecipeCard({ recipe, onPress }: { recipe: Recipe; onPress: () => void }) {
-  const nutriColor = recipe.nutriscore_grade
-    ? NUTRISCORE_COLORS[recipe.nutriscore_grade as keyof typeof NUTRISCORE_COLORS]
-    : null;
+  const grade = recipe.nutriscore_grade as keyof typeof NUTRISCORE_COLORS | null | undefined;
+  const nutriColor = grade ? NUTRISCORE_COLORS[grade] : null;
 
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>
+    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.9}>
+      {/* Cover image — 180px tall, full width */}
       <View style={styles.cardCover}>
         {recipe.cover_image_url ? (
           <Image
@@ -218,27 +225,35 @@ function RecipeCard({ recipe, onPress }: { recipe: Recipe; onPress: () => void }
             resizeMode="cover"
           />
         ) : (
-          <Ionicons name="restaurant-outline" size={44} color={Colors.accent} />
-        )}
-        {recipe.nutriscore_grade && nutriColor && (
-          <View style={[styles.nutriPill, { borderColor: nutriColor }]}>
-            <Text style={[styles.nutriPillText, { color: nutriColor }]}>
-              {recipe.nutriscore_grade.toUpperCase()}
-            </Text>
+          <View style={styles.cardCoverPlaceholder}>
+            <Ionicons name="restaurant-outline" size={44} color={Colors.accent} />
           </View>
         )}
       </View>
+
+      {/* Content — name + servings, with likes pill on the right */}
       <View style={styles.cardInfo}>
-        <Text style={styles.cardName} numberOfLines={2}>{recipe.name}</Text>
-        <View style={styles.cardMeta}>
-          <Text style={styles.cardKcal}>
-            {recipe.total_kcal != null ? `${recipe.total_kcal} kcal` : '—'}
-          </Text>
+        <View style={styles.cardInfoText}>
+          <Text style={styles.cardName} numberOfLines={1}>{recipe.name}</Text>
           <Text style={styles.cardServings}>
             {recipe.servings} {recipe.servings === 1 ? 'serving' : 'servings'}
           </Text>
         </View>
+        {/* Placeholder likes pill — shows once community likes data exists */}
+        {/* {recipe.likes_count != null && (
+          <View style={styles.likesPill}>
+            <Ionicons name="thumbs-up-outline" size={14} color={Colors.secondary} />
+            <Text style={styles.likesText}>{recipe.likes_count} likes</Text>
+          </View>
+        )} */}
       </View>
+
+      {/* Floating nutri-score pill at cover/content seam */}
+      {grade && nutriColor && (
+        <View style={[styles.nutriFloat, { backgroundColor: nutriColor }]}>
+          <Text style={styles.nutriFloatText}>{grade.toUpperCase()}</Text>
+        </View>
+      )}
     </TouchableOpacity>
   );
 }
@@ -374,71 +389,109 @@ const styles = StyleSheet.create({
     maxWidth: 260,
   },
 
-  // Grid. paddingBottom is applied dynamically per render to clear the
-  // tab bar + floating CTA.
-  gridContent: {
-    paddingHorizontal: Spacing.s,
+  // Full-width card list (Figma: single column)
+  listContent: {
+    paddingHorizontal: Spacing.m,
     paddingTop: Spacing.s,
-    gap: 12,
   },
-  gridRow: { gap: 12 },
   card: {
-    flex: 1,
     backgroundColor: Colors.surface.secondary,
     borderRadius: Radius.l,
     borderWidth: 1,
     borderColor: '#aad4cd',
     overflow: 'hidden',
-    ...Shadows.level4,
+    ...Shadows.level3,
+    position: 'relative',
   },
   cardCover: {
     width: '100%',
-    aspectRatio: 1,
+    height: 180,
     backgroundColor: Colors.surface.tertiary,
+  },
+  cardCoverPlaceholder: {
+    width: '100%',
+    height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'relative',
   },
   cardImage: { width: '100%', height: '100%' },
-  nutriPill: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#fff',
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  nutriPillText: {
-    fontSize: 13,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-  },
-  cardInfo: { padding: 12, gap: 4 },
-  cardName: {
-    ...Typography.h6,
-    color: Colors.primary,
-    minHeight: 36,
-  },
-  cardMeta: {
+  cardInfo: {
+    backgroundColor: Colors.surface.secondary,
+    padding: Spacing.s,
     flexDirection: 'row',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
-    alignItems: 'center',
   },
-  cardKcal: {
-    fontSize: 12,
+  cardInfoText: { flex: 1, gap: 4 },
+  cardName: {
+    fontSize: 16,
+    lineHeight: 20,
     fontWeight: '700',
-    color: Colors.accent,
     fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
   },
   cardServings: {
-    fontSize: 11,
-    fontWeight: '300',
+    fontSize: 14,
+    lineHeight: 17,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
     color: Colors.secondary,
-    fontFamily: 'Figtree_300Light',
+    letterSpacing: -0.28,
+  },
+  likesPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#e2f1ee',
+    borderRadius: Radius.m,
+    padding: 4,
+  },
+  likesText: {
+    fontSize: 13,
+    lineHeight: 16,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.secondary,
+    letterSpacing: -0.26,
+  },
+
+  // Nutri-score pill floats at the cover/content boundary (Figma: top 139, right 9)
+  nutriFloat: {
+    position: 'absolute',
+    top: 139,
+    right: 9,
+    width: 24,
+    height: 30,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+    ...Shadows.level2,
+  },
+  nutriFloatText: {
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: '#fff',
+    textAlign: 'center',
+    textShadowColor: 'rgba(0,0,0,0.29)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+
+  // Floating FAB (populated state) — 52px teal cucumber square
+  fab: {
+    position: 'absolute',
+    right: Spacing.m,
+    width: 52,
+    height: 52,
+    borderRadius: Radius.l,
+    backgroundColor: Colors.secondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadows.level3,
   },
 
   // Sticky footer CTA. `bottom` is set per render so it clears the floating
