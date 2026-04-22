@@ -9,6 +9,18 @@ needs an update.
 ---
 
 ## Card 1 — New Feature!
+### Your recipe book
+
+Build your own recipes from the foods you scan. Add ingredients by
+scan, search or from your history, adjust servings, and watch live
+nutrition and an estimated Nutri-score update as you go. A Process
+section lets you walk through the method step-by-step. Edit mode
+makes it easy to tweak quantities, reorder ingredients, or clear a
+few out in one go.
+
+---
+
+## Card 2 — New Feature!
 ### Dashboard profile refresh
 
 Your dashboard greeting has had a proper tidy-up. Your photo now has a
@@ -19,7 +31,7 @@ collapsing extras into a neat "+N" pill.
 
 ---
 
-## Card 2 — New Feature!
+## Card 3 — New Feature!
 ### Halal dietary preference
 
 We've added Halal as a dietary preference. When it's turned on we
@@ -28,7 +40,7 @@ that wouldn't be permitted, so you can shop with confidence.
 
 ---
 
-## Card 3 — Improvement
+## Card 4 — Improvement
 ### Accurate subscription pricing
 
 The price shown inside the app now pulls directly from the store, so
@@ -37,29 +49,34 @@ Apple runs a regional promotion, you'll see it here too.
 
 ---
 
-## Card 4 — Fix
-### Reliable Plus status
+## Card 5 — Fix
+### Reliable Plus status & smoother date picker
 
-Fixed a glitch where your Plus status could briefly reset itself on
-app launch in some edge cases. Your subscription now stays locked in
-the way it should.
+Two fixes rolled into one. Your Plus status no longer briefly resets
+on app launch in edge cases, and the date-of-birth picker now behaves
+properly on both iOS and Android — no more invisible wheels and no
+more getting stuck tapping Confirm.
 
 ---
 
 # Suggested structure for `whats-new.tsx` update
 
 Replace the `CARDS` array in `app/whats-new.tsx` with the following.
-Icons pull from the existing 4-icon pool (`CARD_ICONS` array) in the
-order below. If you want different icons, swap the imports at the top
-of that file.
+Icons pull from the existing icon pool — add a 5th if needed.
 
 ```ts
 const CARDS: CardData[] = [
   {
     badge: 'New feature!',
+    title: 'Your recipe book',
+    description:
+      "Build your own recipes from the foods you scan. Add ingredients by scan, search or from your history, adjust servings, and watch live nutrition and an estimated Nutri-score update as you go. A Process section lets you walk through the method step-by-step.",
+  },
+  {
+    badge: 'New feature!',
     title: 'Dashboard profile refresh',
     description:
-      "Your dashboard greeting's had a proper tidy-up. Your photo now has a camera shortcut for changing it on the spot, tapping your image takes you to edit profile, and Plus members get a clear badge next to their name. The dietary tag row also stays tidy when you've got lots of selections.",
+      "Your dashboard greeting's had a proper tidy-up. Your photo now has a camera shortcut for changing it on the spot, tapping your image takes you to edit profile, and Plus members get a clear badge next to their name.",
   },
   {
     badge: 'New feature!',
@@ -75,9 +92,9 @@ const CARDS: CardData[] = [
   },
   {
     badge: 'Fix',
-    title: 'Reliable Plus status',
+    title: 'Reliable Plus status & smoother date picker',
     description:
-      "Fixed a glitch where your Plus status could briefly reset itself on app launch in some edge cases. Your subscription now stays locked in the way it should.",
+      "Your Plus status no longer briefly resets on app launch, and the date-of-birth picker now behaves properly on both iOS and Android.",
   },
 ];
 ```
@@ -94,14 +111,13 @@ const CARDS: CardData[] = [
 - **`bee6841` feat**: VIP lifetime access system (internal only — not user-facing)
 - **`8c2f47e` chore**: Bump version to 1.5.0
 - **`95262f2` merge**: Dashboard intro redesign (Plus chip, camera badge, tappable avatar, tag overflow, fullscreen avatar viewer, shared avatar picker)
+- **`f12b422` fix**: Resolve DOB picker Android re-open loop and iOS invisible wheels
+- **recipe-builder merge**: Recipes tab + full recipe builder (hero cover, servings stepper, live nutrition, ingredients view/edit modes, method steps)
 
 ## Parked feature branches (NOT in 1.5.0)
 
 These are pushed but unmerged. When any of these merge to `main`, the
 changelog above should be expanded.
 
-- `feature/recipe-builder` — full My Recipes builder
 - `feature/gamification` — streaks, points, referrals
-- `feature/no-gallbladder` — new health condition
-- `feature/low-fiber` — new dietary preference
-- `feature/profile-conflicts` — IBS subtype, pregnancy, conflict review
+- `feature/scanner-home-market` — US launch, region gating (targeting 1.6.0)
