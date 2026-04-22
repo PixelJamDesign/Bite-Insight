@@ -90,44 +90,71 @@ export function PregnancyStep({ status, dueDate, onChange }: Props) {
         </View>
       )}
 
-      <Modal
-        visible={datePickerOpen}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setDatePickerOpen(false)}
-      >
-        <View style={styles.modalBackdrop}>
-          <TouchableOpacity
-            style={{ flex: 1 }}
-            onPress={() => setDatePickerOpen(false)}
-            activeOpacity={1}
-          />
-          <View style={styles.modalSheet}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{label}</Text>
-              <TouchableOpacity
-                onPress={() => setDatePickerOpen(false)}
-                style={styles.closeBtn}
-              >
-                <Text style={styles.doneText}>Done</Text>
-              </TouchableOpacity>
-            </View>
-            <DateTimePicker
-              value={dueDate ? new Date(dueDate + 'T00:00:00') : new Date()}
-              mode="date"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-              onChange={(_, selected) => {
-                if (selected) {
-                  onChange(status, toLocalDateString(selected));
-                }
-                if (Platform.OS !== 'ios') setDatePickerOpen(false);
-              }}
-              // Due date can be in the future; birth date must be in the past.
-              maximumDate={status === 'breastfeeding' ? new Date() : undefined}
+      {/*
+        Platform-specific picker rendering:
+        - Android: native dialog (not a view). Must NOT be inside a JSX Modal
+          — doing so causes the dialog to re-open on every re-render, trapping
+          the user in a loop. Render the component only while open, and close
+          in onChange regardless of event.type.
+        - iOS: spinner inside a bottom sheet. Force light theme + explicit
+          textColor so the wheels aren't invisible against the white sheet
+          on dark-mode devices.
+      */}
+      {Platform.OS === 'android' && datePickerOpen && (
+        <DateTimePicker
+          value={dueDate ? new Date(dueDate + 'T00:00:00') : new Date()}
+          mode="date"
+          display="default"
+          maximumDate={status === 'breastfeeding' ? new Date() : undefined}
+          onChange={(event, selected) => {
+            // Close first — prevents re-mount-reopen loop.
+            setDatePickerOpen(false);
+            if (event.type === 'set' && selected) {
+              onChange(status, toLocalDateString(selected));
+            }
+          }}
+        />
+      )}
+      {Platform.OS === 'ios' && (
+        <Modal
+          visible={datePickerOpen}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setDatePickerOpen(false)}
+        >
+          <View style={styles.modalBackdrop}>
+            <TouchableOpacity
+              style={{ flex: 1 }}
+              onPress={() => setDatePickerOpen(false)}
+              activeOpacity={1}
             />
+            <View style={styles.modalSheet}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>{label}</Text>
+                <TouchableOpacity
+                  onPress={() => setDatePickerOpen(false)}
+                  style={styles.closeBtn}
+                >
+                  <Text style={styles.doneText}>Done</Text>
+                </TouchableOpacity>
+              </View>
+              <DateTimePicker
+                value={dueDate ? new Date(dueDate + 'T00:00:00') : new Date()}
+                mode="date"
+                display="spinner"
+                themeVariant="light"
+                textColor={Colors.primary}
+                onChange={(_, selected) => {
+                  if (selected) {
+                    onChange(status, toLocalDateString(selected));
+                  }
+                }}
+                maximumDate={status === 'breastfeeding' ? new Date() : undefined}
+              />
+            </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
+      )}
     </View>
   );
 }

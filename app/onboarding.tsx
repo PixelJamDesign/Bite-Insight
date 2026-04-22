@@ -41,7 +41,7 @@ import {
 } from '@/constants/profileOptions';
 import type { NutrientWatchlistEntry } from '@/lib/types';
 import { CameraIcon, PersonalIcon, EmailIcon, BirthdayIcon, TickIcon, InfoIcon } from '@/components/MenuIcons';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { DobPicker } from '@/components/DobPicker';
 import { formatDob, toLocalDateString } from '@/lib/dateOfBirth';
 import { ConditionInfoSheet } from '@/components/ConditionInfoSheet';
 import { SuggestionSheet, type SuggestionCategory } from '@/components/SuggestionSheet';
@@ -1070,33 +1070,15 @@ export default function OnboardingScreen() {
       onClose={() => setSuggestionCategory(null)}
       category={suggestionCategory ?? 'health_condition'}
     />
-    <Modal visible={showDatePicker} transparent animationType="slide" onRequestClose={() => setShowDatePicker(false)}>
-      <View style={pickerOverlay.backdrop}>
-        <View style={[pickerOverlay.sheet, { paddingBottom: insets.bottom + 12 }]}>
-          <View style={pickerOverlay.toolbar}>
-            <TouchableOpacity onPress={() => { setDateOfBirth(null); setShowDatePicker(false); }} activeOpacity={0.7}>
-              <Text style={pickerOverlay.clearText}>{tc('buttons.clear')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setShowDatePicker(false)}
-              activeOpacity={0.7}
-              style={pickerOverlay.doneBtn}
-            >
-              <Text style={pickerOverlay.doneBtnText}>{tc('buttons.done')}</Text>
-            </TouchableOpacity>
-          </View>
-          <DateTimePicker
-            value={dateOfBirth ?? new Date(2000, 0, 1)}
-            mode="date"
-            display="spinner"
-            maximumDate={new Date()}
-            minimumDate={new Date(1920, 0, 1)}
-            style={{ height: 216, alignSelf: 'center', width: '100%' }}
-            onChange={(_e, selected) => { if (selected) setDateOfBirth(selected); }}
-          />
-        </View>
-      </View>
-    </Modal>
+    <DobPicker
+      visible={showDatePicker}
+      value={dateOfBirth}
+      onChange={setDateOfBirth}
+      onClose={() => setShowDatePicker(false)}
+      onClear={() => setDateOfBirth(null)}
+      clearLabel={tc('buttons.clear')}
+      doneLabel={tc('buttons.done')}
+    />
     </>
   );
 }
@@ -1646,40 +1628,3 @@ const styles = StyleSheet.create({
   },
 });
 
-const pickerOverlay = StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    justifyContent: 'flex-end',
-    zIndex: 100,
-  },
-  sheet: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingTop: 12,
-  },
-  toolbar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingBottom: 4,
-  },
-  clearText: {
-    fontFamily: 'Figtree_300Light',
-    fontSize: 15,
-    color: Colors.secondary,
-  },
-  doneBtn: {
-    backgroundColor: Colors.primary,
-    borderRadius: 999,
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-  },
-  doneBtnText: {
-    fontFamily: 'Figtree_700Bold',
-    fontSize: 14,
-    color: '#fff',
-  },
-});
