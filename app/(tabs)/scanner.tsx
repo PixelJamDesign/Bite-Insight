@@ -4,7 +4,10 @@ import { CameraView, Camera, useCameraPermissions, BarcodeScanningResult } from 
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useDraftRecipe } from '@/lib/draftRecipeContext';
+import { useToast } from '@/lib/toastContext';
+import { buildProductSnapshot } from '@/lib/recipes';
 import { useTranslation } from 'react-i18next';
 import * as ImagePicker from 'expo-image-picker';
 import * as VisionScanner from '@/modules/barcode-scanner-vision/src';
@@ -32,6 +35,10 @@ export default function ScannerScreen() {
   const [regionPickerVisible, setRegionPickerVisible] = useState(false);
   const router = useRouter();
   const { session } = useAuth();
+  const scannerParams = useLocalSearchParams<{ addToRecipe?: string }>();
+  const pickMode = scannerParams.addToRecipe === '1';
+  const draftRecipe = useDraftRecipe();
+  const { showToast } = useToast();
   const { isPlus } = useSubscription();
   const { showUpsell } = useUpsellSheet();
   const insets = useSafeAreaInsets();
@@ -230,6 +237,58 @@ export default function ScannerScreen() {
           offLang         = offlineResult.offLang ?? null;
         }
         // Tier 3 (OFF API) is now handled by scan-result page — no blocking here
+      }
+
+      // ── Pick mode — add directly to draft recipe and return ────────────
+      if (pickMode) {
+        const productFound = productName !== tScan('product.unknownName') && productName !== '';
+        setProcessing(false);
+        if (!productFound) {
+          // Can't build a useful snapshot without at least a name
+          showToast({
+            message: "Product not found. Try a different barcode or search manually.",
+            variant: 'error',
+            durationMs: 3000,
+          });
+          // Reset scanner state so user can try again
+          scanLock.current = false;
+          lastScan.current = '';
+          setScanning(true);
+          return;
+        }
+        const snapshot = buildProductSnapshot({
+          product_name: productName,
+          brand,
+          image_url: imageUrl,
+          nutriscore_grade: nutriscoreGrade,
+          nutriments: {
+            energy_kcal: energyKcal ?? undefined,
+            fat_g: fat ?? undefined,
+            saturated_fat_g: saturatedFat ?? undefined,
+            carbs_g: carbs ?? undefined,
+            sugars_g: sugars ?? undefined,
+            fiber_g: fiber ?? undefined,
+            protein_g: proteins ?? undefined,
+            salt_g: salt ?? undefined,
+          },
+          allergens,
+          ingredients: [], // basic — scan-result does the fuller ingredient parsing
+        });
+        draftRecipe.addIngredient({
+          barcode: result.data,
+          scan_id: null,
+          quantity_value: 100,
+          quantity_unit: 'g',
+          quantity_display: null,
+          product_snapshot: snapshot,
+        });
+        showToast({
+          message: `Added ${productName} to recipe`,
+          variant: 'success',
+          durationMs: 2000,
+        });
+        router.back();
+        return;
       }
 
       // ── Navigate immediately — scan-result will fetch from OFF if needed ──

@@ -16,7 +16,10 @@ import {
 import { Image } from 'expo-image';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useDraftRecipe } from '@/lib/draftRecipeContext';
+import { useToast } from '@/lib/toastContext';
+import { buildProductSnapshot } from '@/lib/recipes';
 import { useTranslation } from 'react-i18next';
 import { Colors, Shadows, Spacing, Radius } from '@/constants/theme';
 import { ActionSearchIcon, ActionChevronDownIcon, ActionCheckIcon, MenuArrowLeftIcon, MenuChevronRightIcon } from '@/components/MenuIcons';
@@ -53,6 +56,9 @@ interface SearchProduct {
   image_front_small_url?: string;
   nutriscore_grade?: string;
   quantity?: string;
+  nutriments?: Record<string, number | undefined>;
+  allergens_tags?: string[];
+  ingredients?: Array<{ id?: string; text?: string }>;
 }
 
 // Adaptive debounce — adjusts based on actual typing speed
@@ -60,7 +66,8 @@ const DEBOUNCE_MIN = 300;   // fastest typists
 const DEBOUNCE_MAX = 800;   // slowest typists
 const DEBOUNCE_DEFAULT = 450;
 const PAGE_SIZE = 10;
-const SEARCH_FIELDS = 'code,product_name,brands,image_front_small_url,nutriscore_grade,quantity';
+const SEARCH_FIELDS =
+  'code,product_name,brands,image_front_small_url,nutriscore_grade,quantity,nutriments,allergens_tags,ingredients';
 // Search-a-Licious API — Elasticsearch-backed, much faster than the old CGI endpoint
 const SEARCH_API = 'https://search.openfoodfacts.org/search';
 // Fallback to classic CGI if Search-a-Licious fails
@@ -69,10 +76,14 @@ const SEARCH_CGI_PATH = 'openfoodfacts.org/cgi/search.pl';
 export default function FoodSearchScreen() {
   const { t } = useTranslation('scanner');
   const router = useRouter();
+  const params = useLocalSearchParams<{ addToRecipe?: string }>();
+  const pickMode = params.addToRecipe === '1';
   const insets = useSafeAreaInsets();
   const { isPlus } = useSubscription();
   const { showUpsell } = useUpsellSheet();
   const { session } = useAuth();
+  const draftRecipe = useDraftRecipe();
+  const { showToast } = useToast();
 
   // Page-level entrance/exit animation
   const { opacity: pageOpacity, translateX: pageTranslateX, animateExit: pageExit } = usePageTransition();
@@ -614,6 +625,39 @@ export default function FoodSearchScreen() {
     const barcode = product.code;
     const nutriscoreGrade = product.nutriscore_grade ?? '';
 
+    // ── Pick mode — add the ingredient to the draft recipe and return ────
+    if (pickMode) {
+      const snapshot = buildProductSnapshot({
+        product_name: productName || 'Unknown product',
+        brand: brand || null,
+        image_url: imageUrl || null,
+        nutriscore_grade: nutriscoreGrade || null,
+        nutriments: product.nutriments ?? null,
+        allergens: (product.allergens_tags ?? []).map((a) => a.replace(/^en:/, '')),
+        ingredients: (product.ingredients ?? []).map((i) => ({
+          id: i.id,
+          name: i.text ?? i.id ?? '',
+          is_flagged: false,
+          dietary_tags: [],
+        })),
+      });
+      draftRecipe.addIngredient({
+        barcode,
+        scan_id: null,
+        quantity_value: 100,
+        quantity_unit: 'g',
+        quantity_display: null,
+        product_snapshot: snapshot,
+      });
+      showToast({
+        message: `Added ${productName || 'ingredient'} to recipe`,
+        variant: 'success',
+        durationMs: 2000,
+      });
+      router.back();
+      return;
+    }
+
     router.push({
       pathname: '/scan-result',
       params: { scanId: '', productName, brand, imageUrl, barcode, nutriscoreGrade },
@@ -656,7 +700,7 @@ export default function FoodSearchScreen() {
         }
       })().catch((err) => console.error('Background search-scan save failed:', err));
     }
-  }, [router, session]);
+  }, [router, session, pickMode, draftRecipe, showToast]);
 
   // ── Render product row ──────────────────────────────────────────────────────
   const renderItem = useCallback(({ item }: { item: SearchProduct }) => {

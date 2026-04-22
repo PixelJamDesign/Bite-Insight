@@ -21,6 +21,8 @@ import { SubscriptionProvider } from '@/lib/subscriptionContext';
 import { ActiveFamilyProvider } from '@/lib/activeFamilyContext';
 import { RegionProvider } from '@/lib/regionContext';
 import { MenuProvider } from '@/lib/menuContext';
+import { DraftRecipeProvider } from '@/lib/draftRecipeContext';
+import { ToastProvider } from '@/lib/toastContext';
 import { JourneyProvider, useJourney } from '@/lib/journeyContext';
 import type { OnboardingStep } from '@/lib/types';
 import { UpsellSheet } from '@/components/UpsellSheet';
@@ -265,6 +267,9 @@ function RootLayoutInner() {
             <Stack.Screen name="family-members" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="add-family-member" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="food-search" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="recipes/new" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="recipes/[id]/index" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="recipes/[id]/edit" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="whats-new" options={{ animation: 'fade' }} />
             <Stack.Screen name="+not-found" />
           </Stack>
@@ -316,9 +321,13 @@ export default function RootLayout() {
                 <UpsellSheetProvider>
                   <MyPlanSheetProvider>
                     <MenuProvider>
-                      <TransitionProvider>
-                        <RootLayoutInner />
-                      </TransitionProvider>
+                      <DraftRecipeProvider>
+                        <ToastProvider>
+                          <TransitionProvider>
+                            <RootLayoutInner />
+                          </TransitionProvider>
+                        </ToastProvider>
+                      </DraftRecipeProvider>
                     </MenuProvider>
                   </MyPlanSheetProvider>
                 </UpsellSheetProvider>
