@@ -362,15 +362,16 @@ export function FamilyIngredientPreferencesPanel({
               style={styles.inlineBtn}
               activeOpacity={0.7}
             >
-              <ActionPenIcon color={Colors.secondary} size={16} />
+              {/* Fixed 20×20 slot — keeps every inline icon on the same
+                  vertical baseline regardless of the glyph inside. */}
+              <View style={styles.inlineIconSlot}>
+                <ActionPenIcon color={Colors.secondary} size={20} />
+              </View>
               <Text style={styles.inlineText}>Edit list</Text>
             </TouchableOpacity>
           )}
           <TouchableOpacity
             onPress={() => {
-              // Toggle the search bar. If an external onSearch is supplied
-              // we call it in addition (e.g. to open a full-screen picker),
-              // but the inline search is the primary affordance here.
               setSearchVisible((prev) => {
                 const next = !prev;
                 if (!next) setSearchQuery('');
@@ -381,9 +382,15 @@ export function FamilyIngredientPreferencesPanel({
             style={styles.inlineBtn}
             activeOpacity={0.7}
           >
-            <ActionSearchIcon color={Colors.secondary} size={16} />
+            <View style={styles.inlineIconSlot}>
+              {searchVisible ? (
+                <ActionClearIcon color={Colors.secondary} size={16} />
+              ) : (
+                <ActionSearchIcon color={Colors.secondary} size={20} />
+              )}
+            </View>
             <Text style={styles.inlineText}>
-              {searchVisible ? 'Close search' : 'Search'}
+              {searchVisible ? 'Close' : 'Search'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -605,6 +612,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     flexShrink: 0,
+  },
+  // Fixed 20×20 slot so every inline action icon (pen, magnifier,
+  // clear-X) occupies the same footprint. The clear X renders at 16
+  // inside the slot so it doesn't look chunky next to the 20px pen
+  // and magnifier, but the slot itself stays 20×20.
+  inlineIconSlot: {
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   inlineText: {
     fontSize: 16,
