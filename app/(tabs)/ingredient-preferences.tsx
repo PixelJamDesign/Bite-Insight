@@ -422,13 +422,10 @@ export default function IngredientPreferencesScreen() {
               <Text style={styles.actionBtnText}>{tc('buttons.editList')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionBtn} onPress={closeSearch} activeOpacity={0.7}>
-              <View style={styles.actionIconSlot}>
-                {/* Rendered at 14 inside the 20×20 slot — the 3px of
-                    empty space on each side is the close button's
-                    visual padding (keeps the X from reading as
-                    bigger than the pen/magnifier at the same slot). */}
-                <ActionClearIcon size={14} color={Colors.secondary} />
-              </View>
+              {/* No 20×20 slot here — render the close X the same way
+                  as the clear button inside the search field so the
+                  two look identical across the screen. */}
+              <ActionClearIcon size={14} color={Colors.secondary} />
               <Text style={styles.actionBtnText}>{tc('buttons.close')}</Text>
             </TouchableOpacity>
           </>

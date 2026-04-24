@@ -382,15 +382,15 @@ export function FamilyIngredientPreferencesPanel({
             style={styles.inlineBtn}
             activeOpacity={0.7}
           >
-            <View style={styles.inlineIconSlot}>
-              {searchVisible ? (
-                // 14 inside a 20×20 slot — 3px of empty space each
-                // side is the close button's visual padding.
-                <ActionClearIcon color={Colors.secondary} size={14} />
-              ) : (
+            {searchVisible ? (
+              // Close X rendered without the 20×20 slot wrapper so it
+              // matches the clear button inside the search field.
+              <ActionClearIcon color={Colors.secondary} size={14} />
+            ) : (
+              <View style={styles.inlineIconSlot}>
                 <ActionSearchIcon color={Colors.secondary} size={20} />
-              )}
-            </View>
+              </View>
+            )}
             <Text style={styles.inlineText}>
               {searchVisible ? 'Close' : 'Search'}
             </Text>
