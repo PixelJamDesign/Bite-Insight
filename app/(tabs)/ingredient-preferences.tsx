@@ -449,9 +449,12 @@ export default function IngredientPreferencesScreen() {
             <ActionSearchIcon size={24} color={Colors.secondary} />
             <TextInput
               ref={searchInputRef}
-              style={styles.searchInput}
+              style={[
+                styles.searchInput,
+                searchQuery !== '' && styles.searchInputFilled,
+              ]}
               placeholder={t('preferences.search.placeholder')}
-              placeholderTextColor={Colors.secondary}
+              placeholderTextColor="rgba(2,52,50,0.5)"
               value={searchQuery}
               onChangeText={setSearchQuery}
               autoCorrect={false}
@@ -846,6 +849,10 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     padding: 0,
     margin: 0,
+  },
+  searchInputFilled: {
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
   },
   // ── Category tab bar ──────────────────────────────────────────────────────────
   categoryTabsOuter: {

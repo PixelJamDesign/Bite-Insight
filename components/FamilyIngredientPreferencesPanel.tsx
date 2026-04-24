@@ -395,7 +395,10 @@ export function FamilyIngredientPreferencesPanel({
         <View style={styles.searchRow}>
           <ActionSearchIcon color={Colors.secondary} size={20} />
           <TextInput
-            style={styles.searchInput}
+            style={[
+              styles.searchInput,
+              searchQuery.length > 0 && styles.searchInputFilled,
+            ]}
             value={searchQuery}
             onChangeText={setSearchQuery}
             placeholder="Search ingredients…"
@@ -631,6 +634,12 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_300Light',
     color: Colors.primary,
     padding: 0,
+  },
+  // Bolden the typed text — placeholder stays light so the empty
+  // state still reads as a hint rather than a typed value.
+  searchInputFilled: {
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
   },
 
   // Category tabs

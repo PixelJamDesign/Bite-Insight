@@ -231,11 +231,14 @@ export function AddToRecipeSheet({ visible, onClose, snapshot, barcode }: Props)
                 <View style={styles.searchBox}>
                   <ActionSearchIcon color={Colors.secondary} size={18} />
                   <TextInput
-                    style={styles.searchInput}
+                    style={[
+                      styles.searchInput,
+                      search.length > 0 && styles.searchInputFilled,
+                    ]}
                     value={search}
                     onChangeText={setSearch}
                     placeholder="Search your recipes"
-                    placeholderTextColor="#99b8b3"
+                    placeholderTextColor="rgba(2,52,50,0.5)"
                   />
                 </View>
               )}
@@ -400,6 +403,10 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_300Light',
     color: Colors.primary,
     padding: 0,
+  },
+  searchInputFilled: {
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
   },
   loadingWrap: { padding: Spacing.l, alignItems: 'center' },
 

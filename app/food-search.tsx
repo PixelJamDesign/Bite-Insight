@@ -852,9 +852,12 @@ export default function FoodSearchScreen() {
           <ActionSearchIcon color={Colors.secondary} size={24} />
           <TextInput
             ref={inputRef}
-            style={styles.searchInput}
+            style={[
+              styles.searchInput,
+              query.length > 0 && styles.searchInputFilled,
+            ]}
             placeholder={t('search.placeholder')}
-            placeholderTextColor="#aad4cd"
+            placeholderTextColor="rgba(2,52,50,0.5)"
             value={query}
             onChangeText={setQuery}
             autoFocus
@@ -1079,11 +1082,16 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
     color: Colors.primary,
     letterSpacing: -0.32,
     padding: 0,
+  },
+  // Bolden the typed text so it reads as a real value, not a hint.
+  searchInputFilled: {
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
   },
   clearBtn: {
     width: 24,
