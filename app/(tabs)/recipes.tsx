@@ -298,6 +298,19 @@ function RecipeCard({
   const author = isCommunity ? (recipe as PublicRecipe).author : null;
   const authorName = author?.full_name?.trim() || 'Anonymous';
 
+  // DEV diagnostic — remove once the community avatar is confirmed
+  // rendering on-device. Logs exactly what the card receives so we
+  // can tell whether the join is populating author/avatar_url.
+  if (__DEV__ && isCommunity) {
+    // eslint-disable-next-line no-console
+    console.log('[CommunityCard]', {
+      recipeName: recipe.name,
+      hasAuthor: Boolean(author),
+      authorName: author?.full_name,
+      avatarUrl: author?.avatar_url,
+    });
+  }
+
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.9}>
       {/* Cover image — 180px tall, full width */}
@@ -329,6 +342,16 @@ function RecipeCard({
                 <Image
                   source={{ uri: author.avatar_url }}
                   style={styles.authorAvatarImage}
+                  onError={(e) => {
+                    if (__DEV__) {
+                      // eslint-disable-next-line no-console
+                      console.warn(
+                        '[CommunityCard] avatar load failed',
+                        author.avatar_url,
+                        e.nativeEvent,
+                      );
+                    }
+                  }}
                 />
               ) : (
                 <View style={styles.authorAvatarFallback}>
