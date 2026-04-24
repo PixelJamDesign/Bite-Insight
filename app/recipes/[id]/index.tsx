@@ -33,6 +33,8 @@ import { useTranslation } from 'react-i18next';
 import { useRecipe } from '@/lib/useRecipes';
 import { deleteRecipe, duplicateRecipe, computeTotalWeightGrams } from '@/lib/recipes';
 import { useAuth } from '@/lib/auth';
+import { useSubscription } from '@/lib/subscriptionContext';
+import { useUpsellSheet } from '@/lib/upsellSheetContext';
 import { RecipeActionsSheet } from '@/components/RecipeActionsSheet';
 import { FamilyImpactSheet, type FlaggedMatch } from '@/components/FamilyImpactSheet';
 import {
@@ -81,8 +83,10 @@ type NutritionMode = 'serving' | 'per100';
 export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session } = useAuth();
+  const { isPlus } = useSubscription();
+  const { showUpsell } = useUpsellSheet();
   const insets = useSafeAreaInsets();
-  const { recipe, loading, household } = useRecipe(id);
+  const { recipe, loading, household, refresh: refreshRecipe } = useRecipe(id);
   // Profile-options namespace — the same translation source used by the
   // family-members screen and scan-result flag chips. Keeps chip labels
   // consistent across the app (e.g. "adhd" → "ADHD", "keto" → "Low Carb/Keto").
@@ -278,6 +282,55 @@ export default function RecipeDetailScreen() {
     if (!session?.user?.id) return;
     const newId = await duplicateRecipe(session.user.id, currentRecipe.id);
     if (newId) router.replace(`/recipes/${newId}` as never);
+  }
+
+  // Community sharing — Plus-gated. Non-Plus taps open the upsell sheet.
+  // Plus members toggle recipes.visibility between 'public' and 'private'
+  // after confirmation. No complex share flow here; the recipe simply
+  // becomes discoverable (or not) to other users.
+  async function handleShareWithCommunity() {
+    if (!isPlus) {
+      showUpsell();
+      return;
+    }
+    const isCurrentlyShared = currentRecipe.visibility === 'public';
+    if (isCurrentlyShared) {
+      Alert.alert(
+        'Stop sharing?',
+        `"${currentRecipe.name}" will no longer be visible to the community.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Stop sharing',
+            onPress: async () => {
+              await supabase
+                .from('recipes')
+                .update({ visibility: 'private' })
+                .eq('id', currentRecipe.id);
+              await refreshRecipe();
+            },
+          },
+        ],
+      );
+      return;
+    }
+    Alert.alert(
+      'Share with community?',
+      `"${currentRecipe.name}" will be visible to other Bite Insight users. You can stop sharing at any time.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Share',
+          onPress: async () => {
+            await supabase
+              .from('recipes')
+              .update({ visibility: 'public' })
+              .eq('id', currentRecipe.id);
+            await refreshRecipe();
+          },
+        },
+      ],
+    );
   }
 
   // Author display. Recipes don't carry an owner name today, so derive
@@ -509,6 +562,9 @@ export default function RecipeDetailScreen() {
         onEdit={() => router.push(`/recipes/${currentRecipe.id}/edit` as never)}
         onDuplicate={handleDuplicate}
         onDelete={handleDelete}
+        onShareWithCommunity={handleShareWithCommunity}
+        isShared={currentRecipe.visibility === 'public'}
+        isPlus={isPlus}
       />
 
       <FamilyImpactSheetForMember

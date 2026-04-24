@@ -32,9 +32,28 @@ interface Props {
   onEdit: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
+  /** Fires when the user taps "Share with community". The parent decides
+   *  whether to trigger the upsell sheet (non-Plus) or perform the share. */
+  onShareWithCommunity: () => void;
+  /** Whether this recipe is currently visible to the community
+   *  (visibility === 'public'). Controls the share row copy + icon. */
+  isShared: boolean;
+  /** Plus-gate for the share row. When false, a "Plus" badge is shown on
+   *  the row title and the parent's onShareWithCommunity handler is
+   *  expected to route to the upsell sheet. */
+  isPlus: boolean;
 }
 
-export function RecipeActionsSheet({ visible, onClose, onEdit, onDuplicate, onDelete }: Props) {
+export function RecipeActionsSheet({
+  visible,
+  onClose,
+  onEdit,
+  onDuplicate,
+  onDelete,
+  onShareWithCommunity,
+  isShared,
+  isPlus,
+}: Props) {
   const { rendered, backdropOpacity, sheetTranslateY } = useSheetAnimation(visible);
 
   return (
@@ -88,6 +107,22 @@ export function RecipeActionsSheet({ visible, onClose, onEdit, onDuplicate, onDe
                   }}
                 />
                 <ActionRow
+                  icon={isShared ? 'people' : 'people-outline'}
+                  iconColor={Colors.primary}
+                  tint={SPRING_WATER}
+                  title={isShared ? 'Stop sharing' : 'Share with community'}
+                  subtitle={
+                    isShared
+                      ? 'Make this recipe private again'
+                      : 'Let other Bite Insight users discover it'
+                  }
+                  badge={!isPlus ? 'Plus' : undefined}
+                  onPress={() => {
+                    onClose();
+                    onShareWithCommunity();
+                  }}
+                />
+                <ActionRow
                   icon="trash-outline"
                   iconColor={DESTRUCTIVE_RED}
                   tint={DESTRUCTIVE_TINT}
@@ -120,6 +155,7 @@ function ActionRow({
   tint,
   title,
   subtitle,
+  badge,
   onPress,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
@@ -127,6 +163,9 @@ function ActionRow({
   tint: string;
   title: string;
   subtitle: string;
+  /** Optional small pill shown to the right of the title — used to
+   *  indicate a Plus-gated action. */
+  badge?: string;
   onPress: () => void;
 }) {
   return (
@@ -135,7 +174,14 @@ function ActionRow({
         <Ionicons name={icon} size={22} color={iconColor} />
       </View>
       <View style={styles.rowInfo}>
-        <Text style={styles.rowTitle}>{title}</Text>
+        <View style={styles.rowTitleLine}>
+          <Text style={styles.rowTitle}>{title}</Text>
+          {badge && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{badge}</Text>
+            </View>
+          )}
+        </View>
         <Text style={styles.rowSub}>{subtitle}</Text>
       </View>
     </TouchableOpacity>
@@ -211,6 +257,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   rowInfo: { flex: 1, gap: 4 },
+  rowTitleLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   rowTitle: {
     fontSize: 16,
     lineHeight: 17.6, // Figma: 1.1
@@ -218,6 +269,21 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
     letterSpacing: -0.32,
+  },
+  badge: {
+    backgroundColor: '#ffc72d',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 999,
+  },
+  badgeText: {
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: 0.2,
+    textTransform: 'uppercase',
   },
   rowSub: {
     fontSize: 14,
