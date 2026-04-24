@@ -53,8 +53,8 @@ import {
 } from '@/lib/householdImpact';
 import { supabase } from '@/lib/supabase';
 import ArrowLeftIcon from '@/assets/icons/recipe-header/arrow-left.svg';
-import HeartOutlineIcon from '@/assets/icons/recipe-header/heart-outline.svg';
-import HeartFilledIcon from '@/assets/icons/recipe-header/heart-filled.svg';
+import ThumbOutlineIcon from '@/assets/icons/recipe-header/thumb-outline.svg';
+import ThumbFilledIcon from '@/assets/icons/recipe-header/thumb-filled.svg';
 import LikeThumbIcon from '@/assets/icons/recipe-header/like-thumb.svg';
 import type {
   FamilyProfile,
@@ -482,9 +482,9 @@ export default function RecipeDetailScreen() {
             hitSlop={8}
           >
             {liked ? (
-              <HeartFilledIcon width={22} height={20} />
+              <ThumbFilledIcon width={22} height={24} />
             ) : (
-              <HeartOutlineIcon width={22} height={20} />
+              <ThumbOutlineIcon width={22} height={24} />
             )}
           </TouchableOpacity>
         )}
