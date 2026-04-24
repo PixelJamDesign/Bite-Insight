@@ -25,6 +25,7 @@ import {
   Image,
   ActivityIndicator,
   Alert,
+  Share,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -283,6 +284,20 @@ export default function RecipeDetailScreen() {
     if (!session?.user?.id) return;
     const newId = await duplicateRecipe(session.user.id, currentRecipe.id);
     if (newId) router.replace(`/recipes/${newId}` as never);
+  }
+
+  // "Share with a friend" — opens the native share sheet with a
+  // biteinsight:// deep link so a recipient on Bite Insight can open
+  // the recipe directly. Not Plus-gated — any user can share their
+  // own creations.
+  async function handleShareWithFriend() {
+    try {
+      const url = `biteinsight://recipes/${currentRecipe.id}`;
+      const message = `Check out "${currentRecipe.name}" on Bite Insight: ${url}`;
+      await Share.share({ message, url, title: currentRecipe.name });
+    } catch (e) {
+      console.warn('[recipe-detail] share failed:', e);
+    }
   }
 
   // Community sharing — Plus-gated. Non-Plus taps open the upsell sheet.
@@ -562,12 +577,14 @@ export default function RecipeDetailScreen() {
       </ScrollView>
 
       <RecipeActionsSheet
+        variant="owner"
         visible={actionsOpen}
         onClose={() => setActionsOpen(false)}
         onEdit={() => router.push(`/recipes/${currentRecipe.id}/edit` as never)}
         onDuplicate={handleDuplicate}
         onDelete={handleDelete}
         onShareWithCommunity={handleShareWithCommunity}
+        onShareWithFriend={handleShareWithFriend}
         isShared={currentRecipe.visibility === 'public'}
         isPlus={isPlus}
       />
