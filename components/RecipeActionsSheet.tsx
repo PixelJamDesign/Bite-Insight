@@ -1,17 +1,21 @@
 /**
- * RecipeActionsSheet — bottom sheet with Edit / Duplicate / Delete actions.
+ * RecipeActionsSheet — bottom sheet with Edit / Duplicate / Share /
+ * Delete actions.
  *
- * Pixel-matches Figma node 4817-7241:
+ * Pixel-matches Figma node 4817-7241 (+ 4828-26060 for the Share row):
  *   • 24px top-corner sheet, 24px horizontal padding, 24 top / 48 bottom
  *   • Top handle (110×6 #d9d9d9 at top:7) + trailing close X
  *   • "Recipe actions" Heading 3 title
- *   • Three action rows — each a white card with 1px #aad4cd border and
- *     8px radius, containing a 48×48 circular icon tile on the left and
- *     title + subtitle on the right
- *   • Edit/Duplicate icons use the spring-water teal tint (#e2f1ee)
- *   • Delete uses a rose-pink tint on the icon tile and keeps the title
- *     in the primary colour (subtitle stays secondary teal — the only
- *     visual signal for destructive intent is the icon colour)
+ *   • Four action rows — white cards, 1px #aad4cd border, 8px radius,
+ *     48×48 circular icon tile on the left, title + subtitle on the right
+ *   • The Share row sits between Duplicate and Delete and shows a
+ *     Plus+ tag on the right for non-Plus users (dark teal pill with
+ *     lowercase "plus" text + gradient sparkle glyph)
+ *   • Delete uses a rose-pink tint on the icon tile; all other icons
+ *     sit on the spring-water teal tint (#e2f1ee)
+ *
+ * Custom SVG icons live in assets/icons/recipe-actions/ — exported
+ * directly from the Figma design system so strokes match exactly.
  */
 import {
   View,
@@ -25,6 +29,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Radius } from '@/constants/theme';
 import { useSheetAnimation } from '@/lib/useSheetAnimation';
+import EditIcon from '@/assets/icons/recipe-actions/edit.svg';
+import DuplicateIcon from '@/assets/icons/recipe-actions/duplicate.svg';
+import ShareIcon from '@/assets/icons/recipe-actions/share.svg';
+import TrashIcon from '@/assets/icons/recipe-actions/trash.svg';
+import PlusSparkleIcon from '@/assets/icons/plus-sparkle.svg';
 
 interface Props {
   visible: boolean;
@@ -32,17 +41,21 @@ interface Props {
   onEdit: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
-  /** Fires when the user taps "Share with community". The parent decides
-   *  whether to trigger the upsell sheet (non-Plus) or perform the share. */
+  /** Fires when the user taps "Share to the community". The parent
+   *  decides whether to open the upsell sheet (non-Plus) or toggle
+   *  recipes.visibility between 'public' / 'private'. */
   onShareWithCommunity: () => void;
-  /** Whether this recipe is currently visible to the community
-   *  (visibility === 'public'). Controls the share row copy + icon. */
+  /** True when recipes.visibility === 'public'. Controls the row
+   *  copy — "Share to the community" vs "Stop sharing". */
   isShared: boolean;
-  /** Plus-gate for the share row. When false, a "Plus" badge is shown on
-   *  the row title and the parent's onShareWithCommunity handler is
-   *  expected to route to the upsell sheet. */
+  /** When false, the Share row shows the Plus+ tag on the right edge
+   *  so the user knows they need to upgrade to use this action. */
   isPlus: boolean;
 }
+
+// ── Icon tile colours (Figma-sourced) ───────────────────────────────────
+const SPRING_WATER = '#e2f1ee';
+const DESTRUCTIVE_TINT = 'rgba(255, 47, 97, 0.1)';
 
 export function RecipeActionsSheet({
   visible,
@@ -67,7 +80,7 @@ export function RecipeActionsSheet({
             {/* Handle */}
             <View style={styles.handle} />
 
-            {/* Close X — on its own row, top-right, no background */}
+            {/* Close X */}
             <View style={styles.closeRow}>
               <TouchableOpacity
                 style={styles.closeBtn}
@@ -85,8 +98,8 @@ export function RecipeActionsSheet({
 
               <View style={styles.rows}>
                 <ActionRow
-                  icon="create-outline"
-                  iconColor={Colors.primary}
+                  IconSvg={EditIcon}
+                  iconSize={20}
                   tint={SPRING_WATER}
                   title="Edit recipe"
                   subtitle="Update name, servings, ingredients"
@@ -96,8 +109,8 @@ export function RecipeActionsSheet({
                   }}
                 />
                 <ActionRow
-                  icon="copy-outline"
-                  iconColor={Colors.primary}
+                  IconSvg={DuplicateIcon}
+                  iconSize={22}
                   tint={SPRING_WATER}
                   title="Duplicate recipe"
                   subtitle="Create a copy you can tweak"
@@ -107,24 +120,24 @@ export function RecipeActionsSheet({
                   }}
                 />
                 <ActionRow
-                  icon={isShared ? 'people' : 'people-outline'}
-                  iconColor={Colors.primary}
+                  IconSvg={ShareIcon}
+                  iconSize={22}
                   tint={SPRING_WATER}
-                  title={isShared ? 'Stop sharing' : 'Share with community'}
+                  title={isShared ? 'Stop sharing' : 'Share to the community'}
                   subtitle={
                     isShared
                       ? 'Make this recipe private again'
-                      : 'Let other Bite Insight users discover it'
+                      : 'Share your creation with the\nBite Insight+ Community'
                   }
-                  badge={!isPlus ? 'Plus' : undefined}
+                  rightAccessory={!isPlus ? <PlusTag /> : undefined}
                   onPress={() => {
                     onClose();
                     onShareWithCommunity();
                   }}
                 />
                 <ActionRow
-                  icon="trash-outline"
-                  iconColor={DESTRUCTIVE_RED}
+                  IconSvg={TrashIcon}
+                  iconSize={22}
                   tint={DESTRUCTIVE_TINT}
                   title="Delete recipe"
                   subtitle="Permanently remove this recipe"
@@ -142,49 +155,59 @@ export function RecipeActionsSheet({
   );
 }
 
-// ── Icon tile colours ────────────────────────────────────────────────────
-const SPRING_WATER = '#e2f1ee';
-const DESTRUCTIVE_RED = '#ff2f61';
-const DESTRUCTIVE_TINT = 'rgba(255, 47, 97, 0.1)';
-
 // ─────────────────────────────────────────────────────────────────────────
 
+type SvgComponent = React.FC<{ width?: number; height?: number }>;
+
 function ActionRow({
-  icon,
-  iconColor,
+  IconSvg,
+  iconSize,
   tint,
   title,
   subtitle,
-  badge,
+  rightAccessory,
   onPress,
 }: {
-  icon: keyof typeof Ionicons.glyphMap;
-  iconColor: string;
+  IconSvg: SvgComponent;
+  iconSize: number;
   tint: string;
   title: string;
   subtitle: string;
-  /** Optional small pill shown to the right of the title — used to
-   *  indicate a Plus-gated action. */
-  badge?: string;
+  /** Optional element rendered on the right edge of the card, aligned
+   *  to the top. Used for the Plus+ tag on the Share row. */
+  rightAccessory?: React.ReactNode;
   onPress: () => void;
 }) {
   return (
-    <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.85}>
-      <View style={[styles.rowIcon, { backgroundColor: tint }]}>
-        <Ionicons name={icon} size={22} color={iconColor} />
-      </View>
-      <View style={styles.rowInfo}>
-        <View style={styles.rowTitleLine}>
-          <Text style={styles.rowTitle}>{title}</Text>
-          {badge && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{badge}</Text>
-            </View>
-          )}
+    <TouchableOpacity
+      style={[styles.row, rightAccessory ? styles.rowWithAccessory : null]}
+      onPress={onPress}
+      activeOpacity={0.85}
+    >
+      <View style={styles.rowMain}>
+        <View style={[styles.rowIcon, { backgroundColor: tint }]}>
+          <IconSvg width={iconSize} height={iconSize} />
         </View>
-        <Text style={styles.rowSub}>{subtitle}</Text>
+        <View style={styles.rowInfo}>
+          <Text style={styles.rowTitle}>{title}</Text>
+          <Text style={styles.rowSub}>{subtitle}</Text>
+        </View>
       </View>
+      {rightAccessory}
     </TouchableOpacity>
+  );
+}
+
+/**
+ * Plus+ tag — Figma "Plus Tag" variant of the BiteInsight upsell banner.
+ * Dark teal pill, white lowercase "plus", gradient sparkle glyph.
+ */
+function PlusTag() {
+  return (
+    <View style={styles.plusTag}>
+      <Text style={styles.plusTagText}>plus</Text>
+      <PlusSparkleIcon width={8} height={8} />
+    </View>
   );
 }
 
@@ -200,7 +223,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 24,
     paddingHorizontal: 24,
     paddingTop: 7,
-    paddingBottom: 48, // generous breathing room above home indicator
+    paddingBottom: 48,
   },
   handle: {
     alignSelf: 'center',
@@ -221,7 +244,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   body: {
-    gap: 32, // Figma: gap-l between title and action list
+    gap: 32,
     marginTop: 8,
   },
   title: {
@@ -233,11 +256,11 @@ const styles = StyleSheet.create({
     letterSpacing: -0.48,
   },
 
-  rows: {
-    gap: 8,
-  },
+  rows: { gap: 8 },
 
-  // Action row card
+  // Base row card. `items-center` for normal rows; rows with a
+  // right accessory switch to `items-start` so the accessory pins
+  // to the top of the card (matches Figma).
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -249,6 +272,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
   },
+  rowWithAccessory: {
+    alignItems: 'flex-start',
+  },
+  rowMain: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
   rowIcon: {
     width: 48,
     height: 48,
@@ -257,33 +289,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   rowInfo: { flex: 1, gap: 4 },
-  rowTitleLine: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
   rowTitle: {
     fontSize: 16,
-    lineHeight: 17.6, // Figma: 1.1
+    lineHeight: 17.6,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
     letterSpacing: -0.32,
-  },
-  badge: {
-    backgroundColor: '#ffc72d',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 999,
-  },
-  badgeText: {
-    fontSize: 10,
-    lineHeight: 14,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
-    letterSpacing: 0.2,
-    textTransform: 'uppercase',
   },
   rowSub: {
     fontSize: 14,
@@ -292,5 +304,26 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_300Light',
     color: Colors.secondary,
     letterSpacing: -0.14,
+  },
+
+  // Plus+ tag (Figma "Plus Tag" variant) — dark teal pill with white
+  // "plus" text and a small gradient sparkle. Sits top-right of the
+  // Share row for non-Plus members.
+  plusTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: Colors.surface.contrast, // #023432
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  plusTagText: {
+    fontSize: 16,
+    lineHeight: 17.6,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: '#ffffff',
+    letterSpacing: -0.32,
   },
 });
