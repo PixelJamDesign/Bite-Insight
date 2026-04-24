@@ -100,7 +100,7 @@ export function DobPicker({
 
   // ── iOS: spinner inside a bottom-sheet Modal. ─────────────────────────────
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.backdrop}>
         <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={onClose} />
         <View style={[styles.sheet, { paddingBottom: insets.bottom + 12 }]}>

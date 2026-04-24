@@ -106,9 +106,18 @@ export interface FamilyProfile {
   health_conditions: string[];
   allergies: string[];
   nutrient_watchlist: NutrientWatchlistEntry[];
+  // Per-member ingredient preferences (added in 1.5.0). Mutually
+  // exclusive — an ingredient is in at most one of these three arrays.
+  liked_ingredients: string[] | null;
+  disliked_ingredients: string[] | null;
+  flagged_ingredients: string[] | null;
   ibs_subtype: IbsSubtype | null;
   pregnancy_due_date: string | null;
   pregnancy_status: PregnancyStatus | null;
+  // Forward-compat pointer to a real user account — populated only via
+  // the future invite/accept flow, gated by a DB trigger.
+  linked_user_id: string | null;
+  linked_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -146,6 +155,12 @@ export interface ProductSnapshot {
     is_flagged: boolean;
     dietary_tags?: DietaryTag[];
   }>;
+  /** Raw ingredient text captured at snapshot time (e.g. OFF's
+   *  `ingredients_text`). Populated for new recipes; optional for
+   *  back-compat with older snapshots that only stored the structured
+   *  array. Used by the recipe impact matcher as a fallback when the
+   *  structured `ingredients` array is empty. */
+  ingredients_text?: string | null;
 }
 
 export interface RecipeIngredient {

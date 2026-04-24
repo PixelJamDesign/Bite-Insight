@@ -12,12 +12,14 @@ import {
   Modal,
   Image,
   ActivityIndicator,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { Colors, Spacing, Radius, Shadows, Typography } from '@/constants/theme';
+import { useSheetAnimation } from '@/lib/useSheetAnimation';
 import type { Scan } from '@/lib/types';
 
 interface Props {
@@ -30,6 +32,7 @@ export function ScanPickerSheet({ visible, onClose, onPick }: Props) {
   const { session } = useAuth();
   const [scans, setScans] = useState<Scan[]>([]);
   const [loading, setLoading] = useState(false);
+  const { rendered, backdropOpacity, sheetTranslateY } = useSheetAnimation(visible);
 
   useEffect(() => {
     if (!visible || !session?.user?.id) return;
@@ -51,9 +54,12 @@ export function ScanPickerSheet({ visible, onClose, onPick }: Props) {
   }, [visible, session?.user?.id]);
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal visible={rendered} transparent animationType="none" onRequestClose={onClose}>
       <View style={styles.backdrop}>
-        <TouchableOpacity style={styles.backdropTouch} onPress={onClose} activeOpacity={1} />
+        <Animated.View style={[styles.backdropTint, { opacity: backdropOpacity }]}>
+          <TouchableOpacity style={StyleSheet.absoluteFill} onPress={onClose} activeOpacity={1} />
+        </Animated.View>
+        <Animated.View style={{ transform: [{ translateY: sheetTranslateY }] }}>
         <SafeAreaView style={styles.sheet} edges={['bottom']}>
           <View style={styles.handle} />
           <View style={styles.header}>
@@ -77,7 +83,7 @@ export function ScanPickerSheet({ visible, onClose, onPick }: Props) {
             <FlatList
               data={scans}
               keyExtractor={(s) => s.id}
-              contentContainerStyle={{ paddingBottom: Spacing.m }}
+              contentContainerStyle={{ paddingBottom: Spacing.l }}
               renderItem={({ item }) => (
                 <TouchableOpacity
                   style={styles.row}
@@ -103,6 +109,7 @@ export function ScanPickerSheet({ visible, onClose, onPick }: Props) {
             />
           )}
         </SafeAreaView>
+        </Animated.View>
       </View>
     </Modal>
   );
@@ -111,9 +118,12 @@ export function ScanPickerSheet({ visible, onClose, onPick }: Props) {
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
   },
-  backdropTouch: { flex: 1 },
+  backdropTint: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 41, 35, 0.55)',
+  },
   sheet: {
     backgroundColor: Colors.surface.secondary,
     borderTopLeftRadius: 20,

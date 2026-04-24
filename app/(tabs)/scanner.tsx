@@ -272,7 +272,11 @@ export default function ScannerScreen() {
             salt_g: salt ?? undefined,
           },
           allergens,
-          ingredients: [], // basic — scan-result does the fuller ingredient parsing
+          ingredients: [],
+          // Thread raw OFF ingredient text through — buildProductSnapshot
+          // parses it into structured entries *and* persists it on the
+          // snapshot so the family impact matcher can search it later.
+          ingredients_text: ingredientsText,
         });
         draftRecipe.addIngredient({
           barcode: result.data,

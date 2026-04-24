@@ -2,6 +2,23 @@
  * PregnancyStep — captures pregnancy status and due date (or baby's
  * birth date for breastfeeding) as a follow-up after the user selects
  * Pregnancy as a health condition.
+ *
+ * Pixel-matches Figma node 4799-23015 ("Pregnancy Details" conditions panel):
+ *   • White card container, 1px white border, 16px radius, pt:24 px:16 pb:16
+ *   • Heading 4 title + body-regular secondary copy
+ *   • Two status rows — 8px radius cards with 24px square checkboxes
+ *       - Default:  white bg, 1px #aad4cd border, primary text,
+ *                   secondary-teal subtitle
+ *       - Selected: dark primary (#023432) bg, white title, aloe-vera
+ *                   (#aad4cd) subtitle, filled green checkbox, level-2 shadow
+ *   • Due date field — h5 label + bordered input button with calendar
+ *     icon; placeholder at 50% opacity
+ *
+ * The date picker below is platform-correct:
+ *   Android — native dialog rendered only while open (no JSX Modal wrapper
+ *             or it re-opens on every re-render).
+ *   iOS     — spinner inside a bottom-sheet Modal with light theme + explicit
+ *             textColor so wheels are always readable.
  */
 import { useState } from 'react';
 import {
@@ -14,7 +31,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Colors, Spacing, Radius, Shadows, Typography } from '@/constants/theme';
+import { Colors, Radius, Shadows } from '@/constants/theme';
 import { formatDob } from '@/lib/dateOfBirth';
 import type { PregnancyStatus } from '@/lib/types';
 
@@ -24,9 +41,21 @@ interface Props {
   onChange: (status: PregnancyStatus | null, dueDate: string | null) => void;
 }
 
-const STATUS_OPTIONS: Array<{ key: PregnancyStatus; title: string; subtitle: string }> = [
-  { key: 'pregnant',     title: 'Currently pregnant',    subtitle: "We'll tailor guidance by trimester" },
-  { key: 'breastfeeding', title: 'Currently breastfeeding', subtitle: 'Nutritional focus shifts after birth' },
+const STATUS_OPTIONS: Array<{
+  key: PregnancyStatus;
+  title: string;
+  subtitle: string;
+}> = [
+  {
+    key: 'pregnant',
+    title: 'Currently pregnant',
+    subtitle: "We'll tailor guidance by trimester",
+  },
+  {
+    key: 'breastfeeding',
+    title: 'Currently breastfeeding',
+    subtitle: 'Nutritional focus shifts after birth',
+  },
 ];
 
 function toLocalDateString(d: Date): string {
@@ -39,17 +68,26 @@ function toLocalDateString(d: Date): string {
 export function PregnancyStep({ status, dueDate, onChange }: Props) {
   const [datePickerOpen, setDatePickerOpen] = useState(false);
 
-  const label = status === 'pregnant' ? 'Due date' : "Baby's birth date";
-  const placeholder = status === 'pregnant' ? 'Pick your due date' : "Pick baby's birth date";
+  const dueLabel = status === 'pregnant' ? 'Due date' : "Baby's birth date";
+  const duePlaceholder =
+    status === 'pregnant' ? 'Pick your due date' : "Pick baby's birth date";
 
+  // NOTE: the white card chrome is supplied by the parent screen (onboarding
+  // and edit-profile both wrap this step in their own styles.card). So this
+  // component renders raw content with vertical spacing only — no border,
+  // background, or padding of its own.
   return (
     <View style={styles.wrap}>
-      <Text style={styles.heading}>Tell us a bit more</Text>
-      <Text style={styles.subheading}>
-        Pregnancy and breastfeeding both shift your nutritional needs. This helps us
-        show the right information at the right time.
-      </Text>
+      {/* Heading + copy */}
+      <View style={styles.headingBlock}>
+        <Text style={styles.heading}>Tell us a bit more</Text>
+        <Text style={styles.subheading}>
+          Pregnancy and breastfeeding both shift your nutritional needs. This
+          helps us show the right information at the right time.
+        </Text>
+      </View>
 
+      {/* Status options */}
       <View style={styles.options}>
         {STATUS_OPTIONS.map((opt) => {
           const selected = status === opt.key;
@@ -60,45 +98,50 @@ export function PregnancyStep({ status, dueDate, onChange }: Props) {
               onPress={() => onChange(opt.key, dueDate)}
               activeOpacity={0.85}
             >
-              <View style={[styles.radio, selected && styles.radioSelected]}>
-                {selected && (
-                  <Ionicons name="checkmark" size={14} color="#fff" />
-                )}
+              <View style={[styles.checkbox, selected && styles.checkboxChecked]}>
+                {selected && <Ionicons name="checkmark" size={16} color="#fff" />}
               </View>
               <View style={styles.info}>
-                <Text style={styles.title}>{opt.title}</Text>
-                <Text style={styles.subtitle}>{opt.subtitle}</Text>
+                <Text
+                  style={[styles.rowTitle, selected && styles.rowTitleSelected]}
+                >
+                  {opt.title}
+                </Text>
+                <Text
+                  style={[
+                    styles.rowSubtitle,
+                    selected && styles.rowSubtitleSelected,
+                  ]}
+                >
+                  {opt.subtitle}
+                </Text>
               </View>
             </TouchableOpacity>
           );
         })}
       </View>
 
+      {/* Due date field (only visible once a status is chosen) */}
       {status && (
         <View style={styles.dateBlock}>
-          <Text style={styles.fieldLabel}>{label}</Text>
+          <Text style={styles.fieldLabel}>{dueLabel}</Text>
           <TouchableOpacity
             style={styles.dateBtn}
             onPress={() => setDatePickerOpen(true)}
             activeOpacity={0.85}
           >
-            <Ionicons name="calendar-outline" size={20} color={Colors.secondary} />
-            <Text style={[styles.dateValue, !dueDate && styles.datePlaceholder]}>
-              {dueDate ? formatDob(dueDate) : placeholder}
+            <Ionicons name="calendar-outline" size={24} color={Colors.primary} />
+            <Text
+              style={[styles.dateValue, !dueDate && styles.datePlaceholder]}
+            >
+              {dueDate ? formatDob(dueDate) : duePlaceholder}
             </Text>
           </TouchableOpacity>
         </View>
       )}
 
       {/*
-        Platform-specific picker rendering:
-        - Android: native dialog (not a view). Must NOT be inside a JSX Modal
-          — doing so causes the dialog to re-open on every re-render, trapping
-          the user in a loop. Render the component only while open, and close
-          in onChange regardless of event.type.
-        - iOS: spinner inside a bottom sheet. Force light theme + explicit
-          textColor so the wheels aren't invisible against the white sheet
-          on dark-mode devices.
+        Platform-specific picker rendering (see header comment).
       */}
       {Platform.OS === 'android' && datePickerOpen && (
         <DateTimePicker
@@ -107,7 +150,6 @@ export function PregnancyStep({ status, dueDate, onChange }: Props) {
           display="default"
           maximumDate={status === 'breastfeeding' ? new Date() : undefined}
           onChange={(event, selected) => {
-            // Close first — prevents re-mount-reopen loop.
             setDatePickerOpen(false);
             if (event.type === 'set' && selected) {
               onChange(status, toLocalDateString(selected));
@@ -119,7 +161,7 @@ export function PregnancyStep({ status, dueDate, onChange }: Props) {
         <Modal
           visible={datePickerOpen}
           transparent
-          animationType="slide"
+          animationType="fade"
           onRequestClose={() => setDatePickerOpen(false)}
         >
           <View style={styles.modalBackdrop}>
@@ -130,7 +172,7 @@ export function PregnancyStep({ status, dueDate, onChange }: Props) {
             />
             <View style={styles.modalSheet}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>{label}</Text>
+                <Text style={styles.modalTitle}>{dueLabel}</Text>
                 <TouchableOpacity
                   onPress={() => setDatePickerOpen(false)}
                   style={styles.closeBtn}
@@ -159,113 +201,155 @@ export function PregnancyStep({ status, dueDate, onChange }: Props) {
   );
 }
 
+// ── Styles ───────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  wrap: { gap: Spacing.s },
-  heading: { ...Typography.h3, color: Colors.primary },
+  // Outer wrapper — parent screen owns the card chrome (white bg, border,
+  // padding). We just stack our sections with 24px gap to match Figma's
+  // gap-m between heading, options, and due-date field.
+  wrap: {
+    gap: 24,
+  },
+
+  // Heading block
+  headingBlock: { gap: 8 },
+  heading: {
+    fontSize: 20,
+    lineHeight: 24,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.4,
+  },
   subheading: {
-    ...Typography.bodyRegular,
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '300',
     fontFamily: 'Figtree_300Light',
     color: Colors.secondary,
   },
-  options: { gap: 10, marginTop: Spacing.xs },
+
+  // Options
+  options: { gap: 8 },
   row: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 16,
     backgroundColor: Colors.surface.secondary,
     borderWidth: 1,
     borderColor: '#aad4cd',
     borderRadius: Radius.m,
-    padding: Spacing.s,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    ...Shadows.level4,
+    paddingHorizontal: 8,
+    paddingVertical: 16,
   },
   rowSelected: {
-    borderColor: Colors.secondary,
+    backgroundColor: Colors.primary, // #023432 dark
+    borderColor: Colors.primary,
+    ...Shadows.level2,
+  },
+
+  // Checkbox
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
     borderWidth: 2,
+    borderColor: '#aad4cd',
+    backgroundColor: Colors.surface.secondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2, // optical align with title line
   },
-  radio: {
-    width: 24, height: 24, borderRadius: 12,
-    borderWidth: 2, borderColor: '#aad4cd',
-    alignItems: 'center', justifyContent: 'center',
+  checkboxChecked: {
+    backgroundColor: Colors.accent, // green-apple teal
+    borderColor: Colors.accent,
   },
-  radioSelected: {
-    backgroundColor: Colors.secondary,
-    borderColor: Colors.secondary,
-  },
-  info: { flex: 1, gap: 2 },
-  title: {
+
+  // Row text
+  info: { flex: 1, gap: 4 },
+  rowTitle: {
     fontSize: 16,
+    lineHeight: 17.6, // 1.1 leading
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
     letterSpacing: -0.32,
   },
-  subtitle: {
-    fontSize: 13,
+  rowTitleSelected: { color: '#fff' },
+  rowSubtitle: {
+    fontSize: 14,
+    lineHeight: 21,
     fontWeight: '300',
     fontFamily: 'Figtree_300Light',
     color: Colors.secondary,
+    letterSpacing: -0.14,
   },
-  dateBlock: { gap: 8, marginTop: Spacing.s },
+  rowSubtitleSelected: { color: '#aad4cd' },
+
+  // Due date field
+  dateBlock: { gap: 8 },
   fieldLabel: {
-    fontSize: 12,
+    fontSize: 16,
+    lineHeight: 17.6,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
-    color: Colors.secondary,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
+    color: Colors.primary,
+    letterSpacing: -0.32,
   },
   dateBtn: {
     backgroundColor: Colors.surface.secondary,
     borderWidth: 1,
     borderColor: '#aad4cd',
     borderRadius: Radius.m,
-    padding: Spacing.s,
+    padding: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
   },
   dateValue: {
+    flex: 1,
     fontSize: 16,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
+    lineHeight: 24,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
     color: Colors.primary,
   },
   datePlaceholder: {
-    fontWeight: '300',
-    fontFamily: 'Figtree_300Light',
-    color: Colors.secondary,
+    color: Colors.primary,
+    opacity: 0.5,
   },
+
+  // iOS date picker modal
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'rgba(0, 41, 35, 0.55)',
+    justifyContent: 'flex-end',
   },
   modalSheet: {
     backgroundColor: Colors.surface.secondary,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingBottom: Spacing.m,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingBottom: 32,
   },
   modalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.s,
-    paddingTop: Spacing.s,
-    paddingBottom: Spacing.xs,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.surface.tertiary,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 8,
   },
   modalTitle: {
-    ...Typography.h5,
+    fontSize: 18,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
   },
   closeBtn: {
-    paddingHorizontal: Spacing.s,
+    paddingHorizontal: 12,
     paddingVertical: 6,
   },
   doneText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.secondary,

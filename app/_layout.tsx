@@ -268,6 +268,7 @@ function RootLayoutInner() {
             <Stack.Screen name="add-family-member" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="food-search" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="recipes/new" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="recipes/pick-scan" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="recipes/[id]/index" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="recipes/[id]/edit" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="whats-new" options={{ animation: 'fade' }} />

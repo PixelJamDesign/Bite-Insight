@@ -416,6 +416,22 @@ export async function duplicateRecipe(
  * traces.
  */
 function snapshotFromCached(cached: CachedProduct, scanIngredients: Scan['ingredients'] = []): ProductSnapshot {
+  // Prefer the scan's structured ingredient list when it's populated (that
+  // wires up canonical ingredient ids from the ingredients table). Fall
+  // back to parsing the cache's raw OFF text — most scans reach us with
+  // just the text, so this is the common path.
+  const structured = (scanIngredients ?? []).map((i) => ({
+    id: i.id,
+    name: i.name,
+    is_flagged: i.is_flagged,
+    dietary_tags: i.dietary_tags,
+  }));
+
+  const ingredients =
+    structured.length > 0
+      ? structured
+      : parseIngredientText(cached.ingredientsText ?? '');
+
   return {
     product_name: cached.productName,
     brand: cached.brand,
@@ -434,13 +450,34 @@ function snapshotFromCached(cached: CachedProduct, scanIngredients: Scan['ingred
     allergens: cached.allergens
       ? cached.allergens.split(',').map((a) => a.trim()).filter(Boolean)
       : [],
-    ingredients: (scanIngredients ?? []).map((i) => ({
-      id: i.id,
-      name: i.name,
-      is_flagged: i.is_flagged,
-      dietary_tags: i.dietary_tags,
-    })),
+    ingredients,
+    // Keep the raw text too — gives the recipe impact matcher a second
+    // chance if the structured list ends up sparse or outdated.
+    ingredients_text: cached.ingredientsText ?? null,
   };
+}
+
+/**
+ * Split an OFF-style "ingredients_text" into entries. Input looks like:
+ *   "Beef (90%), Water, Salt, Flavourings (contain: milk), Sulphites"
+ * Output: [{ name: "beef", ... }, { name: "water", ... }, ...]
+ *
+ * Strips percentages/parenthesised sub-lists, splits on the top-level
+ * separator characters (commas, semicolons, middle-dot), normalises
+ * whitespace. Intentionally simple — the matcher does case-insensitive
+ * substring checks so we don't need perfect canonicalisation.
+ */
+function parseIngredientText(text: string): ProductSnapshot['ingredients'] {
+  if (!text || !text.trim()) return [];
+  // Remove parenthesised sub-content ("Flavourings (contain: milk)" → "Flavourings")
+  const stripped = text.replace(/\([^)]*\)/g, ' ');
+  return stripped
+    .split(/[,;·]/)
+    .map((raw) => raw.replace(/\s+/g, ' ').trim())
+    // Remove percentages and common OFF markers
+    .map((s) => s.replace(/\s*\d+(?:[.,]\d+)?\s*%/g, '').trim())
+    .filter((s) => s.length > 0)
+    .map((name) => ({ name, is_flagged: false }));
 }
 
 /**
@@ -508,8 +545,28 @@ export function buildProductSnapshot(input: {
   nutriments?: Record<string, number | undefined> | null;
   allergens?: string[] | null;
   ingredients?: Array<{ id?: string; name: string; is_flagged?: boolean; dietary_tags?: string[] }> | null;
+  /** Raw ingredient text (e.g. OFF's `ingredients_text`). Used as a
+   *  fallback when the structured list is absent/sparse, and persisted
+   *  on the snapshot so the impact sheet can search it later. */
+  ingredients_text?: string | null;
 }): ProductSnapshot {
   const n = input.nutriments ?? {};
+
+  const structured = (input.ingredients ?? []).map((i) => ({
+    id: i.id,
+    name: i.name,
+    is_flagged: i.is_flagged ?? false,
+    dietary_tags: (i.dietary_tags ?? []) as ProductSnapshot['ingredients'][number]['dietary_tags'],
+  }));
+
+  // Derive structured entries from raw text when the caller didn't
+  // supply them — scanner pick-mode and direct OFF fetches both hit this
+  // path, so we always get *something* into snap.ingredients as long as
+  // OFF gave us an ingredient line.
+  const ingredients = structured.length > 0
+    ? structured
+    : parseIngredientText(input.ingredients_text ?? '');
+
   return {
     product_name: input.product_name,
     brand: input.brand ?? null,
@@ -526,11 +583,7 @@ export function buildProductSnapshot(input: {
       salt_g: n.salt_100g ?? n.salt_g ?? undefined,
     },
     allergens: input.allergens ?? [],
-    ingredients: (input.ingredients ?? []).map((i) => ({
-      id: i.id,
-      name: i.name,
-      is_flagged: i.is_flagged ?? false,
-      dietary_tags: (i.dietary_tags ?? []) as ProductSnapshot['ingredients'][number]['dietary_tags'],
-    })),
+    ingredients,
+    ingredients_text: input.ingredients_text ?? null,
   };
 }

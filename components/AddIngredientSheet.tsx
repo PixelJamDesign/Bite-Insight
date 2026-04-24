@@ -9,10 +9,12 @@ import {
   StyleSheet,
   TouchableOpacity,
   Modal,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Radius, Shadows, Typography } from '@/constants/theme';
+import { useSheetAnimation } from '@/lib/useSheetAnimation';
 
 export type AddSource = 'search' | 'scan' | 'history';
 
@@ -23,10 +25,14 @@ interface Props {
 }
 
 export function AddIngredientSheet({ visible, onClose, onPick }: Props) {
+  const { rendered, backdropOpacity, sheetTranslateY } = useSheetAnimation(visible);
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal visible={rendered} transparent animationType="none" onRequestClose={onClose}>
       <View style={styles.backdrop}>
-        <TouchableOpacity style={styles.backdropTouch} onPress={onClose} activeOpacity={1} />
+        <Animated.View style={[styles.backdropTint, { opacity: backdropOpacity }]}>
+          <TouchableOpacity style={StyleSheet.absoluteFill} onPress={onClose} activeOpacity={1} />
+        </Animated.View>
+        <Animated.View style={{ transform: [{ translateY: sheetTranslateY }] }}>
         <SafeAreaView style={styles.sheet} edges={['bottom']}>
           <View style={styles.handle} />
           <View style={styles.header}>
@@ -57,6 +63,7 @@ export function AddIngredientSheet({ visible, onClose, onPick }: Props) {
             />
           </View>
         </SafeAreaView>
+        </Animated.View>
       </View>
     </Modal>
   );
@@ -90,9 +97,12 @@ function Option({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
   },
-  backdropTouch: { flex: 1 },
+  backdropTint: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 41, 35, 0.55)',
+  },
   sheet: {
     backgroundColor: Colors.surface.secondary,
     borderTopLeftRadius: 20,

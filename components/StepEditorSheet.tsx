@@ -14,10 +14,12 @@ import {
   Platform,
   ScrollView,
   Alert,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Radius, Shadows, Typography } from '@/constants/theme';
+import { useSheetAnimation } from '@/lib/useSheetAnimation';
 
 interface Props {
   visible: boolean;
@@ -39,6 +41,7 @@ export function StepEditorSheet({
   stepNumber,
 }: Props) {
   const [text, setText] = useState(initialText);
+  const { rendered, backdropOpacity, sheetTranslateY } = useSheetAnimation(visible);
 
   // Reset the text when the sheet opens for a different step
   useEffect(() => {
@@ -72,13 +75,16 @@ export function StepEditorSheet({
   }
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal visible={rendered} transparent animationType="none" onRequestClose={onClose}>
       <View style={styles.backdrop}>
-        <TouchableOpacity style={styles.backdropTouch} onPress={onClose} activeOpacity={1} />
+        <Animated.View style={[styles.backdropTint, { opacity: backdropOpacity }]}>
+          <TouchableOpacity style={StyleSheet.absoluteFill} onPress={onClose} activeOpacity={1} />
+        </Animated.View>
         <KeyboardAvoidingView
           style={styles.keyboardWrap}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
+          <Animated.View style={{ transform: [{ translateY: sheetTranslateY }] }}>
           <SafeAreaView style={styles.sheet} edges={['bottom']}>
             <View style={styles.handle} />
             <View style={styles.header}>
@@ -125,6 +131,7 @@ export function StepEditorSheet({
               </TouchableOpacity>
             </View>
           </SafeAreaView>
+          </Animated.View>
         </KeyboardAvoidingView>
       </View>
     </Modal>
@@ -134,9 +141,12 @@ export function StepEditorSheet({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
   },
-  backdropTouch: { flex: 1 },
+  backdropTint: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 41, 35, 0.55)',
+  },
   keyboardWrap: {
     justifyContent: 'flex-end',
   },
@@ -192,7 +202,7 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingHorizontal: Spacing.s,
     paddingTop: Spacing.s,
-    paddingBottom: Spacing.s,
+    paddingBottom: Spacing.m, // 24px breathing room above home-indicator inset
   },
   deleteBtn: {
     width: 52, height: 52,

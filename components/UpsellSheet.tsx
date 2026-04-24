@@ -177,7 +177,7 @@ export function UpsellSheet() {
         </ScrollView>
 
         {/* ── Sticky Pricing + CTAs ── */}
-        <View style={[styles.ctaSection, { paddingBottom: insets.bottom + 16 }]}>
+        <View style={[styles.ctaSection, { paddingBottom: insets.bottom + 24 }]}>
           <View style={styles.pricingSection}>
             <Text style={styles.pricingJust}>Just</Text>
             <View style={styles.priceRow}>

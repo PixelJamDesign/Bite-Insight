@@ -13,6 +13,7 @@ import {
   Image,
   Animated,
   Easing,
+  LayoutAnimation,
   Modal,
   Pressable,
 } from 'react-native';
@@ -39,8 +40,82 @@ import { CameraIcon, PersonalIcon, TickIcon, InfoIcon } from '@/components/MenuI
 import { ConditionInfoSheet } from '@/components/ConditionInfoSheet';
 import { SuggestionSheet, type SuggestionCategory } from '@/components/SuggestionSheet';
 import { LottieLoader } from '@/components/LottieLoader';
+import { FamilyIngredientPreferencesPanel } from '@/components/FamilyIngredientPreferencesPanel';
+import { FlagReasonSheet } from '@/components/FlagReasonSheet';
+import type { Ingredient } from '@/lib/types';
 import { CONDITION_INFO } from '@/constants/conditionInfo';
 import Logo from '../assets/images/logo.svg';
+
+// ── Flag-reason persistence ───────────────────────────────────────────────────
+/**
+ * Reconcile the `ingredient_flag_reasons` table against the currently-flagged
+ * ingredients for a single family member.
+ *
+ * - Currently-flagged ingredient + locally-collected reasons → upsert
+ * - Currently-flagged ingredient with no local reasons       → leave any
+ *   existing row alone (user re-flagged without picking reasons)
+ * - Ingredient not currently flagged                         → delete any
+ *   existing reason row for this member
+ *
+ * All queries are scoped by `family_profile_id` so the account owner's
+ * own flag reasons (where family_profile_id IS NULL) are never touched.
+ */
+async function syncFamilyFlagReasons({
+  userId,
+  familyProfileId,
+  flaggedIngredients,
+  reasons,
+}: {
+  userId: string;
+  familyProfileId: string;
+  flaggedIngredients: string[];
+  reasons: Record<string, { category: string; text: string }>;
+}): Promise<{ message: string } | null> {
+  const flaggedSet = new Set(flaggedIngredients);
+
+  // 1. Upsert reasons for ingredients we have fresh reasons for.
+  const upserts = Object.entries(reasons)
+    .filter(([ingredientId]) => flaggedSet.has(ingredientId))
+    .map(([ingredient_id, { category, text }]) => ({
+      user_id: userId,
+      family_profile_id: familyProfileId,
+      ingredient_id,
+      reason_category: category,
+      reason_text: text,
+    }));
+
+  if (upserts.length > 0) {
+    const { error } = await supabase
+      .from('ingredient_flag_reasons')
+      .upsert(upserts, { onConflict: 'user_id,ingredient_id,family_profile_id' });
+    if (error) return { message: error.message };
+  }
+
+  // 2. Remove reason rows for ingredients that are no longer flagged.
+  // Fetch the existing rows for this scope and filter against the
+  // current flagged set rather than attempting a server-side anti-join.
+  const { data: existing, error: fetchErr } = await supabase
+    .from('ingredient_flag_reasons')
+    .select('ingredient_id')
+    .eq('user_id', userId)
+    .eq('family_profile_id', familyProfileId);
+  if (fetchErr) return { message: fetchErr.message };
+
+  const stale = (existing ?? [])
+    .map((r) => r.ingredient_id as string)
+    .filter((id) => !flaggedSet.has(id));
+  if (stale.length > 0) {
+    const { error: delErr } = await supabase
+      .from('ingredient_flag_reasons')
+      .delete()
+      .eq('user_id', userId)
+      .eq('family_profile_id', familyProfileId)
+      .in('ingredient_id', stale);
+    if (delErr) return { message: delErr.message };
+  }
+
+  return null;
+}
 
 // ── Condition key helpers ──────────────────────────────────────────────────────
 const KEY_TO_LEGACY: Record<string, string> = {};
@@ -52,7 +127,23 @@ function conditionMapKey(conditionKey: string): string {
 }
 
 // ── Step types ────────────────────────────────────────────────────────────────
-type StepKey = 'about' | 'health' | 'nutrients' | 'allergies' | 'dietary';
+type StepKey = 'about' | 'health' | 'nutrients' | 'allergies' | 'dietary' | 'ingredients';
+
+// Ingredient category labels shown as horizontal-scroll tabs on the
+// ingredients step. Matches Figma node 4819-24905.
+const INGREDIENT_CATEGORIES = [
+  'Fruit',
+  'Vegetables',
+  'Dairy',
+  'Grains',
+  'Proteins',
+  'Nuts',
+  'Seeds',
+  'Legumes',
+  'Herbs',
+  'Beverages',
+  'Snacks',
+];
 
 // ── Unique nutrient type (tri-state) ─────────────────────────────────────────
 type UniqueNutrient = {
@@ -173,6 +264,25 @@ export default function AddFamilyMemberScreen() {
   // Step 4 – Dietary Preferences
   const [dietaryPrefs, setDietaryPrefs] = useState<string[]>([]);
 
+  // Step 5 – Ingredient Preferences (liked / disliked / flagged)
+  const [likedIngredients, setLikedIngredients] = useState<string[]>([]);
+  const [dislikedIngredients, setDislikedIngredients] = useState<string[]>([]);
+  const [flaggedIngredients, setFlaggedIngredients] = useState<string[]>([]);
+  const [ingredientCatalog, setIngredientCatalog] = useState<
+    (import('@/lib/types').Ingredient & { category: string | null })[]
+  >([]);
+  const [ingredientTab, setIngredientTab] = useState<'all' | 'liked' | 'disliked' | 'flagged'>('all');
+  // When the user taps the flag icon on an ingredient we defer the actual
+  // preference change until they've chosen reasons in the sheet. Matches
+  // the dashboard interaction exactly (see app/(tabs)/index.tsx).
+  const [flagReasonTarget, setFlagReasonTarget] = useState<Ingredient | null>(null);
+  // Locally-collected flag reasons per ingredient id. On Save, these are
+  // upserted into ingredient_flag_reasons alongside the family profile row.
+  const [flagReasons, setFlagReasons] = useState<
+    Record<string, { category: string; text: string }>
+  >({});
+  const [ingredientCategory, setIngredientCategory] = useState<string>('All');
+
   // ── Nutrient watchlist ──────────────────────────────────────────────────────
   const [nutrientChoices, setNutrientChoices] = useState<Record<string, 'limit' | 'boost' | 'none'>>({});
 
@@ -184,6 +294,7 @@ export default function AddFamilyMemberScreen() {
     ...(showNutrientStep ? ['nutrients' as StepKey] : []),
     'allergies',
     'dietary',
+    'ingredients',
   ], [showNutrientStep]);
 
   const totalSteps = stepSequence.length;
@@ -254,6 +365,29 @@ export default function AddFamilyMemberScreen() {
           setHealthConditions(((data.health_conditions as string[]) ?? []).map(normalizeHealthCondition));
           setAllergies(((data.allergies as string[]) ?? []).map(normalizeAllergy));
           setDietaryPrefs(((data.dietary_preferences as string[]) ?? []).map(normalizeDietaryPreference));
+          // Hydrate ingredient preference arrays. Columns may not exist yet
+          // on older rows — tolerate undefined.
+          setLikedIngredients(((data as any).liked_ingredients as string[] | null) ?? []);
+          setDislikedIngredients(((data as any).disliked_ingredients as string[] | null) ?? []);
+          setFlaggedIngredients(((data as any).flagged_ingredients as string[] | null) ?? []);
+
+          // Hydrate existing flag reasons so the sheet shows prior picks
+          // when the user re-opens flag for a previously-flagged ingredient.
+          supabase
+            .from('ingredient_flag_reasons')
+            .select('ingredient_id, reason_category, reason_text')
+            .eq('family_profile_id', data.id)
+            .then(({ data: reasons }) => {
+              if (!reasons) return;
+              const map: Record<string, { category: string; text: string }> = {};
+              for (const r of reasons) {
+                map[r.ingredient_id as string] = {
+                  category: (r.reason_category as string) ?? '',
+                  text: (r.reason_text as string) ?? '',
+                };
+              }
+              setFlagReasons(map);
+            });
 
           // Load existing nutrient watchlist choices
           const existing = (data.nutrient_watchlist as NutrientWatchlistEntry[] | null) ?? [];
@@ -266,6 +400,34 @@ export default function AddFamilyMemberScreen() {
         setFetched(true);
       });
   }, [params.id]);
+
+  // Load the shared ingredient catalog for the preferences step.
+  // Tolerant of empty/missing tables — empty list is a valid state.
+  useEffect(() => {
+    let mounted = true;
+    supabase
+      .from('ingredients')
+      .select('*')
+      .order('name', { ascending: true })
+      .then(({ data, error }) => {
+        if (!mounted || error) return;
+        setIngredientCatalog(
+          (data ?? []).map((r: any) => ({
+            id: r.id,
+            name: r.name,
+            fact: r.fact ?? null,
+            image_url: r.image_url ?? null,
+            is_flagged: r.is_flagged ?? false,
+            flag_reason: r.flag_reason ?? null,
+            dietary_tags: r.dietary_tags ?? [],
+            category: r.category ?? null,
+          })),
+        );
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // Auto-select non-userConfirmRequired nutrients when suggestions change
   const hasLoadedExistingRef = useRef(false);
@@ -443,15 +605,54 @@ export default function AddFamilyMemberScreen() {
       allergies,
       dietary_preferences: dietaryPrefs,
       nutrient_watchlist: buildFinalWatchlist(),
+      // Per-member ingredient preferences (1.5.0). Mutually exclusive
+      // arrays maintained by the Ingredients step.
+      liked_ingredients: likedIngredients,
+      disliked_ingredients: dislikedIngredients,
+      flagged_ingredients: flaggedIngredients,
     };
 
-    const { error } = isEditing
-      ? await supabase.from('family_profiles').update(payload).eq('id', params.id!)
-      : await supabase.from('family_profiles').insert(payload);
+    // Upsert the family profile row first. We need the row id afterwards
+    // to attach flag reasons, so select back the id on both paths.
+    const { data: savedRow, error } = isEditing
+      ? await supabase
+          .from('family_profiles')
+          .update(payload)
+          .eq('id', params.id!)
+          .select('id')
+          .single()
+      : await supabase
+          .from('family_profiles')
+          .insert(payload)
+          .select('id')
+          .single();
+
+    if (error || !savedRow) {
+      setSaving(false);
+      if (error) Alert.alert(tc('alert.saveFailedTitle'), error.message);
+      return;
+    }
+
+    // Sync flag reasons for this family member.
+    //  - Currently-flagged ingredients with a reason → upsert a row
+    //  - Ingredients that were flagged earlier but aren't now → delete
+    // Scoped to this family_profile_id so the account owner's own flag
+    // reasons (family_profile_id IS NULL) are untouched.
+    const familyProfileId = savedRow.id as string;
+    const reasonErr = await syncFamilyFlagReasons({
+      userId: session.user.id,
+      familyProfileId,
+      flaggedIngredients,
+      reasons: flagReasons,
+    });
+    if (reasonErr) {
+      setSaving(false);
+      Alert.alert(tc('alert.saveFailedTitle'), reasonErr.message);
+      return;
+    }
 
     setSaving(false);
-    if (error) Alert.alert(tc('alert.saveFailedTitle'), error.message);
-    else animateExit('forward', () => safeBack());
+    animateExit('forward', () => safeBack());
   }
 
   // ── Progress indicator ────────────────────────────────────────────────────
@@ -885,6 +1086,45 @@ export default function AddFamilyMemberScreen() {
             </View>
           )}
 
+          {/* ── Step: Ingredient Preferences ── */}
+          {currentStepKey === 'ingredients' && (
+            <View style={styles.card}>
+              <FamilyIngredientPreferencesPanel
+                member={{
+                  id: params.id ?? 'new',
+                  name: fullName.trim() || 'This family member',
+                  avatar_url: existingAvatar ?? avatarUri ?? null,
+                  tags: [
+                    ...healthConditions,
+                    ...allergies,
+                    ...dietaryPrefs,
+                  ],
+                }}
+                ingredients={ingredientCatalog}
+                tab={ingredientTab}
+                onTabChange={setIngredientTab}
+                category={ingredientCategory}
+                onCategoryChange={setIngredientCategory}
+                categories={INGREDIENT_CATEGORIES}
+                draft={{
+                  liked: likedIngredients,
+                  disliked: dislikedIngredients,
+                  flagged: flaggedIngredients,
+                }}
+                onDraftChange={(next) => {
+                  setLikedIngredients(next.liked);
+                  setDislikedIngredients(next.disliked);
+                  setFlaggedIngredients(next.flagged);
+                }}
+                showMemberHeader={false}
+                // Match the dashboard: tapping flag opens a sheet so the
+                // user can pick one or more reasons before the ingredient
+                // is marked as flagged.
+                onFlagRequest={(ing) => setFlagReasonTarget(ing)}
+              />
+            </View>
+          )}
+
           <View style={{ height: 120 }} />
           </Animated.View>
         </ScrollView>
@@ -916,6 +1156,53 @@ export default function AddFamilyMemberScreen() {
       visible={!!suggestionCategory}
       onClose={() => setSuggestionCategory(null)}
       category={suggestionCategory ?? 'health_condition'}
+    />
+    {/* Flag-reason picker — matches the dashboard. On confirm we store the
+        reasons locally and ensure the ingredient is in the flagged array;
+        a LayoutAnimation fires so the row fades out smoothly. */}
+    <FlagReasonSheet
+      visible={!!flagReasonTarget}
+      ingredientName={flagReasonTarget?.name ?? ''}
+      onClose={() => setFlagReasonTarget(null)}
+      onConfirm={(reasons) => {
+        if (!flagReasonTarget) return;
+        const targetId = flagReasonTarget.id;
+        // Fire the same fade-and-slide animation the panel uses for
+        // like/dislike so the row leaves the list smoothly. Only fires
+        // when the ingredient wasn't already flagged (would stay visible
+        // on the Flagged tab in that case).
+        if (ingredientTab !== 'flagged' && !flaggedIngredients.includes(targetId)) {
+          LayoutAnimation.configureNext({
+            duration: 240,
+            create: {
+              type: LayoutAnimation.Types.easeInEaseOut,
+              property: LayoutAnimation.Properties.opacity,
+            },
+            update: { type: LayoutAnimation.Types.easeInEaseOut },
+            delete: {
+              type: LayoutAnimation.Types.easeInEaseOut,
+              property: LayoutAnimation.Properties.opacity,
+            },
+          });
+        }
+        // Mark flagged (mutually-exclusive — also remove from like/dislike).
+        setLikedIngredients((prev) => prev.filter((id) => id !== targetId));
+        setDislikedIngredients((prev) => prev.filter((id) => id !== targetId));
+        setFlaggedIngredients((prev) => (prev.includes(targetId) ? prev : [...prev, targetId]));
+        // Stash the reason so we can persist alongside the family profile
+        // on save (DB wiring lands with the per-member flag migration).
+        setFlagReasons((prev) => ({
+          ...prev,
+          [targetId]: {
+            category: reasons.map((r) => r.category).join(', '),
+            text: reasons.map((r) => r.text).join(', '),
+          },
+        }));
+        setFlagReasonTarget(null);
+      }}
+      healthConditions={healthConditions}
+      allergies={allergies}
+      dietaryPreferences={dietaryPrefs}
     />
     </>
   );

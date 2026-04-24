@@ -640,6 +640,12 @@ export default function FoodSearchScreen() {
           is_flagged: false,
           dietary_tags: [],
         })),
+        // Also pass the raw ingredient text so the family impact matcher
+        // can search it later if the structured list is sparse.
+        ingredients_text:
+          (product as { ingredients_text_en?: string; ingredients_text?: string }).ingredients_text_en ??
+          (product as { ingredients_text?: string }).ingredients_text ??
+          null,
       });
       draftRecipe.addIngredient({
         barcode,

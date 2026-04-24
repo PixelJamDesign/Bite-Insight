@@ -1,6 +1,18 @@
 /**
  * QuantityPickerSheet — edits the value and unit of a recipe ingredient.
- * Placeholder UI.
+ *
+ * Pixel-matches Figma node 4803-25337:
+ *   • 24px top-corner bottom sheet, 24px padding, white
+ *   • Top handle bar + trailing close (X)
+ *   • "Quantity" — Heading 3 title
+ *   • Stepper: [-] [ value  unit-name ] [+]
+ *       - ± buttons: 28×28 circular, #e4f1ef bg, 2px #aad4cd border
+ *       - Value card: flex-1, #f5fbfb bg, 1px #aad4cd border, 8px radius
+ *       - Number: Heading 3 primary; unit-name: body-large secondary
+ *   • "Unit of measurement" — Heading 5 label
+ *   • Unit chips: selected = mint fill + teal border + primary text;
+ *                 unselected = plain secondary-teal text on transparent
+ *   • Save button: full width, teal cucumber, 8px radius, 16/20 bold white
  */
 import { useEffect, useState } from 'react';
 import {
@@ -8,13 +20,24 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  TextInput,
   Modal,
+  Platform,
+  KeyboardAvoidingView,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Spacing, Radius, Shadows, Typography } from '@/constants/theme';
-import { QUANTITY_UNITS, unitMeta } from '@/constants/quantityUnits';
+import { Colors, Radius } from '@/constants/theme';
+import {
+  QUANTITY_UNITS,
+  unitMeta,
+  convertUnits,
+  canConvert,
+  snapToFractionStep,
+  formatQuantityValue,
+  shouldShowAsFraction,
+} from '@/constants/quantityUnits';
+import { useSheetAnimation } from '@/lib/useSheetAnimation';
 import type { QuantityUnit } from '@/lib/types';
 
 interface Props {
@@ -26,12 +49,13 @@ interface Props {
 }
 
 export function QuantityPickerSheet({ visible, value, unit, onClose, onSave }: Props) {
-  const [localValue, setLocalValue] = useState(String(value));
+  const [localValue, setLocalValue] = useState<number>(value);
   const [localUnit, setLocalUnit] = useState<QuantityUnit>(unit);
+  const { rendered, backdropOpacity, sheetTranslateY } = useSheetAnimation(visible);
 
   useEffect(() => {
     if (visible) {
-      setLocalValue(String(value));
+      setLocalValue(value);
       setLocalUnit(unit);
     }
   }, [visible, value, unit]);
@@ -39,96 +63,137 @@ export function QuantityPickerSheet({ visible, value, unit, onClose, onSave }: P
   const meta = unitMeta(localUnit);
 
   function handleSave() {
-    const num = parseFloat(localValue);
-    if (Number.isFinite(num) && num > 0) {
-      onSave(num, localUnit);
+    if (Number.isFinite(localValue) && localValue > 0) {
+      onSave(localValue, localUnit);
     } else {
       onClose();
     }
   }
 
   function adjust(delta: number) {
-    const num = parseFloat(localValue);
-    const next = Math.max(0, (Number.isFinite(num) ? num : 0) + delta);
-    setLocalValue(next.toFixed(meta.precision));
+    const next = Math.max(0, localValue + delta);
+    setLocalValue(next);
   }
 
   /**
-   * When the user switches unit, reset the value to a sensible default:
-   *   - Grams / Millilitres → 100 (weight/volume defaults)
-   *   - Everything else (units, packs, tbsp, tsp, cup) → 1
+   * When the user switches unit:
+   *  - If the current + next unit are compatible (both volume, both weight,
+   *    or weight↔volume), convert the value using UNIT_TO_ML (water density
+   *    for weight↔volume).
+   *  - If either unit is a count (unit, pack), conversion is meaningless so
+   *    fall back to a sensible default.
+   *  - For fractional display units (cup, tbsp, tsp) also snap the stored
+   *    value to the nearest fraction glyph so what you see is what saves.
    */
   function handleUnitChange(nextUnit: QuantityUnit) {
+    if (nextUnit === localUnit) return;
+
+    if (canConvert(localUnit, nextUnit)) {
+      const converted = convertUnits(localUnit, nextUnit, localValue) ?? 0;
+      const finalValue = shouldShowAsFraction(nextUnit)
+        ? snapToFractionStep(converted, nextUnit)
+        : converted;
+      setLocalValue(finalValue);
+    } else {
+      const defaultValue = nextUnit === 'g' || nextUnit === 'ml' ? 100 : 1;
+      setLocalValue(defaultValue);
+    }
     setLocalUnit(nextUnit);
-    const defaultValue = nextUnit === 'g' || nextUnit === 'ml' ? 100 : 1;
-    const nextMeta = QUANTITY_UNITS.find((u) => u.key === nextUnit);
-    setLocalValue(defaultValue.toFixed(nextMeta?.precision ?? 0));
   }
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal visible={rendered} transparent animationType="none" onRequestClose={onClose}>
       <View style={styles.backdrop}>
-        <TouchableOpacity style={styles.backdropTouch} onPress={onClose} activeOpacity={1} />
-        <SafeAreaView style={styles.sheet} edges={['bottom']}>
-          <View style={styles.handle} />
-          <View style={styles.header}>
-            <Text style={styles.title}>Quantity</Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={22} color={Colors.primary} />
-            </TouchableOpacity>
-          </View>
+        <Animated.View style={[styles.backdropTint, { opacity: backdropOpacity }]}>
+          <TouchableOpacity style={StyleSheet.absoluteFill} onPress={onClose} activeOpacity={1} />
+        </Animated.View>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={{ width: '100%' }}
+        >
+          <Animated.View style={{ transform: [{ translateY: sheetTranslateY }] }}>
+          <SafeAreaView style={styles.sheet} edges={['bottom']}>
+            {/* Handle */}
+            <View style={styles.handle} />
 
-          {/* Value stepper */}
-          <View style={styles.stepperRow}>
-            <TouchableOpacity
-              style={styles.stepperBtn}
-              onPress={() => adjust(-meta.step)}
-            >
-              <Ionicons name="remove" size={22} color={Colors.secondary} />
-            </TouchableOpacity>
-            <View style={styles.valueInputWrap}>
-              <TextInput
-                style={styles.valueInput}
-                value={localValue}
-                onChangeText={setLocalValue}
-                keyboardType="decimal-pad"
-                textAlign="right"
-              />
-              <Text style={styles.valueUnit}>{meta.shortLabel}</Text>
-            </View>
-            <TouchableOpacity
-              style={styles.stepperBtn}
-              onPress={() => adjust(meta.step)}
-            >
-              <Ionicons name="add" size={22} color={Colors.secondary} />
-            </TouchableOpacity>
-          </View>
-
-          {/* Unit picker */}
-          <Text style={styles.unitLabel}>Unit</Text>
-          <View style={styles.unitsWrap}>
-            {QUANTITY_UNITS.map((u) => (
+            {/* Close (X) — top-right, no background */}
+            <View style={styles.closeRow}>
               <TouchableOpacity
-                key={u.key}
-                style={[styles.unitPill, localUnit === u.key && styles.unitPillActive]}
-                onPress={() => handleUnitChange(u.key)}
+                style={styles.closeBtn}
+                onPress={onClose}
+                hitSlop={12}
+                activeOpacity={0.7}
               >
-                <Text
-                  style={[
-                    styles.unitPillText,
-                    localUnit === u.key && styles.unitPillTextActive,
-                  ]}
-                >
-                  {u.label}
-                </Text>
+                <Ionicons name="close" size={22} color={Colors.primary} />
               </TouchableOpacity>
-            ))}
-          </View>
+            </View>
 
-          <TouchableOpacity style={styles.saveBtn} onPress={handleSave} activeOpacity={0.85}>
-            <Text style={styles.saveBtnText}>Save</Text>
-          </TouchableOpacity>
-        </SafeAreaView>
+            {/* Body */}
+            <View style={styles.body}>
+              <Text style={styles.title}>Quantity</Text>
+
+              {/* Stepper row */}
+              <View style={styles.stepperRow}>
+                <TouchableOpacity
+                  style={styles.stepperBtn}
+                  onPress={() => adjust(-meta.step)}
+                  activeOpacity={0.7}
+                  hitSlop={8}
+                >
+                  <Ionicons name="remove" size={16} color={Colors.secondary} />
+                </TouchableOpacity>
+
+                <View style={styles.valueCard}>
+                  <Text style={styles.valueNumber}>
+                    {formatQuantityValue(localValue, localUnit)}
+                  </Text>
+                  <Text style={styles.valueUnit}>{meta.label.toLowerCase()}</Text>
+                </View>
+
+                <TouchableOpacity
+                  style={styles.stepperBtn}
+                  onPress={() => adjust(meta.step)}
+                  activeOpacity={0.7}
+                  hitSlop={8}
+                >
+                  <Ionicons name="add" size={16} color={Colors.secondary} />
+                </TouchableOpacity>
+              </View>
+
+              {/* Unit of measurement */}
+              <View style={styles.unitSection}>
+                <Text style={styles.unitLabel}>Unit of measurement</Text>
+                <View style={styles.unitsWrap}>
+                  {QUANTITY_UNITS.map((u) => {
+                    const isActive = localUnit === u.key;
+                    return (
+                      <TouchableOpacity
+                        key={u.key}
+                        style={[styles.chip, isActive && styles.chipActive]}
+                        onPress={() => handleUnitChange(u.key)}
+                        activeOpacity={0.75}
+                      >
+                        <Text style={[styles.chipText, isActive && styles.chipTextActive]}>
+                          {u.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              {/* Save button */}
+              <TouchableOpacity
+                style={styles.saveBtn}
+                onPress={handleSave}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.saveBtnText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </SafeAreaView>
+          </Animated.View>
+        </KeyboardAvoidingView>
       </View>
     </Modal>
   );
@@ -137,136 +202,169 @@ export function QuantityPickerSheet({ visible, value, unit, onClose, onSave }: P
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
   },
-  backdropTouch: { flex: 1 },
+  backdropTint: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 41, 35, 0.55)', // avocado-skin @ 55%
+  },
   sheet: {
     backgroundColor: Colors.surface.secondary,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    ...Shadows.level3,
-    paddingBottom: Spacing.m,   // breathing room above the safe-area inset
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 24,
+    paddingTop: 7,
+    paddingBottom: 24, // breathing room above the home-indicator inset
+    position: 'relative',
   },
   handle: {
     alignSelf: 'center',
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#cdd8d6',
-    marginTop: 8,
-    marginBottom: 8,
+    width: 110,
+    height: 6,
+    borderRadius: 93,
+    backgroundColor: '#d9d9d9',
   },
-  header: {
+  closeRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.s,
-    paddingBottom: Spacing.s,
-  },
-  title: {
-    ...Typography.h4,
-    color: Colors.primary,
+    justifyContent: 'flex-end',
+    marginTop: 16,
   },
   closeBtn: {
-    width: 36, height: 36,
-    borderRadius: 18,
-    backgroundColor: Colors.surface.tertiary,
-    alignItems: 'center', justifyContent: 'center',
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
+  body: {
+    gap: 24,
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 24,
+    lineHeight: 30,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.48,
+    width: '100%',
+  },
+
+  // Stepper
   stepperRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: Spacing.m,
-    paddingVertical: Spacing.s,
+    gap: 8,
+    width: '100%',
+    paddingHorizontal: 2,
   },
   stepperBtn: {
-    width: 48, height: 48,
-    borderRadius: 24,
-    backgroundColor: Colors.surface.tertiary,
-    borderWidth: 1,
+    width: 28,
+    height: 28,
+    borderRadius: 999,
+    backgroundColor: '#e4f1ef',
+    borderWidth: 2,
     borderColor: '#aad4cd',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  valueInputWrap: {
+  valueCard: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'baseline',
     justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    backgroundColor: Colors.surface.tertiary,
-    borderRadius: Radius.m,
+    gap: 4,
+    backgroundColor: '#f5fbfb',
     borderWidth: 1,
     borderColor: '#aad4cd',
+    borderRadius: Radius.m,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    minHeight: 52,
   },
-  valueInput: {
-    fontSize: 32,
-    lineHeight: 40,
+  // Number + unit are plain Text components so they size to their own
+  // content. The card centers the whole group via justifyContent and a
+  // constant 4px gap sits between them regardless of digit count.
+  // lineHeight is omitted so the font's natural baseline is used — this
+  // keeps baseline alignment honest across mixed font sizes.
+  valueNumber: {
+    fontSize: 24,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
-    minWidth: 60,
-    padding: 0,
+    letterSpacing: -0.48,
+    includeFontPadding: false,
   },
   valueUnit: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.secondary,
-    letterSpacing: -0.36,
+    letterSpacing: -0.5,
+    includeFontPadding: false,
+  },
+
+  // Unit of measurement section
+  unitSection: {
+    width: '100%',
+    gap: 16,
   },
   unitLabel: {
-    fontSize: 12,
+    fontSize: 16,
+    lineHeight: 20,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
-    color: Colors.secondary,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-    paddingHorizontal: Spacing.m,
-    marginBottom: 8,
+    color: Colors.primary,
   },
   unitsWrap: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    paddingHorizontal: Spacing.m,
-    marginBottom: Spacing.s,
+    alignItems: 'center',
+    rowGap: 4,
+    columnGap: 0,
   },
-  unitPill: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: Radius.full,
-    backgroundColor: Colors.surface.tertiary,
-    borderWidth: 1,
+
+  // Chips (selected / unselected are two distinct states per Figma)
+  chip: {
+    height: 30,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  chipActive: {
+    backgroundColor: '#e4f1ef',
     borderColor: '#aad4cd',
   },
-  unitPillActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  unitPillText: {
-    fontSize: 13,
+  chipText: {
+    fontSize: 16,
+    lineHeight: 17.6,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.secondary,
+    letterSpacing: -0.32,
   },
-  unitPillTextActive: {
-    color: '#fff',
+  chipTextActive: {
+    color: Colors.primary,
   },
+
+  // Save
   saveBtn: {
-    marginHorizontal: Spacing.s,
-    backgroundColor: Colors.primary,
+    width: '100%',
+    backgroundColor: Colors.secondary,
     borderRadius: Radius.m,
+    paddingHorizontal: 24,
     paddingVertical: 16,
     alignItems: 'center',
-    ...Shadows.level3,
+    justifyContent: 'center',
   },
   saveBtnText: {
-    ...Typography.h5,
-    color: '#fff',
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
+    color: '#fff',
   },
 });

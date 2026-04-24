@@ -10,11 +10,13 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { Colors, Spacing, Radius, Shadows, Typography } from '@/constants/theme';
+import { useSheetAnimation } from '@/lib/useSheetAnimation';
 
 const GRACE_DAYS = 14;
 
@@ -50,6 +52,7 @@ interface Props {
 export function PregnancyStatusPrompt({ visible, onClose }: Props) {
   const { session } = useAuth();
   const [saving, setSaving] = useState(false);
+  const { rendered, backdropOpacity, sheetTranslateY } = useSheetAnimation(visible);
 
   async function setStatus(next: 'breastfeeding' | 'done' | 'still_pregnant') {
     if (!session?.user?.id) return;
@@ -73,8 +76,12 @@ export function PregnancyStatusPrompt({ visible, onClose }: Props) {
   }
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal visible={rendered} transparent animationType="none" onRequestClose={onClose}>
       <View style={styles.backdrop}>
+        <Animated.View style={[styles.backdropTint, { opacity: backdropOpacity }]}>
+          <TouchableOpacity style={StyleSheet.absoluteFill} onPress={onClose} activeOpacity={1} />
+        </Animated.View>
+        <Animated.View style={{ transform: [{ translateY: sheetTranslateY }] }}>
         <SafeAreaView style={styles.sheet} edges={['bottom']}>
           <View style={styles.handle} />
           <View style={styles.content}>
@@ -114,6 +121,7 @@ export function PregnancyStatusPrompt({ visible, onClose }: Props) {
             </View>
           </View>
         </SafeAreaView>
+        </Animated.View>
       </View>
     </Modal>
   );
@@ -122,8 +130,11 @@ export function PregnancyStatusPrompt({ visible, onClose }: Props) {
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'flex-end',
+  },
+  backdropTint: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 41, 35, 0.55)',
   },
   sheet: {
     backgroundColor: Colors.surface.secondary,

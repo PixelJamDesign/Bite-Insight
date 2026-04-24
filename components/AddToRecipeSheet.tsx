@@ -18,6 +18,7 @@ import {
   Image,
   ActivityIndicator,
   TextInput,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,6 +27,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { useDraftRecipe } from '@/lib/draftRecipeContext';
 import { useToast } from '@/lib/toastContext';
+import { useSheetAnimation } from '@/lib/useSheetAnimation';
 import { Colors, Spacing, Radius, Shadows, Typography } from '@/constants/theme';
 import type { ProductSnapshot, Recipe } from '@/lib/types';
 
@@ -47,6 +49,7 @@ export function AddToRecipeSheet({ visible, onClose, snapshot, barcode }: Props)
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [adding, setAdding] = useState<string | null>(null); // recipe id being added
+  const { rendered, backdropOpacity, sheetTranslateY } = useSheetAnimation(visible);
 
   useEffect(() => {
     if (!visible || !session?.user?.id) return;
@@ -165,9 +168,12 @@ export function AddToRecipeSheet({ visible, onClose, snapshot, barcode }: Props)
   const hasDraft = draft.hasDraft && draft.draft != null;
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal visible={rendered} transparent animationType="none" onRequestClose={onClose}>
       <View style={styles.backdrop}>
-        <TouchableOpacity style={styles.backdropTouch} onPress={onClose} activeOpacity={1} />
+        <Animated.View style={[styles.backdropTint, { opacity: backdropOpacity }]}>
+          <TouchableOpacity style={StyleSheet.absoluteFill} onPress={onClose} activeOpacity={1} />
+        </Animated.View>
+        <Animated.View style={{ transform: [{ translateY: sheetTranslateY }] }}>
         <SafeAreaView style={styles.sheet} edges={['bottom']}>
           <View style={styles.handle} />
           <View style={styles.header}>
@@ -243,7 +249,7 @@ export function AddToRecipeSheet({ visible, onClose, snapshot, barcode }: Props)
             <FlatList
               data={filteredRecipes}
               keyExtractor={(r) => r.id}
-              contentContainerStyle={{ paddingBottom: Spacing.m }}
+              contentContainerStyle={{ paddingBottom: Spacing.l }}
               renderItem={({ item }) => (
                 <TouchableOpacity
                   style={styles.recipeRow}
@@ -275,14 +281,18 @@ export function AddToRecipeSheet({ visible, onClose, snapshot, barcode }: Props)
             />
           )}
         </SafeAreaView>
+        </Animated.View>
       </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' },
-  backdropTouch: { flex: 1 },
+  backdrop: { flex: 1, justifyContent: 'flex-end' },
+  backdropTint: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 41, 35, 0.55)',
+  },
   sheet: {
     backgroundColor: Colors.surface.secondary,
     borderTopLeftRadius: 20,

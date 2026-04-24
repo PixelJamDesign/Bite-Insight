@@ -1,10 +1,21 @@
 /**
- * Recipe Detail — MINIMAL PLACEHOLDER UI (design will change 100%)
+ * Recipe Detail — populated card view accessed from the Recipe Tab.
  *
- * Shows a saved recipe with nutrition totals, Nutri-score, household
- * impact table, and action bar.
+ * Pixel-matches Figma node 4818-23137:
+ *   1. Hero cover image — full-bleed 300px, no overlay
+ *   2. Title block (recipe name + author)
+ *   3. Recipe metrics row (Serves / Prep / Cook)
+ *   4. Nutrition section: heading + Per serving / Per 100g tabs, then a
+ *      list of #f5fbfb/#aad4cd bordered rows with food icons
+ *   5. Estimated Nutri-score block — h5 label + verdict pill + A-E scale
+ *   6. Household impact section — member rows with per-member Good/Ok/
+ *      Warning verdict pills. Tap a member to open the impact sheet.
+ *   7. Ingredients section — brand + product name + quantity pill rows
+ *   8. Step-by-step process — numbered step cards
+ *
+ * Floating back (left) + actions "…" (right) buttons overlay the hero.
  */
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -18,30 +29,107 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useRecipe } from '@/lib/useRecipes';
 import { deleteRecipe, duplicateRecipe, computeTotalWeightGrams } from '@/lib/recipes';
 import { useAuth } from '@/lib/auth';
-import { NutritionTable } from '@/components/NutritionTable';
-import type { NutrientKey } from '@/lib/nutrientRatings';
-import { NutritionModeToggle, type NutritionMode } from '@/components/NutritionModeToggle';
 import { RecipeActionsSheet } from '@/components/RecipeActionsSheet';
+import { FamilyImpactSheet, type FlaggedMatch } from '@/components/FamilyImpactSheet';
 import {
   NUTRISCORE_COLORS,
   NUTRISCORE_VERDICT,
   type NutriscoreGrade,
 } from '@/lib/nutriscore';
 import { formatQuantity } from '@/constants/quantityUnits';
-import { Colors, Spacing, Radius, Shadows, Typography } from '@/constants/theme';
+import { Colors, Radius, Shadows } from '@/constants/theme';
 import { safeBack } from '@/lib/safeBack';
-import type { HouseholdImpactRow, RecipeIngredient } from '@/lib/types';
+import { getActiveInsights, summariseVerdict } from '@/lib/insightEngine';
+import {
+  findRecipeFlaggedIngredients,
+  findRecipeAllergenMatches,
+} from '@/lib/householdImpact';
+import { supabase } from '@/lib/supabase';
+import type {
+  FamilyProfile,
+  HouseholdImpactRow,
+  RecipeIngredient,
+  UserProfile,
+} from '@/lib/types';
+
+/* eslint-disable @typescript-eslint/no-require-imports */
+const FoodIcons = {
+  energyKcal: require('@/assets/icons/food/calories.svg').default as React.FC<{ width?: number; height?: number }>,
+  fat: require('@/assets/icons/food/fat.svg').default as React.FC<{ width?: number; height?: number }>,
+  saturatedFat: require('@/assets/icons/food/sat-fat.svg').default as React.FC<{ width?: number; height?: number }>,
+  carbs: require('@/assets/icons/food/carbs.svg').default as React.FC<{ width?: number; height?: number }>,
+  sugars: require('@/assets/icons/food/sugars.svg').default as React.FC<{ width?: number; height?: number }>,
+  fiber: require('@/assets/icons/food/fiber.svg').default as React.FC<{ width?: number; height?: number }>,
+  netCarbs: require('@/assets/icons/food/net-carbs.svg').default as React.FC<{ width?: number; height?: number }>,
+  proteins: require('@/assets/icons/food/protein.svg').default as React.FC<{ width?: number; height?: number }>,
+  salt: require('@/assets/icons/food/salt.svg').default as React.FC<{ width?: number; height?: number }>,
+};
+/* eslint-enable @typescript-eslint/no-require-imports */
+
+// Canonical row fill used throughout the recipe detail (and on other
+// cards across the app). NOT the same as Colors.surface.tertiary — keep
+// it local to this file + other Figma-aligned screens.
+const ROW_FILL = '#f5fbfb';
+const STROKE = '#aad4cd';
+
+type NutritionMode = 'serving' | 'per100';
 
 export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session } = useAuth();
   const insets = useSafeAreaInsets();
   const { recipe, loading, household } = useRecipe(id);
+  // Profile-options namespace — the same translation source used by the
+  // family-members screen and scan-result flag chips. Keeps chip labels
+  // consistent across the app (e.g. "adhd" → "ADHD", "keto" → "Low Carb/Keto").
+  const { t: tpo } = useTranslation('profileOptions');
   const [nutritionMode, setNutritionMode] = useState<NutritionMode>('serving');
   const [actionsOpen, setActionsOpen] = useState(false);
+  // Selected member id for the Family impact sheet. null = sheet closed.
+  const [impactMemberId, setImpactMemberId] = useState<string | null>(null);
+  // Canonical id→name map for every flagged ingredient across every
+  // household member. Loaded once per recipe open so both the list
+  // row and the opened sheet share the same lookup — no duplicate
+  // queries, and the row verdict stays consistent with the sheet.
+  const [allFlaggedRefs, setAllFlaggedRefs] = useState<
+    { id: string; name: string }[]
+  >([]);
+
+  // Must stay above the loading/not-found early returns so React's
+  // hook order is stable across renders.
+  useEffect(() => {
+    const ids = new Set<string>();
+    (household.self?.flagged_ingredients ?? []).forEach((id) => ids.add(id));
+    for (const f of household.family) {
+      (f.flagged_ingredients ?? []).forEach((id) => ids.add(id));
+    }
+    if (ids.size === 0) {
+      setAllFlaggedRefs([]);
+      return;
+    }
+    let cancelled = false;
+    supabase
+      .from('ingredients')
+      .select('id, name')
+      .in('id', Array.from(ids))
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        setAllFlaggedRefs(
+          data.map((r) => ({ id: r.id as string, name: r.name as string })),
+        );
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    household.self?.id,
+    household.self?.flagged_ingredients,
+    household.family,
+  ]);
 
   if (loading) {
     return (
@@ -58,10 +146,7 @@ export default function RecipeDetailScreen() {
       <SafeAreaView style={styles.safe}>
         <View style={styles.loadingWrap}>
           <Text style={styles.emptyText}>Recipe not found</Text>
-          <TouchableOpacity
-            onPress={() => safeBack()}
-            style={styles.backInlineBtn}
-          >
+          <TouchableOpacity onPress={() => safeBack()} style={styles.backInlineBtn}>
             <Text style={styles.backInlineBtnText}>Go back</Text>
           </TouchableOpacity>
         </View>
@@ -69,31 +154,17 @@ export default function RecipeDetailScreen() {
     );
   }
 
-  // Capture non-null recipe for use in handlers below
   const currentRecipe = recipe;
   const grade = currentRecipe.nutriscore_grade as NutriscoreGrade | null;
   const grades: NutriscoreGrade[] = ['a', 'b', 'c', 'd', 'e'];
 
-  // ── Compute per-100g values from per-serving totals ─────────────────────
-  // Per-serving × servings ÷ (totalWeight / 100) = per 100g.
+  // ── Nutrition values: per-serving (stored) + derived per-100g ──────────
   const totalWeightG = computeTotalWeightGrams(currentRecipe.ingredients);
   const toPer100 = (perServing: number | null | undefined): number | null => {
     if (perServing == null || totalWeightG <= 0) return null;
     return (perServing * currentRecipe.servings) / (totalWeightG / 100);
   };
-  const per100g: Partial<Record<NutrientKey, number | null>> = {
-    energyKcal: toPer100(currentRecipe.total_kcal),
-    fat: toPer100(currentRecipe.total_fat_g),
-    saturatedFat: toPer100(currentRecipe.total_sat_fat_g),
-    carbs: toPer100(currentRecipe.total_carbs_g),
-    sugars: toPer100(currentRecipe.total_sugars_g),
-    fiber: toPer100(currentRecipe.total_fiber_g),
-    proteins: toPer100(currentRecipe.total_protein_g),
-    salt: toPer100(currentRecipe.total_salt_g),
-  };
-
-  // Per-serving values (as stored on the recipe row)
-  const perServingValues: Partial<Record<NutrientKey, number | null>> = {
+  const perServing = {
     energyKcal: currentRecipe.total_kcal,
     fat: currentRecipe.total_fat_g,
     saturatedFat: currentRecipe.total_sat_fat_g,
@@ -103,7 +174,88 @@ export default function RecipeDetailScreen() {
     proteins: currentRecipe.total_protein_g,
     salt: currentRecipe.total_salt_g,
   };
+  const per100g = {
+    energyKcal: toPer100(perServing.energyKcal),
+    fat: toPer100(perServing.fat),
+    saturatedFat: toPer100(perServing.saturatedFat),
+    carbs: toPer100(perServing.carbs),
+    sugars: toPer100(perServing.sugars),
+    fiber: toPer100(perServing.fiber),
+    proteins: toPer100(perServing.proteins),
+    salt: toPer100(perServing.salt),
+  };
+  const values = nutritionMode === 'serving' ? perServing : per100g;
+  const netCarbsVal =
+    values.carbs != null && values.fiber != null
+      ? Math.max(0, values.carbs - values.fiber)
+      : null;
 
+  /**
+   * Resolve a household row to (tags, verdict) for display.
+   *   - tags   = member's conditions + allergies + dietary preferences,
+   *              shown as pills under the name
+   *   - verdict = insight-engine summary of how this recipe lands for
+   *               the member's health profile, upgraded to 'Warning' if
+   *               an ingredient directly conflicts (flaggedIngredientIds).
+   */
+  function getMemberView(row: HouseholdImpactRow): {
+    tags: string[];
+    verdict: { label: 'Good' | 'Ok' | 'Warning'; color: string };
+  } {
+    const isSelf = row.memberId === 'self';
+    const profile = isSelf
+      ? household.self
+      : household.family.find((f) => f.id === row.memberId);
+    const conditions = profile?.health_conditions ?? [];
+    const allergies = profile?.allergies ?? [];
+    const preferences = profile?.dietary_preferences ?? [];
+
+    const insights = getActiveInsights(conditions, allergies, preferences, {
+      energyKcal: perServing.energyKcal != null ? String(perServing.energyKcal) : undefined,
+      fat: perServing.fat != null ? String(perServing.fat) : undefined,
+      saturatedFat: perServing.saturatedFat != null ? String(perServing.saturatedFat) : undefined,
+      carbs: perServing.carbs != null ? String(perServing.carbs) : undefined,
+      sugars: perServing.sugars != null ? String(perServing.sugars) : undefined,
+      fiber: perServing.fiber != null ? String(perServing.fiber) : undefined,
+      proteins: perServing.proteins != null ? String(perServing.proteins) : undefined,
+      salt: perServing.salt != null ? String(perServing.salt) : undefined,
+    });
+    let verdict = summariseVerdict(insights);
+    // Direct allergen matches or personal-flag hits inside any product
+    // force a Warning — the insight summary is macro-level and can't
+    // see these. Match the same logic the impact sheet uses so the
+    // row's pill stays in sync with what the sheet shows on tap.
+    const memberFlaggedIds = new Set(
+      (profile as UserProfile | FamilyProfile | undefined)?.flagged_ingredients ?? [],
+    );
+    const memberFlaggedRefs = allFlaggedRefs.filter((r) => memberFlaggedIds.has(r.id));
+    const hasFlagHit = findRecipeFlaggedIngredients(
+      currentRecipe.ingredients,
+      memberFlaggedRefs,
+    ).length > 0;
+    const hasAllergenHit = findRecipeAllergenMatches(
+      currentRecipe.ingredients,
+      allergies,
+    ).length > 0;
+    if (row.status === 'avoid' || hasFlagHit || hasAllergenHit) {
+      verdict = { label: 'Warning', color: '#ff3f42' };
+    }
+
+    // Translate the raw profile keys into human-readable chip labels
+    // via the shared `profileOptions` namespace (same lookups used by
+    // family-members.tsx and the scan-result chip rows), so chips on
+    // this screen match the rest of the app. Unknown keys fall back
+    // to the key itself rather than showing empty.
+    const tags = [
+      ...conditions.map((c) => tpo(`healthConditions.${c}`, { defaultValue: c })),
+      ...allergies.map((a) => tpo(`allergies.${a}`, { defaultValue: a })),
+      ...preferences.map((d) => tpo(`dietaryPreferences.${d}`, { defaultValue: d })),
+    ];
+
+    return { tags, verdict };
+  }
+
+  // ── Actions ───────────────────────────────────────────────────────────
   async function handleDelete() {
     Alert.alert(
       'Delete recipe',
@@ -125,149 +277,232 @@ export default function RecipeDetailScreen() {
   async function handleDuplicate() {
     if (!session?.user?.id) return;
     const newId = await duplicateRecipe(session.user.id, currentRecipe.id);
-    if (newId) {
-      router.replace(`/recipes/${newId}` as never);
-    }
+    if (newId) router.replace(`/recipes/${newId}` as never);
   }
 
+  // Author display. Recipes don't carry an owner name today, so derive
+  // from the account email's local part and capitalise the first letter
+  // so the line reads as a proper sentence — e.g. "By Glenn" rather
+  // than "by glenn".
+  const rawAuthor = session?.user?.email?.split('@')[0] ?? 'you';
+  const authorName = rawAuthor.charAt(0).toUpperCase() + rawAuthor.slice(1);
+
   return (
-    <SafeAreaView style={styles.safe} edges={['bottom']}>
+    <View style={styles.safe}>
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 48 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Hero */}
+        {/* ── Hero ───────────────────────────────────────────────────── */}
         <View style={styles.hero}>
           {currentRecipe.cover_image_url ? (
-            <Image source={{ uri: currentRecipe.cover_image_url }} style={styles.heroImage} resizeMode="cover" />
+            <Image
+              source={{ uri: currentRecipe.cover_image_url }}
+              style={styles.heroImage}
+              resizeMode="cover"
+            />
           ) : (
             <Ionicons name="restaurant-outline" size={96} color={Colors.accent} />
           )}
-          <TouchableOpacity
-            style={[styles.heroBack, { top: insets.top + 8 }]}
-            onPress={() => safeBack()}
-          >
-            <Ionicons name="chevron-back" size={22} color={Colors.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.heroMenu, { top: insets.top + 8 }]}
-            onPress={() => setActionsOpen(true)}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="ellipsis-horizontal" size={22} color={Colors.primary} />
-          </TouchableOpacity>
         </View>
 
-        {/* Title card */}
-        <View style={styles.titleCard}>
-          <Text style={styles.title}>{currentRecipe.name}</Text>
-          <View style={styles.titleMeta}>
-            <Text style={styles.metaItem}>
-              <Text style={styles.metaStrong}>{currentRecipe.servings}</Text> servings
-            </Text>
-            <Text style={styles.metaItem}>
-              <Text style={styles.metaStrong}>{currentRecipe.ingredients.length}</Text> ingredients
-            </Text>
+        {/* Floating back + actions overlay */}
+        <TouchableOpacity
+          style={[styles.heroBack, { top: insets.top + 12 }]}
+          onPress={() => safeBack()}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="chevron-back" size={22} color={Colors.primary} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.heroMenu, { top: insets.top + 12 }]}
+          onPress={() => setActionsOpen(true)}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="ellipsis-horizontal" size={22} color={Colors.primary} />
+        </TouchableOpacity>
+
+        {/* ── White sheet containing everything else ─────────────────── */}
+        <View style={styles.sheet}>
+          {/* Title block */}
+          <View style={styles.titleBlock}>
+            <Text style={styles.title}>{currentRecipe.name}</Text>
+            <Text style={styles.author}>By {authorName}</Text>
           </View>
-        </View>
 
-        <View style={styles.content}>
-          {/* Nutrition section with per-serving / per-100g toggle */}
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Nutrition</Text>
-          </View>
-
-          <NutritionModeToggle
-            mode={nutritionMode}
-            onChange={setNutritionMode}
-            servingLabel={`Per serving (${currentRecipe.servings})`}
-          />
-
-          {nutritionMode === 'serving' ? (
-            <NutritionTable
-              valuesPer100g={perServingValues}
-              showRating={false}
+          {/* Recipe metrics */}
+          <View style={styles.metricsRow}>
+            <MetricCard label="Serves" value={String(currentRecipe.servings)} />
+            <MetricCard
+              label="Prep time"
+              value={currentRecipe.prep_time_min != null ? `${currentRecipe.prep_time_min} mins` : '—'}
             />
-          ) : (
-            <NutritionTable valuesPer100g={per100g} />
-          )}
+            <MetricCard
+              label="Cook time"
+              value={currentRecipe.cook_time_min != null ? `${currentRecipe.cook_time_min} mins` : '—'}
+            />
+          </View>
 
-          {/* Nutri-score */}
-          {grade && (
-            <View style={styles.nutriCard}>
-              <View style={styles.nutriHead}>
-                <Text style={styles.nutriLabel}>NUTRI-SCORE</Text>
-                <Text
-                  style={[
-                    styles.nutriVerdict,
-                    { color: NUTRISCORE_COLORS[grade] },
-                  ]}
-                >
-                  {NUTRISCORE_VERDICT[grade]}
-                </Text>
-              </View>
-              <View style={styles.nutriScale}>
-                {grades.map((g) => (
+          {/* ── Nutrition ─────────────────────────────────────────── */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Nutrition</Text>
+
+            <View style={styles.modeTabs}>
+              <ModeTab
+                label="Per serving"
+                active={nutritionMode === 'serving'}
+                onPress={() => setNutritionMode('serving')}
+              />
+              <ModeTab
+                label="Per 100g"
+                active={nutritionMode === 'per100'}
+                onPress={() => setNutritionMode('per100')}
+              />
+            </View>
+
+            <View style={styles.nutritionRows}>
+              <NutritionRow
+                Icon={FoodIcons.energyKcal}
+                label="Calories"
+                value={formatKcal(values.energyKcal)}
+              />
+              <NutritionRow
+                Icon={FoodIcons.fat}
+                label="Fat"
+                value={formatGrams(values.fat)}
+              />
+              <NutritionRow
+                Icon={FoodIcons.saturatedFat}
+                label="Saturated Fat"
+                value={formatGrams(values.saturatedFat)}
+              />
+              <NutritionRow
+                Icon={FoodIcons.carbs}
+                label="Carbohydrates"
+                value={formatGrams(values.carbs)}
+              />
+              <NutritionRow
+                Icon={FoodIcons.sugars}
+                label="Sugars"
+                value={formatGrams(values.sugars)}
+              />
+              <NutritionRow
+                Icon={FoodIcons.fiber}
+                label="Fiber"
+                value={formatGrams(values.fiber)}
+              />
+              <NutritionRow
+                Icon={FoodIcons.netCarbs}
+                label="Net Carbs"
+                value={formatGrams(netCarbsVal)}
+              />
+              <NutritionRow
+                Icon={FoodIcons.proteins}
+                label="Protein"
+                value={formatGrams(values.proteins)}
+              />
+              <NutritionRow
+                Icon={FoodIcons.salt}
+                label="Salt"
+                value={formatGrams(values.salt)}
+              />
+            </View>
+
+            {/* Estimated Nutri-score */}
+            {grade && (
+              <View style={styles.nutriBlock}>
+                <Text style={styles.h5}>Estimated Nutri-score</Text>
+                <View style={styles.nutriCard}>
                   <View
-                    key={g}
                     style={[
-                      styles.nutriGrade,
-                      { backgroundColor: NUTRISCORE_COLORS[g] },
-                      g === grade ? styles.nutriGradeActive : styles.nutriGradeInactive,
+                      styles.verdictPill,
+                      { backgroundColor: NUTRISCORE_COLORS[grade] },
                     ]}
                   >
-                    <Text style={styles.nutriGradeText}>{g.toUpperCase()}</Text>
+                    <Text style={styles.verdictText}>{NUTRISCORE_VERDICT[grade]}</Text>
+                  </View>
+                  <View style={styles.scaleRow}>
+                    {grades.map((g) => {
+                      const isActive = g === grade;
+                      return (
+                        <View
+                          key={g}
+                          style={[
+                            styles.gradePill,
+                            { backgroundColor: NUTRISCORE_COLORS[g] },
+                            isActive ? styles.gradePillActive : styles.gradePillInactive,
+                          ]}
+                        >
+                          <Text style={styles.gradeText}>{g.toUpperCase()}</Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+                </View>
+              </View>
+            )}
+          </View>
+
+          {/* ── Household impact ──────────────────────────────────── */}
+          {household.impact.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Household impact</Text>
+              <Text style={styles.sectionSubtitle}>
+                How do the ingredients in this recipe impact your household?
+              </Text>
+
+              <View style={styles.householdList}>
+                {household.impact.map((row) => {
+                  const view = getMemberView(row);
+                  return (
+                    <HouseholdMemberRow
+                      key={row.memberId}
+                      row={row}
+                      tags={view.tags}
+                      verdict={view.verdict}
+                      onPress={() => setImpactMemberId(row.memberId)}
+                    />
+                  );
+                })}
+              </View>
+            </View>
+          )}
+
+          {/* ── Ingredients ───────────────────────────────────────── */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Ingredients</Text>
+            <Text style={styles.countLine}>
+              {currentRecipe.ingredients.length}{' '}
+              {currentRecipe.ingredients.length === 1 ? 'ingredient' : 'ingredients'}
+            </Text>
+            <View style={styles.ingList}>
+              {currentRecipe.ingredients.map((ing) => (
+                <IngredientRow key={ing.id} ingredient={ing} />
+              ))}
+            </View>
+          </View>
+
+          {/* ── Step-by-step process ──────────────────────────────── */}
+          {currentRecipe.method.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Step-by-step process</Text>
+              <Text style={styles.sectionSubtitle}>
+                Follow these steps to make this recipe.
+              </Text>
+              <View style={styles.stepList}>
+                {currentRecipe.method.map((text, idx) => (
+                  <View key={`${idx}-${text.slice(0, 12)}`} style={styles.stepCard}>
+                    <Text style={styles.stepTitle}>Step {idx + 1}</Text>
+                    <Text style={styles.stepBody}>{text}</Text>
                   </View>
                 ))}
               </View>
             </View>
           )}
-
-          {/* Household impact */}
-          {household.impact.length > 0 && (
-            <>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Household impact</Text>
-                <Text style={styles.sectionSubtitle}>
-                  How this recipe works for everyone
-                </Text>
-              </View>
-
-              <View style={styles.householdCard}>
-                <View style={styles.householdHead}>
-                  <Text style={styles.householdHeadText}>
-                    {household.impact.length}{' '}
-                    {household.impact.length === 1 ? 'member' : 'members'}
-                  </Text>
-                  {household.summary.anyFlag && (
-                    <View style={styles.warningBadge}>
-                      <Text style={styles.warningBadgeText}>
-                        {household.summary.cautionCount + household.summary.avoidCount}{' '}
-                        warning
-                        {household.summary.cautionCount + household.summary.avoidCount > 1 ? 's' : ''}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-                {household.impact.map((row, idx) => (
-                  <HouseholdRow key={row.memberId} row={row} last={idx === household.impact.length - 1} />
-                ))}
-              </View>
-            </>
-          )}
-
-          {/* Ingredients list */}
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Ingredients</Text>
-          </View>
-          {currentRecipe.ingredients.map((ing) => (
-            <IngredientRow key={ing.id} ingredient={ing} />
-          ))}
         </View>
       </ScrollView>
 
-      {/* Actions sheet (Edit / Duplicate / Delete) — opened via the "…" button in the hero */}
       <RecipeActionsSheet
         visible={actionsOpen}
         onClose={() => setActionsOpen(false)}
@@ -275,378 +510,819 @@ export default function RecipeDetailScreen() {
         onDuplicate={handleDuplicate}
         onDelete={handleDelete}
       />
-    </SafeAreaView>
+
+      <FamilyImpactSheetForMember
+        memberId={impactMemberId}
+        onClose={() => setImpactMemberId(null)}
+        ingredients={currentRecipe.ingredients}
+        perServing={perServing}
+        self={household.self}
+        family={household.family}
+        impactRows={household.impact}
+        allFlaggedRefs={allFlaggedRefs}
+        tpo={tpo}
+      />
+    </View>
   );
 }
 
-// ── Sub-components ───────────────────────────────────────────────────────────
+// ── FamilyImpactSheet adapter ──────────────────────────────────────────
+//
+// Derives the inputs the presentational FamilyImpactSheet needs from the
+// recipe + household data we already have. Keeps the detail screen itself
+// focused on layout.
+function FamilyImpactSheetForMember({
+  memberId,
+  onClose,
+  ingredients,
+  perServing,
+  self,
+  family,
+  impactRows,
+  allFlaggedRefs,
+  tpo,
+}: {
+  memberId: string | null;
+  onClose: () => void;
+  ingredients: RecipeIngredient[];
+  perServing: {
+    energyKcal: number | null;
+    fat: number | null;
+    saturatedFat: number | null;
+    carbs: number | null;
+    sugars: number | null;
+    fiber: number | null;
+    proteins: number | null;
+    salt: number | null;
+  };
+  self: UserProfile | null;
+  family: FamilyProfile[];
+  impactRows: HouseholdImpactRow[];
+  allFlaggedRefs: { id: string; name: string }[];
+  tpo: (key: string, opts?: { defaultValue?: string }) => string;
+}) {
+  // Resolve the selected member.
+  const row = memberId ? impactRows.find((r) => r.memberId === memberId) : null;
+  const isSelf = memberId === 'self';
+  const familyProfile = !isSelf && memberId ? family.find((f) => f.id === memberId) : null;
 
+  // Pull the condition/allergy/preference arrays the insight engine needs,
+  // plus the member's personal flagged-ingredient list.
+  const conditions = isSelf
+    ? self?.health_conditions ?? []
+    : familyProfile?.health_conditions ?? [];
+  const allergies = isSelf ? self?.allergies ?? [] : familyProfile?.allergies ?? [];
+  const preferences = isSelf
+    ? self?.dietary_preferences ?? []
+    : familyProfile?.dietary_preferences ?? [];
+  const memberFlaggedIdsSet = new Set<string>(
+    isSelf
+      ? self?.flagged_ingredients ?? []
+      : familyProfile?.flagged_ingredients ?? [],
+  );
+  // Filter the household-wide id→name map down to just this member.
+  const memberFlaggedRefs = useMemo(
+    () => allFlaggedRefs.filter((r) => memberFlaggedIdsSet.has(r.id)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [allFlaggedRefs, isSelf, self?.flagged_ingredients, familyProfile?.flagged_ingredients],
+  );
 
-/**
- * Tappable ingredient row — opens scan-result for the product, pre-filled
- * with the snapshot data so nutrition loads instantly. Only tappable when
- * we have a barcode to look up; otherwise the row is inert (but still
- * visible).
- */
-function IngredientRow({ ingredient: ing }: { ingredient: RecipeIngredient }) {
-  const hasBarcode = Boolean(ing.barcode);
-  const snap = ing.product_snapshot;
-  const n = snap.nutrition_per_100g ?? {};
+  // Cross-reference each product's sub-ingredients against this member's
+  // personal flagged list. Matches on id OR name so OFF-sourced products
+  // (which often carry ingredient text without canonical ids) still hit.
+  const flagHits = useMemo(
+    () => findRecipeFlaggedIngredients(ingredients, memberFlaggedRefs),
+    [ingredients, memberFlaggedRefs],
+  );
 
-  function openScanResult() {
-    if (!hasBarcode) return;
-    router.push({
-      pathname: '/scan-result',
-      params: {
-        scanId: '',
-        productName: snap.product_name ?? '',
-        brand: snap.brand ?? '',
-        imageUrl: snap.image_url ?? '',
-        barcode: ing.barcode!,
-        quantity: '',
-        nutriscoreGrade: snap.nutriscore_grade ?? '',
-        energyKcal: n.energy_kcal != null ? String(n.energy_kcal) : '',
-        carbs: n.carbs_g != null ? String(n.carbs_g) : '',
-        sugars: n.sugars_g != null ? String(n.sugars_g) : '',
-        fiber: n.fiber_g != null ? String(n.fiber_g) : '',
-        fat: n.fat_g != null ? String(n.fat_g) : '',
-        saturatedFat: n.saturated_fat_g != null ? String(n.saturated_fat_g) : '',
-        proteins: n.protein_g != null ? String(n.protein_g) : '',
-        salt: n.salt_g != null ? String(n.salt_g) : '',
-        allergens: (snap.allergens ?? []).join(','),
-      },
+  // Allergen cross-check — product.allergens[] + ingredient text search.
+  const allergenHits = useMemo(
+    () => findRecipeAllergenMatches(ingredients, allergies),
+    [ingredients, allergies],
+  );
+
+  // ── DEV diagnostics ──────────────────────────────────────────────────
+  // Short-term logging to track down missing Flagged/Warning cards.
+  // Dumps everything the matcher sees so we can tell which side is empty:
+  //   1. memberFlaggedRefs — what ids/names the member has flagged
+  //   2. allergies          — member's allergy list
+  //   3. per-ingredient     — snap.ingredients + snap.ingredients_text
+  //   4. flagHits/allergenHits — what the matcher produced
+  // Remove this block once the bug is fixed.
+  useEffect(() => {
+    if (!__DEV__ || !memberId) return;
+    // eslint-disable-next-line no-console
+    console.log('[FamilyImpact]', {
+      memberId,
+      memberName: row?.name,
+      allFlaggedRefsCount: allFlaggedRefs.length,
+      memberFlaggedRefs,
+      allergies,
+      ingredients: ingredients.map((ing) => ({
+        productName: ing.product_snapshot.product_name,
+        structuredCount: (ing.product_snapshot.ingredients ?? []).length,
+        structuredNames: (ing.product_snapshot.ingredients ?? []).map((i) => i.name),
+        hasIngredientsText: Boolean(ing.product_snapshot.ingredients_text),
+        ingredientsTextPreview: (ing.product_snapshot.ingredients_text ?? '').slice(0, 120),
+        allergens: ing.product_snapshot.allergens ?? [],
+      })),
+      flagHits,
+      allergenHits,
     });
+  }, [memberId, row?.name, allFlaggedRefs.length, memberFlaggedRefs, allergies, ingredients, flagHits, allergenHits]);
+
+  // Reasons live in ingredient_flag_reasons keyed by (user, ingredient,
+  // family_profile_id). Fetched on demand when the sheet opens so we
+  // don't query when no member is selected.
+  const [reasonsByFlaggedId, setReasonsByFlaggedId] = useState<
+    Record<string, string[]>
+  >({});
+
+  useEffect(() => {
+    if (!memberId || flagHits.length === 0 || !self?.id) {
+      setReasonsByFlaggedId({});
+      return;
+    }
+    let cancelled = false;
+    const uniqueIds = Array.from(new Set(flagHits.map((h) => h.flaggedIngredientId)));
+    (async () => {
+      let q = supabase
+        .from('ingredient_flag_reasons')
+        .select('ingredient_id, reason_category, reason_text')
+        .eq('user_id', self.id)
+        .in('ingredient_id', uniqueIds);
+      // Scope to this family member. The account owner's own flags live
+      // in rows where family_profile_id IS NULL.
+      q = isSelf ? q.is('family_profile_id', null) : q.eq('family_profile_id', memberId);
+      const { data } = await q;
+      if (cancelled || !data) return;
+      const map: Record<string, string[]> = {};
+      for (const r of data) {
+        const id = r.ingredient_id as string;
+        const parts: string[] = [];
+        // reason_text is a comma-joined string of the user's reason picks
+        // from the flag sheet. Split back into bullets for display.
+        const text = (r.reason_text as string | null) ?? '';
+        if (text) {
+          parts.push(...text.split(',').map((p) => p.trim()).filter(Boolean));
+        }
+        map[id] = parts;
+      }
+      setReasonsByFlaggedId(map);
+    })();
+    return () => { cancelled = true; };
+  }, [memberId, isSelf, self?.id, flagHits]);
+
+  const nutrientData = {
+    energyKcal: perServing.energyKcal != null ? String(perServing.energyKcal) : undefined,
+    fat: perServing.fat != null ? String(perServing.fat) : undefined,
+    saturatedFat: perServing.saturatedFat != null ? String(perServing.saturatedFat) : undefined,
+    carbs: perServing.carbs != null ? String(perServing.carbs) : undefined,
+    sugars: perServing.sugars != null ? String(perServing.sugars) : undefined,
+    fiber: perServing.fiber != null ? String(perServing.fiber) : undefined,
+    proteins: perServing.proteins != null ? String(perServing.proteins) : undefined,
+    salt: perServing.salt != null ? String(perServing.salt) : undefined,
+  };
+
+  const insights = getActiveInsights(conditions, allergies, preferences, nutrientData);
+  let verdict = summariseVerdict(insights);
+  // Upgrade to Warning if there's any direct hit — these always beat
+  // the numeric insights, which only see macro-level severities.
+  if (flagHits.length > 0 || allergenHits.length > 0 || row?.status === 'avoid') {
+    verdict = { label: 'Warning', color: '#ff3f42' };
   }
 
-  const Container = hasBarcode ? TouchableOpacity : View;
+  // Build FlaggedMatch[] — one card per unique flagged ingredient,
+  // with the reasons pulled from the DB above.
+  const byIngredient: Record<
+    string,
+    { ingredientName: string; products: Set<string>; reasons: string[] }
+  > = {};
+  for (const h of flagHits) {
+    const bucket = byIngredient[h.flaggedIngredientId] ?? {
+      ingredientName: h.flaggedIngredientName,
+      products: new Set<string>(),
+      reasons: reasonsByFlaggedId[h.flaggedIngredientId] ?? [],
+    };
+    bucket.products.add(h.productName);
+    byIngredient[h.flaggedIngredientId] = bucket;
+  }
+  const flaggedMatches: FlaggedMatch[] = Object.values(byIngredient).map((b) => ({
+    ingredientName: b.ingredientName,
+    reasons: b.reasons,
+  }));
+
+  // Allergen warnings — one card per member allergy that's present.
+  const allergenWarnings = allergenHits.map((h) => {
+    const label = tpo(`allergies.${h.allergy}`, { defaultValue: h.allergy });
+    const productList =
+      h.productNames.length === 1
+        ? h.productNames[0]
+        : `${h.productNames.slice(0, -1).join(', ')} and ${h.productNames[h.productNames.length - 1]}`;
+    return `This recipe contains ${label.toLowerCase()} (${productList}). Avoid if allergic.`;
+  });
 
   return (
-    <Container
-      style={styles.ingRow}
-      {...(hasBarcode ? { onPress: openScanResult, activeOpacity: 0.85 } : {})}
+    <FamilyImpactSheet
+      visible={memberId !== null}
+      onClose={onClose}
+      member={{
+        id: memberId ?? '',
+        name: row?.name ?? '',
+        avatarUrl: row?.avatarUrl ?? null,
+        tags: [
+          ...conditions.map((c) => tpo(`healthConditions.${c}`, { defaultValue: c })),
+          ...allergies.map((a) => tpo(`allergies.${a}`, { defaultValue: a })),
+          ...preferences.map((d) => tpo(`dietaryPreferences.${d}`, { defaultValue: d })),
+        ],
+      }}
+      verdict={verdict}
+      insights={insights}
+      flaggedMatches={flaggedMatches}
+      allergenWarnings={allergenWarnings}
+    />
+  );
+}
+
+// ── Sub-components ─────────────────────────────────────────────────────
+
+function MetricCard({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.metricCard}>
+      <Text style={styles.metricLabel}>{label}</Text>
+      <Text style={styles.metricValue}>{value}</Text>
+    </View>
+  );
+}
+
+function ModeTab({
+  label,
+  active,
+  onPress,
+}: {
+  label: string;
+  active: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={[styles.modeTab, active && styles.modeTabActive]}
+      activeOpacity={0.85}
     >
+      <Text style={[styles.modeTabText, active && styles.modeTabTextActive]}>
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
+}
+
+function NutritionRow({
+  Icon,
+  label,
+  value,
+}: {
+  Icon: React.FC<{ width?: number; height?: number }>;
+  label: string;
+  value: string;
+}) {
+  return (
+    <View style={styles.nutritionRow}>
+      <View style={styles.nutritionIconWrap}>
+        <Icon width={24} height={24} />
+      </View>
+      <Text style={styles.nutritionLabel}>{label}</Text>
+      <Text style={styles.nutritionValue}>{value}</Text>
+    </View>
+  );
+}
+
+function HouseholdMemberRow({
+  row,
+  tags,
+  verdict,
+  onPress,
+}: {
+  row: HouseholdImpactRow;
+  /** Condition + allergy + dietary pref labels rendered as pills. */
+  tags: string[];
+  /** Insight-based verdict from the parent (already Warning-upgraded if
+   *  there are direct conflicts). */
+  verdict: { label: 'Good' | 'Ok' | 'Warning'; color: string };
+  onPress: () => void;
+}) {
+  return (
+    <TouchableOpacity style={styles.memberRow} onPress={onPress} activeOpacity={0.85}>
+      <View style={styles.memberAvatar}>
+        {row.avatarUrl ? (
+          <Image source={{ uri: row.avatarUrl }} style={styles.memberAvatarImg} />
+        ) : (
+          <Text style={styles.memberAvatarInitials}>
+            {row.name.slice(0, 2).toUpperCase()}
+          </Text>
+        )}
+      </View>
+      <View style={styles.memberInfo}>
+        <Text style={styles.memberName} numberOfLines={1}>
+          {row.name}
+        </Text>
+        {tags.length > 0 && (
+          <View style={styles.memberTagWrap}>
+            {tags.map((t) => (
+              <View key={t} style={styles.memberTag}>
+                <Text style={styles.memberTagText} numberOfLines={1}>
+                  {t}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
+      <View style={[styles.memberStatusPill, { backgroundColor: verdict.color }]}>
+        <Text style={styles.memberStatusText}>{verdict.label}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+function IngredientRow({ ingredient: ing }: { ingredient: RecipeIngredient }) {
+  const snap = ing.product_snapshot;
+  return (
+    <View style={styles.ingRow}>
       <View style={styles.ingThumb}>
         {snap.image_url ? (
           <Image source={{ uri: snap.image_url }} style={styles.ingThumbImage} />
         ) : (
-          <Ionicons name="nutrition-outline" size={20} color={Colors.secondary} />
+          <View style={styles.ingThumbNoImage}>
+            <Ionicons name="image-outline" size={16} color={STROKE} />
+            <Text style={styles.ingThumbNoImageText}>No image</Text>
+          </View>
         )}
       </View>
       <View style={styles.ingInfo}>
-        <Text style={styles.ingName} numberOfLines={1}>{snap.product_name}</Text>
         {snap.brand && (
-          <Text style={styles.ingBrand} numberOfLines={1}>{snap.brand}</Text>
+          <Text style={styles.ingBrand} numberOfLines={1}>
+            {snap.brand}
+          </Text>
         )}
-      </View>
-      <Text style={styles.ingQty}>
-        {formatQuantity(Number(ing.quantity_value), ing.quantity_unit)}
-      </Text>
-      {hasBarcode && (
-        <Ionicons name="chevron-forward" size={16} color={Colors.secondary} style={styles.ingChevron} />
-      )}
-    </Container>
-  );
-}
-
-function HouseholdRow({ row, last }: { row: HouseholdImpactRow; last: boolean }) {
-  const color = {
-    ok: { bg: '#e8f5e9', text: '#3b9586', dot: '#3b9586' },
-    caution: { bg: '#fff4e0', text: '#ff8736', dot: '#ff8736' },
-    avoid: { bg: '#ffebec', text: '#ff3f42', dot: '#ff3f42' },
-  }[row.status];
-  const statusLabel = { ok: 'OK', caution: 'Caution', avoid: 'Avoid' }[row.status];
-
-  return (
-    <View style={[styles.hhRow, !last && styles.hhRowDivider]}>
-      <View style={styles.hhAvatar}>
-        <Text style={styles.hhAvatarText}>
-          {row.name.slice(0, 2).toUpperCase()}
+        <Text style={styles.ingName} numberOfLines={1}>
+          {snap.product_name}
         </Text>
       </View>
-      <View style={styles.hhInfo}>
-        <Text style={styles.hhName}>{row.name}</Text>
-        <Text style={styles.hhReason} numberOfLines={2}>
-          {row.reasons.length > 0 ? row.reasons.join(' • ') : 'No conflicts found'}
+      <View style={styles.ingQty}>
+        <Text style={styles.ingQtyText}>
+          {formatQuantity(Number(ing.quantity_value), ing.quantity_unit)}
         </Text>
-      </View>
-      <View style={[styles.hhStatus, { backgroundColor: color.bg }]}>
-        <View style={[styles.hhStatusDot, { backgroundColor: color.dot }]} />
-        <Text style={[styles.hhStatusText, { color: color.text }]}>{statusLabel}</Text>
       </View>
     </View>
   );
 }
 
-// ── Styles ───────────────────────────────────────────────────────────────────
+// ── Formatting helpers ─────────────────────────────────────────────────
+
+function formatGrams(n: number | null | undefined): string {
+  if (n == null || !Number.isFinite(n)) return '—';
+  if (n >= 10) return `${Math.round(n)}g`;
+  return `${Math.round(n * 10) / 10}g`;
+}
+
+function formatKcal(kcal: number | null | undefined): string {
+  if (kcal == null || !Number.isFinite(kcal)) return '—';
+  const kj = Math.round(kcal * 4.184);
+  return `${kj} kJ (${Math.round(kcal)} kcal)`;
+}
+
+// ── Styles ─────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+  safe: { flex: 1, backgroundColor: Colors.surface.secondary },
   loadingWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   emptyText: {
-    ...Typography.bodyRegular,
+    fontSize: 16,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
     color: Colors.secondary,
   },
-  backInlineBtn: {
-    padding: 10,
-    marginTop: Spacing.s,
+  backInlineBtn: { padding: 10, marginTop: 16 },
+  backInlineBtnText: {
+    fontSize: 16,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.secondary,
   },
-  backInlineBtnText: { ...Typography.h5, color: Colors.secondary },
 
   // Hero
   hero: {
     width: '100%',
-    aspectRatio: 16 / 10,
+    height: 300,
     backgroundColor: Colors.surface.tertiary,
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'relative',
   },
   heroImage: { width: '100%', height: '100%' },
   heroBack: {
     position: 'absolute',
     left: 16,
-    width: 40, height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: 'rgba(255,255,255,0.95)',
-    alignItems: 'center', justifyContent: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
     ...Shadows.level3,
   },
   heroMenu: {
     position: 'absolute',
     right: 16,
-    width: 40, height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: 'rgba(255,255,255,0.95)',
-    alignItems: 'center', justifyContent: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
     ...Shadows.level3,
   },
 
-  // Title card
-  titleCard: {
+  // Bottom sheet wrapper for all content below the hero
+  sheet: {
     backgroundColor: Colors.surface.secondary,
-    marginHorizontal: Spacing.s,
-    marginTop: -20,
-    padding: Spacing.s,
-    borderRadius: Radius.l,
-    borderWidth: 1,
-    borderColor: '#aad4cd',
-    ...Shadows.level4,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    marginTop: -16, // overlap the hero slightly per Figma
+    paddingHorizontal: 24,
+    paddingTop: 32,
+    gap: 32,
   },
-  title: { ...Typography.h3, color: Colors.primary },
-  titleMeta: {
-    flexDirection: 'row',
-    gap: 16,
-    marginTop: 8,
+
+  // Title
+  titleBlock: { gap: 4 },
+  title: {
+    fontSize: 24,
+    lineHeight: 30,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.48,
   },
-  metaItem: {
-    fontSize: 13,
+  author: {
+    fontSize: 16,
+    lineHeight: 24,
     fontWeight: '300',
     fontFamily: 'Figtree_300Light',
     color: Colors.secondary,
   },
-  metaStrong: {
+
+  // Metrics row (3 equal cards)
+  metricsRow: { flexDirection: 'row', gap: 8 },
+  metricCard: {
+    flex: 1,
+    backgroundColor: ROW_FILL,
+    borderWidth: 1,
+    borderColor: STROKE,
+    borderRadius: Radius.m,
+    padding: 16,
+    gap: 4,
+  },
+  metricLabel: {
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
+    color: Colors.secondary,
+    letterSpacing: -0.32,
+  },
+  metricValue: {
+    fontSize: 16,
+    lineHeight: 20,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
   },
 
-  content: {
-    padding: Spacing.s,
-    gap: Spacing.s,
+  // Section
+  section: { gap: 16 },
+  sectionTitle: {
+    fontSize: 20,
+    lineHeight: 24,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.4,
   },
-
-  sectionHeader: { paddingHorizontal: 4, marginTop: 4 },
-  sectionTitle: { ...Typography.h4, color: Colors.primary },
   sectionSubtitle: {
-    fontSize: 13,
+    fontSize: 14,
+    lineHeight: 21,
     fontWeight: '300',
     fontFamily: 'Figtree_300Light',
     color: Colors.secondary,
-    marginTop: 2,
+    letterSpacing: -0.14,
+    marginTop: -8, // sit closer to the title
   },
-
-  // Nutrition rows
-
-  // Nutri-score
-  nutriCard: {
-    backgroundColor: Colors.surface.secondary,
-    borderRadius: Radius.l,
-    borderWidth: 1,
-    borderColor: '#aad4cd',
-    padding: Spacing.s,
-    ...Shadows.level4,
-  },
-  nutriHead: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  nutriLabel: {
+  countLine: {
     fontSize: 13,
+    lineHeight: 16,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
-    color: Colors.secondary,
-    letterSpacing: 0.5,
+    color: Colors.primary,
+    letterSpacing: -0.26,
+    marginTop: -8,
   },
-  nutriVerdict: {
-    fontSize: 13,
+
+  h5: {
+    fontSize: 16,
+    lineHeight: 20,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
   },
-  nutriScale: { flexDirection: 'row', gap: 4 },
-  nutriGrade: {
-    flex: 1,
-    aspectRatio: 24 / 30,
-    borderRadius: 3,
+
+  // Mode tabs
+  modeTabs: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  modeTab: {
+    height: 30,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  nutriGradeActive: {
     borderWidth: 2,
-    borderColor: '#fff',
-    ...Shadows.level2,
+    borderColor: 'transparent',
   },
-  nutriGradeInactive: {
-    opacity: 0.15,
+  modeTabActive: {
+    backgroundColor: '#e4f1ef',
+    borderColor: STROKE,
   },
-  nutriGradeText: {
-    fontSize: 14,
+  modeTabText: {
+    fontSize: 16,
+    lineHeight: 17.6,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
-    color: '#fff',
-  },
-
-  // Household
-  householdCard: {
-    backgroundColor: Colors.surface.secondary,
-    borderRadius: Radius.l,
-    borderWidth: 1,
-    borderColor: '#aad4cd',
-    overflow: 'hidden',
-    ...Shadows.level4,
-  },
-  householdHead: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    paddingTop: 16,
-  },
-  householdHeadText: {
-    fontSize: 14,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
-  },
-  warningBadge: {
-    backgroundColor: '#fff4e0',
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: Radius.full,
-  },
-  warningBadgeText: {
-    fontSize: 12,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: '#ff8736',
-  },
-  hhRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  hhRowDivider: {
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.surface.tertiary,
-  },
-  hhAvatar: {
-    width: 36, height: 36,
-    borderRadius: 18,
-    backgroundColor: Colors.accent,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  hhAvatarText: {
-    fontSize: 12,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: '#fff',
-  },
-  hhInfo: { flex: 1, gap: 2 },
-  hhName: {
-    fontSize: 14,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
-  },
-  hhReason: {
-    fontSize: 12,
-    fontWeight: '300',
-    fontFamily: 'Figtree_300Light',
     color: Colors.secondary,
+    letterSpacing: -0.32,
   },
-  hhStatus: {
+  modeTabTextActive: { color: Colors.primary },
+
+  // Nutrition rows
+  nutritionRows: { gap: 4 },
+  nutritionRow: {
+    backgroundColor: ROW_FILL,
+    borderWidth: 1,
+    borderColor: STROKE,
+    borderRadius: Radius.m,
+    paddingLeft: 8,
+    paddingRight: 16,
+    paddingVertical: 8,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: Radius.full,
   },
-  hhStatusDot: {
-    width: 6, height: 6,
-    borderRadius: 3,
-  },
-  hhStatusText: {
-    fontSize: 11,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-  },
-
-  // Ingredients
-  ingRow: {
-    backgroundColor: Colors.surface.secondary,
-    borderRadius: Radius.m,
-    borderWidth: 1,
-    borderColor: '#aad4cd',
-    padding: 10,
-    flexDirection: 'row',
+  nutritionIconWrap: {
+    width: 32,
+    height: 32,
     alignItems: 'center',
-    gap: 12,
-    ...Shadows.level4,
+    justifyContent: 'center',
   },
-  ingThumb: {
-    width: 40, height: 40,
-    borderRadius: Radius.m,
-    backgroundColor: Colors.surface.tertiary,
-    overflow: 'hidden',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  ingThumbImage: { width: '100%', height: '100%' },
-  ingInfo: { flex: 1, gap: 2 },
-  ingName: {
-    fontSize: 14,
+  nutritionLabel: {
+    flex: 1,
+    fontSize: 16,
+    lineHeight: 20,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
   },
-  ingBrand: {
-    fontSize: 11,
-    fontWeight: '300',
-    fontFamily: 'Figtree_300Light',
-    color: Colors.secondary,
+  nutritionValue: {
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
   },
-  ingQty: {
-    fontSize: 13,
+
+  // Nutri-score
+  nutriBlock: { gap: 8 },
+  nutriCard: {
+    backgroundColor: ROW_FILL,
+    borderWidth: 1,
+    borderColor: STROKE,
+    borderRadius: Radius.m,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  verdictPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+  verdictText: {
+    fontSize: 14,
+    lineHeight: 17,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: '#fff',
+    letterSpacing: -0.28,
+    textShadowColor: 'rgba(0,0,0,0.29)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  scaleRow: { flexDirection: 'row', alignItems: 'center', gap: 4, height: 30 },
+  gradePill: {
+    width: 24,
+    height: 30,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  gradePillActive: {},
+  gradePillInactive: { opacity: 0.15 },
+  gradeText: {
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: '#fff',
+    textAlign: 'center',
+    textShadowColor: 'rgba(0,0,0,0.29)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+
+  // Household
+  householdList: { gap: 8 },
+  memberRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    paddingVertical: 8,
+  },
+  memberAvatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#e2f1ee',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    borderWidth: 3,
+    borderColor: '#fff',
+    ...Shadows.level2,
+  },
+  memberAvatarImg: { width: '100%', height: '100%' },
+  memberAvatarInitials: {
+    fontSize: 18,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.secondary,
   },
-  ingChevron: {
-    marginLeft: 4,
+  memberInfo: { flex: 1, gap: 6 },
+  memberName: {
+    // Figma: Heading 5 bumped to the recipe-card treatment — larger name
+    // so it sits comfortably above the condition pills.
+    fontSize: 18,
+    lineHeight: 22,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.36,
+  },
+  memberTagWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+  },
+  memberTag: {
+    // Figma: lighter teal-tinted fill specific to the household row — a
+    // touch more visible than the usual spring-water pill so it reads
+    // clearly against the white row background.
+    backgroundColor: 'rgba(0, 119, 111, 0.12)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
+    maxWidth: '100%',
+  },
+  memberTagText: {
+    fontSize: 13,
+    lineHeight: 16,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.26,
+  },
+  memberStatusPill: {
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  memberStatusText: {
+    fontSize: 14,
+    lineHeight: 17,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: '#fff',
+    letterSpacing: -0.28,
+    textShadowColor: 'rgba(0,0,0,0.29)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
 
+  // Ingredient rows (info-only — no like/dislike/flag on this screen)
+  ingList: { gap: 8 },
+  ingRow: {
+    backgroundColor: ROW_FILL,
+    borderWidth: 1,
+    borderColor: STROKE,
+    borderRadius: Radius.m,
+    height: 76,
+    paddingLeft: 8,
+    paddingRight: 16,
+    paddingVertical: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  ingThumb: {
+    width: 60,
+    height: 60,
+    borderRadius: Radius.m,
+    backgroundColor: '#e2f1ee',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  ingThumbImage: { width: '100%', height: '100%' },
+  ingThumbNoImage: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+  },
+  ingThumbNoImageText: {
+    fontSize: 9,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: STROKE,
+  },
+  ingInfo: { flex: 1, justifyContent: 'center', gap: 2 },
+  ingBrand: {
+    fontSize: 13,
+    lineHeight: 16,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.secondary,
+    letterSpacing: -0.26,
+  },
+  ingName: {
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+  },
+  ingQty: {
+    backgroundColor: '#e4f1ef',
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 52,
+  },
+  ingQtyText: {
+    fontSize: 13,
+    lineHeight: 16,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.26,
+    textAlign: 'center',
+  },
+
+  // Process step cards
+  stepList: { gap: 8 },
+  stepCard: {
+    backgroundColor: ROW_FILL,
+    borderWidth: 1,
+    borderColor: STROKE,
+    borderRadius: Radius.m,
+    padding: 16,
+    gap: 8,
+  },
+  stepTitle: {
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+  },
+  stepBody: {
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
+    color: Colors.secondary,
+  },
 });

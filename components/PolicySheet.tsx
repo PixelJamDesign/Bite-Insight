@@ -185,7 +185,7 @@ export function PolicySheet({ visible, onClose, type }: Props) {
           {
             height: SCREEN_HEIGHT * SHEET_FRACTION,
             transform: [{ translateY: slideAnim }],
-            paddingBottom: insets.bottom,
+            paddingBottom: insets.bottom + 24,
           },
         ]}
       >

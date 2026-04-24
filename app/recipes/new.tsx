@@ -23,7 +23,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInput,
-  ScrollView,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -31,12 +30,18 @@ import {
   Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  NestableScrollContainer,
+  NestableDraggableFlatList,
+  ScaleDecorator,
+  type RenderItemParams,
+} from 'react-native-draggable-flatlist';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '@/lib/auth';
 import { useDraftRecipe } from '@/lib/draftRecipeContext';
-import { getRecipe, snapshotFromScanAsync } from '@/lib/recipes';
+import { getRecipe } from '@/lib/recipes';
 import { uploadRecipeCover } from '@/lib/supabase';
 import { formatQuantity } from '@/constants/quantityUnits';
 import { Colors, Spacing, Radius, Shadows } from '@/constants/theme';
@@ -45,9 +50,7 @@ import {
   NUTRISCORE_VERDICT,
   type NutriscoreGrade,
 } from '@/lib/nutriscore';
-import type { Scan } from '@/lib/types';
-import { MenuArrowLeftIcon } from '@/components/MenuIcons';
-import { ScanPickerSheet } from '@/components/ScanPickerSheet';
+import { MenuArrowLeftIcon, ActionPenIcon } from '@/components/MenuIcons';
 import { QuantityPickerSheet } from '@/components/QuantityPickerSheet';
 import { AddIngredientSheet, type AddSource } from '@/components/AddIngredientSheet';
 import { StepEditorSheet } from '@/components/StepEditorSheet';
@@ -84,7 +87,6 @@ export default function RecipeBuilderScreen() {
   const [loadingInitial, setLoadingInitial] = useState(isEditing);
   const [saving, setSaving] = useState(false);
   const [addSheetOpen, setAddSheetOpen] = useState(false);
-  const [scanPickerOpen, setScanPickerOpen] = useState(false);
   const [quantityEditing, setQuantityEditing] = useState<string | null>(null);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [nutritionMode, setNutritionMode] = useState<NutritionMode>('serving');
@@ -126,36 +128,6 @@ export default function RecipeBuilderScreen() {
         },
       ],
     );
-  }
-
-  function handleReorderPrompt(localId: string, currentIndex: number, total: number) {
-    const options: any[] = [];
-    if (currentIndex > 0) {
-      options.push({
-        text: 'Move up',
-        onPress: () => draft.reorderIngredient(currentIndex, currentIndex - 1),
-      });
-    }
-    if (currentIndex < total - 1) {
-      options.push({
-        text: 'Move down',
-        onPress: () => draft.reorderIngredient(currentIndex, currentIndex + 1),
-      });
-    }
-    if (currentIndex > 0) {
-      options.push({
-        text: 'Move to top',
-        onPress: () => draft.reorderIngredient(currentIndex, 0),
-      });
-    }
-    if (currentIndex < total - 1) {
-      options.push({
-        text: 'Move to bottom',
-        onPress: () => draft.reorderIngredient(currentIndex, total - 1),
-      });
-    }
-    options.push({ text: 'Cancel', style: 'cancel' });
-    Alert.alert('Reorder ingredient', undefined, options);
   }
 
   // ── Draft bootstrap ───────────────────────────────────────────────────────
@@ -225,23 +197,12 @@ export default function RecipeBuilderScreen() {
     }
   }
 
-  async function handleAddScan(scan: Scan) {
-    const snapshot = await snapshotFromScanAsync(scan);
-    draft.addIngredient({
-      barcode: scan.barcode,
-      scan_id: scan.id,
-      quantity_value: 100,
-      quantity_unit: 'g',
-      quantity_display: null,
-      product_snapshot: snapshot,
-    });
-    setScanPickerOpen(false);
-  }
-
   function handleAddSourceSelected(source: AddSource) {
     setAddSheetOpen(false);
     if (source === 'history') {
-      setTimeout(() => setScanPickerOpen(true), 180);
+      // Full-screen picker (not a Modal) — avoids iOS's double-Modal
+      // freeze when presenting one Modal while another is dismissing.
+      router.push('/recipes/pick-scan' as never);
     } else if (source === 'search') {
       router.push('/food-search?addToRecipe=1' as never);
     } else if (source === 'scan') {
@@ -380,7 +341,7 @@ export default function RecipeBuilderScreen() {
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView
+        <NestableScrollContainer
           style={{ flex: 1 }}
           contentContainerStyle={{ paddingBottom: 140 }}
           keyboardShouldPersistTaps="handled"
@@ -401,22 +362,28 @@ export default function RecipeBuilderScreen() {
                 resizeMode="cover"
               />
             )}
-            <View style={styles.heroCta}>
-              <View style={styles.heroIconWrap}>
-                {uploadingCover ? (
-                  <ActivityIndicator color={Colors.secondary} />
-                ) : (
-                  <Ionicons name="image-outline" size={40} color={Colors.secondary} />
-                )}
+            {/* "Add cover image" CTA only shows when there is no image yet.
+                Once a cover is uploaded we let the photo speak for itself —
+                the whole hero remains tappable to replace it. */}
+            {!d.coverImageUrl && (
+              <View style={styles.heroCta}>
+                <View style={styles.heroIconWrap}>
+                  {uploadingCover ? (
+                    <ActivityIndicator color={Colors.secondary} />
+                  ) : (
+                    <Ionicons name="image-outline" size={40} color={Colors.secondary} />
+                  )}
+                </View>
+                <Text style={styles.heroCtaText}>
+                  {uploadingCover ? 'Uploading…' : 'Add cover image'}
+                </Text>
               </View>
-              <Text style={styles.heroCtaText}>
-                {uploadingCover
-                  ? 'Uploading…'
-                  : d.coverImageUrl
-                  ? 'Change cover image'
-                  : 'Add cover image'}
-              </Text>
-            </View>
+            )}
+            {uploadingCover && d.coverImageUrl && (
+              <View style={styles.heroUploadingOverlay}>
+                <ActivityIndicator color="#fff" />
+              </View>
+            )}
           </TouchableOpacity>
 
           {/* Floating back button (top-left over hero) */}
@@ -630,11 +597,11 @@ export default function RecipeBuilderScreen() {
                       }
                       activeOpacity={0.7}
                     >
-                      <Ionicons
-                        name={ingredientsEditMode ? 'close' : 'create-outline'}
-                        size={16}
-                        color={Colors.secondary}
-                      />
+                      {ingredientsEditMode ? (
+                        <Ionicons name="close" size={16} color={Colors.secondary} />
+                      ) : (
+                        <ActionPenIcon color={Colors.secondary} size={18} />
+                      )}
                       <Text style={styles.inlineCtrlText}>
                         {ingredientsEditMode ? 'Cancel' : 'Edit ingredients'}
                       </Text>
@@ -658,101 +625,144 @@ export default function RecipeBuilderScreen() {
                 >
                   <Text style={styles.emptyCardText}>Add an ingredient</Text>
                 </TouchableOpacity>
+              ) : ingredientsEditMode ? (
+                <NestableDraggableFlatList
+                  data={d.ingredients}
+                  keyExtractor={(ing) => ing._localId}
+                  onDragEnd={({ from, to }) => {
+                    if (from !== to) draft.reorderIngredient(from, to);
+                  }}
+                  activationDistance={10}
+                  ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+                  containerStyle={styles.ingList}
+                  renderItem={({ item: ing, drag, isActive }: RenderItemParams<typeof d.ingredients[number]>) => {
+                    const selected = selectedIngredientIds.has(ing._localId);
+                    return (
+                      <ScaleDecorator>
+                        <View style={[styles.ingEditWrap, isActive && styles.ingRowActive]}>
+                          <View style={[styles.ingRow, styles.ingRowFlex]}>
+                            <TouchableOpacity
+                              style={[styles.checkbox, selected && styles.checkboxChecked]}
+                              onPress={() => toggleIngredientSelected(ing._localId)}
+                              activeOpacity={0.7}
+                            >
+                              {selected && <Ionicons name="checkmark" size={16} color="#fff" />}
+                            </TouchableOpacity>
+                            <View style={styles.ingThumb}>
+                              {ing.product_snapshot.image_url ? (
+                                <Image
+                                  source={{ uri: ing.product_snapshot.image_url }}
+                                  style={styles.ingThumbImage}
+                                  resizeMode="cover"
+                                />
+                              ) : (
+                                <View style={styles.ingThumbNoImage}>
+                                  <Ionicons name="image-outline" size={16} color="#aad4cd" />
+                                  <Text style={styles.ingThumbNoImageText}>No image</Text>
+                                </View>
+                              )}
+                            </View>
+                            <View style={styles.ingInfo}>
+                              {ing.product_snapshot.brand && (
+                                <Text style={styles.ingBrand} numberOfLines={1}>
+                                  {ing.product_snapshot.brand}
+                                </Text>
+                              )}
+                              <Text style={styles.ingName} numberOfLines={1}>
+                                {ing.product_snapshot.product_name}
+                              </Text>
+                            </View>
+                            <TouchableOpacity
+                              style={styles.ingQty}
+                              onPress={() => setQuantityEditing(ing._localId)}
+                              activeOpacity={0.75}
+                            >
+                              <Text style={styles.ingQtyText}>
+                                {formatQuantity(ing.quantity_value, ing.quantity_unit)}
+                              </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={styles.ingDeleteGlyph}
+                              onPress={() => draft.removeIngredient(ing._localId)}
+                              activeOpacity={0.7}
+                              hitSlop={8}
+                            >
+                              <Ionicons name="trash-outline" size={20} color={Colors.secondary} />
+                            </TouchableOpacity>
+                          </View>
+                          {/* Drag handle — long-press (or press-in on Android)
+                              begins the reorder gesture via DraggableFlatList. */}
+                          <TouchableOpacity
+                            style={styles.gripBtn}
+                            onLongPress={drag}
+                            delayLongPress={150}
+                            disabled={isActive}
+                            activeOpacity={0.6}
+                            hitSlop={8}
+                          >
+                            <Ionicons name="reorder-three-outline" size={22} color={Colors.secondary} />
+                          </TouchableOpacity>
+                        </View>
+                      </ScaleDecorator>
+                    );
+                  }}
+                />
               ) : (
                 <View style={styles.ingList}>
-                  {d.ingredients.map((ing, idx) => {
-                    const selected = selectedIngredientIds.has(ing._localId);
-                    const row = (
-                      <View style={styles.ingRow}>
-                        {ingredientsEditMode && (
-                          <TouchableOpacity
-                            style={[styles.checkbox, selected && styles.checkboxChecked]}
-                            onPress={() => toggleIngredientSelected(ing._localId)}
-                            activeOpacity={0.7}
-                          >
-                            {selected && <Ionicons name="checkmark" size={16} color="#fff" />}
-                          </TouchableOpacity>
-                        )}
-                        <View style={styles.ingThumb}>
-                          {ing.product_snapshot.image_url ? (
-                            <Image
-                              source={{ uri: ing.product_snapshot.image_url }}
-                              style={styles.ingThumbImage}
-                              resizeMode="cover"
-                            />
-                          ) : (
-                            <View style={styles.ingThumbNoImage}>
-                              <Ionicons name="image-outline" size={16} color="#aad4cd" />
-                              <Text style={styles.ingThumbNoImageText}>No image</Text>
-                            </View>
-                          )}
-                        </View>
-                        <View style={styles.ingInfo}>
-                          {ing.product_snapshot.brand && (
-                            <Text style={styles.ingBrand} numberOfLines={1}>
-                              {ing.product_snapshot.brand}
-                            </Text>
-                          )}
-                          <Text style={styles.ingName} numberOfLines={1}>
-                            {ing.product_snapshot.product_name}
-                          </Text>
-                        </View>
-                        <TouchableOpacity
-                          style={styles.ingQty}
-                          onPress={() => setQuantityEditing(ing._localId)}
-                          activeOpacity={0.75}
-                        >
-                          <Text style={styles.ingQtyText}>
-                            {formatQuantity(ing.quantity_value, ing.quantity_unit)}
-                          </Text>
-                        </TouchableOpacity>
-                        {ingredientsEditMode && (
-                          <TouchableOpacity
-                            style={styles.ingEditGlyph}
-                            onPress={() => setQuantityEditing(ing._localId)}
-                            activeOpacity={0.7}
-                          >
-                            <Ionicons name="create-outline" size={18} color={Colors.secondary} />
-                          </TouchableOpacity>
+                  {d.ingredients.map((ing) => (
+                    <View key={ing._localId} style={styles.ingRow}>
+                      <View style={styles.ingThumb}>
+                        {ing.product_snapshot.image_url ? (
+                          <Image
+                            source={{ uri: ing.product_snapshot.image_url }}
+                            style={styles.ingThumbImage}
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <View style={styles.ingThumbNoImage}>
+                            <Ionicons name="image-outline" size={16} color="#aad4cd" />
+                            <Text style={styles.ingThumbNoImageText}>No image</Text>
+                          </View>
                         )}
                       </View>
-                    );
-
-                    if (!ingredientsEditMode) {
-                      return <View key={ing._localId}>{row}</View>;
-                    }
-                    return (
-                      <View key={ing._localId} style={styles.ingEditWrap}>
-                        <View style={{ flex: 1 }}>{row}</View>
-                        <TouchableOpacity
-                          style={styles.gripBtn}
-                          onPress={() => handleReorderPrompt(ing._localId, idx, d.ingredients.length)}
-                          activeOpacity={0.7}
-                        >
-                          <Ionicons name="reorder-three-outline" size={20} color={Colors.secondary} />
-                        </TouchableOpacity>
+                      <View style={styles.ingInfo}>
+                        {ing.product_snapshot.brand && (
+                          <Text style={styles.ingBrand} numberOfLines={1}>
+                            {ing.product_snapshot.brand}
+                          </Text>
+                        )}
+                        <Text style={styles.ingName} numberOfLines={1}>
+                          {ing.product_snapshot.product_name}
+                        </Text>
                       </View>
-                    );
-                  })}
+                      <TouchableOpacity
+                        style={styles.ingQty}
+                        onPress={() => setQuantityEditing(ing._localId)}
+                        activeOpacity={0.75}
+                      >
+                        <Text style={styles.ingQtyText}>
+                          {formatQuantity(ing.quantity_value, ing.quantity_unit)}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
                 </View>
               )}
 
-              {/* Edit-mode action footer (below ingredient list) */}
-              {ingredientsEditMode && d.ingredients.length > 0 && (
+              {/* Edit-mode action footer — shown only once at least one
+                  ingredient is selected via the row checkbox. The header's
+                  'Cancel' control already handles exiting edit mode without
+                  a selection, so we don't need a second cancel here. */}
+              {ingredientsEditMode && selectedIngredientIds.size > 0 && (
                 <View style={styles.ingEditFooter}>
                   <TouchableOpacity
                     style={styles.deleteSelectedBtn}
                     onPress={handleDeleteSelected}
                     activeOpacity={0.85}
                   >
-                    <Text style={styles.deleteSelectedText}>Delete selected</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.cancelEditBtn}
-                    onPress={exitEditMode}
-                    activeOpacity={0.85}
-                  >
-                    <Text style={styles.cancelEditText}>Cancel</Text>
+                    <Text style={styles.deleteSelectedText}>
+                      Delete {selectedIngredientIds.size} selected
+                    </Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -801,7 +811,7 @@ export default function RecipeBuilderScreen() {
               )}
             </View>
           </View>
-        </ScrollView>
+        </NestableScrollContainer>
 
         {/* ── Sticky footer ──────────────────────────────────────────── */}
         <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
@@ -834,11 +844,6 @@ export default function RecipeBuilderScreen() {
         visible={addSheetOpen}
         onClose={() => setAddSheetOpen(false)}
         onPick={handleAddSourceSelected}
-      />
-      <ScanPickerSheet
-        visible={scanPickerOpen}
-        onClose={() => setScanPickerOpen(false)}
-        onPick={handleAddScan}
       />
       <QuantityPickerSheet
         visible={Boolean(editingIngredient)}
@@ -942,6 +947,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: -0.28,
     lineHeight: 17,
+  },
+  // Semi-transparent overlay shown only while a replacement cover is uploading
+  heroUploadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
   // Floating back button (Figma: bg rgba(255,255,255,0.7), 1px white border, 16 radius, level 3)
@@ -1315,9 +1327,9 @@ const styles = StyleSheet.create({
     letterSpacing: -0.26,
     textAlign: 'center',
   },
-  ingEditGlyph: {
-    width: 20,
-    height: 20,
+  ingDeleteGlyph: {
+    width: 28,
+    height: 28,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1339,6 +1351,13 @@ const styles = StyleSheet.create({
   },
 
   // Edit-mode row wrapper with trailing grip
+  ingRowActive: {
+    opacity: 0.95,
+    ...Shadows.level3,
+  },
+  // Applied to the row when it sits next to the drag handle in edit mode —
+  // without flex:1 the row shrinks to content width inside the row-wrapper.
+  ingRowFlex: { flex: 1 },
   ingEditWrap: {
     flexDirection: 'row',
     alignItems: 'center',
