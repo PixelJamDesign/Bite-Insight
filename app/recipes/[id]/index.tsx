@@ -51,6 +51,7 @@ import {
   findRecipeAllergenMatches,
 } from '@/lib/householdImpact';
 import { supabase } from '@/lib/supabase';
+import ArrowLeftIcon from '@/assets/icons/recipe-header/arrow-left.svg';
 import type {
   FamilyProfile,
   HouseholdImpactRow,
@@ -360,18 +361,22 @@ export default function RecipeDetailScreen() {
           )}
         </View>
 
-        {/* Floating back + actions overlay */}
+        {/* Floating back + actions overlay — matches the recipe builder
+            header pill style (Figma node 4834:26085): 48x48, rounded-16,
+            white 70% fill, white border, level-3 shadow. */}
         <TouchableOpacity
-          style={[styles.heroBack, { top: insets.top + 12 }]}
+          style={[styles.headerBtn, styles.headerBtnLeft, { top: insets.top + 12 }]}
           onPress={() => safeBack()}
           activeOpacity={0.85}
+          hitSlop={8}
         >
-          <Ionicons name="chevron-back" size={22} color={Colors.primary} />
+          <ArrowLeftIcon width={18} height={14} />
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.heroMenu, { top: insets.top + 12 }]}
+          style={[styles.headerBtn, styles.headerBtnRight, { top: insets.top + 12 }]}
           onPress={() => setActionsOpen(true)}
           activeOpacity={0.85}
+          hitSlop={8}
         >
           <Ionicons name="ellipsis-horizontal" size={22} color={Colors.primary} />
         </TouchableOpacity>
@@ -976,28 +981,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   heroImage: { width: '100%', height: '100%' },
-  heroBack: {
+  headerBtn: {
     position: 'absolute',
-    left: 16,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.95)',
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    borderWidth: 1,
+    borderColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
     ...Shadows.level3,
   },
-  heroMenu: {
-    position: 'absolute',
-    right: 16,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.95)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Shadows.level3,
-  },
+  headerBtnLeft: { left: 16 },
+  headerBtnRight: { right: 16 },
 
   // Bottom sheet wrapper for all content below the hero
   sheet: {
