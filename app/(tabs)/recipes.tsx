@@ -28,6 +28,7 @@ import { PlusBadge } from '@/components/PlusBadge';
 import { useRecipes } from '@/lib/useRecipes';
 import { NUTRISCORE_COLORS } from '@/lib/nutriscore';
 import type { Recipe } from '@/lib/types';
+import LikeThumbIcon from '@/assets/icons/recipe-header/like-thumb.svg';
 
 type TabKey = 'my' | 'community';
 
@@ -239,13 +240,16 @@ function RecipeCard({ recipe, onPress }: { recipe: Recipe; onPress: () => void }
             {recipe.servings} {recipe.servings === 1 ? 'serving' : 'servings'}
           </Text>
         </View>
-        {/* Placeholder likes pill — shows once community likes data exists */}
-        {/* {recipe.likes_count != null && (
+        {/* Likes pill — only on recipes shared to the community.
+            Private recipes can't be liked so the counter is hidden. */}
+        {recipe.visibility === 'public' && (
           <View style={styles.likesPill}>
-            <Ionicons name="thumbs-up-outline" size={14} color={Colors.secondary} />
-            <Text style={styles.likesText}>{recipe.likes_count} likes</Text>
+            <LikeThumbIcon width={14} height={15} />
+            <Text style={styles.likesText}>
+              {recipe.like_count ?? 0} {recipe.like_count === 1 ? 'like' : 'likes'}
+            </Text>
           </View>
-        )} */}
+        )}
       </View>
 
       {/* Floating nutri-score pill at cover/content seam */}
@@ -444,7 +448,9 @@ const styles = StyleSheet.create({
     gap: 4,
     backgroundColor: '#e2f1ee',
     borderRadius: Radius.m,
-    padding: 4,
+    paddingLeft: 4,
+    paddingRight: 6,
+    paddingVertical: 4,
   },
   likesText: {
     fontSize: 13,
