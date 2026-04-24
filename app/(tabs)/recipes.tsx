@@ -29,7 +29,7 @@ import { useRecipes, usePublicRecipes } from '@/lib/useRecipes';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { useUpsellSheet } from '@/lib/upsellSheetContext';
 import { NUTRISCORE_COLORS } from '@/lib/nutriscore';
-import type { Recipe } from '@/lib/types';
+import type { Recipe, PublicRecipe } from '@/lib/types';
 import LikeThumbIcon from '@/assets/icons/recipe-header/like-thumb.svg';
 
 type TabKey = 'my' | 'community';
@@ -128,6 +128,7 @@ export default function RecipesScreen() {
               renderItem={({ item }) => (
                 <RecipeCard
                   recipe={item}
+                  variant="community"
                   onPress={() =>
                     router.push(`/recipes/${item.id}?viewer=1` as never)
                   }
@@ -279,9 +280,23 @@ function CommunityEmpty({ bottomSpace }: { bottomSpace: number }) {
 
 // ── Recipe Card ──────────────────────────────────────────────────────────────
 
-function RecipeCard({ recipe, onPress }: { recipe: Recipe; onPress: () => void }) {
+function RecipeCard({
+  recipe,
+  variant = 'my',
+  onPress,
+}: {
+  recipe: Recipe | PublicRecipe;
+  /** 'my' = personal recipes list (name + servings on the left).
+   *  'community' = community feed (48px author avatar + name + 'by X'
+   *  on the left). Matches Figma node 4844:55714. */
+  variant?: 'my' | 'community';
+  onPress: () => void;
+}) {
   const grade = recipe.nutriscore_grade as keyof typeof NUTRISCORE_COLORS | null | undefined;
   const nutriColor = grade ? NUTRISCORE_COLORS[grade] : null;
+  const isCommunity = variant === 'community';
+  const author = isCommunity ? (recipe as PublicRecipe).author : null;
+  const authorName = author?.full_name?.trim() || 'Anonymous';
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.9}>
@@ -300,13 +315,37 @@ function RecipeCard({ recipe, onPress }: { recipe: Recipe; onPress: () => void }
         )}
       </View>
 
-      {/* Content — name + servings, with likes pill on the right */}
+      {/* Content — layout depends on variant. Community shows an author
+          avatar and "by [Name]" line; My shows servings. */}
       <View style={styles.cardInfo}>
+        {isCommunity && (
+          <View style={styles.authorAvatarWrap}>
+            {author?.avatar_url ? (
+              <Image
+                source={{ uri: author.avatar_url }}
+                style={styles.authorAvatar}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={[styles.authorAvatar, styles.authorAvatarPlaceholder]}>
+                <Text style={styles.authorAvatarInitial}>
+                  {authorName.charAt(0).toUpperCase()}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
         <View style={styles.cardInfoText}>
-          <Text style={styles.cardName} numberOfLines={1}>{recipe.name}</Text>
-          <Text style={styles.cardServings}>
-            {recipe.servings} {recipe.servings === 1 ? 'serving' : 'servings'}
+          <Text style={styles.cardName} numberOfLines={2}>
+            {recipe.name}
           </Text>
+          {isCommunity ? (
+            <Text style={styles.cardByLine}>by {authorName}</Text>
+          ) : (
+            <Text style={styles.cardServings}>
+              {recipe.servings} {recipe.servings === 1 ? 'serving' : 'servings'}
+            </Text>
+          )}
         </View>
         {/* Likes pill — only on recipes shared to the community.
             Private recipes can't be liked so the counter is hidden. */}
@@ -509,8 +548,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface.secondary,
     padding: Spacing.s,
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: Spacing.s,
   },
   cardInfoText: { flex: 1, gap: 4 },
   cardName: {
@@ -527,6 +566,44 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_700Bold',
     color: Colors.secondary,
     letterSpacing: -0.28,
+  },
+  // Community-feed-only: 48×48 author avatar with a 3px white border
+  // and a soft drop shadow. Placed to the left of the recipe name
+  // (Figma node 4844:55709).
+  authorAvatarWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 999,
+    borderWidth: 3,
+    borderColor: '#ffffff',
+    backgroundColor: Colors.surface.tertiary,
+    overflow: 'hidden',
+    ...Shadows.level2,
+  },
+  authorAvatar: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 999,
+  },
+  authorAvatarPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.accent,
+  },
+  authorAvatarInitial: {
+    fontSize: 18,
+    lineHeight: 22,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: '#ffffff',
+  },
+  cardByLine: {
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
+    color: Colors.secondary,
+    letterSpacing: -0.14,
   },
   likesPill: {
     flexDirection: 'row',

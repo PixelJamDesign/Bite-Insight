@@ -14,6 +14,7 @@ import { fetchHousehold } from './householdMembers';
 import { computeHouseholdImpact, summariseHouseholdImpact } from './householdImpact';
 import type {
   Recipe,
+  PublicRecipe,
   RecipeWithIngredients,
   HouseholdImpactRow,
   UserProfile,
@@ -80,16 +81,25 @@ export function useRecipes(): UseRecipesResult {
 
 // ── usePublicRecipes — community feed ────────────────────────────────────────
 
+export interface UsePublicRecipesResult {
+  recipes: PublicRecipe[];
+  loading: boolean;
+  error: string | null;
+  refresh: () => Promise<void>;
+}
+
 /**
  * Lists community-shared recipes from other users, sorted by like
  * count. Excludes the caller's own recipes so the feed is purely
  * discovery. Plus-gating lives at the screen entry point, not here.
+ * Returns PublicRecipe rows which include author profile data for
+ * the card's "by [Author]" line and avatar.
  */
-export function usePublicRecipes(): UseRecipesResult {
+export function usePublicRecipes(): UsePublicRecipesResult {
   const { session } = useAuth();
   const userId = session?.user?.id;
 
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [recipes, setRecipes] = useState<PublicRecipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

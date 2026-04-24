@@ -208,6 +208,20 @@ export interface Recipe {
   updated_at: string;
 }
 
+/**
+ * Public recipe surfaced on the community feed. Joins the author's
+ * display name and avatar so the card can show "by Glenn" with the
+ * user's profile picture alongside. The `author` field is only
+ * populated when loaded via the community feed query — personal
+ * Recipe rows don't carry it.
+ */
+export interface PublicRecipe extends Recipe {
+  author: {
+    full_name: string | null;
+    avatar_url: string | null;
+  } | null;
+}
+
 /** Recipe + its ingredients, as returned by getRecipe() */
 export interface RecipeWithIngredients extends Recipe {
   ingredients: RecipeIngredient[];

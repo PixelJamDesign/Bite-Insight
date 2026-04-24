@@ -14,6 +14,7 @@ import { getCachedProduct } from './productCache';
 import type { CachedProduct } from './productCache';
 import type {
   Recipe,
+  PublicRecipe,
   RecipeIngredient,
   RecipeWithIngredients,
   ProductSnapshot,
@@ -416,16 +417,19 @@ export async function duplicateRecipe(
 
 /**
  * Lists public community recipes (visibility = 'public') excluding the
- * caller's own. Ordered by like_count desc so trending content surfaces
- * first — tweak to updated_at for chronological feeds later.
+ * caller's own. Joins the author's profile so each card can show the
+ * creator's display name + avatar. Ordered by like_count desc so
+ * trending content surfaces first.
  *
- * RLS already permits any authenticated user to read public rows, so
- * no explicit join on visibility is needed beyond the filter.
+ * RLS:
+ *  • recipes: "Anyone can view public recipes" permits the SELECT
+ *  • profiles: "Authors of public recipes are visible" permits the
+ *    cross-user author join (migration 20260425_public_author_profiles)
  */
-export async function listPublicRecipes(excludeUserId?: string): Promise<Recipe[]> {
+export async function listPublicRecipes(excludeUserId?: string): Promise<PublicRecipe[]> {
   let query = supabase
     .from('recipes')
-    .select('*')
+    .select('*, author:profiles!recipes_user_id_fkey(full_name, avatar_url)')
     .eq('visibility', 'public')
     .order('like_count', { ascending: false })
     .order('updated_at', { ascending: false })
@@ -440,7 +444,7 @@ export async function listPublicRecipes(excludeUserId?: string): Promise<Recipe[
     console.warn('[recipes] listPublicRecipes error:', error.message);
     return [];
   }
-  return (data ?? []) as Recipe[];
+  return (data ?? []) as PublicRecipe[];
 }
 
 /**
