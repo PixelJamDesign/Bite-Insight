@@ -9,7 +9,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from './supabase';
 import { useAuth } from './auth';
-import { listRecipes, getRecipe } from './recipes';
+import { listRecipes, getRecipe, listPublicRecipes } from './recipes';
 import { fetchHousehold } from './householdMembers';
 import { computeHouseholdImpact, summariseHouseholdImpact } from './householdImpact';
 import type {
@@ -74,6 +74,41 @@ export function useRecipes(): UseRecipesResult {
       supabase.removeChannel(channel);
     };
   }, [userId, load]);
+
+  return { recipes, loading, error, refresh: load };
+}
+
+// ── usePublicRecipes — community feed ────────────────────────────────────────
+
+/**
+ * Lists community-shared recipes from other users, sorted by like
+ * count. Excludes the caller's own recipes so the feed is purely
+ * discovery. Plus-gating lives at the screen entry point, not here.
+ */
+export function usePublicRecipes(): UseRecipesResult {
+  const { session } = useAuth();
+  const userId = session?.user?.id;
+
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await listPublicRecipes(userId);
+      setRecipes(data);
+    } catch (e: any) {
+      setError(e?.message ?? 'Failed to load community recipes');
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   return { recipes, loading, error, refresh: load };
 }

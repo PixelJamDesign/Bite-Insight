@@ -25,7 +25,9 @@ import { useRouter } from 'expo-router';
 import { Colors, Spacing, Radius, Shadows, Typography } from '@/constants/theme';
 import { ScreenLayout } from '@/components/ScreenLayout';
 import { PlusBadge } from '@/components/PlusBadge';
-import { useRecipes } from '@/lib/useRecipes';
+import { useRecipes, usePublicRecipes } from '@/lib/useRecipes';
+import { useSubscription } from '@/lib/subscriptionContext';
+import { useUpsellSheet } from '@/lib/upsellSheetContext';
 import { NUTRISCORE_COLORS } from '@/lib/nutriscore';
 import type { Recipe } from '@/lib/types';
 import LikeThumbIcon from '@/assets/icons/recipe-header/like-thumb.svg';
@@ -36,6 +38,9 @@ export default function RecipesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { recipes, loading, refresh } = useRecipes();
+  const community = usePublicRecipes();
+  const { isPlus } = useSubscription();
+  const { showUpsell } = useUpsellSheet();
   const [activeTab, setActiveTab] = useState<TabKey>('my');
 
   const isEmpty = recipes.length === 0;
@@ -102,7 +107,35 @@ export default function RecipesScreen() {
             <ActivityIndicator color={Colors.secondary} />
           </View>
         ) : activeTab === 'community' ? (
-          <CommunityComingSoon bottomSpace={tabBarClearance} />
+          !isPlus ? (
+            <CommunityLocked bottomSpace={tabBarClearance} onUpgrade={showUpsell} />
+          ) : community.loading && community.recipes.length === 0 ? (
+            <View style={styles.loadingWrap}>
+              <ActivityIndicator color={Colors.secondary} />
+            </View>
+          ) : community.recipes.length === 0 ? (
+            <CommunityEmpty bottomSpace={tabBarClearance} />
+          ) : (
+            <FlatList
+              data={community.recipes}
+              keyExtractor={(r) => r.id}
+              refreshing={community.loading}
+              onRefresh={community.refresh}
+              contentContainerStyle={[
+                styles.listContent,
+                { paddingBottom: contentBottomPadding },
+              ]}
+              renderItem={({ item }) => (
+                <RecipeCard
+                  recipe={item}
+                  onPress={() =>
+                    router.push(`/recipes/${item.id}?viewer=1` as never)
+                  }
+                />
+              )}
+              ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
+            />
+          )
         ) : isEmpty ? (
           <EmptyState bottomSpace={contentBottomPadding} />
         ) : (
@@ -186,9 +219,15 @@ function EmptyState({ bottomSpace }: { bottomSpace: number }) {
   );
 }
 
-// ── Community Coming Soon ────────────────────────────────────────────────────
+// ── Community — locked (non-Plus) ────────────────────────────────────────────
 
-function CommunityComingSoon({ bottomSpace }: { bottomSpace: number }) {
+function CommunityLocked({
+  bottomSpace,
+  onUpgrade,
+}: {
+  bottomSpace: number;
+  onUpgrade: () => void;
+}) {
   return (
     <View style={[styles.emptyWrap, { paddingBottom: bottomSpace }]}>
       <View style={styles.emptyIconOuter}>
@@ -198,11 +237,40 @@ function CommunityComingSoon({ bottomSpace }: { bottomSpace: number }) {
         <View style={styles.emptyIconRing} pointerEvents="none" />
       </View>
       <View style={styles.emptyText}>
-        <Text style={styles.emptyTitle}>Community recipes are coming soon</Text>
+        <Text style={styles.emptyTitle}>Community recipes are a Plus feature</Text>
         <Text style={styles.emptyBody}>
-          Share your own recipes and discover ones from people with similar
-          health conditions, allergies and dietary preferences. Available to
-          Plus subscribers soon.
+          Discover recipes from people with similar health conditions, allergies
+          and dietary preferences. Save, duplicate and tweak them to your own
+          needs — all available with Bite Insight Plus.
+        </Text>
+      </View>
+      <TouchableOpacity
+        style={styles.upgradeCta}
+        onPress={onUpgrade}
+        activeOpacity={0.85}
+      >
+        <Text style={styles.upgradeCtaText}>Upgrade to Plus</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+// ── Community — empty (no public recipes yet) ────────────────────────────────
+
+function CommunityEmpty({ bottomSpace }: { bottomSpace: number }) {
+  return (
+    <View style={[styles.emptyWrap, { paddingBottom: bottomSpace }]}>
+      <View style={styles.emptyIconOuter}>
+        <View style={styles.emptyIconInner}>
+          <Ionicons name="people-outline" size={36} color={Colors.secondary} />
+        </View>
+        <View style={styles.emptyIconRing} pointerEvents="none" />
+      </View>
+      <View style={styles.emptyText}>
+        <Text style={styles.emptyTitle}>No community recipes yet</Text>
+        <Text style={styles.emptyBody}>
+          Be the first — share one of your own recipes to the community via
+          the recipe actions menu.
         </Text>
       </View>
     </View>
@@ -391,6 +459,24 @@ const styles = StyleSheet.create({
     color: Colors.secondary,
     textAlign: 'center',
     maxWidth: 260,
+  },
+  // Community-locked CTA — matches the populated-state bottom button
+  // pattern so upgrade feels like the natural next step.
+  upgradeCta: {
+    marginTop: 24,
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: Radius.m,
+    ...Shadows.level3,
+  },
+  upgradeCtaText: {
+    fontSize: 16,
+    lineHeight: 19,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: '#ffffff',
+    letterSpacing: -0.32,
   },
 
   // Full-width card list (Figma: single column)

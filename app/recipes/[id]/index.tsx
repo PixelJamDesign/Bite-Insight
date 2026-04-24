@@ -32,7 +32,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useRecipe } from '@/lib/useRecipes';
-import { deleteRecipe, duplicateRecipe, computeTotalWeightGrams } from '@/lib/recipes';
+import {
+  deleteRecipe,
+  duplicateRecipe,
+  saveRecipeFromSource,
+  computeTotalWeightGrams,
+} from '@/lib/recipes';
 import { useAuth } from '@/lib/auth';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { useUpsellSheet } from '@/lib/upsellSheetContext';
@@ -322,6 +327,16 @@ export default function RecipeDetailScreen() {
   async function handleDuplicate() {
     if (!session?.user?.id) return;
     const newId = await duplicateRecipe(session.user.id, currentRecipe.id);
+    if (newId) router.replace(`/recipes/${newId}` as never);
+  }
+
+  // Viewer-mode action — clone a community recipe into the user's own
+  // book. Same as duplicate but without the "(copy)" suffix and with
+  // the source_recipe_id attribution preserved for later "Inspired by"
+  // credit lines.
+  async function handleSaveFromSource() {
+    if (!session?.user?.id) return;
+    const newId = await saveRecipeFromSource(session.user.id, currentRecipe.id);
     if (newId) router.replace(`/recipes/${newId}` as never);
   }
 
@@ -689,18 +704,32 @@ export default function RecipeDetailScreen() {
         </View>
       </ScrollView>
 
-      <RecipeActionsSheet
-        variant="owner"
-        visible={actionsOpen}
-        onClose={() => setActionsOpen(false)}
-        onEdit={() => router.push(`/recipes/${currentRecipe.id}/edit` as never)}
-        onDuplicate={handleDuplicate}
-        onDelete={handleDelete}
-        onShareWithCommunity={handleShareWithCommunity}
-        onShareWithFriend={handleShareWithFriend}
-        isShared={currentRecipe.visibility === 'public'}
-        isPlus={isPlus}
-      />
+      {/* Owner viewing their own recipe → Edit / Duplicate / Share to
+          community / Share with friend / Delete. Viewer on another
+          user's public recipe → Save / Duplicate / Share with friend. */}
+      {isOwner ? (
+        <RecipeActionsSheet
+          variant="owner"
+          visible={actionsOpen}
+          onClose={() => setActionsOpen(false)}
+          onEdit={() => router.push(`/recipes/${currentRecipe.id}/edit` as never)}
+          onDuplicate={handleDuplicate}
+          onDelete={handleDelete}
+          onShareWithCommunity={handleShareWithCommunity}
+          onShareWithFriend={handleShareWithFriend}
+          isShared={currentRecipe.visibility === 'public'}
+          isPlus={isPlus}
+        />
+      ) : (
+        <RecipeActionsSheet
+          variant="viewer"
+          visible={actionsOpen}
+          onClose={() => setActionsOpen(false)}
+          onSave={handleSaveFromSource}
+          onDuplicate={handleSaveFromSource}
+          onShareWithFriend={handleShareWithFriend}
+        />
+      )}
 
       <FamilyImpactSheetForMember
         memberId={impactMemberId}

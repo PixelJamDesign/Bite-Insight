@@ -221,6 +221,10 @@ export interface NewRecipeInput {
   cook_time_min?: number | null;
   method?: string[];
   tags?: string[];
+  /** If this recipe was saved/duplicated from another user's public
+   *  recipe, this points back to the source so we can show attribution
+   *  and power remix-style signals later. */
+  source_recipe_id?: string | null;
 }
 
 export interface NewIngredientInput {
@@ -266,6 +270,7 @@ export async function createRecipe(
       cook_time_min: recipe.cook_time_min ?? null,
       method: recipe.method ?? [],
       tags: recipe.tags ?? [],
+      source_recipe_id: recipe.source_recipe_id ?? null,
       ...totals,
       nutriscore_grade: nutriscore,
     })
@@ -394,6 +399,79 @@ export async function duplicateRecipe(
       cook_time_min: source.cook_time_min,
       method: source.method,
       tags: source.tags,
+    },
+    source.ingredients.map((i) => ({
+      position: i.position,
+      barcode: i.barcode,
+      scan_id: i.scan_id,
+      quantity_value: i.quantity_value,
+      quantity_unit: i.quantity_unit,
+      quantity_display: i.quantity_display,
+      product_snapshot: i.product_snapshot,
+    })),
+  );
+}
+
+// ── Community / public recipes ───────────────────────────────────────────────
+
+/**
+ * Lists public community recipes (visibility = 'public') excluding the
+ * caller's own. Ordered by like_count desc so trending content surfaces
+ * first — tweak to updated_at for chronological feeds later.
+ *
+ * RLS already permits any authenticated user to read public rows, so
+ * no explicit join on visibility is needed beyond the filter.
+ */
+export async function listPublicRecipes(excludeUserId?: string): Promise<Recipe[]> {
+  let query = supabase
+    .from('recipes')
+    .select('*')
+    .eq('visibility', 'public')
+    .order('like_count', { ascending: false })
+    .order('updated_at', { ascending: false })
+    .limit(100);
+
+  if (excludeUserId) {
+    query = query.neq('user_id', excludeUserId);
+  }
+
+  const { data, error } = await query;
+  if (error) {
+    console.warn('[recipes] listPublicRecipes error:', error.message);
+    return [];
+  }
+  return (data ?? []) as Recipe[];
+}
+
+/**
+ * Clone a community-shared recipe into the signed-in user's own book.
+ *
+ * Works just like duplicateRecipe but:
+ *  • doesn't append "(copy)" to the name — the saver wants a clean
+ *    title in their own collection
+ *  • writes source_recipe_id so the save keeps attribution back to the
+ *    original author / recipe
+ *  • keeps the visibility at the default ('private') even though the
+ *    source was public. Saving != re-sharing.
+ */
+export async function saveRecipeFromSource(
+  userId: string,
+  sourceRecipeId: string,
+): Promise<string | null> {
+  const source = await getRecipe(sourceRecipeId);
+  if (!source) return null;
+
+  return createRecipe(
+    userId,
+    {
+      name: source.name,
+      servings: source.servings,
+      cover_image_url: source.cover_image_url,
+      prep_time_min: source.prep_time_min,
+      cook_time_min: source.cook_time_min,
+      method: source.method,
+      tags: source.tags,
+      source_recipe_id: source.id,
     },
     source.ingredients.map((i) => ({
       position: i.position,

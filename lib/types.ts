@@ -201,6 +201,9 @@ export interface Recipe {
    *  Maintained by the `recipe_likes_count_trigger` trigger — never
    *  written directly by the client. */
   like_count: number;
+  /** When this recipe was saved or duplicated from another user's
+   *  public recipe, points back to the source. Null for originals. */
+  source_recipe_id: string | null;
   created_at: string;
   updated_at: string;
 }
