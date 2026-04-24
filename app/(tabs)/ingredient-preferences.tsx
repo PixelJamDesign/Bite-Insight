@@ -416,11 +416,15 @@ export default function IngredientPreferencesScreen() {
               onPress={() => { setEditMode(true); closeSearch(); }}
               activeOpacity={0.7}
             >
-              <ActionPenIcon size={16} color={Colors.secondary} />
+              <View style={styles.actionIconSlot}>
+                <ActionPenIcon size={20} color={Colors.secondary} />
+              </View>
               <Text style={styles.actionBtnText}>{tc('buttons.editList')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionBtn} onPress={closeSearch} activeOpacity={0.7}>
-              <Ionicons name="close" size={16} color={Colors.secondary} />
+              <View style={styles.actionIconSlot}>
+                <ActionClearIcon size={20} color={Colors.secondary} />
+              </View>
               <Text style={styles.actionBtnText}>{tc('buttons.close')}</Text>
             </TouchableOpacity>
           </>
@@ -431,11 +435,15 @@ export default function IngredientPreferencesScreen() {
               onPress={() => setEditMode(true)}
               activeOpacity={0.7}
             >
-              <ActionPenIcon size={20} color={Colors.secondary} />
+              <View style={styles.actionIconSlot}>
+                <ActionPenIcon size={20} color={Colors.secondary} />
+              </View>
               <Text style={styles.actionBtnText}>{tc('buttons.editList')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionBtn} onPress={openSearch} activeOpacity={0.7}>
-              <ActionSearchIcon size={20} color={Colors.secondary} />
+              <View style={styles.actionIconSlot}>
+                <ActionSearchIcon size={20} color={Colors.secondary} />
+              </View>
               <Text style={styles.actionBtnText}>{tc('buttons.search')}</Text>
             </TouchableOpacity>
           </>
@@ -907,6 +915,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    flexShrink: 0,
+  },
+  // Fixed 20×20 slot for every inline action icon so the pen,
+  // magnifier and clear-X all occupy the same footprint — no visual
+  // jump when toggling between search/close.
+  actionIconSlot: {
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   actionBtnText: {
     fontSize: 16,
