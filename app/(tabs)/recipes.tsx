@@ -237,11 +237,11 @@ function CommunityLocked({
         <View style={styles.emptyIconRing} pointerEvents="none" />
       </View>
       <View style={styles.emptyText}>
-        <Text style={styles.emptyTitle}>Community recipes are a Plus feature</Text>
+        <Text style={styles.emptyTitle}>See what others are cooking</Text>
         <Text style={styles.emptyBody}>
-          Discover recipes from people with similar health conditions, allergies
-          and dietary preferences. Save, duplicate and tweak them to your own
-          needs — all available with Bite Insight Plus.
+          Community recipes come with Plus. Browse meals from people with
+          the same allergies, conditions and diets, and save them straight
+          to your book.
         </Text>
       </View>
       <TouchableOpacity
@@ -267,10 +267,10 @@ function CommunityEmpty({ bottomSpace }: { bottomSpace: number }) {
         <View style={styles.emptyIconRing} pointerEvents="none" />
       </View>
       <View style={styles.emptyText}>
-        <Text style={styles.emptyTitle}>No community recipes yet</Text>
+        <Text style={styles.emptyTitle}>Nothing here yet</Text>
         <Text style={styles.emptyBody}>
-          Be the first — share one of your own recipes to the community via
-          the recipe actions menu.
+          When someone shares a recipe, it'll show up here. Go on, start
+          us off.
         </Text>
       </View>
     </View>
