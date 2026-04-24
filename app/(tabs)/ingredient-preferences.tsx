@@ -423,7 +423,11 @@ export default function IngredientPreferencesScreen() {
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionBtn} onPress={closeSearch} activeOpacity={0.7}>
               <View style={styles.actionIconSlot}>
-                <ActionClearIcon size={20} color={Colors.secondary} />
+                {/* Rendered at 14 inside the 20×20 slot — the 3px of
+                    empty space on each side is the close button's
+                    visual padding (keeps the X from reading as
+                    bigger than the pen/magnifier at the same slot). */}
+                <ActionClearIcon size={14} color={Colors.secondary} />
               </View>
               <Text style={styles.actionBtnText}>{tc('buttons.close')}</Text>
             </TouchableOpacity>

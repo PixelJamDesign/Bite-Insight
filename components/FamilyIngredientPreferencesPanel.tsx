@@ -384,7 +384,9 @@ export function FamilyIngredientPreferencesPanel({
           >
             <View style={styles.inlineIconSlot}>
               {searchVisible ? (
-                <ActionClearIcon color={Colors.secondary} size={20} />
+                // 14 inside a 20×20 slot — 3px of empty space each
+                // side is the close button's visual padding.
+                <ActionClearIcon color={Colors.secondary} size={14} />
               ) : (
                 <ActionSearchIcon color={Colors.secondary} size={20} />
               )}
