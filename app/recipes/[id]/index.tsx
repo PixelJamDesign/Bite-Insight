@@ -55,7 +55,7 @@ import { supabase } from '@/lib/supabase';
 import ArrowLeftIcon from '@/assets/icons/recipe-header/arrow-left.svg';
 import HeartOutlineIcon from '@/assets/icons/recipe-header/heart-outline.svg';
 import HeartFilledIcon from '@/assets/icons/recipe-header/heart-filled.svg';
-import HeartSmallIcon from '@/assets/icons/recipe-header/heart-small.svg';
+import LikeThumbIcon from '@/assets/icons/recipe-header/like-thumb.svg';
 import type {
   FamilyProfile,
   HouseholdImpactRow,
@@ -508,7 +508,7 @@ export default function RecipeDetailScreen() {
               <Text style={styles.author}>By {authorName}</Text>
               {showLikesCounter && (
                 <View style={styles.likesPill}>
-                  <HeartSmallIcon width={16} height={14} />
+                  <LikeThumbIcon width={14} height={15} />
                   <Text style={styles.likesPillText}>
                     {likeCount} {likeCount === 1 ? 'like' : 'likes'}
                   </Text>
