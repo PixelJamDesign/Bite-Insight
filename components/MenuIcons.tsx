@@ -200,11 +200,15 @@ export function ActionSearchIcon({ color, size = 24 }: IconProps) {
 }
 
 // Clear / close X — exact geometry from Figma node
-// I4844:56511;2976:2287;40:4496;1501:696 (2px stroke cross).
+// I4844:56511;2976:2287;40:4496;1501:696. The Figma stroke is 2 on
+// a 13.4 grid (~15% of viewBox). That renders dramatically thicker
+// than pen (12.5%) and search (9%) at equal sizes. Stroke is tuned
+// to 1.25 so the rendered line matches the other two when all three
+// are placed side-by-side at the same inline size.
 export function ActionClearIcon({ color, size = 14 }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 13.4286 13.4286" fill="none">
-      <Path d="M12.4286 1.00005L6.71431 6.71431M6.71431 6.71431L1.00005 12.4286M6.71431 6.71431L1 1M6.71431 6.71431L12.4285 12.4285" stroke={color} strokeWidth={2} strokeLinecap="round" />
+      <Path d="M12.4286 1.00005L6.71431 6.71431M6.71431 6.71431L1.00005 12.4286M6.71431 6.71431L1 1M6.71431 6.71431L12.4285 12.4285" stroke={color} strokeWidth={1.25} strokeLinecap="round" />
     </Svg>
   );
 }

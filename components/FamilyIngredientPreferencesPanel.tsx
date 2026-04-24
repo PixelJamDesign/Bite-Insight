@@ -384,7 +384,7 @@ export function FamilyIngredientPreferencesPanel({
           >
             <View style={styles.inlineIconSlot}>
               {searchVisible ? (
-                <ActionClearIcon color={Colors.secondary} size={16} />
+                <ActionClearIcon color={Colors.secondary} size={20} />
               ) : (
                 <ActionSearchIcon color={Colors.secondary} size={20} />
               )}
@@ -614,9 +614,9 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   // Fixed 20×20 slot so every inline action icon (pen, magnifier,
-  // clear-X) occupies the same footprint. The clear X renders at 16
-  // inside the slot so it doesn't look chunky next to the 20px pen
-  // and magnifier, but the slot itself stays 20×20.
+  // clear-X) occupies the same footprint. All three render at size
+  // 20 — stroke widths are tuned at the icon-component level so they
+  // read as a consistent set.
   inlineIconSlot: {
     width: 20,
     height: 20,
