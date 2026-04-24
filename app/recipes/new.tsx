@@ -50,7 +50,9 @@ import {
   NUTRISCORE_VERDICT,
   type NutriscoreGrade,
 } from '@/lib/nutriscore';
-import { MenuArrowLeftIcon, ActionPenIcon } from '@/components/MenuIcons';
+import { ActionPenIcon } from '@/components/MenuIcons';
+import ArrowLeftIcon from '@/assets/icons/recipe-header/arrow-left.svg';
+import GalleryAddIcon from '@/assets/icons/recipe-header/gallery-add.svg';
 import { QuantityPickerSheet } from '@/components/QuantityPickerSheet';
 import { AddIngredientSheet, type AddSource } from '@/components/AddIngredientSheet';
 import { StepEditorSheet } from '@/components/StepEditorSheet';
@@ -386,13 +388,29 @@ export default function RecipeBuilderScreen() {
             )}
           </TouchableOpacity>
 
-          {/* Floating back button (top-left over hero) */}
+          {/* Floating back + cover-photo buttons over the hero
+              (Figma node 4834:26085). Both pinned to the safe-area
+              top + 12px, 16px from the screen edges. */}
           <TouchableOpacity
-            style={[styles.backBtn, { top: insets.top + 12 }]}
+            style={[styles.headerBtn, styles.headerBtnLeft, { top: insets.top + 12 }]}
             onPress={handleDiscard}
             activeOpacity={0.85}
+            hitSlop={8}
           >
-            <MenuArrowLeftIcon color={Colors.primary} size={24} />
+            <ArrowLeftIcon width={18} height={14} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.headerBtn, styles.headerBtnRight, { top: insets.top + 12 }]}
+            onPress={pickCoverPhoto}
+            activeOpacity={0.85}
+            disabled={uploadingCover}
+            hitSlop={8}
+          >
+            {uploadingCover ? (
+              <ActivityIndicator color={Colors.primary} />
+            ) : (
+              <GalleryAddIcon width={22} height={22} />
+            )}
           </TouchableOpacity>
 
           {/* ── Body ───────────────────────────────────────────────────── */}
@@ -957,9 +975,8 @@ const styles = StyleSheet.create({
   },
 
   // Floating back button (Figma: bg rgba(255,255,255,0.7), 1px white border, 16 radius, level 3)
-  backBtn: {
+  headerBtn: {
     position: 'absolute',
-    left: 16,
     width: 48,
     height: 48,
     borderRadius: 16,
@@ -970,6 +987,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     ...Shadows.level3,
   },
+  headerBtnLeft: { left: 16 },
+  headerBtnRight: { right: 16 },
 
   // ── Body ────────────────────────────────────────────────────────────────
   body: {
