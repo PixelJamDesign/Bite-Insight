@@ -406,7 +406,10 @@ export default function IngredientPreferencesScreen() {
       <View style={styles.actionBtnRow}>
         {editMode ? (
           <TouchableOpacity style={styles.actionBtn} onPress={exitEditMode} activeOpacity={0.7}>
-            <Ionicons name="close" size={16} color={Colors.secondary} />
+            {/* Use ActionClearIcon so the Cancel X visually matches the
+                Clear X inside the search bar — Ionicons 'close' has
+                built-in glyph padding that made this render smaller. */}
+            <ActionClearIcon size={14} color={Colors.secondary} />
             <Text style={styles.actionBtnText}>{tc('buttons.cancel')}</Text>
           </TouchableOpacity>
         ) : searchActive ? (
