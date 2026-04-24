@@ -22,7 +22,7 @@ import { useToast } from '@/lib/toastContext';
 import { buildProductSnapshot } from '@/lib/recipes';
 import { useTranslation } from 'react-i18next';
 import { Colors, Shadows, Spacing, Radius } from '@/constants/theme';
-import { ActionSearchIcon, ActionChevronDownIcon, ActionCheckIcon, MenuArrowLeftIcon, MenuChevronRightIcon } from '@/components/MenuIcons';
+import { ActionSearchIcon, ActionChevronDownIcon, ActionCheckIcon, ActionClearIcon, MenuArrowLeftIcon, MenuChevronRightIcon } from '@/components/MenuIcons';
 import { Ionicons } from '@expo/vector-icons';
 import { useMenu } from '@/lib/menuContext';
 import Logo from '../assets/images/logo.svg';
@@ -873,7 +873,7 @@ export default function FoodSearchScreen() {
           {query.length > 0 && (
             <TouchableOpacity onPress={clearSearch} activeOpacity={0.7} hitSlop={8}>
               <View style={styles.clearBtn}>
-                <Text style={styles.clearBtnX}>✕</Text>
+                <ActionClearIcon color={Colors.primary} size={14} />
               </View>
             </TouchableOpacity>
           )}

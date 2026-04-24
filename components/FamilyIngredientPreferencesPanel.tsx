@@ -59,7 +59,7 @@ const ROW_REMOVE_ANIMATION = {
 };
 import { Colors, Radius } from '@/constants/theme';
 import { CachedAvatar } from '@/components/CachedAvatar';
-import { ActionPenIcon, ActionSearchIcon } from '@/components/MenuIcons';
+import { ActionPenIcon, ActionSearchIcon, ActionClearIcon } from '@/components/MenuIcons';
 import { IngredientRow } from '@/components/IngredientRow';
 import type { Ingredient } from '@/lib/types';
 
@@ -393,7 +393,7 @@ export function FamilyIngredientPreferencesPanel({
           tap rather than always occupying screen space. */}
       {searchVisible && (
         <View style={styles.searchRow}>
-          <Ionicons name="search" size={18} color={Colors.secondary} />
+          <ActionSearchIcon color={Colors.secondary} size={20} />
           <TextInput
             style={styles.searchInput}
             value={searchQuery}
@@ -411,7 +411,7 @@ export function FamilyIngredientPreferencesPanel({
               hitSlop={8}
               activeOpacity={0.7}
             >
-              <Ionicons name="close-circle" size={18} color={Colors.secondary} />
+              <ActionClearIcon color={Colors.secondary} size={14} />
             </TouchableOpacity>
           )}
         </View>

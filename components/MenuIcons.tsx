@@ -188,10 +188,23 @@ export function TickIcon({ color, size = 14, strokeWidth = 3 }: IconProps & { st
 
 // ── Action button icons ────────────────────────────────────────────────────────
 
-export function ActionSearchIcon({ color, size = 20 }: IconProps) {
+// Search (magnifying glass) — exact geometry from Figma node
+// I4844:56511;2976:2257;40:4496;1967:860 on the 22×22 grid. 2px
+// stroke so it sits consistently in a 24×24 container.
+export function ActionSearchIcon({ color, size = 24 }: IconProps) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 20 20" fill="none">
-      <Path d="M11.7831 11.7834L16.6663 16.6667M13.0634 8.19856C13.0634 10.8855 10.8852 13.0637 8.19819 13.0637C5.51122 13.0637 3.33301 10.8855 3.33301 8.19856C3.33301 5.51159 5.51122 3.33337 8.19819 3.33337C10.8852 3.33337 13.0634 5.51159 13.0634 8.19856Z" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+    <Svg width={size} height={size} viewBox="0 0 22 22" fill="none">
+      <Path d="M13.6751 13.6751L21 21M15.5955 8.29777C15.5955 12.3282 12.3282 15.5955 8.29777 15.5955C4.26732 15.5955 1 12.3282 1 8.29777C1 4.26732 4.26732 1 8.29777 1C12.3282 1 15.5955 4.26732 15.5955 8.29777Z" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+// Clear / close X — exact geometry from Figma node
+// I4844:56511;2976:2287;40:4496;1501:696 (2px stroke cross).
+export function ActionClearIcon({ color, size = 14 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 13.4286 13.4286" fill="none">
+      <Path d="M12.4286 1.00005L6.71431 6.71431M6.71431 6.71431L1.00005 12.4286M6.71431 6.71431L1 1M6.71431 6.71431L12.4285 12.4285" stroke={color} strokeWidth={2} strokeLinecap="round" />
     </Svg>
   );
 }
