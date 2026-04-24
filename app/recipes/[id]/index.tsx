@@ -53,6 +53,9 @@ import {
 } from '@/lib/householdImpact';
 import { supabase } from '@/lib/supabase';
 import ArrowLeftIcon from '@/assets/icons/recipe-header/arrow-left.svg';
+import HeartOutlineIcon from '@/assets/icons/recipe-header/heart-outline.svg';
+import HeartFilledIcon from '@/assets/icons/recipe-header/heart-filled.svg';
+import HeartSmallIcon from '@/assets/icons/recipe-header/heart-small.svg';
 import type {
   FamilyProfile,
   HouseholdImpactRow,
@@ -104,6 +107,13 @@ export default function RecipeDetailScreen() {
   const [allFlaggedRefs, setAllFlaggedRefs] = useState<
     { id: string; name: string }[]
   >([]);
+  // Like state — populated when the recipe is public. `liked` is a
+  // client-side mirror of the DB row; `likeCount` mirrors the
+  // denormalised counter on recipes.like_count. Both are optimistically
+  // updated on tap so the UI responds immediately; the DB write runs
+  // in the background.
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
 
   // Must stay above the loading/not-found early returns so React's
   // hook order is stable across renders.
@@ -136,6 +146,35 @@ export default function RecipeDetailScreen() {
     household.self?.flagged_ingredients,
     household.family,
   ]);
+
+  // Sync the local likeCount with the freshly-loaded recipe. Separate
+  // useEffect from the liked-state loader so the count renders as soon
+  // as the recipe itself arrives, even before we know the user's own
+  // like status.
+  useEffect(() => {
+    if (recipe) setLikeCount(recipe.like_count ?? 0);
+  }, [recipe?.id, recipe?.like_count]);
+
+  // Check whether the signed-in user has liked this recipe. Only
+  // runs for public recipes — private recipes can't be liked so
+  // there's nothing to look up.
+  useEffect(() => {
+    if (!recipe || recipe.visibility !== 'public' || !session?.user?.id) {
+      setLiked(false);
+      return;
+    }
+    let cancelled = false;
+    supabase
+      .from('recipe_likes')
+      .select('recipe_id')
+      .eq('recipe_id', recipe.id)
+      .eq('user_id', session.user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!cancelled) setLiked(Boolean(data));
+      });
+    return () => { cancelled = true; };
+  }, [recipe?.id, recipe?.visibility, session?.user?.id]);
 
   if (loading) {
     return (
@@ -300,6 +339,37 @@ export default function RecipeDetailScreen() {
     }
   }
 
+  // Toggle a like on this recipe. Optimistically updates the local
+  // liked + count state before firing the DB write so the heart feels
+  // instant. If the write fails we roll back. Not available on private
+  // recipes (the heart button won't render there) and the owner can't
+  // like their own recipe (enforced at the UI level).
+  async function handleToggleLike() {
+    if (!session?.user?.id) return;
+    const wasLiked = liked;
+    setLiked(!wasLiked);
+    setLikeCount((c) => c + (wasLiked ? -1 : 1));
+    try {
+      if (wasLiked) {
+        await supabase
+          .from('recipe_likes')
+          .delete()
+          .eq('recipe_id', currentRecipe.id)
+          .eq('user_id', session.user.id);
+      } else {
+        await supabase.from('recipe_likes').insert({
+          recipe_id: currentRecipe.id,
+          user_id: session.user.id,
+        });
+      }
+    } catch (e) {
+      // Roll back on failure.
+      console.warn('[recipe-detail] like toggle failed:', e);
+      setLiked(wasLiked);
+      setLikeCount((c) => c + (wasLiked ? 1 : -1));
+    }
+  }
+
   // Community sharing — Plus-gated. Non-Plus taps open the upsell sheet.
   // Plus members toggle recipes.visibility between 'public' and 'private'
   // after confirmation. No complex share flow here; the recipe simply
@@ -356,6 +426,16 @@ export default function RecipeDetailScreen() {
   const rawAuthor = session?.user?.email?.split('@')[0] ?? 'you';
   const authorName = rawAuthor.charAt(0).toUpperCase() + rawAuthor.slice(1);
 
+  // Like UI gates:
+  //   • Counter pill — visible whenever the recipe is public, including
+  //     for the owner (they should see how many likes they've racked up).
+  //   • Heart button on the hero — only for viewers (not the owner), and
+  //     only on public recipes. Owners can't like their own recipe.
+  const isPublic = currentRecipe.visibility === 'public';
+  const isOwner = session?.user?.id === currentRecipe.user_id;
+  const showLikesCounter = isPublic;
+  const showLikeButton = isPublic && !isOwner;
+
   return (
     <View style={styles.safe}>
       <ScrollView
@@ -387,6 +467,27 @@ export default function RecipeDetailScreen() {
         >
           <ArrowLeftIcon width={18} height={14} />
         </TouchableOpacity>
+        {/* Heart button — only for viewers on public recipes. Sits to
+            the left of the ellipsis so the ellipsis stays anchored
+            top-right. */}
+        {showLikeButton && (
+          <TouchableOpacity
+            style={[
+              styles.headerBtn,
+              styles.headerBtnLike,
+              { top: insets.top + 12 },
+            ]}
+            onPress={handleToggleLike}
+            activeOpacity={0.85}
+            hitSlop={8}
+          >
+            {liked ? (
+              <HeartFilledIcon width={22} height={20} />
+            ) : (
+              <HeartOutlineIcon width={22} height={20} />
+            )}
+          </TouchableOpacity>
+        )}
         <TouchableOpacity
           style={[styles.headerBtn, styles.headerBtnRight, { top: insets.top + 12 }]}
           onPress={() => setActionsOpen(true)}
@@ -398,10 +499,22 @@ export default function RecipeDetailScreen() {
 
         {/* ── White sheet containing everything else ─────────────────── */}
         <View style={styles.sheet}>
-          {/* Title block */}
+          {/* Title block — the likes pill sits inline next to the
+              author line when the recipe is public (Figma node
+              4836:33491). */}
           <View style={styles.titleBlock}>
             <Text style={styles.title}>{currentRecipe.name}</Text>
-            <Text style={styles.author}>By {authorName}</Text>
+            <View style={styles.authorRow}>
+              <Text style={styles.author}>By {authorName}</Text>
+              {showLikesCounter && (
+                <View style={styles.likesPill}>
+                  <HeartSmallIcon width={16} height={14} />
+                  <Text style={styles.likesPillText}>
+                    {likeCount} {likeCount === 1 ? 'like' : 'likes'}
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
 
           {/* Recipe metrics */}
@@ -1012,6 +1125,9 @@ const styles = StyleSheet.create({
   },
   headerBtnLeft: { left: 16 },
   headerBtnRight: { right: 16 },
+  // The like heart sits 16 + 48 + 12 = 76px from the right edge so it
+  // doesn't overlap the ellipsis button when both are showing.
+  headerBtnLike: { right: 76 },
 
   // Bottom sheet wrapper for all content below the hero
   sheet: {
@@ -1040,6 +1156,33 @@ const styles = StyleSheet.create({
     fontWeight: '300',
     fontFamily: 'Figtree_300Light',
     color: Colors.secondary,
+  },
+  // Author line + likes pill sit on the same row. `justifyContent:
+  // space-between` pins the pill flush right when present, and the
+  // author text takes the remaining space via flex: 1.
+  authorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  likesPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#e2f1ee',
+    paddingLeft: 4,
+    paddingRight: 6,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  likesPillText: {
+    fontSize: 13,
+    lineHeight: 15.6,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.secondary,
+    letterSpacing: -0.26,
   },
 
   // Metrics row (3 equal cards)

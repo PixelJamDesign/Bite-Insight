@@ -197,6 +197,10 @@ export interface Recipe {
   total_salt_g: number | null;
   nutriscore_grade: string | null;
   visibility: RecipeVisibility;
+  /** Denormalised count of how many users have liked this recipe.
+   *  Maintained by the `recipe_likes_count_trigger` trigger — never
+   *  written directly by the client. */
+  like_count: number;
   created_at: string;
   updated_at: string;
 }
