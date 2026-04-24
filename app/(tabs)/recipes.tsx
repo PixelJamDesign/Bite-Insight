@@ -319,20 +319,25 @@ function RecipeCard({
           avatar and "by [Name]" line; My shows servings. */}
       <View style={styles.cardInfo}>
         {isCommunity && (
-          <View style={styles.authorAvatarWrap}>
-            {author?.avatar_url ? (
-              <Image
-                source={{ uri: author.avatar_url }}
-                style={styles.authorAvatar}
-                resizeMode="cover"
-              />
-            ) : (
-              <View style={[styles.authorAvatar, styles.authorAvatarPlaceholder]}>
-                <Text style={styles.authorAvatarInitial}>
-                  {authorName.charAt(0).toUpperCase()}
-                </Text>
-              </View>
-            )}
+          // Two wrappers: the outer holds the shadow (can't have
+          // overflow:hidden alongside shadow on iOS or the shadow gets
+          // clipped), the inner clips the image to the circle and
+          // draws the white ring via borderWidth.
+          <View style={styles.authorAvatarShadow}>
+            <View style={styles.authorAvatarRing}>
+              {author?.avatar_url ? (
+                <Image
+                  source={{ uri: author.avatar_url }}
+                  style={styles.authorAvatarImage}
+                />
+              ) : (
+                <View style={styles.authorAvatarFallback}>
+                  <Text style={styles.authorAvatarInitial}>
+                    {authorName.charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
         )}
         <View style={styles.cardInfoText}>
@@ -567,25 +572,32 @@ const styles = StyleSheet.create({
     color: Colors.secondary,
     letterSpacing: -0.28,
   },
-  // Community-feed-only: 48×48 author avatar with a 3px white border
-  // and a soft drop shadow. Placed to the left of the recipe name
-  // (Figma node 4844:55709).
-  authorAvatarWrap: {
+  // Community-feed-only author avatar (Figma node 4844:55709).
+  // Structure: shadow wrap (NO overflow:hidden so shadow doesn't get
+  // clipped on iOS) → ring wrap (3px white border + overflow:hidden
+  // to clip the photo to a circle) → image.
+  authorAvatarShadow: {
     width: 48,
     height: 48,
-    borderRadius: 999,
-    borderWidth: 3,
-    borderColor: '#ffffff',
-    backgroundColor: Colors.surface.tertiary,
-    overflow: 'hidden',
+    borderRadius: 24,
     ...Shadows.level2,
   },
-  authorAvatar: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 999,
+  authorAvatarRing: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 3,
+    borderColor: '#ffffff',
+    overflow: 'hidden',
+    backgroundColor: Colors.surface.tertiary,
   },
-  authorAvatarPlaceholder: {
+  authorAvatarImage: {
+    width: 42,
+    height: 42,
+  },
+  authorAvatarFallback: {
+    width: 42,
+    height: 42,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.accent,
