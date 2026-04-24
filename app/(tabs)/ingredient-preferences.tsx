@@ -24,7 +24,7 @@ import { useAuth } from '@/lib/auth';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { Colors, Shadows } from '@/constants/theme';
 import { ScreenLayout } from '@/components/ScreenLayout';
-import { MenuLikedIcon, MenuDislikedIcon, MenuFlaggedIcon, ActionSearchIcon, ActionPenIcon } from '@/components/MenuIcons';
+import { MenuLikedIcon, MenuDislikedIcon, MenuFlaggedIcon, ActionSearchIcon, ActionClearIcon, ActionPenIcon } from '@/components/MenuIcons';
 import { IngredientDetailModal } from '@/components/IngredientDetailModal';
 import { FlagReasonSheet } from '@/components/FlagReasonSheet';
 import { LottieLoader } from '@/components/LottieLoader';
@@ -460,7 +460,7 @@ export default function IngredientPreferencesScreen() {
             />
             {searchQuery !== '' && (
               <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-                <Ionicons name="close-circle" size={16} color={Colors.secondary} />
+                <ActionClearIcon color={Colors.secondary} size={14} />
               </TouchableOpacity>
             )}
           </View>

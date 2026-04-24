@@ -594,7 +594,15 @@ const styles = StyleSheet.create({
     letterSpacing: -0.26,
   },
   inlineActions: { flexDirection: 'row', gap: 16, marginTop: 4 },
-  inlineBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  // flexShrink:0 keeps the icon + label intact when the "Search" text
+  // flips to "Close search" (which is wider). Without this, the parent
+  // row repacks and the pen icon appears to "shrink" on activation.
+  inlineBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    flexShrink: 0,
+  },
   inlineText: {
     fontSize: 16,
     lineHeight: 20,
