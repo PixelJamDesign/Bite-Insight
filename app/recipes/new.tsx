@@ -992,6 +992,10 @@ const styles = StyleSheet.create({
 
   // ── Body ────────────────────────────────────────────────────────────────
   body: {
+    backgroundColor: Colors.surface.secondary,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    marginTop: -16, // overlap the hero slightly — matches the detail screen
     paddingHorizontal: 24,
     paddingTop: 32,
     gap: 32,
