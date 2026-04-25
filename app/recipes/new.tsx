@@ -201,14 +201,20 @@ export default function RecipeBuilderScreen() {
 
   function handleAddSourceSelected(source: AddSource) {
     setAddSheetOpen(false);
+    // Pass the current builder path as `returnTo` so scanner / search
+    // can route back here exactly — works for both /recipes/new and
+    // /recipes/{id}/edit. Without this, scanner's router.back() pops
+    // inside the tabs navigator and lands on Home (it's tab-scoped),
+    // not the root-stack builder.
+    const returnTo = isEditing && editingId
+      ? `/recipes/${editingId}/edit`
+      : '/recipes/new';
     if (source === 'history') {
-      // Full-screen picker (not a Modal) — avoids iOS's double-Modal
-      // freeze when presenting one Modal while another is dismissing.
       router.push('/recipes/pick-scan' as never);
     } else if (source === 'search') {
-      router.push('/food-search?addToRecipe=1' as never);
+      router.push(`/food-search?addToRecipe=1&returnTo=${encodeURIComponent(returnTo)}` as never);
     } else if (source === 'scan') {
-      router.push('/(tabs)/scanner?addToRecipe=1' as never);
+      router.push(`/(tabs)/scanner?addToRecipe=1&returnTo=${encodeURIComponent(returnTo)}` as never);
     }
   }
 

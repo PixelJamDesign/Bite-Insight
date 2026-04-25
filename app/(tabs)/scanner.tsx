@@ -35,8 +35,12 @@ export default function ScannerScreen() {
   const [regionPickerVisible, setRegionPickerVisible] = useState(false);
   const router = useRouter();
   const { session } = useAuth();
-  const scannerParams = useLocalSearchParams<{ addToRecipe?: string }>();
+  const scannerParams = useLocalSearchParams<{ addToRecipe?: string; returnTo?: string }>();
   const pickMode = scannerParams.addToRecipe === '1';
+  // Where to send the user after a successful pick — passed in by
+  // the recipe builder so we land back on the right URL whether
+  // they came from /recipes/new or /recipes/{id}/edit.
+  const returnTo = typeof scannerParams.returnTo === 'string' ? scannerParams.returnTo : '/recipes/new';
   const draftRecipe = useDraftRecipe();
   const { showToast } = useToast();
   const { isPlus } = useSubscription();
@@ -291,7 +295,14 @@ export default function ScannerScreen() {
           variant: 'success',
           durationMs: 2000,
         });
-        router.back();
+        // Scanner lives inside (tabs); the recipe builder is on the
+        // root stack. router.back() here pops within the tabs and
+        // lands on whatever tab was previously active (usually Home),
+        // not the builder. Use the returnTo path threaded through
+        // by the caller so we land on /recipes/new or
+        // /recipes/{id}/edit as appropriate. Draft state lives in
+        // DraftRecipeProvider so it persists across the route swap.
+        router.replace(returnTo as never);
         return;
       }
 
