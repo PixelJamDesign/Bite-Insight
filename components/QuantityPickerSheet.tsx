@@ -14,12 +14,13 @@
  *                 unselected = plain secondary-teal text on transparent
  *   • Save button: full width, teal cucumber, 8px radius, 16/20 bold white
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
+  TextInput,
   Modal,
   Platform,
   KeyboardAvoidingView,
@@ -51,12 +52,20 @@ interface Props {
 export function QuantityPickerSheet({ visible, value, unit, onClose, onSave }: Props) {
   const [localValue, setLocalValue] = useState<number>(value);
   const [localUnit, setLocalUnit] = useState<QuantityUnit>(unit);
+  // Raw text the user is currently typing into the value field.
+  // Kept separate from localValue so we don't fight the user's
+  // intermediate input states (e.g. typing "1." or empty string).
+  const [valueText, setValueText] = useState<string>('');
+  const [editingValue, setEditingValue] = useState(false);
+  const valueInputRef = useRef<TextInput>(null);
   const { rendered, backdropOpacity, sheetTranslateY } = useSheetAnimation(visible);
 
   useEffect(() => {
     if (visible) {
       setLocalValue(value);
       setLocalUnit(unit);
+      setEditingValue(false);
+      setValueText('');
     }
   }, [visible, value, unit]);
 
@@ -143,12 +152,66 @@ export function QuantityPickerSheet({ visible, value, unit, onClose, onSave }: P
                   <Ionicons name="remove" size={16} color={Colors.secondary} />
                 </TouchableOpacity>
 
-                <View style={styles.valueCard}>
-                  <Text style={styles.valueNumber}>
-                    {formatQuantityValue(localValue, localUnit)}
-                  </Text>
+                <TouchableOpacity
+                  style={styles.valueCard}
+                  activeOpacity={0.85}
+                  onPress={() => {
+                    // Tapping anywhere on the card focuses the input.
+                    // The TextInput itself handles the actual editing
+                    // when focused — this just makes the whole card a
+                    // generous tap target.
+                    valueInputRef.current?.focus();
+                  }}
+                >
+                  <TextInput
+                    ref={valueInputRef}
+                    style={styles.valueInput}
+                    value={
+                      editingValue
+                        ? valueText
+                        : formatQuantityValue(localValue, localUnit)
+                    }
+                    onFocus={() => {
+                      setEditingValue(true);
+                      // Seed the field with the current numeric value
+                      // (no fraction glyphs while typing — keep it
+                      // straightforward decimal).
+                      setValueText(
+                        Number.isFinite(localValue) ? String(localValue) : '',
+                      );
+                      // Small timeout so selection happens after the
+                      // value text update lands.
+                      setTimeout(() => {
+                        valueInputRef.current?.setNativeProps?.({ selection: { start: 0, end: 9999 } });
+                      }, 0);
+                    }}
+                    onChangeText={(text) => {
+                      // Allow only digits, optional decimal point.
+                      const cleaned = text.replace(/[^0-9.]/g, '');
+                      // Disallow more than one decimal point.
+                      const parts = cleaned.split('.');
+                      const sanitised = parts.length > 1
+                        ? `${parts[0]}.${parts.slice(1).join('')}`
+                        : cleaned;
+                      setValueText(sanitised);
+                      const parsed = parseFloat(sanitised);
+                      if (Number.isFinite(parsed)) setLocalValue(parsed);
+                    }}
+                    onBlur={() => {
+                      setEditingValue(false);
+                      // Empty / invalid input → fall back to 0 so save
+                      // logic can decide what to do (which is "skip
+                      // save" if value is not > 0).
+                      const parsed = parseFloat(valueText);
+                      setLocalValue(Number.isFinite(parsed) ? parsed : 0);
+                    }}
+                    keyboardType="decimal-pad"
+                    returnKeyType="done"
+                    selectTextOnFocus
+                    underlineColorAndroid="transparent"
+                  />
                   <Text style={styles.valueUnit}>{meta.label.toLowerCase()}</Text>
-                </View>
+                </TouchableOpacity>
 
                 <TouchableOpacity
                   style={styles.stepperBtn}
@@ -293,6 +356,20 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     letterSpacing: -0.48,
     includeFontPadding: false,
+  },
+  // Same look as valueNumber but for the inline editable TextInput.
+  // textAlign:'right' so the typed value sits flush against the unit
+  // label (matches the centered group when not editing).
+  valueInput: {
+    fontSize: 24,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.48,
+    includeFontPadding: false,
+    minWidth: 40,
+    textAlign: 'right',
+    padding: 0,
   },
   valueUnit: {
     fontSize: 20,
