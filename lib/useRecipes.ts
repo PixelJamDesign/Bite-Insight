@@ -7,6 +7,7 @@
  *   const { recipe, ingredients, household, loading } = useRecipe(id);
  */
 import { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
 import { supabase } from './supabase';
 import { useAuth } from './auth';
 import { listRecipes, getRecipe, listPublicRecipes } from './recipes';
@@ -120,6 +121,14 @@ export function usePublicRecipes(): UsePublicRecipesResult {
     load();
   }, [load]);
 
+  // Re-fetch when the screen regains focus so newly-shared recipes
+  // surface immediately when the user navigates back from a share.
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load]),
+  );
+
   return { recipes, loading, error, refresh: load };
 }
 
@@ -176,6 +185,16 @@ export function useRecipe(recipeId: string | null | undefined): UseRecipeResult 
   useEffect(() => {
     load();
   }, [load]);
+
+  // Refresh when the detail screen regains focus — e.g. after the
+  // user taps Save in /recipes/{id}/edit and routes back. The detail
+  // screen stays mounted in the stack on back navigation, so without
+  // this it would still show the pre-edit data.
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load]),
+  );
 
   const impact =
     recipe && selfProfile
