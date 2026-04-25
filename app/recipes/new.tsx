@@ -610,7 +610,7 @@ export default function RecipeBuilderScreen() {
                   the user hasn't bothered setting it; saved as null so
                   the detail screen renders '—'. */}
               <TimeStepperCard
-                title="Prep time"
+                title="Prep time (mins)"
                 hint="How long does it take to prepare?"
                 value={d.prepTimeMin}
                 onChange={draft.setPrepTimeMin}
@@ -618,7 +618,7 @@ export default function RecipeBuilderScreen() {
 
               {/* Cook time inline card — same shape as prep time. */}
               <TimeStepperCard
-                title="Cook time"
+                title="Cook time (mins)"
                 hint="How long does it take to cook?"
                 value={d.cookTimeMin}
                 onChange={draft.setCookTimeMin}
