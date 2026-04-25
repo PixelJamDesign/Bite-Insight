@@ -523,7 +523,9 @@ export function scanResultParamsFromSnapshot(
     proteins: n.protein_g != null ? String(n.protein_g) : '',
     salt: n.salt_g != null ? String(n.salt_g) : '',
     ingredientsText: snap.ingredients_text ?? '',
-    allergens: (snap.allergens ?? []).join(','),
+    // Defensive: older snapshots have allergens stored as strings or
+    // unexpected shapes — coerce to a real array before .join.
+    allergens: Array.isArray(snap.allergens) ? snap.allergens.join(',') : '',
   };
   return params;
 }

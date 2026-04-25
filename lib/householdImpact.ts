@@ -94,6 +94,28 @@ function textContainsAny(text: string, keywords: string[]): boolean {
   return keywords.some((kw) => t.includes(norm(kw)));
 }
 
+/**
+ * Coerces a snapshot field that's *supposed* to be an array into an
+ * array we can safely .map / .filter / etc. Older saved snapshots
+ * sometimes carried '' or a stringified-empty-array in fields like
+ * allergens or ingredients — both pass `?? []` (because they're
+ * truthy non-null values) but then crash on .map. This helper accepts
+ * an array directly, parses a JSON string if that's what we got, and
+ * falls back to [] for everything else.
+ */
+function asArray<T>(value: unknown): T[] {
+  if (Array.isArray(value)) return value as T[];
+  if (typeof value === 'string' && value.trim().startsWith('[')) {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? (parsed as T[]) : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
 interface HouseholdMember {
   id: string;              // 'self' or family_profile.id
   name: string;
@@ -143,8 +165,10 @@ function findFlagsForMember(
   for (const ing of ingredients) {
     const snap = ing.product_snapshot;
     const productName = snap.product_name;
-    const productIngredients = (snap.ingredients ?? []).map((i) => i.name).join(', ');
-    const allergens = (snap.allergens ?? []).map(norm);
+    const productIngredients = asArray<{ name: string }>(snap.ingredients)
+      .map((i) => i.name)
+      .join(', ');
+    const allergens = asArray<string>(snap.allergens).map(norm);
     const searchText = `${productName} ${productIngredients}`;
 
     // ── Allergies → avoid ─────────────────────────────────────────────────
@@ -263,7 +287,7 @@ export function findRecipeFlaggedIngredients(
 
   for (const ing of ingredients) {
     const snap = ing.product_snapshot;
-    const structured = snap.ingredients ?? [];
+    const structured = asArray<{ id?: string; name: string }>(snap.ingredients);
 
     // Track which (flagged-ingredient × product) pairs we've already hit
     // so we don't double-count when the structured + text passes both
@@ -354,8 +378,10 @@ export function findRecipeAllergenMatches(
 
     for (const ing of ingredients) {
       const snap = ing.product_snapshot;
-      const allergens = (snap.allergens ?? []).map(norm);
-      const productIngredients = (snap.ingredients ?? []).map((i) => i.name).join(', ');
+      const allergens = asArray<string>(snap.allergens).map(norm);
+      const productIngredients = asArray<{ name: string }>(snap.ingredients)
+        .map((i) => i.name)
+        .join(', ');
       const searchText = `${snap.product_name} ${productIngredients} ${snap.ingredients_text ?? ''}`;
 
       const hitsAllergenTag = keywords.some((kw) => allergens.some((a) => a.includes(kw)));

@@ -864,11 +864,17 @@ function FamilyImpactSheetForMember({
       allergies,
       ingredients: ingredients.map((ing) => ({
         productName: ing.product_snapshot.product_name,
-        structuredCount: (ing.product_snapshot.ingredients ?? []).length,
-        structuredNames: (ing.product_snapshot.ingredients ?? []).map((i) => i.name),
+        structuredCount: Array.isArray(ing.product_snapshot.ingredients)
+          ? ing.product_snapshot.ingredients.length
+          : 0,
+        structuredNames: Array.isArray(ing.product_snapshot.ingredients)
+          ? ing.product_snapshot.ingredients.map((i) => i.name)
+          : [],
         hasIngredientsText: Boolean(ing.product_snapshot.ingredients_text),
         ingredientsTextPreview: (ing.product_snapshot.ingredients_text ?? '').slice(0, 120),
-        allergens: ing.product_snapshot.allergens ?? [],
+        allergens: Array.isArray(ing.product_snapshot.allergens)
+          ? ing.product_snapshot.allergens
+          : [],
       })),
       flagHits,
       allergenHits,
