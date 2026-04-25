@@ -171,6 +171,17 @@ export default function RecipeBuilderScreen() {
           Alert.alert('Save failed', 'Please try again.');
         }
       }
+    } catch (e: any) {
+      // Anything thrown by draft.save / draft.saveAsUpdate (network,
+      // RLS, JSON serialisation, etc.) used to bubble up uncaught and
+      // produce a blank-screen-then-crash sequence. Surface it as an
+      // alert so the user gets feedback, and log to the device
+      // console for triage.
+      console.error('[recipe-builder] save threw:', e);
+      Alert.alert(
+        'Save failed',
+        e?.message ? String(e.message) : 'Something went wrong while saving. Please try again.',
+      );
     } finally {
       setSaving(false);
     }
