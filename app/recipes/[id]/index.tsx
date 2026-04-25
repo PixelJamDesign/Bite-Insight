@@ -679,9 +679,12 @@ export default function RecipeDetailScreen() {
           {/* ── Ingredients ───────────────────────────────────────── */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Ingredients</Text>
-            <Text style={styles.countLine}>
-              {currentRecipe.ingredients.length}{' '}
-              {currentRecipe.ingredients.length === 1 ? 'ingredient' : 'ingredients'}
+            <Text style={styles.sectionSubtitle}>
+              This recipe contains{' '}
+              <Text style={styles.sectionSubtitleEmphasis}>
+                {currentRecipe.ingredients.length}{' '}
+                {currentRecipe.ingredients.length === 1 ? 'ingredient' : 'ingredients'}
+              </Text>
             </Text>
             <View style={styles.ingList}>
               {currentRecipe.ingredients.map((ing) => (
@@ -1270,14 +1273,13 @@ const styles = StyleSheet.create({
     letterSpacing: -0.14,
     marginTop: -8, // sit closer to the title
   },
-  countLine: {
-    fontSize: 13,
-    lineHeight: 16,
+  // Inline bold emphasis inside a sectionSubtitle Text — used for
+  // the ingredient count in the 'This recipe contains N ingredients'
+  // line. Inherits font size + line height from the parent Text.
+  sectionSubtitleEmphasis: {
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
-    letterSpacing: -0.26,
-    marginTop: -8,
   },
 
   h5: {
