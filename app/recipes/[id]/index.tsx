@@ -498,22 +498,14 @@ export default function RecipeDetailScreen() {
             <View style={styles.authorRow}>
               <Text style={styles.author}>By {authorName}</Text>
               {showLikesCounter && (
-                // The pill itself is the like toggle for viewers —
-                // no separate heart button on the hero. Owners see
-                // the same pill read-only (they can't like their
-                // own recipe), so the tap is gated on !isOwner.
-                <TouchableOpacity
-                  style={[styles.likesPill, liked && styles.likesPillActive]}
-                  onPress={handleToggleLike}
-                  activeOpacity={isOwner ? 1 : 0.7}
-                  disabled={isOwner}
-                  hitSlop={6}
-                >
+                // Read-only counter. The actual like/unlike action
+                // lives in the Recipe Actions sheet (viewer variant).
+                <View style={[styles.likesPill, liked && styles.likesPillActive]}>
                   <LikeThumbIcon width={14} height={15} />
                   <Text style={styles.likesPillText}>
                     {likeCount} {likeCount === 1 ? 'like' : 'likes'}
                   </Text>
-                </TouchableOpacity>
+                </View>
               )}
             </View>
           </View>
@@ -714,6 +706,8 @@ export default function RecipeDetailScreen() {
           onSave={handleSaveFromSource}
           onDuplicate={handleSaveFromSource}
           onShareWithFriend={handleShareWithFriend}
+          onToggleLike={handleToggleLike}
+          liked={liked}
         />
       )}
 

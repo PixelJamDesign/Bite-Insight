@@ -40,6 +40,7 @@ import ShareIcon from '@/assets/icons/recipe-actions/share.svg';
 import ShareLinkIcon from '@/assets/icons/recipe-actions/share-link.svg';
 import BookmarkIcon from '@/assets/icons/recipe-actions/bookmark.svg';
 import TrashIcon from '@/assets/icons/recipe-actions/trash.svg';
+import LikeThumbIcon from '@/assets/icons/recipe-header/like-thumb.svg';
 import PlusSparkleIcon from '@/assets/icons/plus-sparkle.svg';
 
 export type RecipeActionsVariant = 'owner' | 'viewer';
@@ -70,6 +71,10 @@ interface ViewerProps extends BaseProps {
   variant: 'viewer';
   onSave: () => void;
   onDuplicate: () => void;
+  /** Toggles the current user's like on this recipe. */
+  onToggleLike: () => void;
+  /** Whether the current user has already liked this recipe. */
+  liked: boolean;
 }
 
 type Props = OwnerProps | ViewerProps;
@@ -204,9 +209,26 @@ function ViewerRows({
   onSave,
   onDuplicate,
   onShareWithFriend,
+  onToggleLike,
+  liked,
 }: ViewerProps) {
   return (
     <>
+      <ActionRow
+        IconSvg={LikeThumbIcon}
+        iconSize={18}
+        tint={SPRING_WATER}
+        title={liked ? 'Unlike' : 'Like'}
+        subtitle={
+          liked
+            ? "Remove your like from this recipe"
+            : "Show some love for this recipe"
+        }
+        onPress={() => {
+          onClose();
+          onToggleLike();
+        }}
+      />
       <ActionRow
         IconSvg={BookmarkIcon}
         iconSize={20}

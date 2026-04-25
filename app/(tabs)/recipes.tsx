@@ -8,7 +8,7 @@
  *   Sticky bottom CTA (gradient fade) — "Create your first recipe" when empty,
  *   "+ New recipe" when recipes exist
  */
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -28,6 +28,8 @@ import { PlusBadge } from '@/components/PlusBadge';
 import { useRecipes, usePublicRecipes } from '@/lib/useRecipes';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { useUpsellSheet } from '@/lib/upsellSheetContext';
+import { useAuth } from '@/lib/auth';
+import { supabase } from '@/lib/supabase';
 import { NUTRISCORE_COLORS } from '@/lib/nutriscore';
 import type { Recipe, PublicRecipe } from '@/lib/types';
 import LikeThumbIcon from '@/assets/icons/recipe-header/like-thumb.svg';
@@ -41,7 +43,84 @@ export default function RecipesScreen() {
   const community = usePublicRecipes();
   const { isPlus } = useSubscription();
   const { showUpsell } = useUpsellSheet();
+  const { session } = useAuth();
   const [activeTab, setActiveTab] = useState<TabKey>('my');
+
+  // ── Community-feed like state ─────────────────────────────────────────
+  // Set of recipe ids the current user has already liked, plus a local
+  // override map for optimistic count adjustments. Tapping the pill
+  // updates both immediately, then persists via supabase.
+  const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
+  const [likeOverrides, setLikeOverrides] = useState<Record<string, number>>({});
+
+  // Load the user's like rows for any community recipes they're seeing.
+  // RLS policy 'Users can see public recipe likes' permits this read.
+  useEffect(() => {
+    if (!session?.user?.id || community.recipes.length === 0) {
+      setLikedIds(new Set());
+      return;
+    }
+    let cancelled = false;
+    const ids = community.recipes.map((r) => r.id);
+    supabase
+      .from('recipe_likes')
+      .select('recipe_id')
+      .eq('user_id', session.user.id)
+      .in('recipe_id', ids)
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        setLikedIds(new Set(data.map((r) => r.recipe_id as string)));
+      });
+    return () => { cancelled = true; };
+  }, [session?.user?.id, community.recipes]);
+
+  // Toggle a like on a community recipe with optimistic UI. Rolls back
+  // on failure. Owners can't reach this — community feed excludes the
+  // caller's own recipes.
+  const handleToggleFeedLike = useCallback(
+    async (recipeId: string) => {
+      if (!session?.user?.id) return;
+      const wasLiked = likedIds.has(recipeId);
+      // Optimistic flip
+      setLikedIds((prev) => {
+        const next = new Set(prev);
+        if (wasLiked) next.delete(recipeId);
+        else next.add(recipeId);
+        return next;
+      });
+      setLikeOverrides((prev) => ({
+        ...prev,
+        [recipeId]: (prev[recipeId] ?? 0) + (wasLiked ? -1 : 1),
+      }));
+      try {
+        if (wasLiked) {
+          await supabase
+            .from('recipe_likes')
+            .delete()
+            .eq('recipe_id', recipeId)
+            .eq('user_id', session.user.id);
+        } else {
+          await supabase
+            .from('recipe_likes')
+            .insert({ recipe_id: recipeId, user_id: session.user.id });
+        }
+      } catch (e) {
+        console.warn('[recipes] feed like toggle failed:', e);
+        // Roll back
+        setLikedIds((prev) => {
+          const next = new Set(prev);
+          if (wasLiked) next.add(recipeId);
+          else next.delete(recipeId);
+          return next;
+        });
+        setLikeOverrides((prev) => ({
+          ...prev,
+          [recipeId]: (prev[recipeId] ?? 0) + (wasLiked ? 1 : -1),
+        }));
+      }
+    },
+    [likedIds, session?.user?.id],
+  );
 
   const isEmpty = recipes.length === 0;
 
@@ -129,6 +208,9 @@ export default function RecipesScreen() {
                 <RecipeCard
                   recipe={item}
                   variant="community"
+                  liked={likedIds.has(item.id)}
+                  likeCountOverride={likeOverrides[item.id]}
+                  onToggleLike={() => handleToggleFeedLike(item.id)}
                   onPress={() =>
                     router.push(`/recipes/${item.id}?viewer=1` as never)
                   }
@@ -283,6 +365,9 @@ function CommunityEmpty({ bottomSpace }: { bottomSpace: number }) {
 function RecipeCard({
   recipe,
   variant = 'my',
+  liked = false,
+  likeCountOverride,
+  onToggleLike,
   onPress,
 }: {
   recipe: Recipe | PublicRecipe;
@@ -290,6 +375,14 @@ function RecipeCard({
    *  'community' = community feed (48px author avatar + name + 'by X'
    *  on the left). Matches Figma node 4844:55714. */
   variant?: 'my' | 'community';
+  /** Whether the current user has liked this recipe. Only used for
+   *  the community variant — drives the pill's active state. */
+  liked?: boolean;
+  /** Optimistic delta applied to recipe.like_count on the client so
+   *  the count moves immediately on tap before the DB write returns. */
+  likeCountOverride?: number;
+  /** Tap handler for the likes pill on the community variant. */
+  onToggleLike?: () => void;
   onPress: () => void;
 }) {
   const grade = recipe.nutriscore_grade as keyof typeof NUTRISCORE_COLORS | null | undefined;
@@ -297,6 +390,7 @@ function RecipeCard({
   const isCommunity = variant === 'community';
   const author = isCommunity ? (recipe as PublicRecipe).author : null;
   const authorName = author?.full_name?.trim() || 'Anonymous';
+  const likeCount = (recipe.like_count ?? 0) + (likeCountOverride ?? 0);
 
   // DEV diagnostic — remove once the community avatar is confirmed
   // rendering on-device. Logs exactly what the card receives so we
@@ -376,14 +470,30 @@ function RecipeCard({
           )}
         </View>
         {/* Likes pill — only on recipes shared to the community.
-            Private recipes can't be liked so the counter is hidden. */}
+            On the community variant the pill itself is tappable to
+            toggle a like (no separate button anywhere). My-recipes
+            cards keep it as a read-only display. */}
         {recipe.visibility === 'public' && (
-          <View style={styles.likesPill}>
-            <LikeThumbIcon width={14} height={15} />
-            <Text style={styles.likesText}>
-              {recipe.like_count ?? 0} {recipe.like_count === 1 ? 'like' : 'likes'}
-            </Text>
-          </View>
+          isCommunity && onToggleLike ? (
+            <TouchableOpacity
+              style={[styles.likesPill, liked && styles.likesPillActive]}
+              onPress={onToggleLike}
+              activeOpacity={0.7}
+              hitSlop={6}
+            >
+              <LikeThumbIcon width={14} height={15} />
+              <Text style={styles.likesText}>
+                {likeCount} {likeCount === 1 ? 'like' : 'likes'}
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.likesPill}>
+              <LikeThumbIcon width={14} height={15} />
+              <Text style={styles.likesText}>
+                {likeCount} {likeCount === 1 ? 'like' : 'likes'}
+              </Text>
+            </View>
+          )
         )}
       </View>
 
@@ -649,6 +759,11 @@ const styles = StyleSheet.create({
     paddingLeft: 4,
     paddingRight: 6,
     paddingVertical: 4,
+  },
+  // Slight visual nudge when the viewer has liked this recipe —
+  // same dimensions so the layout doesn't shift on tap.
+  likesPillActive: {
+    backgroundColor: '#c8e4dd',
   },
   likesText: {
     fontSize: 13,
