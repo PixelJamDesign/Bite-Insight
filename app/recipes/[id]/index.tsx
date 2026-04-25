@@ -57,6 +57,8 @@ import {
   findRecipeAllergenMatches,
 } from '@/lib/householdImpact';
 import { supabase } from '@/lib/supabase';
+import { File, Paths } from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 import ArrowLeftIcon from '@/assets/icons/recipe-header/arrow-left.svg';
 import LikeThumbIcon from '@/assets/icons/recipe-header/like-thumb.svg';
 import type {
@@ -342,11 +344,37 @@ export default function RecipeDetailScreen() {
   // biteinsight:// deep link so a recipient on Bite Insight can open
   // the recipe directly. Not Plus-gated — any user can share their
   // own creations.
+  // Share the recipe to a friend. When we have a cover image we
+  // download it to the cache and share it via expo-sharing so the
+  // native iOS share sheet renders the image as a preview tile and
+  // the recipe name as the dialog title — that's what gives "image
+  // and name as the preview". Falls back to a plain text+url share
+  // (with a biteinsight:// deep link) when there's no cover image
+  // or expo-sharing isn't available on the platform.
   async function handleShareWithFriend() {
+    const deepLink = `biteinsight://recipes/${currentRecipe.id}`;
+    const cover = currentRecipe.cover_image_url;
     try {
-      const url = `biteinsight://recipes/${currentRecipe.id}`;
-      const message = `Check out "${currentRecipe.name}" on Bite Insight: ${url}`;
-      await Share.share({ message, url, title: currentRecipe.name });
+      if (cover && (await Sharing.isAvailableAsync())) {
+        // Cache key keyed on the recipe id so re-shares don't re-download.
+        const ext = cover.toLowerCase().includes('.png') ? 'png' : 'jpg';
+        const dest = new File(Paths.cache, `share-recipe-${currentRecipe.id}.${ext}`);
+        const downloaded = await File.downloadFileAsync(cover, dest, { idempotent: true });
+        if (downloaded?.uri) {
+          await Sharing.shareAsync(downloaded.uri, {
+            dialogTitle: currentRecipe.name,
+            mimeType: ext === 'png' ? 'image/png' : 'image/jpeg',
+            UTI: ext === 'png' ? 'public.png' : 'public.jpeg',
+          });
+          return;
+        }
+      }
+      // Fallback when there's no cover or expo-sharing isn't available.
+      await Share.share({
+        title: currentRecipe.name,
+        message: `Check out "${currentRecipe.name}" on Bite Insight\n${deepLink}`,
+        url: deepLink,
+      });
     } catch (e) {
       console.warn('[recipe-detail] share failed:', e);
     }
