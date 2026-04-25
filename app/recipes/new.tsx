@@ -80,8 +80,12 @@ type NutritionMode = 'serving' | 'per100';
 
 const TIME_STEP_MIN = 5;
 
-/** Inline stepper card for prep / cook time — shape matches the
- *  Servings stepper. Null means "not set" → renders an em dash. */
+/** Inline stepper card for prep / cook time. Layout + styling
+ *  intentionally identical to the Servings card so the three
+ *  panels stack with the [−] number [+] tower right-aligned at the
+ *  same x. The unit (minutes) is implied by the title — we render
+ *  just the number to keep the value column the same width as
+ *  Servings' "15". */
 function TimeStepperCard({
   title,
   hint,
@@ -93,13 +97,17 @@ function TimeStepperCard({
   value: number | null;
   onChange: (v: number | null) => void;
 }) {
+  // Treat null as "not set" but display 0 so the column width
+  // matches Servings. Decrementing from 0 / null is a no-op so the
+  // user can't go negative.
+  const display = value ?? 0;
   function decrement() {
-    if (value == null) return;
-    const next = value - TIME_STEP_MIN;
+    if (display <= 0) return;
+    const next = display - TIME_STEP_MIN;
     onChange(next <= 0 ? null : next);
   }
   function increment() {
-    onChange((value ?? 0) + TIME_STEP_MIN);
+    onChange(display + TIME_STEP_MIN);
   }
   return (
     <View style={timeStepperStyles.card}>
@@ -112,17 +120,10 @@ function TimeStepperCard({
           style={timeStepperStyles.btn}
           onPress={decrement}
           activeOpacity={0.7}
-          disabled={value == null}
         >
-          <Ionicons
-            name="remove"
-            size={16}
-            color={value == null ? '#aad4cd' : Colors.secondary}
-          />
+          <Ionicons name="remove" size={16} color={Colors.secondary} />
         </TouchableOpacity>
-        <Text style={timeStepperStyles.value}>
-          {value == null ? '—' : `${value} min`}
-        </Text>
+        <Text style={timeStepperStyles.value}>{display}</Text>
         <TouchableOpacity
           style={timeStepperStyles.btn}
           onPress={increment}
@@ -135,24 +136,29 @@ function TimeStepperCard({
   );
 }
 
+// Mirror of the Servings card / stepper so the three panels share
+// a single visual language. Don't bump these in isolation — keep
+// them in lock-step with `inlineCard` / `stepperBtn` / `stepperValue`
+// in the main StyleSheet below.
 const timeStepperStyles = StyleSheet.create({
   card: {
+    backgroundColor: '#f5fbfb',
+    borderWidth: 1,
+    borderColor: '#aad4cd',
+    borderRadius: 8,
+    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#f5fbfb',
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
     gap: 16,
   },
   left: { flex: 1, gap: 4 },
   title: {
-    fontSize: 16,
-    lineHeight: 20,
+    fontSize: 18,
+    lineHeight: 24,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
+    letterSpacing: -0.36,
   },
   hint: {
     fontSize: 14,
@@ -168,23 +174,24 @@ const timeStepperStyles = StyleSheet.create({
     gap: 8,
   },
   btn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#fff',
-    borderWidth: 1,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#e4f1ef',
+    borderWidth: 2,
     borderColor: '#aad4cd',
     alignItems: 'center',
     justifyContent: 'center',
   },
   value: {
-    fontSize: 16,
-    lineHeight: 20,
+    minWidth: 34,
+    fontSize: 20,
+    lineHeight: 22,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
-    minWidth: 64,
+    color: Colors.secondary,
     textAlign: 'center',
+    letterSpacing: -0.5,
   },
 });
 
