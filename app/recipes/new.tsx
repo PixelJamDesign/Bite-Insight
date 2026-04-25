@@ -152,13 +152,14 @@ const timeStepperStyles = StyleSheet.create({
     gap: 16,
   },
   left: { flex: 1, gap: 4 },
+  // Title + hint mirror the Servings card's h5 + bodySmall styles
+  // exactly (16/20 + 14/21) so all three cards typeset the same.
   title: {
-    fontSize: 18,
-    lineHeight: 24,
+    fontSize: 16,
+    lineHeight: 20,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
-    letterSpacing: -0.36,
   },
   hint: {
     fontSize: 14,
