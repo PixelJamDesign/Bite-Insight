@@ -56,6 +56,7 @@ import GalleryAddIcon from '@/assets/icons/recipe-header/gallery-add.svg';
 import { QuantityPickerSheet } from '@/components/QuantityPickerSheet';
 import { AddIngredientSheet, type AddSource } from '@/components/AddIngredientSheet';
 import { StepEditorSheet } from '@/components/StepEditorSheet';
+import { MinutesPickerSheet } from '@/components/MinutesPickerSheet';
 import { safeBack } from '@/lib/safeBack';
 
 const HERO_HEIGHT = 300;
@@ -85,17 +86,20 @@ const TIME_STEP_MIN = 5;
  *  panels stack with the [−] number [+] tower right-aligned at the
  *  same x. The unit (minutes) is implied by the title — we render
  *  just the number to keep the value column the same width as
- *  Servings' "15". */
+ *  Servings' "15". Tapping the number opens a wheel-picker sheet
+ *  for fast precise selection. */
 function TimeStepperCard({
   title,
   hint,
   value,
   onChange,
+  onTapValue,
 }: {
   title: string;
   hint: string;
   value: number | null;
   onChange: (v: number | null) => void;
+  onTapValue: () => void;
 }) {
   // Treat null as "not set" but display 0 so the column width
   // matches Servings. Decrementing from 0 / null is a no-op so the
@@ -123,7 +127,9 @@ function TimeStepperCard({
         >
           <Ionicons name="remove" size={16} color={Colors.secondary} />
         </TouchableOpacity>
-        <Text style={timeStepperStyles.value}>{display}</Text>
+        <TouchableOpacity onPress={onTapValue} activeOpacity={0.6} hitSlop={6}>
+          <Text style={timeStepperStyles.value}>{display}</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           style={timeStepperStyles.btn}
           onPress={increment}
@@ -211,6 +217,10 @@ export default function RecipeBuilderScreen() {
   const [uploadingCover, setUploadingCover] = useState(false);
   const [nutritionMode, setNutritionMode] = useState<NutritionMode>('serving');
   const [stepEditorIndex, setStepEditorIndex] = useState<number | null>(null);
+  // Which time field is currently being picked via the wheel sheet
+  // (null = sheet closed). Holds the field key so we know which
+  // setter to call when the user saves.
+  const [timePicker, setTimePicker] = useState<'prep' | 'cook' | null>(null);
   const [ingredientsEditMode, setIngredientsEditMode] = useState(false);
   const [selectedIngredientIds, setSelectedIngredientIds] = useState<Set<string>>(new Set());
 
@@ -608,12 +618,14 @@ export default function RecipeBuilderScreen() {
 
               {/* Prep time inline card — minutes, 5-min steps. Null when
                   the user hasn't bothered setting it; saved as null so
-                  the detail screen renders '—'. */}
+                  the detail screen renders '—'. Tapping the number
+                  opens a wheel-picker sheet for fast precise entry. */}
               <TimeStepperCard
                 title="Prep time (mins)"
                 hint="How long does it take to prepare?"
                 value={d.prepTimeMin}
                 onChange={draft.setPrepTimeMin}
+                onTapValue={() => setTimePicker('prep')}
               />
 
               {/* Cook time inline card — same shape as prep time. */}
@@ -622,6 +634,7 @@ export default function RecipeBuilderScreen() {
                 hint="How long does it take to cook?"
                 value={d.cookTimeMin}
                 onChange={draft.setCookTimeMin}
+                onTapValue={() => setTimePicker('cook')}
               />
             </View>
 
@@ -1066,6 +1079,17 @@ export default function RecipeBuilderScreen() {
         onDelete={stepEditorIndex !== null && stepEditorIndex >= 0 ? handleDeleteStep : undefined}
         initialText={stepEditorInitial}
         stepNumber={stepEditorNumber}
+      />
+      <MinutesPickerSheet
+        visible={timePicker !== null}
+        title={timePicker === 'cook' ? 'Cook time' : 'Prep time'}
+        value={timePicker === 'cook' ? d.cookTimeMin : d.prepTimeMin}
+        onClose={() => setTimePicker(null)}
+        onSave={(mins) => {
+          if (timePicker === 'cook') draft.setCookTimeMin(mins);
+          else if (timePicker === 'prep') draft.setPrepTimeMin(mins);
+          setTimePicker(null);
+        }}
       />
     </View>
   );
