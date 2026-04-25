@@ -416,15 +416,20 @@ export async function duplicateRecipe(
 // ── Community / public recipes ───────────────────────────────────────────────
 
 /**
- * Lists public community recipes (visibility = 'public') excluding the
- * caller's own. Joins the author's profile so each card can show the
- * creator's display name + avatar. Ordered by like_count desc so
- * trending content surfaces first.
+ * Lists public community recipes (visibility = 'public') including the
+ * caller's own — users should see their own shared recipes alongside
+ * other people's so they can confirm a successful share and get a
+ * sense of how their recipe lives in the feed. Joins the author's
+ * profile so each card can show the creator's display name + avatar.
+ * Ordered by like_count desc so trending content surfaces first.
  *
  * RLS:
  *  • recipes: "Anyone can view public recipes" permits the SELECT
  *  • profiles: "Authors of public recipes are visible" permits the
  *    cross-user author join (migration 20260425_public_author_profiles)
+ *
+ * (The optional excludeUserId param is kept for callers that explicitly
+ * want pure-discovery feeds — not used by the community tab any more.)
  */
 export async function listPublicRecipes(excludeUserId?: string): Promise<PublicRecipe[]> {
   let query = supabase

@@ -78,6 +78,116 @@ const FOOD_ICONS: Record<string, SvgIcon> = {
 
 type NutritionMode = 'serving' | 'per100';
 
+const TIME_STEP_MIN = 5;
+
+/** Inline stepper card for prep / cook time — shape matches the
+ *  Servings stepper. Null means "not set" → renders an em dash. */
+function TimeStepperCard({
+  title,
+  hint,
+  value,
+  onChange,
+}: {
+  title: string;
+  hint: string;
+  value: number | null;
+  onChange: (v: number | null) => void;
+}) {
+  function decrement() {
+    if (value == null) return;
+    const next = value - TIME_STEP_MIN;
+    onChange(next <= 0 ? null : next);
+  }
+  function increment() {
+    onChange((value ?? 0) + TIME_STEP_MIN);
+  }
+  return (
+    <View style={timeStepperStyles.card}>
+      <View style={timeStepperStyles.left}>
+        <Text style={timeStepperStyles.title}>{title}</Text>
+        <Text style={timeStepperStyles.hint}>{hint}</Text>
+      </View>
+      <View style={timeStepperStyles.stepper}>
+        <TouchableOpacity
+          style={timeStepperStyles.btn}
+          onPress={decrement}
+          activeOpacity={0.7}
+          disabled={value == null}
+        >
+          <Ionicons
+            name="remove"
+            size={16}
+            color={value == null ? '#aad4cd' : Colors.secondary}
+          />
+        </TouchableOpacity>
+        <Text style={timeStepperStyles.value}>
+          {value == null ? '—' : `${value} min`}
+        </Text>
+        <TouchableOpacity
+          style={timeStepperStyles.btn}
+          onPress={increment}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="add" size={16} color={Colors.secondary} />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+const timeStepperStyles = StyleSheet.create({
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f5fbfb',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    gap: 16,
+  },
+  left: { flex: 1, gap: 4 },
+  title: {
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+  },
+  hint: {
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
+    color: Colors.secondary,
+    letterSpacing: -0.14,
+  },
+  stepper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  btn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#aad4cd',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  value: {
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    minWidth: 64,
+    textAlign: 'center',
+  },
+});
+
 export default function RecipeBuilderScreen() {
   const { session } = useAuth();
   const params = useLocalSearchParams<{ id?: string }>();
@@ -487,6 +597,24 @@ export default function RecipeBuilderScreen() {
                   </TouchableOpacity>
                 </View>
               </View>
+
+              {/* Prep time inline card — minutes, 5-min steps. Null when
+                  the user hasn't bothered setting it; saved as null so
+                  the detail screen renders '—'. */}
+              <TimeStepperCard
+                title="Prep time"
+                hint="How long does it take to prepare?"
+                value={d.prepTimeMin}
+                onChange={draft.setPrepTimeMin}
+              />
+
+              {/* Cook time inline card — same shape as prep time. */}
+              <TimeStepperCard
+                title="Cook time"
+                hint="How long does it take to cook?"
+                value={d.cookTimeMin}
+                onChange={draft.setCookTimeMin}
+              />
             </View>
 
             {/* ── Live Nutrition ──────────────────────────────────────── */}

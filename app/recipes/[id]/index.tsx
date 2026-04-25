@@ -328,17 +328,27 @@ export default function RecipeDetailScreen() {
   async function handleDuplicate() {
     if (!session?.user?.id) return;
     const newId = await duplicateRecipe(session.user.id, currentRecipe.id);
-    if (newId) router.replace(`/recipes/${newId}` as never);
+    // Open the copy in EDIT mode so the user can rename / tweak it
+    // before settling on the duplicate. Matches the user's intent
+    // of "copy = a starting point I want to modify".
+    if (newId) router.replace(`/recipes/${newId}/edit` as never);
   }
 
-  // Viewer-mode action — clone a community recipe into the user's own
-  // book. Same as duplicate but without the "(copy)" suffix and with
-  // the source_recipe_id attribution preserved for later "Inspired by"
-  // credit lines.
+  // Viewer-mode "Save recipe" — clone a community recipe into the
+  // user's own book and open the new recipe's detail screen. This is
+  // the "I want to use this as-is" action.
   async function handleSaveFromSource() {
     if (!session?.user?.id) return;
     const newId = await saveRecipeFromSource(session.user.id, currentRecipe.id);
     if (newId) router.replace(`/recipes/${newId}` as never);
+  }
+
+  // Viewer-mode "Duplicate recipe" — same clone as Save but the user
+  // wants to tweak it, so we open the new copy in the edit view.
+  async function handleDuplicateFromSource() {
+    if (!session?.user?.id) return;
+    const newId = await saveRecipeFromSource(session.user.id, currentRecipe.id);
+    if (newId) router.replace(`/recipes/${newId}/edit` as never);
   }
 
   // "Share with a friend" — opens the native share sheet with a
@@ -748,7 +758,7 @@ export default function RecipeDetailScreen() {
           visible={actionsOpen}
           onClose={() => setActionsOpen(false)}
           onSave={handleSaveFromSource}
-          onDuplicate={handleSaveFromSource}
+          onDuplicate={handleDuplicateFromSource}
           onShareWithFriend={handleShareWithFriend}
           onToggleLike={handleToggleLike}
           liked={liked}

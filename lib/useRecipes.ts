@@ -96,9 +96,6 @@ export interface UsePublicRecipesResult {
  * the card's "by [Author]" line and avatar.
  */
 export function usePublicRecipes(): UsePublicRecipesResult {
-  const { session } = useAuth();
-  const userId = session?.user?.id;
-
   const [recipes, setRecipes] = useState<PublicRecipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -107,14 +104,17 @@ export function usePublicRecipes(): UsePublicRecipesResult {
     setLoading(true);
     setError(null);
     try {
-      const data = await listPublicRecipes(userId);
+      // Pass undefined so the user's own shared recipes show up in
+      // the feed too — confirms a successful share and lets them
+      // see how their card looks alongside the rest.
+      const data = await listPublicRecipes(undefined);
       setRecipes(data);
     } catch (e: any) {
       setError(e?.message ?? 'Failed to load community recipes');
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, []);
 
   useEffect(() => {
     load();
