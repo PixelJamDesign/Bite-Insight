@@ -218,10 +218,10 @@ function ViewerRows({
         IconSvg={LikeThumbIcon}
         iconSize={18}
         tint={SPRING_WATER}
-        title={liked ? 'Unlike' : 'Like'}
+        title="Like this recipe"
         subtitle={
           liked
-            ? "Remove your like from this recipe"
+            ? "You've liked this. Tap to undo."
             : "Show some love for this recipe"
         }
         onPress={() => {
