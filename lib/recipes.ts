@@ -489,6 +489,45 @@ export async function saveRecipeFromSource(
   );
 }
 
+// ── Navigation helpers ───────────────────────────────────────────────────────
+
+/**
+ * Build the URL params for /scan-result from a saved ProductSnapshot.
+ * Used when the user taps an ingredient row in a recipe — we route
+ * them to the scan-result screen so they can see the full
+ * household-impact / dietary breakdown for that product, then back
+ * out to the recipe.
+ *
+ * scan-result re-fetches missing nutrition from OFF when carbs is
+ * absent, so passing whatever the snapshot has is enough — anything
+ * we don't have here gets filled in by the OFF fetch.
+ */
+export function scanResultParamsFromSnapshot(
+  snap: ProductSnapshot,
+  barcode: string | null,
+): Record<string, string> {
+  const n = snap.nutrition_per_100g ?? {};
+  const params: Record<string, string> = {
+    scanId: '',
+    productName: snap.product_name ?? '',
+    brand: snap.brand ?? '',
+    imageUrl: snap.image_url ?? '',
+    barcode: barcode ?? '',
+    nutriscoreGrade: snap.nutriscore_grade ?? '',
+    energyKcal: n.energy_kcal != null ? String(n.energy_kcal) : '',
+    carbs: n.carbs_g != null ? String(n.carbs_g) : '',
+    sugars: n.sugars_g != null ? String(n.sugars_g) : '',
+    fiber: n.fiber_g != null ? String(n.fiber_g) : '',
+    fat: n.fat_g != null ? String(n.fat_g) : '',
+    saturatedFat: n.saturated_fat_g != null ? String(n.saturated_fat_g) : '',
+    proteins: n.protein_g != null ? String(n.protein_g) : '',
+    salt: n.salt_g != null ? String(n.salt_g) : '',
+    ingredientsText: snap.ingredients_text ?? '',
+    allergens: (snap.allergens ?? []).join(','),
+  };
+  return params;
+}
+
 // ── Snapshot helper ──────────────────────────────────────────────────────────
 
 /**

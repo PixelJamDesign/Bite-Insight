@@ -37,6 +37,7 @@ import {
   duplicateRecipe,
   saveRecipeFromSource,
   computeTotalWeightGrams,
+  scanResultParamsFromSnapshot,
 } from '@/lib/recipes';
 import { useAuth } from '@/lib/auth';
 import { useSubscription } from '@/lib/subscriptionContext';
@@ -688,7 +689,19 @@ export default function RecipeDetailScreen() {
             </Text>
             <View style={styles.ingList}>
               {currentRecipe.ingredients.map((ing) => (
-                <IngredientRow key={ing.id} ingredient={ing} />
+                <IngredientRow
+                  key={ing.id}
+                  ingredient={ing}
+                  onPress={() =>
+                    router.push({
+                      pathname: '/scan-result',
+                      params: scanResultParamsFromSnapshot(
+                        ing.product_snapshot,
+                        ing.barcode,
+                      ),
+                    })
+                  }
+                />
               ))}
             </View>
           </View>
@@ -1076,10 +1089,18 @@ function HouseholdMemberRow({
   );
 }
 
-function IngredientRow({ ingredient: ing }: { ingredient: RecipeIngredient }) {
+function IngredientRow({
+  ingredient: ing,
+  onPress,
+}: {
+  ingredient: RecipeIngredient;
+  /** When provided, the whole row becomes a touch target — used to
+   *  open the scan-result page for the underlying product. */
+  onPress?: () => void;
+}) {
   const snap = ing.product_snapshot;
-  return (
-    <View style={styles.ingRow}>
+  const content = (
+    <>
       <View style={styles.ingThumb}>
         {snap.image_url ? (
           <Image source={{ uri: snap.image_url }} style={styles.ingThumbImage} />
@@ -1105,8 +1126,16 @@ function IngredientRow({ ingredient: ing }: { ingredient: RecipeIngredient }) {
           {formatQuantity(Number(ing.quantity_value), ing.quantity_unit)}
         </Text>
       </View>
-    </View>
+    </>
   );
+  if (onPress) {
+    return (
+      <TouchableOpacity style={styles.ingRow} onPress={onPress} activeOpacity={0.85}>
+        {content}
+      </TouchableOpacity>
+    );
+  }
+  return <View style={styles.ingRow}>{content}</View>;
 }
 
 // ── Formatting helpers ─────────────────────────────────────────────────

@@ -41,7 +41,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '@/lib/auth';
 import { useDraftRecipe } from '@/lib/draftRecipeContext';
-import { getRecipe } from '@/lib/recipes';
+import { getRecipe, scanResultParamsFromSnapshot } from '@/lib/recipes';
 import { uploadRecipeCover } from '@/lib/supabase';
 import { formatQuantity } from '@/constants/quantityUnits';
 import { Colors, Spacing, Radius, Shadows } from '@/constants/theme';
@@ -216,6 +216,17 @@ export default function RecipeBuilderScreen() {
     } else if (source === 'scan') {
       router.push(`/(tabs)/scanner?addToRecipe=1&returnTo=${encodeURIComponent(returnTo)}` as never);
     }
+  }
+
+  // Tapping an ingredient's thumb/name area opens the scan-result
+  // screen for that product so the user can see the full household
+  // impact + dietary breakdown. Back from scan-result returns to the
+  // builder. Quantity pill keeps its own onPress (edit quantity).
+  function openIngredientScan(ing: { product_snapshot: import('@/lib/types').ProductSnapshot; barcode?: string | null }) {
+    router.push({
+      pathname: '/scan-result',
+      params: scanResultParamsFromSnapshot(ing.product_snapshot, ing.barcode ?? null),
+    });
   }
 
   // ── Cover photo picker ────────────────────────────────────────────────────
@@ -672,30 +683,36 @@ export default function RecipeBuilderScreen() {
                             >
                               {selected && <Ionicons name="checkmark" size={16} color="#fff" />}
                             </TouchableOpacity>
-                            <View style={styles.ingThumb}>
-                              {ing.product_snapshot.image_url ? (
-                                <Image
-                                  source={{ uri: ing.product_snapshot.image_url }}
-                                  style={styles.ingThumbImage}
-                                  resizeMode="cover"
-                                />
-                              ) : (
-                                <View style={styles.ingThumbNoImage}>
-                                  <Ionicons name="image-outline" size={16} color="#aad4cd" />
-                                  <Text style={styles.ingThumbNoImageText}>No image</Text>
-                                </View>
-                              )}
-                            </View>
-                            <View style={styles.ingInfo}>
-                              {ing.product_snapshot.brand && (
-                                <Text style={styles.ingBrand} numberOfLines={1}>
-                                  {ing.product_snapshot.brand}
+                            <TouchableOpacity
+                              style={styles.ingTapArea}
+                              onPress={() => openIngredientScan(ing)}
+                              activeOpacity={0.85}
+                            >
+                              <View style={styles.ingThumb}>
+                                {ing.product_snapshot.image_url ? (
+                                  <Image
+                                    source={{ uri: ing.product_snapshot.image_url }}
+                                    style={styles.ingThumbImage}
+                                    resizeMode="cover"
+                                  />
+                                ) : (
+                                  <View style={styles.ingThumbNoImage}>
+                                    <Ionicons name="image-outline" size={16} color="#aad4cd" />
+                                    <Text style={styles.ingThumbNoImageText}>No image</Text>
+                                  </View>
+                                )}
+                              </View>
+                              <View style={styles.ingInfo}>
+                                {ing.product_snapshot.brand && (
+                                  <Text style={styles.ingBrand} numberOfLines={1}>
+                                    {ing.product_snapshot.brand}
+                                  </Text>
+                                )}
+                                <Text style={styles.ingName} numberOfLines={1}>
+                                  {ing.product_snapshot.product_name}
                                 </Text>
-                              )}
-                              <Text style={styles.ingName} numberOfLines={1}>
-                                {ing.product_snapshot.product_name}
-                              </Text>
-                            </View>
+                              </View>
+                            </TouchableOpacity>
                             <TouchableOpacity
                               style={styles.ingQty}
                               onPress={() => setQuantityEditing(ing._localId)}
@@ -735,30 +752,41 @@ export default function RecipeBuilderScreen() {
                 <View style={styles.ingList}>
                   {d.ingredients.map((ing) => (
                     <View key={ing._localId} style={styles.ingRow}>
-                      <View style={styles.ingThumb}>
-                        {ing.product_snapshot.image_url ? (
-                          <Image
-                            source={{ uri: ing.product_snapshot.image_url }}
-                            style={styles.ingThumbImage}
-                            resizeMode="cover"
-                          />
-                        ) : (
-                          <View style={styles.ingThumbNoImage}>
-                            <Ionicons name="image-outline" size={16} color="#aad4cd" />
-                            <Text style={styles.ingThumbNoImageText}>No image</Text>
-                          </View>
-                        )}
-                      </View>
-                      <View style={styles.ingInfo}>
-                        {ing.product_snapshot.brand && (
-                          <Text style={styles.ingBrand} numberOfLines={1}>
-                            {ing.product_snapshot.brand}
+                      {/* Tapping the thumb + name area opens the scan-
+                          result screen so the user sees the full
+                          household impact for that product. The
+                          quantity pill keeps its own onPress for the
+                          quantity editor. */}
+                      <TouchableOpacity
+                        style={styles.ingTapArea}
+                        onPress={() => openIngredientScan(ing)}
+                        activeOpacity={0.85}
+                      >
+                        <View style={styles.ingThumb}>
+                          {ing.product_snapshot.image_url ? (
+                            <Image
+                              source={{ uri: ing.product_snapshot.image_url }}
+                              style={styles.ingThumbImage}
+                              resizeMode="cover"
+                            />
+                          ) : (
+                            <View style={styles.ingThumbNoImage}>
+                              <Ionicons name="image-outline" size={16} color="#aad4cd" />
+                              <Text style={styles.ingThumbNoImageText}>No image</Text>
+                            </View>
+                          )}
+                        </View>
+                        <View style={styles.ingInfo}>
+                          {ing.product_snapshot.brand && (
+                            <Text style={styles.ingBrand} numberOfLines={1}>
+                              {ing.product_snapshot.brand}
+                            </Text>
+                          )}
+                          <Text style={styles.ingName} numberOfLines={1}>
+                            {ing.product_snapshot.product_name}
                           </Text>
-                        )}
-                        <Text style={styles.ingName} numberOfLines={1}>
-                          {ing.product_snapshot.product_name}
-                        </Text>
-                      </View>
+                        </View>
+                      </TouchableOpacity>
                       <TouchableOpacity
                         style={styles.ingQty}
                         onPress={() => setQuantityEditing(ing._localId)}
@@ -1294,6 +1322,16 @@ const styles = StyleSheet.create({
     paddingLeft: 8,
     paddingRight: 16,
     paddingVertical: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  // Tap zone for the thumb + name section. Sits inside the row,
+  // takes the remaining flex so the quantity pill stays tappable
+  // independently. Tapping this area opens scan-result for the
+  // underlying product.
+  ingTapArea: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
