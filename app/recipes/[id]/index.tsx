@@ -58,8 +58,6 @@ import {
 } from '@/lib/householdImpact';
 import { supabase } from '@/lib/supabase';
 import ArrowLeftIcon from '@/assets/icons/recipe-header/arrow-left.svg';
-import ThumbOutlineIcon from '@/assets/icons/recipe-header/thumb-outline.svg';
-import ThumbFilledIcon from '@/assets/icons/recipe-header/thumb-filled.svg';
 import LikeThumbIcon from '@/assets/icons/recipe-header/like-thumb.svg';
 import type {
   FamilyProfile,
@@ -449,7 +447,6 @@ export default function RecipeDetailScreen() {
   const isPublic = currentRecipe.visibility === 'public';
   const isOwner = session?.user?.id === currentRecipe.user_id;
   const showLikesCounter = isPublic;
-  const showLikeButton = isPublic && !isOwner;
 
   return (
     <View style={styles.safe}>
@@ -482,27 +479,6 @@ export default function RecipeDetailScreen() {
         >
           <ArrowLeftIcon width={18} height={14} />
         </TouchableOpacity>
-        {/* Heart button — only for viewers on public recipes. Sits to
-            the left of the ellipsis so the ellipsis stays anchored
-            top-right. */}
-        {showLikeButton && (
-          <TouchableOpacity
-            style={[
-              styles.headerBtn,
-              styles.headerBtnLike,
-              { top: insets.top + 12 },
-            ]}
-            onPress={handleToggleLike}
-            activeOpacity={0.85}
-            hitSlop={8}
-          >
-            {liked ? (
-              <ThumbFilledIcon width={22} height={24} />
-            ) : (
-              <ThumbOutlineIcon width={22} height={24} />
-            )}
-          </TouchableOpacity>
-        )}
         <TouchableOpacity
           style={[styles.headerBtn, styles.headerBtnRight, { top: insets.top + 12 }]}
           onPress={() => setActionsOpen(true)}
@@ -522,12 +498,22 @@ export default function RecipeDetailScreen() {
             <View style={styles.authorRow}>
               <Text style={styles.author}>By {authorName}</Text>
               {showLikesCounter && (
-                <View style={styles.likesPill}>
+                // The pill itself is the like toggle for viewers —
+                // no separate heart button on the hero. Owners see
+                // the same pill read-only (they can't like their
+                // own recipe), so the tap is gated on !isOwner.
+                <TouchableOpacity
+                  style={[styles.likesPill, liked && styles.likesPillActive]}
+                  onPress={handleToggleLike}
+                  activeOpacity={isOwner ? 1 : 0.7}
+                  disabled={isOwner}
+                  hitSlop={6}
+                >
                   <LikeThumbIcon width={14} height={15} />
                   <Text style={styles.likesPillText}>
                     {likeCount} {likeCount === 1 ? 'like' : 'likes'}
                   </Text>
-                </View>
+                </TouchableOpacity>
               )}
             </View>
           </View>
@@ -1154,9 +1140,6 @@ const styles = StyleSheet.create({
   },
   headerBtnLeft: { left: 16 },
   headerBtnRight: { right: 16 },
-  // The like heart sits 16 + 48 + 12 = 76px from the right edge so it
-  // doesn't overlap the ellipsis button when both are showing.
-  headerBtnLike: { right: 76 },
 
   // Bottom sheet wrapper for all content below the hero
   sheet: {
@@ -1204,6 +1187,11 @@ const styles = StyleSheet.create({
     paddingRight: 6,
     paddingVertical: 4,
     borderRadius: 8,
+  },
+  // Slight visual nudge when the viewer has liked this recipe —
+  // keeps the same layout dimensions so nothing shifts on tap.
+  likesPillActive: {
+    backgroundColor: '#c8e4dd',
   },
   likesPillText: {
     fontSize: 13,
