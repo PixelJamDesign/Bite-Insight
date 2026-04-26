@@ -366,12 +366,11 @@ const styles = StyleSheet.create({
   },
   // Right-side stack inside cardHeader: the kind-of-update badge
   // sits on top, the Plus chip drops in underneath when the
-  // feature is Plus-only. alignItems:flex-start keeps both pills
-  // hugging the left edge of the column so the chip lines up
-  // with the badge instead of stretching full width.
+  // feature is Plus-only. alignItems:flex-end so both pills hug
+  // the right edge of the card.
   cardHeaderTags: {
     flexDirection: 'column',
-    alignItems: 'flex-start',
+    alignItems: 'flex-end',
     gap: 6,
   },
   cardTitle: {
