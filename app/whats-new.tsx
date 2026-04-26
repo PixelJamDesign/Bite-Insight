@@ -92,14 +92,14 @@ const CARDS: CardData[] = [
   },
   {
     badge: 'New feature!',
-    title: 'Flagged ingredients for family members',
+    title: 'Family-aware recipe insights',
     plus: true,
     description:
       "Cooking for the household? Tap any family member on a recipe to see which ingredients to watch for them and whether the meal's a good fit.",
   },
   {
     badge: 'New feature!',
-    title: 'Family-aware recipe insights',
+    title: 'Flagged ingredients for family members',
     plus: true,
     description:
       "Set liked, disliked and flagged ingredients for each person in your family. Scans and recipes then warn you about things that don't suit them, separately from your own list.",
