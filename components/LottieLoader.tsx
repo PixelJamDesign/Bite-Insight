@@ -17,7 +17,7 @@ interface LottieLoaderProps {
   type?: AnimationType;
   /** Optional message below the animation */
   message?: string;
-  /** Animation size (width & height) — default 120 */
+  /** Animation size (width & height) — default 48 */
   size?: number;
   /** Fill the entire screen (centered) — default true */
   fullScreen?: boolean;
@@ -30,7 +30,7 @@ interface LottieLoaderProps {
 export function LottieLoader({
   type = 'loading',
   message,
-  size = 120,
+  size = 48,
   fullScreen = true,
   loop = true,
   onAnimationFinish,
@@ -39,13 +39,16 @@ export function LottieLoader({
 
   return (
     <View style={containerStyle}>
-      <LottieView
-        source={ANIMATIONS[type]}
-        autoPlay
-        loop={loop}
-        onAnimationFinish={onAnimationFinish}
-        style={{ width: size, height: size }}
-      />
+      <View style={{ width: size, height: size, overflow: 'hidden' }}>
+        <LottieView
+          source={ANIMATIONS[type]}
+          autoPlay
+          loop={loop}
+          onAnimationFinish={onAnimationFinish}
+          resizeMode="contain"
+          style={{ width: size, height: size }}
+        />
+      </View>
       {message ? <Text style={styles.message}>{message}</Text> : null}
     </View>
   );

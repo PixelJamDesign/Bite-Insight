@@ -1336,12 +1336,12 @@ const styles = StyleSheet.create({
     letterSpacing: -0.4,
   },
   sectionSubtitle: {
-    fontSize: 14,
-    lineHeight: 21,
+    fontSize: 16,
+    lineHeight: 24,
     fontWeight: '300',
     fontFamily: 'Figtree_300Light',
     color: Colors.secondary,
-    letterSpacing: -0.14,
+    letterSpacing: 0,
     marginTop: -8, // sit closer to the title
   },
   // Inline bold emphasis inside a sectionSubtitle Text — used for

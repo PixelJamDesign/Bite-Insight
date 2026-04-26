@@ -30,12 +30,7 @@ import {
   Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {
-  NestableScrollContainer,
-  NestableDraggableFlatList,
-  ScaleDecorator,
-  type RenderItemParams,
-} from 'react-native-draggable-flatlist';
+import { NestableScrollContainer } from 'react-native-draggable-flatlist';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
@@ -223,12 +218,6 @@ export default function RecipeBuilderScreen() {
   const [timePicker, setTimePicker] = useState<'prep' | 'cook' | null>(null);
   const [ingredientsEditMode, setIngredientsEditMode] = useState(false);
   const [selectedIngredientIds, setSelectedIngredientIds] = useState<Set<string>>(new Set());
-  // While an ingredient is mid-drag we have to manually freeze the
-  // outer NestableScrollContainer — the library's auto-coordination
-  // doesn't always engage in this nested setup, so the page scrolls
-  // along with the finger and the row never becomes the active drag
-  // target. Toggling scrollEnabled is the documented workaround.
-  const [isDraggingIngredient, setIsDraggingIngredient] = useState(false);
 
   function toggleIngredientSelected(localId: string) {
     setSelectedIngredientIds((prev) => {
@@ -510,7 +499,6 @@ export default function RecipeBuilderScreen() {
           contentContainerStyle={{ paddingBottom: 140 }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
-          scrollEnabled={!isDraggingIngredient}
         >
           {/* ── Hero cover ─────────────────────────────────────────────── */}
           <TouchableOpacity
@@ -828,119 +816,73 @@ export default function RecipeBuilderScreen() {
                   <Text style={styles.emptyCardText}>Add an ingredient</Text>
                 </TouchableOpacity>
               ) : ingredientsEditMode ? (
-                <NestableDraggableFlatList
-                  data={d.ingredients}
-                  keyExtractor={(ing) => ing._localId}
-                  onDragBegin={() => setIsDraggingIngredient(true)}
-                  onRelease={() => setIsDraggingIngredient(false)}
-                  onDragEnd={({ from, to }) => {
-                    setIsDraggingIngredient(false);
-                    if (from !== to) draft.reorderIngredient(from, to);
-                  }}
-                  activationDistance={0}
-                  // Disable the library's edge-autoscroll. With a
-                  // NestableScrollContainer parent, autoscroll triggers
-                  // a page scroll the moment the grabbed row is near
-                  // the viewport edge — which on a half-filled screen
-                  // is most of the time, so the page slid up as soon
-                  // as you touched the handle.
-                  autoscrollThreshold={0}
-                  autoscrollSpeed={0}
-                  ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
-                  containerStyle={styles.ingList}
-                  renderItem={({ item: ing, drag, isActive }: RenderItemParams<typeof d.ingredients[number]>) => {
+                /* Edit mode — checkbox + delete-glyph rows. Drag-to-
+                   reorder is intentionally disabled: the gesture
+                   competed with the parent scroll and the experience
+                   was unreliable. We'll revisit reorder later. */
+                <View style={styles.ingList}>
+                  {d.ingredients.map((ing) => {
                     const selected = selectedIngredientIds.has(ing._localId);
                     return (
-                      <ScaleDecorator>
-                        <View style={[styles.ingEditWrap, isActive && styles.ingRowActive]}>
-                          <View style={[styles.ingRow, styles.ingRowFlex]}>
-                            <TouchableOpacity
-                              style={[styles.checkbox, selected && styles.checkboxChecked]}
-                              onPress={() => toggleIngredientSelected(ing._localId)}
-                              activeOpacity={0.7}
-                            >
-                              {selected && <Ionicons name="checkmark" size={16} color="#fff" />}
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                              style={styles.ingTapArea}
-                              onPress={() => openIngredientScan(ing)}
-                              activeOpacity={0.85}
-                            >
-                              <View style={styles.ingThumb}>
-                                {ing.product_snapshot.image_url ? (
-                                  <Image
-                                    source={{ uri: ing.product_snapshot.image_url }}
-                                    style={styles.ingThumbImage}
-                                    resizeMode="cover"
-                                  />
-                                ) : (
-                                  <View style={styles.ingThumbNoImage}>
-                                    <Ionicons name="image-outline" size={16} color="#aad4cd" />
-                                    <Text style={styles.ingThumbNoImageText}>No image</Text>
-                                  </View>
-                                )}
+                      <View key={ing._localId} style={styles.ingRow}>
+                        <TouchableOpacity
+                          style={[styles.checkbox, selected && styles.checkboxChecked]}
+                          onPress={() => toggleIngredientSelected(ing._localId)}
+                          activeOpacity={0.7}
+                        >
+                          {selected && <Ionicons name="checkmark" size={16} color="#fff" />}
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.ingTapArea}
+                          onPress={() => openIngredientScan(ing)}
+                          activeOpacity={0.85}
+                        >
+                          <View style={styles.ingThumb}>
+                            {ing.product_snapshot.image_url ? (
+                              <Image
+                                source={{ uri: ing.product_snapshot.image_url }}
+                                style={styles.ingThumbImage}
+                                resizeMode="cover"
+                              />
+                            ) : (
+                              <View style={styles.ingThumbNoImage}>
+                                <Ionicons name="image-outline" size={16} color="#aad4cd" />
+                                <Text style={styles.ingThumbNoImageText}>No image</Text>
                               </View>
-                              <View style={styles.ingInfo}>
-                                {ing.product_snapshot.brand && (
-                                  <Text style={styles.ingBrand} numberOfLines={1}>
-                                    {ing.product_snapshot.brand}
-                                  </Text>
-                                )}
-                                <Text style={styles.ingName} numberOfLines={2}>
-                                  {ing.product_snapshot.product_name}
-                                </Text>
-                              </View>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                              style={styles.ingQty}
-                              onPress={() => setQuantityEditing(ing._localId)}
-                              activeOpacity={0.75}
-                            >
-                              <Text style={styles.ingQtyText}>
-                                {formatQuantity(ing.quantity_value, ing.quantity_unit)}
-                              </Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                              style={styles.ingDeleteGlyph}
-                              onPress={() => draft.removeIngredient(ing._localId)}
-                              activeOpacity={0.7}
-                              hitSlop={8}
-                            >
-                              <Ionicons name="trash-outline" size={20} color={Colors.secondary} />
-                            </TouchableOpacity>
+                            )}
                           </View>
-                          {/* Drag handle — onPressIn starts the drag
-                              immediately so the gesture isn't stolen by
-                              the parent NestableScrollContainer. Using
-                              onLongPress here would let the scroll win
-                              if the user begins moving before the long-
-                              press timer fires. */}
-                          <TouchableOpacity
-                            style={styles.gripBtn}
-                            // Freeze the parent scroll the instant the
-                            // user touches the handle, so the ScrollView
-                            // can't claim the gesture before the long-
-                            // press confirms drag intent.
-                            onPressIn={() => setIsDraggingIngredient(true)}
-                            onPressOut={() => {
-                              // Only release if a drag never actually
-                              // started (the FlatList's own onDragEnd
-                              // handles the post-drag release).
-                              if (!isActive) setIsDraggingIngredient(false);
-                            }}
-                            onLongPress={drag}
-                            delayLongPress={200}
-                            disabled={isActive}
-                            activeOpacity={0.6}
-                            hitSlop={8}
-                          >
-                            <Ionicons name="reorder-three-outline" size={22} color={Colors.secondary} />
-                          </TouchableOpacity>
-                        </View>
-                      </ScaleDecorator>
+                          <View style={styles.ingInfo}>
+                            {ing.product_snapshot.brand && (
+                              <Text style={styles.ingBrand} numberOfLines={1}>
+                                {ing.product_snapshot.brand}
+                              </Text>
+                            )}
+                            <Text style={styles.ingName} numberOfLines={2}>
+                              {ing.product_snapshot.product_name}
+                            </Text>
+                          </View>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.ingQty}
+                          onPress={() => setQuantityEditing(ing._localId)}
+                          activeOpacity={0.75}
+                        >
+                          <Text style={styles.ingQtyText}>
+                            {formatQuantity(ing.quantity_value, ing.quantity_unit)}
+                          </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.ingDeleteGlyph}
+                          onPress={() => draft.removeIngredient(ing._localId)}
+                          activeOpacity={0.7}
+                          hitSlop={8}
+                        >
+                          <Ionicons name="trash-outline" size={20} color={Colors.secondary} />
+                        </TouchableOpacity>
+                      </View>
                     );
-                  }}
-                />
+                  })}
+                </View>
               ) : (
                 <View style={styles.ingList}>
                   {d.ingredients.map((ing) => (
@@ -1264,12 +1206,12 @@ const styles = StyleSheet.create({
     color: Colors.primary,
   },
   bodySmall: {
-    fontSize: 14,
-    lineHeight: 21,
+    fontSize: 16,
+    lineHeight: 24,
     fontWeight: '300',
     fontFamily: 'Figtree_300Light',
     color: Colors.secondary,
-    letterSpacing: -0.14,
+    letterSpacing: 0,
   },
 
   // Grouping helpers
@@ -1284,12 +1226,12 @@ const styles = StyleSheet.create({
   sectionHeaderText: { flex: 1, gap: 4 },
   countRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', gap: 4 },
   countBold: {
-    fontSize: 13,
-    lineHeight: 16,
+    fontSize: 16,
+    lineHeight: 24,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
-    letterSpacing: -0.26,
+    letterSpacing: 0,
   },
 
   // Recipe name input
@@ -1516,13 +1458,13 @@ const styles = StyleSheet.create({
   },
 
   // Ingredient rows (Figma: 76px tall, #f5fbfb, #aad4cd border, 8 radius)
-  ingList: { gap: 8 },
+  ingList: { gap: 8, overflow: 'visible' },
   ingRow: {
     backgroundColor: '#f5fbfb',
     borderRadius: Radius.m,
     borderWidth: 1,
     borderColor: '#aad4cd',
-    height: 76,
+    minHeight: 76,
     paddingLeft: 8,
     paddingRight: 16,
     paddingVertical: 8,
@@ -1624,6 +1566,8 @@ const styles = StyleSheet.create({
   // Edit-mode row wrapper with trailing grip
   ingRowActive: {
     opacity: 0.95,
+    zIndex: 999,
+    elevation: 8,
     ...Shadows.level3,
   },
   // Applied to the row when it sits next to the drag handle in edit mode —
