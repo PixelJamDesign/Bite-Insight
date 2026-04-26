@@ -700,6 +700,11 @@ export default function ScanResultScreen() {
     ingredientsJson: string;
     offLang: string;
     offRegion: string;
+    /** When '1', skip the background scan-history write. Used when
+     *  the user opened scan-result by tapping an ingredient row in
+     *  a recipe — that's a "view product" gesture, not a real scan,
+     *  so it shouldn't pollute their scan history. */
+    noSave: string;
   }>();
 
   const { activeFamilyId } = useActiveFamily();
@@ -1071,8 +1076,11 @@ export default function ScanResultScreen() {
             offLang: hasEnglishText ? 'en' : (op.lang || op.lc || 'en'),
           }).catch(() => {});
 
-          // Save/update Supabase scan history with the product info (fire-and-forget)
-          if (session?.user?.id) {
+          // Save/update Supabase scan history with the product info
+          // (fire-and-forget). Skipped when noSave='1' — set when the
+          // user opened scan-result by tapping an ingredient row in
+          // a recipe, since that's a view gesture, not a real scan.
+          if (session?.user?.id && p.noSave !== '1') {
             const resolvedName = fetchedProductName || p.productName;
             const saveScan = async (attempt = 0): Promise<void> => {
               try {

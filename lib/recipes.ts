@@ -531,6 +531,11 @@ export function scanResultParamsFromSnapshot(
     // Defensive: older snapshots have allergens stored as strings or
     // unexpected shapes — coerce to a real array before .join.
     allergens: Array.isArray(snap.allergens) ? snap.allergens.join(',') : '',
+    // Tells scan-result NOT to write a row to the user's scan history
+    // — opening from a recipe ingredient is a "view it" gesture, not
+    // a "scan it" event. Without this every tappable ingredient would
+    // pollute the history with a phantom entry.
+    noSave: '1',
   };
   return params;
 }

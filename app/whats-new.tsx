@@ -74,36 +74,39 @@ interface CardData {
 
 const CARDS: CardData[] = [
   {
-    badge: 'Improvement',
-    title: 'Smarter Nutrient Watchlist',
+    badge: 'New feature!',
+    title: 'Your recipe book',
     description:
-      'Your nutrient watchlist is now clinically validated with more accurate values, updated thresholds, and newly supported nutrients across 30+ conditions.',
-  },
-  {
-    badge: 'Improvement',
-    title: 'Improved Scanning',
-    description:
-      'Scan results are now clearer and more informative, with better product recognition and streamlined history.',
+      "Build your own recipes from the foods you scan. Add ingredients by scan, search or from your history, adjust servings, and watch live nutrition and an estimated Nutri-score update as you go.",
   },
   {
     badge: 'New feature!',
-    title: 'Date of Birth',
+    title: 'Family-aware recipes',
     description:
-      'Now you can easily pick your exact birth date which means no more yearly updates needed, making things simpler for you.',
+      "Every recipe shows how it lands for each person in your household. Tap a family member for flagged ingredients, allergen warnings and a clear Good / Ok / Warning verdict based on their health profile.",
   },
   {
-    badge: 'New Additions!',
-    title: 'New Conditions, Allergies & Diets',
+    badge: 'New feature!',
+    title: 'Community recipes',
     description:
-      'You spoke, and we listened. We have updated the health conditions, allergies and diets to now include:',
+      "Plus members can share their recipes to the community and discover others — like your favourites with a tap and save them straight to your own book.",
+  },
+  {
+    badge: 'New additions!',
+    title: 'More conditions, diets and profile options',
+    description:
+      "More ways to tell us about you so the app can tailor itself properly:",
     subsections: [
-      { heading: 'Health Conditions', bullets: ['Fibromyalgia'] },
-      {
-        heading: 'Allergies',
-        bullets: ['Dairy Allergy', 'Aloe Vera Allergy', 'Raspberry Allergy'],
-      },
-      { heading: 'Dietary Preferences', bullets: ['Mediterranean Diet'] },
+      { heading: 'Health Conditions', bullets: ['No Gallbladder', 'IBS (with subtype)', 'Pregnancy'] },
+      { heading: 'Dietary Preferences', bullets: ['Halal (with auto-detection)', 'Low Fibre'] },
+      { heading: 'Profile', bullets: ['Date of birth instead of age', 'Family ingredient preferences'] },
     ],
+  },
+  {
+    badge: 'Improvement',
+    title: 'Smarter detection and pricing',
+    description:
+      "Flagged ingredients are now caught even when the product is the ingredient itself (think a product literally called 'Sugar'). Plus subscription prices come straight from the App Store / Google Play so what you see always matches what you pay.",
   },
 ];
 
@@ -172,7 +175,10 @@ export default function WhatsNewScreen() {
         {/* ── Cards ── */}
         <View style={styles.cardsContainer}>
           {CARDS.map((card, i) => {
-            const IconComponent = CARD_ICONS[i];
+            // Cycle through the icon set when CARDS has more entries
+            // than CARD_ICONS — a future card never crashes for want
+            // of a matching icon.
+            const IconComponent = CARD_ICONS[i % CARD_ICONS.length];
             return (
             <View key={i} style={styles.card}>
               {/* Icon + Badge row */}

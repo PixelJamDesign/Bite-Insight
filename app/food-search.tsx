@@ -59,6 +59,13 @@ interface SearchProduct {
   nutriments?: Record<string, number | undefined>;
   allergens_tags?: string[];
   ingredients?: Array<{ id?: string; text?: string }>;
+  /** OFF-reported completeness score 0–1 (1 = fully filled in).
+   *  Used as the dominant tiebreaker between equally-named matches
+   *  so the most complete entry surfaces first. */
+  completeness?: number;
+  /** Number of unique scans the product has racked up — proxy for
+   *  how "real" / popular it is. */
+  unique_scans_n?: number;
 }
 
 // Adaptive debounce — adjusts based on actual typing speed
@@ -66,8 +73,11 @@ const DEBOUNCE_MIN = 300;   // fastest typists
 const DEBOUNCE_MAX = 800;   // slowest typists
 const DEBOUNCE_DEFAULT = 450;
 const PAGE_SIZE = 10;
+// completeness + unique_scans_n drive the data-quality tiebreaker
+// in scoreRelevance. Without them every result tied on completeness
+// = 0 and we'd surface whichever entry the API ranked first.
 const SEARCH_FIELDS =
-  'code,product_name,brands,image_front_small_url,nutriscore_grade,quantity,nutriments,allergens_tags,ingredients';
+  'code,product_name,brands,image_front_small_url,nutriscore_grade,quantity,nutriments,allergens_tags,ingredients,completeness,unique_scans_n';
 // Search-a-Licious API — Elasticsearch-backed, much faster than the old CGI endpoint
 const SEARCH_API = 'https://search.openfoodfacts.org/search';
 // Fallback to classic CGI if Search-a-Licious fails
@@ -255,12 +265,22 @@ export default function FoodSearchScreen() {
     }
 
     // ── Data quality & popularity bonuses ──
-    if (product.image_front_small_url) score += 200;
-    if (product.nutriscore_grade) score += 100;
+    // Comp is the single biggest tiebreaker (up to ~10k) because
+    // when two results are equally well-named ("Mars bar" vs "Mars
+    // bar") the user wants the one with actual nutrition + ingredients
+    // data, not the empty ghost row. Image / nutriscore presence are
+    // treated as proxies for completeness too. Popularity (unique
+    // scans) gets a smaller boost just enough to break ties between
+    // two equally-complete entries.
     const comp = product.completeness ?? 0;
-    score += Math.round(comp * 150);
+    score += Math.round(comp * 10000);
+    if (product.image_front_small_url) score += 1500;
+    if (product.nutriscore_grade) score += 1200;
+    if (product.ingredients && product.ingredients.length > 0) score += 1000;
+    const hasNutrition = product.nutriments && Object.keys(product.nutriments).length > 0;
+    if (hasNutrition) score += 800;
     const scans = product.unique_scans_n ?? 0;
-    if (scans > 0) score += Math.min(Math.round(Math.log10(scans) * 50), 250);
+    if (scans > 0) score += Math.min(Math.round(Math.log10(scans) * 100), 600);
 
     return score;
   }
