@@ -191,22 +191,23 @@ export default function WhatsNewScreen() {
             const IconComponent = CARD_ICONS[i % CARD_ICONS.length];
             return (
             <View key={i} style={styles.card}>
-              {/* Icon + Badge row */}
+              {/* Icon + Badge row. Plus chip sits stacked under the
+                  badge for Plus-only features so it reads as a
+                  qualifier on the badge itself. */}
               <View style={styles.cardHeader}>
                 <View style={styles.iconCircle}>
                   <IconComponent width={28} height={28} />
                 </View>
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>{card.badge}</Text>
+                <View style={styles.cardHeaderTags}>
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>{card.badge}</Text>
+                  </View>
+                  {card.plus && <PlusBadge size="small" />}
                 </View>
               </View>
 
-              {/* Title — Plus chip sits inline next to it for
-                  Plus-only features. */}
-              <View style={styles.cardTitleRow}>
-                <Text style={styles.cardTitle}>{card.title}</Text>
-                {card.plus && <PlusBadge size="small" />}
-              </View>
+              {/* Title */}
+              <Text style={styles.cardTitle}>{card.title}</Text>
 
               {/* Description */}
               <Text style={styles.cardDesc}>{card.description}</Text>
@@ -363,15 +364,15 @@ const styles = StyleSheet.create({
     letterSpacing: -0.26,
     color: Colors.primary,
   },
-  // Title + optional Plus chip on the same row. flexShrink:1 on
-  // the title lets long titles wrap before pushing the chip off
-  // the right edge.
-  cardTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: Spacing.xxs,
+  // Right-side stack inside cardHeader: the kind-of-update badge
+  // sits on top, the Plus chip drops in underneath when the
+  // feature is Plus-only. alignItems:flex-start keeps both pills
+  // hugging the left edge of the column so the chip lines up
+  // with the badge instead of stretching full width.
+  cardHeaderTags: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: 6,
   },
   cardTitle: {
     fontSize: 20,
@@ -380,7 +381,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_700Bold',
     letterSpacing: -0.4,
     color: Colors.primary,
-    flexShrink: 1,
+    marginBottom: Spacing.xxs,
   },
   cardDesc: {
     fontSize: 16,
