@@ -20,18 +20,10 @@ const LABELS: Record<DerivedDietaryTag, string> = {
   nutFree: 'Nut free',
 };
 
-// Map each derived tag to a background colour from the theme. Some
-// tags don't have a dedicated theme entry yet (dairyFree, nutFree)
-// so they fall back to a neutral mint.
-const FALLBACK_BG = '#b8dfd6';
-const TAG_BG: Record<DerivedDietaryTag, string> = {
-  vegan: Colors.dietary.vegan,
-  vegetarian: Colors.dietary.vegetarian,
-  pescatarian: Colors.dietary.pescatarian,
-  'gluten-free': Colors.dietary.glutenFree,
-  dairyFree: FALLBACK_BG,
-  nutFree: FALLBACK_BG,
-};
+// Single mint chip background for every dietary tag — matches the
+// existing <DietaryTag> component used elsewhere in the app, so the
+// visual language is consistent.
+const CHIP_BG = '#b8dfd6';
 
 interface Props {
   tags: DerivedDietaryTag[];
@@ -59,7 +51,7 @@ export function DietaryTagsRow({ tags, max, size = 'compact' }: Props) {
           key={tag}
           style={[
             isCompact ? styles.chipCompact : styles.chip,
-            { backgroundColor: TAG_BG[tag] ?? FALLBACK_BG },
+            { backgroundColor: CHIP_BG },
           ]}
         >
           <Text style={isCompact ? styles.labelCompact : styles.label}>
