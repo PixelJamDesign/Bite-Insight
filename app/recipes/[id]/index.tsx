@@ -58,6 +58,8 @@ import {
   findRecipeAllergenMatches,
 } from '@/lib/householdImpact';
 import { supabase } from '@/lib/supabase';
+import { deriveDietaryTags } from '@/lib/dietaryTags';
+import { DietaryTagsRow } from '@/components/DietaryTagsRow';
 import ArrowLeftIcon from '@/assets/icons/recipe-header/arrow-left.svg';
 import LikeThumbIcon from '@/assets/icons/recipe-header/like-thumb.svg';
 import type {
@@ -562,6 +564,16 @@ export default function RecipeDetailScreen() {
               )}
             </View>
           </View>
+
+          {/* Auto-derived dietary tags — Vegetarian, Gluten free etc.
+              based on the recipe's ingredients. Hidden when the
+              ingredient data is too sparse to be sure of anything. */}
+          {(() => {
+            const tags = deriveDietaryTags(currentRecipe.ingredients);
+            return tags.length > 0 ? (
+              <DietaryTagsRow tags={tags} size="regular" />
+            ) : null;
+          })()}
 
           {/* Recipe metrics */}
           <View style={styles.metricsRow}>

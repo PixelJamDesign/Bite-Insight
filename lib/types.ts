@@ -206,6 +206,11 @@ export interface Recipe {
   source_recipe_id: string | null;
   created_at: string;
   updated_at: string;
+  /** When fetched via listRecipes / listPublicRecipes, each row
+   *  carries a thin slice of its ingredients (just the product
+   *  snapshot) so cards can derive dietary tags without a
+   *  follow-up fetch. Absent on rows fetched by other paths. */
+  ingredients?: Array<{ product_snapshot: ProductSnapshot }>;
 }
 
 /**

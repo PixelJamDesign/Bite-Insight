@@ -177,11 +177,15 @@ export function computeRecipeNutriscore(
 
 // ── CRUD ─────────────────────────────────────────────────────────────────────
 
-/** Lists the current user's recipes, most recently updated first. */
+/** Lists the current user's recipes, most recently updated first.
+ *  Embeds each ingredient's product_snapshot so the card can derive
+ *  dietary tags client-side without a follow-up fetch per recipe.
+ *  Snapshots are JSONB blobs so the embed is cheap; we don't pull
+ *  the rest of the recipe_ingredients row. */
 export async function listRecipes(userId: string): Promise<Recipe[]> {
   const { data, error } = await supabase
     .from('recipes')
-    .select('*')
+    .select('*, ingredients:recipe_ingredients(product_snapshot)')
     .eq('user_id', userId)
     .order('updated_at', { ascending: false });
 
@@ -434,7 +438,11 @@ export async function duplicateRecipe(
 export async function listPublicRecipes(excludeUserId?: string): Promise<PublicRecipe[]> {
   let query = supabase
     .from('recipes')
-    .select('*, author:profiles!recipes_user_id_fkey(full_name, avatar_url)')
+    .select(
+      '*, ' +
+        'author:profiles!recipes_user_id_fkey(full_name, avatar_url), ' +
+        'ingredients:recipe_ingredients(product_snapshot)',
+    )
     .eq('visibility', 'public')
     .order('like_count', { ascending: false })
     .order('updated_at', { ascending: false })
@@ -449,7 +457,9 @@ export async function listPublicRecipes(excludeUserId?: string): Promise<PublicR
     console.warn('[recipes] listPublicRecipes error:', error.message);
     return [];
   }
-  return (data ?? []) as PublicRecipe[];
+  // Supabase's generated types fight the embedded join + alias here,
+  // so route through `unknown` to land on PublicRecipe[].
+  return ((data ?? []) as unknown) as PublicRecipe[];
 }
 
 /**

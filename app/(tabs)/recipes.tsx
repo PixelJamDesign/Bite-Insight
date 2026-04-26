@@ -32,6 +32,8 @@ import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { NUTRISCORE_COLORS } from '@/lib/nutriscore';
 import type { Recipe, PublicRecipe } from '@/lib/types';
+import { deriveDietaryTags } from '@/lib/dietaryTags';
+import { DietaryTagsRow } from '@/components/DietaryTagsRow';
 import LikeThumbIcon from '@/assets/icons/recipe-header/like-thumb.svg';
 
 type TabKey = 'my' | 'community';
@@ -391,6 +393,13 @@ function RecipeCard({
   const author = isCommunity ? (recipe as PublicRecipe).author : null;
   const authorName = author?.full_name?.trim() || 'Anonymous';
   const likeCount = (recipe.like_count ?? 0) + (likeCountOverride ?? 0);
+  // Auto-derived dietary tags from the embedded ingredient snapshots.
+  // Empty array if the row was fetched without ingredients (other
+  // call sites use plain Recipe rows) — DietaryTagsRow renders
+  // nothing in that case, so it's safe to call unconditionally.
+  const dietaryTags = recipe.ingredients
+    ? deriveDietaryTags(recipe.ingredients)
+    : [];
 
   // DEV diagnostic — remove once the community avatar is confirmed
   // rendering on-device. Logs exactly what the card receives so we
@@ -461,6 +470,9 @@ function RecipeCard({
           <Text style={styles.cardName} numberOfLines={2}>
             {recipe.name}
           </Text>
+          {dietaryTags.length > 0 && (
+            <DietaryTagsRow tags={dietaryTags} max={3} size="compact" />
+          )}
           {isCommunity ? (
             <Text style={styles.cardByLine}>by {authorName}</Text>
           ) : (
