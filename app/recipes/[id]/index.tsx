@@ -543,14 +543,22 @@ export default function RecipeDetailScreen() {
             <View style={styles.authorRow}>
               <Text style={styles.author}>By {authorName}</Text>
               {showLikesCounter && (
-                // Read-only counter. The actual like/unlike action
-                // lives in the Recipe Actions sheet (viewer variant).
-                <View style={[styles.likesPill, liked && styles.likesPillActive]}>
+                // Tap-to-toggle for viewers; read-only display for the
+                // owner (you can't like your own recipe). The same
+                // action also lives in the Recipe Actions sheet so
+                // there are two natural entry points.
+                <TouchableOpacity
+                  style={[styles.likesPill, liked && styles.likesPillActive]}
+                  onPress={handleToggleLike}
+                  activeOpacity={isOwner ? 1 : 0.7}
+                  disabled={isOwner}
+                  hitSlop={6}
+                >
                   <LikeThumbIcon width={14} height={15} />
                   <Text style={styles.likesPillText}>
                     {likeCount} {likeCount === 1 ? 'like' : 'likes'}
                   </Text>
-                </View>
+                </TouchableOpacity>
               )}
             </View>
           </View>
