@@ -11,10 +11,11 @@ import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Path } from 'react-native-svg';
-import UpdateBulbIcon from '../assets/icons/update_bulb.svg';
-import UpdateScannerIcon from '../assets/icons/update_scanner.svg';
-import UpdateBalloonIcon from '../assets/icons/update_balloon.svg';
-import UpdateUserIcon from '../assets/icons/update_user.svg';
+import RecipeBookIcon from '@/assets/icons/whats-new/recipe-book.svg';
+import CommunityIcon from '@/assets/icons/whats-new/community.svg';
+import FamilyInsightsIcon from '@/assets/icons/whats-new/family-insights.svg';
+import FlagIcon from '@/assets/icons/whats-new/flag.svg';
+import ProfileAdditionsIcon from '@/assets/icons/whats-new/profile-additions.svg';
 import Constants from 'expo-constants';
 import { useTranslation } from 'react-i18next';
 import { Colors, Spacing, Radius, Shadows } from '@/constants/theme';
@@ -51,8 +52,8 @@ function getGreeting(tc: (key: string) => string): string {
   return tc('greeting.evening');
 }
 
-// ── Card icon SVGs (exported from Figma → assets/icons/update_*.svg) ────────
-const CARD_ICONS = [UpdateBulbIcon, UpdateScannerIcon, UpdateBalloonIcon, UpdateUserIcon];
+// ── Card icon SVGs (exported from Figma node 4904:71593) ────────────────────
+type CardIcon = React.FC<{ width?: number; height?: number }>;
 
 // ── Bullet marker (teal circle + dark lightning bolt, per Figma design) ─────
 function BulletMarker({ size = 18 }: { size?: number }) {
@@ -74,12 +75,16 @@ interface CardData {
   /** When true, the Plus chip sits next to the title to flag the
    *  feature as Plus-only. */
   plus?: boolean;
+  /** Bespoke icon for this card. Each card has its own glyph
+   *  rather than cycling a shared set. */
+  icon: CardIcon;
 }
 
 const CARDS: CardData[] = [
   {
     badge: 'New feature!',
     title: 'Your recipe book',
+    icon: RecipeBookIcon,
     description:
       "Build recipes from the foods you scan. Drop in ingredients, set the servings, and the nutrition totals itself up as you go.",
   },
@@ -87,6 +92,7 @@ const CARDS: CardData[] = [
     badge: 'New feature!',
     title: 'Community recipes',
     plus: true,
+    icon: CommunityIcon,
     description:
       "Post your recipes for everyone to see, and pinch ones you like the look of. Tap the heart on the cards you love and save the keepers to your own book.",
   },
@@ -94,6 +100,7 @@ const CARDS: CardData[] = [
     badge: 'New feature!',
     title: 'Family-aware recipe insights',
     plus: true,
+    icon: FamilyInsightsIcon,
     description:
       "Cooking for the household? Tap any family member on a recipe to see which ingredients to watch for them and whether the meal's a good fit.",
   },
@@ -101,12 +108,14 @@ const CARDS: CardData[] = [
     badge: 'New feature!',
     title: 'Flagged ingredients for family members',
     plus: true,
+    icon: FlagIcon,
     description:
       "Set liked, disliked and flagged ingredients for each person in your family. Scans and recipes then warn you about things that don't suit them, separately from your own list.",
   },
   {
     badge: 'New additions!',
     title: 'New Conditions, Allergies & Diets',
+    icon: ProfileAdditionsIcon,
     description:
       "A few new things to add to your profile so the app fits how you actually live:",
     subsections: [
@@ -118,6 +127,7 @@ const CARDS: CardData[] = [
     badge: 'Improvement',
     title: 'Flagged ingredient accuracy',
     plus: true,
+    icon: FlagIcon,
     description:
       "Greater accuracy of flagged ingredients when scanning or searching products.",
   },
@@ -187,10 +197,7 @@ export default function WhatsNewScreen() {
         {/* ── Cards ── */}
         <View style={styles.cardsContainer}>
           {CARDS.map((card, i) => {
-            // Cycle through the icon set when CARDS has more entries
-            // than CARD_ICONS — a future card never crashes for want
-            // of a matching icon.
-            const IconComponent = CARD_ICONS[i % CARD_ICONS.length];
+            const IconComponent = card.icon;
             return (
             <View key={i} style={styles.card}>
               {/* Icon + Badge row. Plus chip sits stacked under the
