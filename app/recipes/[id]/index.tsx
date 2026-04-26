@@ -370,12 +370,19 @@ export default function RecipeDetailScreen() {
   // signed in, AuthGuard sends them to login first; after auth +
   // onboarding they land on the recipe.
   async function handleShareWithFriend() {
-    const deepLink = `biteinsight://recipes/${currentRecipe.id}`;
+    // Universal link — when iOS / Android sees this URL on a device
+    // with the app installed, the OS hands the URL to the app
+    // before the browser opens, landing the recipient on the recipe
+    // detail screen. Without the app, the link opens the
+    // biteinsight.app web fallback (handled separately on the web
+    // side). Configured via app.json associatedDomains +
+    // intentFilters and the AASA / assetlinks files hosted at
+    // biteinsight.app/.well-known/.
+    const link = `https://biteinsight.app/recipes/${currentRecipe.id}`;
     const cover = currentRecipe.cover_image_url;
     const message =
       `Take a look at my "${currentRecipe.name}" recipe on Bite Insight.\n\n` +
-      `Open it here: ${deepLink}\n\n` +
-      `Don't have Bite Insight yet? Grab it on the App Store or Google Play and the link will take you straight there.`;
+      `${link}`;
     try {
       await Share.share({
         title: currentRecipe.name,
@@ -383,7 +390,7 @@ export default function RecipeDetailScreen() {
         // iOS uses `url` to render the share-sheet preview tile.
         // Pointing at the cover image gives a visual preview without
         // losing the deep link (which lives in `message`).
-        url: cover ?? deepLink,
+        url: cover ?? link,
       });
     } catch (e) {
       console.warn('[recipe-detail] share failed:', e);

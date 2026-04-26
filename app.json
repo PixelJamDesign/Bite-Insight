@@ -22,6 +22,9 @@
         "dark": "./assets/images/icon-dark.png",
         "tinted": "./assets/images/icon-tinted.png"
       },
+      "associatedDomains": [
+        "applinks:biteinsight.app"
+      ],
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "BiteInsight needs camera access to scan food labels and barcodes.",
@@ -47,6 +50,20 @@
         "android.permission.USE_BIOMETRIC",
         "android.permission.RECORD_AUDIO",
         "android.permission.USE_FINGERPRINT"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "biteinsight.app",
+              "pathPrefix": "/recipes/"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
       ]
     },
     "web": {
