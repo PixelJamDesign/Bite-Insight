@@ -58,8 +58,6 @@ import {
   findRecipeAllergenMatches,
 } from '@/lib/householdImpact';
 import { supabase } from '@/lib/supabase';
-import { File, Paths } from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
 import ArrowLeftIcon from '@/assets/icons/recipe-header/arrow-left.svg';
 import LikeThumbIcon from '@/assets/icons/recipe-header/like-thumb.svg';
 import type {
@@ -355,36 +353,37 @@ export default function RecipeDetailScreen() {
   // biteinsight:// deep link so a recipient on Bite Insight can open
   // the recipe directly. Not Plus-gated — any user can share their
   // own creations.
-  // Share the recipe to a friend. When we have a cover image we
-  // download it to the cache and share it via expo-sharing so the
-  // native iOS share sheet renders the image as a preview tile and
-  // the recipe name as the dialog title — that's what gives "image
-  // and name as the preview". Falls back to a plain text+url share
-  // (with a biteinsight:// deep link) when there's no cover image
-  // or expo-sharing isn't available on the platform.
+  // Share the recipe with both the cover image (preview) and a
+  // deep link the recipient can tap to open it in the app.
+  //
+  // Behaviour by destination (iOS):
+  //   • iMessage / Mail → shows an image preview tile (from the cover
+  //     URL passed as `url`) plus the message body that contains the
+  //     recipe name and the biteinsight://recipes/{id} deep link.
+  //   • Other apps that only respect one of `message` / `url` will
+  //     get whichever the app prefers, but the message body always
+  //     includes the link as a fallback.
+  //
+  // Tapping the link on a device with the app installed launches
+  // straight into the recipe (expo-router maps biteinsight://recipes/N
+  // to /recipes/[id] via the registered scheme). If the user isn't
+  // signed in, AuthGuard sends them to login first; after auth +
+  // onboarding they land on the recipe.
   async function handleShareWithFriend() {
     const deepLink = `biteinsight://recipes/${currentRecipe.id}`;
     const cover = currentRecipe.cover_image_url;
+    const message =
+      `Take a look at my "${currentRecipe.name}" recipe on Bite Insight.\n\n` +
+      `Open it here: ${deepLink}\n\n` +
+      `Don't have Bite Insight yet? Grab it on the App Store or Google Play and the link will take you straight there.`;
     try {
-      if (cover && (await Sharing.isAvailableAsync())) {
-        // Cache key keyed on the recipe id so re-shares don't re-download.
-        const ext = cover.toLowerCase().includes('.png') ? 'png' : 'jpg';
-        const dest = new File(Paths.cache, `share-recipe-${currentRecipe.id}.${ext}`);
-        const downloaded = await File.downloadFileAsync(cover, dest, { idempotent: true });
-        if (downloaded?.uri) {
-          await Sharing.shareAsync(downloaded.uri, {
-            dialogTitle: currentRecipe.name,
-            mimeType: ext === 'png' ? 'image/png' : 'image/jpeg',
-            UTI: ext === 'png' ? 'public.png' : 'public.jpeg',
-          });
-          return;
-        }
-      }
-      // Fallback when there's no cover or expo-sharing isn't available.
       await Share.share({
         title: currentRecipe.name,
-        message: `Check out "${currentRecipe.name}" on Bite Insight\n${deepLink}`,
-        url: deepLink,
+        message,
+        // iOS uses `url` to render the share-sheet preview tile.
+        // Pointing at the cover image gives a visual preview without
+        // losing the deep link (which lives in `message`).
+        url: cover ?? deepLink,
       });
     } catch (e) {
       console.warn('[recipe-detail] share failed:', e);

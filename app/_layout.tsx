@@ -24,6 +24,7 @@ import { MenuProvider } from '@/lib/menuContext';
 import { DraftRecipeProvider } from '@/lib/draftRecipeContext';
 import { ToastProvider } from '@/lib/toastContext';
 import { JourneyProvider, useJourney } from '@/lib/journeyContext';
+import { savePendingDeepLink, consumePendingDeepLink } from '@/lib/pendingDeepLink';
 import type { OnboardingStep } from '@/lib/types';
 import { UpsellSheet } from '@/components/UpsellSheet';
 import { MyPlanSheet } from '@/components/MyPlanSheet';
@@ -81,8 +82,14 @@ function AuthGuard({ session }: { session: Session | null }) {
   // Allow the reset-password screen regardless of session state
   if (inResetPassword) return null;
 
-  // Not signed in → send to login
+  // Not signed in → send to login. Memorise where the user was
+  // trying to reach (e.g. a shared recipe deep link) so we can
+  // bring them back after they sign in / sign up.
   if (!session && !inAuthGroup) {
+    const targetPath = '/' + segments.join('/');
+    // Fire-and-forget — the redirect happens regardless and the
+    // saved path is consumed after the journey completes.
+    savePendingDeepLink(targetPath).catch(() => {});
     return <Redirect href="/(auth)/login" />;
   }
 
@@ -126,6 +133,43 @@ function JourneyGuard() {
     // (app-tour is intentionally NOT locked so users can re-view it from the menu)
     return <Redirect href="/(tabs)" />;
   }
+
+  return null;
+}
+
+// ── Pending Deep Link Guard ─────────────────────────────────────────────────
+
+/**
+ * After the user has signed in and finished onboarding, replay any
+ * deep link they were originally trying to open (e.g. a friend's
+ * shared recipe). The path was saved to AsyncStorage by AuthGuard
+ * when it bounced them to login.
+ *
+ * Only fires when the user lands on (tabs) — that's where the
+ * journey delivers them after onboarding completes. Consume-once
+ * semantics so it doesn't loop.
+ */
+function PendingDeepLinkGuard() {
+  const { session } = useAuth();
+  const segments = useSegments();
+  const navigationState = useRootNavigationState();
+  const { onboardingStep, loading: journeyLoading } = useJourney();
+  const router = useRouter();
+  const [consumed, setConsumed] = useState(false);
+
+  const currentSegment = segments[0] as string;
+
+  useEffect(() => {
+    if (consumed) return;
+    if (!navigationState?.key || !session || journeyLoading || onboardingStep !== 'complete') {
+      return;
+    }
+    if (currentSegment !== '(tabs)') return;
+    setConsumed(true);
+    consumePendingDeepLink().then((path) => {
+      if (path) router.replace(path as never);
+    });
+  }, [consumed, navigationState?.key, session, journeyLoading, onboardingStep, currentSegment, router]);
 
   return null;
 }
@@ -250,6 +294,7 @@ function RootLayoutInner() {
     <>
       <AuthGuard session={session} />
       <JourneyGuard />
+      <PendingDeepLinkGuard />
       <WhatsNewGuard />
       <StatusBar style="dark" />
       <View style={{ flex: 1, backgroundColor: '#e2f1ee' }}>
