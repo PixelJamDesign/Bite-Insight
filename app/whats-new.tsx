@@ -86,6 +86,7 @@ const CARDS: CardData[] = [
   {
     badge: 'New feature!',
     title: 'Flagged ingredients for family profiles',
+    plus: true,
     description:
       "Cooking for the household? Tap any family member on a recipe to see which ingredients to watch for them and whether the meal's a good fit.",
   },
