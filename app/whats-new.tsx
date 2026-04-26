@@ -20,6 +20,7 @@ import { useTranslation } from 'react-i18next';
 import { Colors, Spacing, Radius, Shadows } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
+import { PlusBadge } from '@/components/PlusBadge';
 
 // ── Constants ───────────────────────────────────────────────────────────────
 
@@ -70,6 +71,9 @@ interface CardData {
   title: string;
   description: string;
   subsections?: { heading: string; bullets: string[] }[];
+  /** When true, the Plus chip sits next to the title to flag the
+   *  feature as Plus-only. */
+  plus?: boolean;
 }
 
 const CARDS: CardData[] = [
@@ -88,25 +92,32 @@ const CARDS: CardData[] = [
   {
     badge: 'New feature!',
     title: 'Community recipes',
+    plus: true,
     description:
-      "Plus members can post their recipes for everyone to see, and pinch ones they like the look of. Tap the heart on the cards you love and save the keepers to your own book.",
+      "Post your recipes for everyone to see, and pinch ones you like the look of. Tap the heart on the cards you love and save the keepers to your own book.",
+  },
+  {
+    badge: 'New feature!',
+    title: 'Family ingredient preferences',
+    plus: true,
+    description:
+      "Set liked, disliked and flagged ingredients for each person in your family. Scans and recipes then warn you about things that don't suit them, separately from your own list.",
   },
   {
     badge: 'New additions!',
-    title: 'More about you',
+    title: 'Better personalisation',
     description:
       "A few new things to add to your profile so the app fits how you actually live:",
     subsections: [
       { heading: 'Health Conditions', bullets: ['No Gallbladder', 'IBS (with subtype)', 'Pregnancy'] },
       { heading: 'Dietary Preferences', bullets: ['Halal (with auto-detection)', 'Low Fibre'] },
-      { heading: 'Profile', bullets: ['Date of birth instead of age', 'Family ingredient preferences'] },
     ],
   },
   {
     badge: 'Improvement',
-    title: 'Smarter ingredient detection',
+    title: 'Catches more flagged ingredients',
     description:
-      "Flagged sugar? A jar literally called 'Sugar' now warns you too, not just products that list sugar in their ingredients. Same goes for search: the result with proper info comes up first.",
+      "Before, we only checked the ingredients list inside a product. So if you'd flagged sugar, a bag of pure sugar slipped through. Now if the product itself IS the ingredient, you'll get the warning.",
   },
 ];
 
@@ -190,8 +201,12 @@ export default function WhatsNewScreen() {
                 </View>
               </View>
 
-              {/* Title */}
-              <Text style={styles.cardTitle}>{card.title}</Text>
+              {/* Title — Plus chip sits inline next to it for
+                  Plus-only features. */}
+              <View style={styles.cardTitleRow}>
+                <Text style={styles.cardTitle}>{card.title}</Text>
+                {card.plus && <PlusBadge size="small" />}
+              </View>
 
               {/* Description */}
               <Text style={styles.cardDesc}>{card.description}</Text>
@@ -348,6 +363,16 @@ const styles = StyleSheet.create({
     letterSpacing: -0.26,
     color: Colors.primary,
   },
+  // Title + optional Plus chip on the same row. flexShrink:1 on
+  // the title lets long titles wrap before pushing the chip off
+  // the right edge.
+  cardTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: Spacing.xxs,
+  },
   cardTitle: {
     fontSize: 20,
     lineHeight: 26,
@@ -355,7 +380,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_700Bold',
     letterSpacing: -0.4,
     color: Colors.primary,
-    marginBottom: Spacing.xxs,
+    flexShrink: 1,
   },
   cardDesc: {
     fontSize: 16,
