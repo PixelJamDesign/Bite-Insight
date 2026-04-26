@@ -77,25 +77,25 @@ const CARDS: CardData[] = [
     badge: 'New feature!',
     title: 'Your recipe book',
     description:
-      "Build your own recipes from the foods you scan. Add ingredients by scan, search or from your history, adjust servings, and watch live nutrition and an estimated Nutri-score update as you go.",
+      "Build recipes from the foods you scan. Drop in ingredients, set the servings, and the nutrition totals itself up as you go.",
   },
   {
     badge: 'New feature!',
     title: 'Family-aware recipes',
     description:
-      "Every recipe shows how it lands for each person in your household. Tap a family member for flagged ingredients, allergen warnings and a clear Good / Ok / Warning verdict based on their health profile.",
+      "Cooking for the household? Tap any family member on a recipe to see which ingredients to watch for them and whether the meal's a good fit.",
   },
   {
     badge: 'New feature!',
     title: 'Community recipes',
     description:
-      "Plus members can share their recipes to the community and discover others — like your favourites with a tap and save them straight to your own book.",
+      "Plus members can post their recipes for everyone to see, and pinch ones they like the look of. Tap the heart on the cards you love and save the keepers to your own book.",
   },
   {
     badge: 'New additions!',
-    title: 'More conditions, diets and profile options',
+    title: 'More about you',
     description:
-      "More ways to tell us about you so the app can tailor itself properly:",
+      "A few new things to add to your profile so the app fits how you actually live:",
     subsections: [
       { heading: 'Health Conditions', bullets: ['No Gallbladder', 'IBS (with subtype)', 'Pregnancy'] },
       { heading: 'Dietary Preferences', bullets: ['Halal (with auto-detection)', 'Low Fibre'] },
@@ -106,7 +106,7 @@ const CARDS: CardData[] = [
     badge: 'Improvement',
     title: 'Smarter ingredient detection',
     description:
-      "Flagged ingredients are now caught even when the product is the ingredient itself — think a product literally called 'Sugar' or 'Rice'. Search results also surface the most complete entry first.",
+      "Flagged sugar? A jar literally called 'Sugar' now warns you too, not just products that list sugar in their ingredients. Same goes for search: the result with proper info comes up first.",
   },
 ];
 
@@ -166,10 +166,9 @@ export default function WhatsNewScreen() {
         <Text style={styles.greetingName}>{firstName}</Text>
 
         {/* ── Headline ── */}
-        <Text style={styles.headline}>We've made some updates!</Text>
+        <Text style={styles.headline}>A few new things</Text>
         <Text style={styles.subtitle}>
-          Thanks to your feedback we've updated Bite Insight to improve your
-          experience.
+          Quick tour of what's changed in this version.
         </Text>
 
         {/* ── Cards ── */}
