@@ -16,6 +16,7 @@ import CommunityIcon from '@/assets/icons/whats-new/community.svg';
 import FamilyInsightsIcon from '@/assets/icons/whats-new/family-insights.svg';
 import FlagIcon from '@/assets/icons/whats-new/flag.svg';
 import ProfileAdditionsIcon from '@/assets/icons/whats-new/profile-additions.svg';
+import AccuracyIcon from '@/assets/icons/whats-new/accuracy.svg';
 import Constants from 'expo-constants';
 import { useTranslation } from 'react-i18next';
 import { Colors, Spacing, Radius, Shadows } from '@/constants/theme';
@@ -127,7 +128,7 @@ const CARDS: CardData[] = [
     badge: 'Improvement',
     title: 'Flagged ingredient accuracy',
     plus: true,
-    icon: FlagIcon,
+    icon: AccuracyIcon,
     description:
       "Greater accuracy of flagged ingredients when scanning or searching products.",
   },
