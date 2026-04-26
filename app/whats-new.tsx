@@ -104,9 +104,9 @@ const CARDS: CardData[] = [
   },
   {
     badge: 'Improvement',
-    title: 'Smarter detection and pricing',
+    title: 'Smarter ingredient detection',
     description:
-      "Flagged ingredients are now caught even when the product is the ingredient itself (think a product literally called 'Sugar'). Plus subscription prices come straight from the App Store / Google Play so what you see always matches what you pay.",
+      "Flagged ingredients are now caught even when the product is the ingredient itself — think a product literally called 'Sugar' or 'Rice'. Search results also surface the most complete entry first.",
   },
 ];
 
