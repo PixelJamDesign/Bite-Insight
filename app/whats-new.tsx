@@ -85,17 +85,17 @@ const CARDS: CardData[] = [
   },
   {
     badge: 'New feature!',
-    title: 'Flagged ingredients for family profiles',
-    plus: true,
-    description:
-      "Cooking for the household? Tap any family member on a recipe to see which ingredients to watch for them and whether the meal's a good fit.",
-  },
-  {
-    badge: 'New feature!',
     title: 'Community recipes',
     plus: true,
     description:
       "Post your recipes for everyone to see, and pinch ones you like the look of. Tap the heart on the cards you love and save the keepers to your own book.",
+  },
+  {
+    badge: 'New feature!',
+    title: 'Flagged ingredients for family profiles',
+    plus: true,
+    description:
+      "Cooking for the household? Tap any family member on a recipe to see which ingredients to watch for them and whether the meal's a good fit.",
   },
   {
     badge: 'New feature!',
