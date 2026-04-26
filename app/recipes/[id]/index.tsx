@@ -26,6 +26,7 @@ import {
   ActivityIndicator,
   Alert,
   Share,
+  Platform,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -381,19 +382,21 @@ export default function RecipeDetailScreen() {
     // intentFilters and the AASA / assetlinks files hosted at
     // biteinsight.app/.well-known/.
     const link = `https://biteinsight.app/recipes/${currentRecipe.id}`;
-    const cover = currentRecipe.cover_image_url;
-    const message =
-      `Take a look at my "${currentRecipe.name}" recipe on Bite Insight.\n\n` +
-      `${link}`;
+    const message = `Take a look at my "${currentRecipe.name}" recipe on Bite Insight.`;
     try {
-      await Share.share({
-        title: currentRecipe.name,
-        message,
-        // iOS uses `url` to render the share-sheet preview tile.
-        // Pointing at the cover image gives a visual preview without
-        // losing the deep link (which lives in `message`).
-        url: cover ?? link,
-      });
+      // iOS: pass the deep link as `url` (NOT the cover image). The
+      // share sheet then fetches the Vercel preview page's OG tags to
+      // render the preview tile, and tapping the shared item opens
+      // the recipe instead of the cover image. Passing a large remote
+      // image URL here was freezing the sheet while iOS tried to
+      // download it.
+      // Android: ignores `url` and only respects `message`, so the
+      // link goes in the message body for cross-platform parity.
+      await Share.share(
+        Platform.OS === 'ios'
+          ? { title: currentRecipe.name, message, url: link }
+          : { title: currentRecipe.name, message: `${message}\n\n${link}` },
+      );
     } catch (e) {
       console.warn('[recipe-detail] share failed:', e);
     }
