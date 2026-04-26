@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.biteinsightapp.gcahill",
+      "sha256_cert_fingerprints": [
+        "FC:6D:C2:F8:89:FF:DF:B7:A9:EC:C5:D9:4A:5D:81:A5:05:32:E6:67:C6:37:FD:5C:D2:D8:5F:B4:AE:55:59:46"
+      ]
+    }
+  }
+]

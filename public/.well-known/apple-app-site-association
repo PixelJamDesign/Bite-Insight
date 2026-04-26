@@ -1,0 +1,15 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["F4SPMVBR2D.com.biteinsight.app"],
+        "components": [
+          {
+            "/": "/recipes/*",
+            "comment": "Shared recipe links — open the iOS app to the recipe detail screen"
+          }
+        ]
+      }
+    ]
+  }
+}
