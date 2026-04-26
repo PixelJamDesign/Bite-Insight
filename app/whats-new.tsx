@@ -115,9 +115,10 @@ const CARDS: CardData[] = [
   },
   {
     badge: 'Improvement',
-    title: 'Catches more flagged ingredients',
+    title: 'Flagged ingredient accuracy',
+    plus: true,
     description:
-      "Before, we only checked the ingredients list inside a product. So if you'd flagged sugar, a bag of pure sugar slipped through. Now if the product itself IS the ingredient, you'll get the warning.",
+      "Greater accuracy of flagged ingredients when scanning or searching products.",
   },
 ];
 
