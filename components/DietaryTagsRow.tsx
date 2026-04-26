@@ -105,8 +105,8 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   labelCompact: {
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 14,
+    lineHeight: 17,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,

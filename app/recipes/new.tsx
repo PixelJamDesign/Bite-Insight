@@ -223,6 +223,12 @@ export default function RecipeBuilderScreen() {
   const [timePicker, setTimePicker] = useState<'prep' | 'cook' | null>(null);
   const [ingredientsEditMode, setIngredientsEditMode] = useState(false);
   const [selectedIngredientIds, setSelectedIngredientIds] = useState<Set<string>>(new Set());
+  // While an ingredient is mid-drag we have to manually freeze the
+  // outer NestableScrollContainer — the library's auto-coordination
+  // doesn't always engage in this nested setup, so the page scrolls
+  // along with the finger and the row never becomes the active drag
+  // target. Toggling scrollEnabled is the documented workaround.
+  const [isDraggingIngredient, setIsDraggingIngredient] = useState(false);
 
   function toggleIngredientSelected(localId: string) {
     setSelectedIngredientIds((prev) => {
@@ -504,6 +510,7 @@ export default function RecipeBuilderScreen() {
           contentContainerStyle={{ paddingBottom: 140 }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          scrollEnabled={!isDraggingIngredient}
         >
           {/* ── Hero cover ─────────────────────────────────────────────── */}
           <TouchableOpacity
@@ -824,10 +831,21 @@ export default function RecipeBuilderScreen() {
                 <NestableDraggableFlatList
                   data={d.ingredients}
                   keyExtractor={(ing) => ing._localId}
+                  onDragBegin={() => setIsDraggingIngredient(true)}
+                  onRelease={() => setIsDraggingIngredient(false)}
                   onDragEnd={({ from, to }) => {
+                    setIsDraggingIngredient(false);
                     if (from !== to) draft.reorderIngredient(from, to);
                   }}
-                  activationDistance={10}
+                  activationDistance={0}
+                  // Disable the library's edge-autoscroll. With a
+                  // NestableScrollContainer parent, autoscroll triggers
+                  // a page scroll the moment the grabbed row is near
+                  // the viewport edge — which on a half-filled screen
+                  // is most of the time, so the page slid up as soon
+                  // as you touched the handle.
+                  autoscrollThreshold={0}
+                  autoscrollSpeed={0}
                   ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
                   containerStyle={styles.ingList}
                   renderItem={({ item: ing, drag, isActive }: RenderItemParams<typeof d.ingredients[number]>) => {
@@ -868,7 +886,7 @@ export default function RecipeBuilderScreen() {
                                     {ing.product_snapshot.brand}
                                   </Text>
                                 )}
-                                <Text style={styles.ingName} numberOfLines={1}>
+                                <Text style={styles.ingName} numberOfLines={2}>
                                   {ing.product_snapshot.product_name}
                                 </Text>
                               </View>
@@ -891,12 +909,27 @@ export default function RecipeBuilderScreen() {
                               <Ionicons name="trash-outline" size={20} color={Colors.secondary} />
                             </TouchableOpacity>
                           </View>
-                          {/* Drag handle — long-press (or press-in on Android)
-                              begins the reorder gesture via DraggableFlatList. */}
+                          {/* Drag handle — onPressIn starts the drag
+                              immediately so the gesture isn't stolen by
+                              the parent NestableScrollContainer. Using
+                              onLongPress here would let the scroll win
+                              if the user begins moving before the long-
+                              press timer fires. */}
                           <TouchableOpacity
                             style={styles.gripBtn}
+                            // Freeze the parent scroll the instant the
+                            // user touches the handle, so the ScrollView
+                            // can't claim the gesture before the long-
+                            // press confirms drag intent.
+                            onPressIn={() => setIsDraggingIngredient(true)}
+                            onPressOut={() => {
+                              // Only release if a drag never actually
+                              // started (the FlatList's own onDragEnd
+                              // handles the post-drag release).
+                              if (!isActive) setIsDraggingIngredient(false);
+                            }}
                             onLongPress={drag}
-                            delayLongPress={150}
+                            delayLongPress={200}
                             disabled={isActive}
                             activeOpacity={0.6}
                             hitSlop={8}
@@ -942,7 +975,7 @@ export default function RecipeBuilderScreen() {
                               {ing.product_snapshot.brand}
                             </Text>
                           )}
-                          <Text style={styles.ingName} numberOfLines={1}>
+                          <Text style={styles.ingName} numberOfLines={2}>
                             {ing.product_snapshot.product_name}
                           </Text>
                         </View>

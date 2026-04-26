@@ -1159,7 +1159,7 @@ function IngredientRow({
             {snap.brand}
           </Text>
         )}
-        <Text style={styles.ingName} numberOfLines={1}>
+        <Text style={styles.ingName} numberOfLines={2}>
           {snap.product_name}
         </Text>
       </View>

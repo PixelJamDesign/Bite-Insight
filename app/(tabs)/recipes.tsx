@@ -470,15 +470,17 @@ function RecipeCard({
           <Text style={styles.cardName} numberOfLines={2}>
             {recipe.name}
           </Text>
-          {dietaryTags.length > 0 && (
-            <DietaryTagsRow tags={dietaryTags} max={3} size="compact" />
-          )}
           {isCommunity ? (
             <Text style={styles.cardByLine}>by {authorName}</Text>
           ) : (
             <Text style={styles.cardServings}>
               {recipe.servings} {recipe.servings === 1 ? 'serving' : 'servings'}
             </Text>
+          )}
+          {dietaryTags.length > 0 && (
+            <View style={{ marginTop: 8 }}>
+              <DietaryTagsRow tags={dietaryTags} max={3} size="compact" />
+            </View>
           )}
         </View>
         {/* Likes pill — only on recipes shared to the community.
