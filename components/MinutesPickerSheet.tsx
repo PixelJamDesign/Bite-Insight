@@ -139,9 +139,16 @@ export function MinutesPickerSheet({ visible, value, title, onClose, onSave }: P
                   snapToInterval={ITEM_HEIGHT}
                   decelerationRate="fast"
                   contentContainerStyle={{ paddingVertical: PADDING }}
+                  // Offset MUST include the contentContainer padding —
+                  // otherwise FlatList's viewable-items calculation
+                  // lands PADDING / ITEM_HEIGHT rows below where the
+                  // wheel actually shows the centred row, and
+                  // onViewableItemsChanged sets pending to the wrong
+                  // value (visible as the bold styling landing on a
+                  // row outside the highlight bar).
                   getItemLayout={(_, index) => ({
                     length: ITEM_HEIGHT,
-                    offset: ITEM_HEIGHT * index,
+                    offset: PADDING + ITEM_HEIGHT * index,
                     index,
                   })}
                   onViewableItemsChanged={onViewableItemsChanged}
