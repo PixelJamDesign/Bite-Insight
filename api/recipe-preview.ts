@@ -45,7 +45,7 @@ interface RecipePreview {
   author: { full_name: string | null; avatar_url: string | null } | null;
 }
 
-const APP_STORE_URL = 'https://apps.apple.com/app/bite-insight/id6739489541';
+const APP_STORE_URL = 'https://apps.apple.com/app/bite-insight-food-scanner/id6760033160';
 const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.biteinsightapp.gcahill';
 const FALLBACK_OG_IMAGE = 'https://biteinsight.app/og-default.png';
 
@@ -190,7 +190,7 @@ function renderHtml(args: {
     <meta name="twitter:image" content="${og}" />
 
     <!-- iOS Smart App Banner -->
-    <meta name="apple-itunes-app" content="app-id=6739489541, app-argument=${u}" />
+    <meta name="apple-itunes-app" content="app-id=6760033160, app-argument=${u}" />
 
     <link rel="icon" href="/favicon.ico" />
 
