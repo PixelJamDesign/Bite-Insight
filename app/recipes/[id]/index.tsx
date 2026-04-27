@@ -26,7 +26,6 @@ import {
   ActivityIndicator,
   Alert,
   Share,
-  Platform,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -390,21 +389,21 @@ export default function RecipeDetailScreen() {
     // intentFilters and the AASA / assetlinks files hosted at
     // biteinsight.app/.well-known/.
     const link = `https://biteinsight.app/recipes/${currentRecipe.id}`;
-    const message = `Take a look at my "${currentRecipe.name}" recipe on Bite Insight.`;
+    // Single payload that works on every platform:
+    //   • iOS  — uses `url` as the primary shared item; `message` is
+    //            the body text (link included as fallback in case the
+    //            target only respects `message`).
+    //   • Android — ignores `url`, uses `message` (link is embedded).
+    //   • Web (navigator.share) — uses `url`, `text` and `title`
+    //            together so the link is the explicit shared resource.
+    const message =
+      `Take a look at my "${currentRecipe.name}" recipe on Bite Insight.\n\n${link}`;
     try {
-      // iOS: pass the deep link as `url` (NOT the cover image). The
-      // share sheet then fetches the Vercel preview page's OG tags to
-      // render the preview tile, and tapping the shared item opens
-      // the recipe instead of the cover image. Passing a large remote
-      // image URL here was freezing the sheet while iOS tried to
-      // download it.
-      // Android: ignores `url` and only respects `message`, so the
-      // link goes in the message body for cross-platform parity.
-      await Share.share(
-        Platform.OS === 'ios'
-          ? { title: currentRecipe.name, message, url: link }
-          : { title: currentRecipe.name, message: `${message}\n\n${link}` },
-      );
+      await Share.share({
+        title: currentRecipe.name,
+        message,
+        url: link,
+      });
     } catch (e) {
       console.warn('[recipe-detail] share failed:', e);
     }
