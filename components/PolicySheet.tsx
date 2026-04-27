@@ -1129,7 +1129,6 @@ const s = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 2,
-    elevation: 2,
   },
   accordionHeader: {
     flexDirection: 'row',

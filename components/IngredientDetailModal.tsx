@@ -202,7 +202,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 16 },
     shadowOpacity: 0.2,
     shadowRadius: 28,
-    elevation: 12,
   },
   imageClip: {
     width: 160,

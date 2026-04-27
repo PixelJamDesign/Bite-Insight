@@ -311,7 +311,6 @@ const styles = StyleSheet.create({
   },
   menuOverlay: {
     zIndex: 100,
-    elevation: 100,
   },
   menuHeader: {
     position: 'absolute',

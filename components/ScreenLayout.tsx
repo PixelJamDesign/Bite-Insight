@@ -165,7 +165,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 15,
-    elevation: 15,
   },
   menuOverlay: {
     position: 'absolute',
@@ -174,7 +173,6 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     zIndex: 10,
-    elevation: 10,
   },
   headerBar: {
     position: 'absolute',
@@ -187,7 +185,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 16,
     zIndex: 20,
-    elevation: 20,
   },
   headerBarMenu: {
     backgroundColor: '#fff',
@@ -205,6 +202,5 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
-    elevation: 6,
   },
 });

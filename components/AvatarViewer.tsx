@@ -87,7 +87,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 16,
     zIndex: 20,
-    elevation: 20,
   },
   // Same dimensions + radius as styles.menuBtn in ScreenLayout, but
   // transparent with a white border to read well over the dark-teal tint.

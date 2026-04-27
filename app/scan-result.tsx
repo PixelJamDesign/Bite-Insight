@@ -3318,7 +3318,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
-    elevation: 3,
   },
 
   // Scroll
@@ -3610,7 +3609,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
-    elevation: 4,
   },
   familyAvatarImage: {
     width: '100%',
@@ -3727,7 +3725,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 4,
   },
   impactRowContent: {
     flex: 1,
@@ -3762,7 +3759,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.12,
     shadowRadius: 8,
-    elevation: 4,
   },
   impactPanelInfo: {
     position: 'absolute',
@@ -4204,7 +4200,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.12,
     shadowRadius: 8,
-    elevation: 4,
   },
   ingCategoryHeading: {
     flexWrap: 'wrap',

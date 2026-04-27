@@ -237,7 +237,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 24 },
     shadowOpacity: 0.05,
     shadowRadius: 24,
-    elevation: 4,
   },
   cardHeader: { gap: 4 },
   cardTitle: {

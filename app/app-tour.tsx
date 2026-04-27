@@ -576,7 +576,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 14 },
     shadowOpacity: 1,
     shadowRadius: 32,
-    elevation: 8,
   },
   introCardTitle: {
     fontSize: 18,

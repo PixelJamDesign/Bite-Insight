@@ -460,7 +460,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 7 },
     shadowOpacity: 0.19,
     shadowRadius: 14,
-    elevation: 3,
   },
   cancelBtnText: {
     // Heading 5

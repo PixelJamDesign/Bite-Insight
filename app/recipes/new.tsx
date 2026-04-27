@@ -1567,7 +1567,6 @@ const styles = StyleSheet.create({
   ingRowActive: {
     opacity: 0.95,
     zIndex: 999,
-    elevation: 8,
     ...Shadows.level3,
   },
   // Applied to the row when it sits next to the drag handle in edit mode —

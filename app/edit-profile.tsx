@@ -1161,7 +1161,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.18,
     shadowRadius: 10,
-    elevation: 6,
   },
   avatarImage: {
     width: 120,
@@ -1413,7 +1412,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 14 },
     shadowOpacity: 1,
     shadowRadius: 32,
-    elevation: 2,
   },
   conditionPillText: {
     fontSize: 13,

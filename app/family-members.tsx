@@ -525,7 +525,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
-    elevation: 8,
   },
   dragHandle: {
     width: 36, height: 36, alignItems: 'center', justifyContent: 'center',
@@ -538,7 +537,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.15,
     shadowRadius: 10,
-    elevation: 6,
   },
   avatarText: {
     fontSize: 22, fontWeight: '700', fontFamily: 'Figtree_700Bold',

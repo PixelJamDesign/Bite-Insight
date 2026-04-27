@@ -419,7 +419,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
     shadowRadius: 8,
-    elevation: 4,
   },
   avatarText: {
     fontSize: 20,

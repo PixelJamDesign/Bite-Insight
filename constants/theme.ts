@@ -60,28 +60,35 @@ export const Radius = {
   full: 999,
 };
 
-import { Platform } from 'react-native';
 
 export const Shadows = {
+  // iOS uses the CALayer shadow props (offset/opacity/radius) which
+  // fade cleanly with the parent's opacity.
+  //
+  // Android: deliberately NO `elevation`. Android renders elevation
+  // shadows as a separate compositing layer outside the view tree,
+  // and on the React Native new architecture (Fabric) that layer
+  // ignores parent opacity animations — so every fade transition
+  // (page navigation, step animator, in-screen fade-in) leaked
+  // visible grey halo rectangles around every elevated card.
+  // Without elevation, Android cards stay defined via the surface
+  // colour + border (set per-component) and transitions are clean.
   level2: {
     shadowColor: 'rgba(68,71,112)',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
-    ...(Platform.OS === 'android' ? { elevation: 2 } : {}),
   },
   level3: {
     shadowColor: 'rgba(68,71,112)',
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
-    ...(Platform.OS === 'android' ? { elevation: 2 } : {}),
   },
   level4: {
     shadowColor: 'rgba(68,71,112)',
     shadowOffset: { width: 0, height: 24 },
     shadowOpacity: 0.05,
     shadowRadius: 24,
-    ...(Platform.OS === 'android' ? { elevation: 1 } : {}),
   },
 };
