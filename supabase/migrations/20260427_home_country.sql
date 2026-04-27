@@ -20,6 +20,16 @@
 alter table public.profiles
   add column if not exists home_country_code text;
 
+-- Backfill every existing row to 'gb'. Up to and including this
+-- migration the entire user base signed up while the app was a
+-- UK-only soft launch, so the only correct answer is GB. This
+-- avoids leaving any historical user without a region (which
+-- would otherwise default them to 'world' in Phase 2 and lock
+-- them out of the UK scanner they were already using).
+update public.profiles
+  set home_country_code = 'gb'
+  where home_country_code is null;
+
 -- Constraint: ISO 3166-1 alpha-2 lowercase, or the sentinel 'world'.
 alter table public.profiles
   add constraint profiles_home_country_code_format
