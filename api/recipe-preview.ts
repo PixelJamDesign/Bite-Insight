@@ -239,9 +239,8 @@ function renderHtml(args: {
         overflow: hidden;
       }
       .app-icon img { width: 100%; height: 100%; object-fit: cover; }
-      .wordmark { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-      .wordmark img.logo { width: 194px; height: auto; display: block; }
-      .wordmark img.tagline { width: 178px; height: auto; display: block; }
+      .wordmark { display: flex; flex-direction: column; align-items: center; }
+      .wordmark img.logo { width: 220px; height: auto; display: block; }
 
       /* ── Recipe card ──────────────────────────────────────────── */
       .feed {
@@ -414,8 +413,7 @@ function renderHtml(args: {
         <img src="/share/app-icon.png" alt="Bite Insight" />
       </div>
       <div class="wordmark">
-        <img class="logo" src="/share/logo-full.svg" alt="Bite Insight" />
-        <img class="tagline" src="/share/tagline.svg" alt="Scan your snacks. Know the facts." />
+        <img class="logo" src="/share/logo-full.svg" alt="Bite Insight — Scan your snacks. Know the facts." />
       </div>
     </div>
 
