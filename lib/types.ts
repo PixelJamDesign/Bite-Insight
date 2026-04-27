@@ -42,6 +42,11 @@ export interface UserProfile {
   date_of_birth: string | null;
   is_plus: boolean;
   stripe_customer_id: string | null;
+  /** ISO 3166-1 alpha-2 lowercase country code captured at signup
+   *  via IP geolocation (Edge Function: detect-country), or 'world'
+   *  if the country isn't one of our supported regions. Used to gate
+   *  the freemium region-scoped features. Not user-editable. */
+  home_country_code: string | null;
   liked_ingredients: string[] | null;
   disliked_ingredients: string[] | null;
   flagged_ingredients: string[] | null;

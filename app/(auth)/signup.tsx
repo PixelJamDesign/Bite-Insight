@@ -34,6 +34,7 @@ import { SuggestionSheet, type SuggestionCategory } from '@/components/Suggestio
 import { CONDITION_INFO } from '@/constants/conditionInfo';
 import { DobPicker } from '@/components/DobPicker';
 import { formatDob, toLocalDateString } from '@/lib/dateOfBirth';
+import { detectCountry } from '@/lib/detectCountry';
 import Logo from '../../assets/images/logo.svg';
 
 // ── Step keys ────────────────────────────────────────────────────────────────
@@ -235,6 +236,9 @@ export default function SignUpScreen() {
     }
     const user = data.user;
     if (user) {
+      // Detect the user's country via IP (Edge Function). Never
+      // blocks signup — failures fall back to 'world' silently.
+      const { country_code } = await detectCountry();
       if (avatarUri) await uploadAvatar(user.id, avatarUri);
       await supabase.from('profiles').upsert({
         id: user.id,
@@ -243,6 +247,7 @@ export default function SignUpScreen() {
         allergies,
         dietary_preferences: dietaryPrefs,
         date_of_birth: dateOfBirth ? toLocalDateString(dateOfBirth) : null,
+        home_country_code: country_code,
       });
     }
     setLoading(false);
@@ -274,11 +279,15 @@ export default function SignUpScreen() {
     }
     const user = data.user;
     if (user) {
+      // Detect the user's country via IP (Edge Function). Never
+      // blocks signup — failures fall back to 'world' silently.
+      const { country_code } = await detectCountry();
       if (avatarUri) await uploadAvatar(user.id, avatarUri);
       await supabase.from('profiles').upsert({
         id: user.id,
         full_name: fullName,
         date_of_birth: dateOfBirth ? toLocalDateString(dateOfBirth) : null,
+        home_country_code: country_code,
       });
     }
     setLoading(false);
