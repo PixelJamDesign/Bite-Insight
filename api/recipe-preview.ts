@@ -259,7 +259,21 @@ function renderHtml(args: {
         border-radius: 16px;
         overflow: hidden;
         box-shadow: 0 12px 12px rgba(68, 71, 112, 0.1);
+        /* The card is a <button> so the whole tile is tappable —
+           reset the default button look and lay it out like a div. */
+        padding: 0;
+        font: inherit;
+        color: inherit;
+        text-align: left;
+        cursor: pointer;
+        display: block;
+        appearance: none;
+        -webkit-tap-highlight-color: transparent;
+        transition: transform 120ms ease, box-shadow 120ms ease;
       }
+      .card:hover { transform: translateY(-1px); box-shadow: 0 14px 18px rgba(68, 71, 112, 0.14); }
+      .card:active { transform: translateY(0); }
+      .card:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
       .cover-wrap {
         position: relative;
         width: 100%;
@@ -422,7 +436,7 @@ function renderHtml(args: {
 
     <!-- Recipe card -->
     <div class="feed">
-      <div class="card">
+      <button id="open-app-card" class="card" type="button" aria-label="Open this recipe in Bite Insight">
         <div class="cover-wrap">
           ${cover
             ? `<img class="cover" src="${cover}" alt="${t}" />`
@@ -450,7 +464,7 @@ function renderHtml(args: {
                </span>`
             : ''}
         </div>
-      </div>
+      </button>
 
       <button id="open-app-btn" class="cta" type="button">
         Open Bite Insight app
@@ -521,6 +535,10 @@ function renderHtml(args: {
 
         var btn = document.getElementById('open-app-btn');
         if (btn) btn.addEventListener('click', openApp);
+        // The whole recipe card is also tappable — same handler so
+        // there's no chance of the two paths drifting apart.
+        var cardBtn = document.getElementById('open-app-card');
+        if (cardBtn) cardBtn.addEventListener('click', openApp);
 
         // Auto-attempt on first load for mobile users — gives the
         // app the chance to take over before the user has to tap
