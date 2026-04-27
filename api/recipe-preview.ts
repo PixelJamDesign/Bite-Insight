@@ -485,68 +485,48 @@ function renderHtml(args: {
     </div>
 
     <script>
-      // The big "Open Bite Insight app" button needs to do the right
-      // thing on three different surfaces:
-      //   • iOS / Android with the app installed → custom-scheme
-      //     deep link launches straight into the recipe.
-      //   • iOS / Android without the app → fall through to the
-      //     platform's App Store / Play Store after ~1.2s.
-      //   • Desktop browsers → can't launch a native app at all, so
-      //     send them to the App Store directly. Otherwise the click
-      //     would silently do nothing (which is the bug we just hit).
+      // Tap behaviour for the "Open Bite Insight app" button and the
+      // recipe card. Two surfaces, two rules:
+      //
+      //   • Mobile (iOS / Android) — fire the custom-scheme deep
+      //     link and stop. If the app is installed the OS switches
+      //     to it; if it isn't, the scheme silently no-ops and the
+      //     user stays on the preview page where the App Store /
+      //     Play Store badges are right there waiting.
+      //
+      //   • Desktop — there is no native app to launch, so a tap
+      //     opens the App Store listing directly. Otherwise the
+      //     click would feel broken.
+      //
+      // What we deliberately don't do any more:
+      //   1) Auto-fire on page load. iOS prompted "Open in Bite
+      //      Insight?" every visit, which is hostile.
+      //   2) Race the deep link against a setTimeout fallback to the
+      //      App Store. The race was bouncing every user — Open and
+      //      Cancel alike — to the store after the modal closed.
       (function () {
         var id = ${JSON.stringify(args.recipeId)};
         var ua = navigator.userAgent || '';
-        var isIos = /iPhone|iPad|iPod/i.test(ua);
+        var isMobile = /iPhone|iPad|iPod|Android/i.test(ua);
         var isAndroid = /Android/i.test(ua);
-        var isMobile = isIos || isAndroid;
         var APP_STORE_URL = ${JSON.stringify(APP_STORE_URL)};
         var PLAY_STORE_URL = ${JSON.stringify(PLAY_STORE_URL)};
-        var storeUrl = isAndroid ? PLAY_STORE_URL : APP_STORE_URL;
 
         function openApp() {
           if (!isMobile) {
-            // No native app on desktop — send them to the store.
-            window.location.href = storeUrl;
+            window.location.href = isAndroid ? PLAY_STORE_URL : APP_STORE_URL;
             return;
           }
-          if (!id) {
-            window.location.href = storeUrl;
-            return;
-          }
-          // Try the custom scheme. If the app is installed the
-          // browser switches context and our setTimeout never fires.
-          // If nothing handles the scheme, the timer ticks and we
-          // forward the user to the relevant store.
-          var start = Date.now();
-          var timer = setTimeout(function () {
-            if (Date.now() - start < 2000 && document.visibilityState === 'visible') {
-              window.location.href = storeUrl;
-            }
-          }, 1200);
-          // If the page becomes hidden, the deep link worked — clear
-          // the fallback timer so the user doesn't get bounced to
-          // the store after returning to Safari later.
-          document.addEventListener('visibilitychange', function () {
-            if (document.visibilityState === 'hidden') clearTimeout(timer);
-          }, { once: true });
+          if (!id) return;
           window.location.href = 'biteinsight://recipes/' + id;
         }
 
         var btn = document.getElementById('open-app-btn');
         if (btn) btn.addEventListener('click', openApp);
-        // The whole recipe card is also tappable — same handler so
-        // there's no chance of the two paths drifting apart.
+        // Whole recipe card is tappable — same handler so the two
+        // paths can't drift apart.
         var cardBtn = document.getElementById('open-app-card');
         if (cardBtn) cardBtn.addEventListener('click', openApp);
-
-        // Auto-attempt on first load for mobile users — gives the
-        // app the chance to take over before the user has to tap
-        // anything. Desktop users always need an explicit click
-        // (auto-redirecting them to the App Store would be hostile).
-        if (isMobile && id) {
-          setTimeout(openApp, 500);
-        }
       })();
     </script>
   </body>
