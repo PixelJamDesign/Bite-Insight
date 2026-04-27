@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { useSubscription } from '@/lib/subscriptionContext';
+import { useAuth } from '@/lib/auth';
+import { fetchAndCacheProfile, getCachedProfile } from '@/lib/profileCache';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -29,18 +31,19 @@ export const FLAG_IMAGES: Record<string, any> = {
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
-export function getDefaultRegion(): Region {
-  try {
-    const locale = Intl.DateTimeFormat().resolvedOptions().locale;
-    const regionCode = locale.split('-').pop()?.toLowerCase() ?? '';
-    const match = REGIONS.find(r => r.code === regionCode);
-    if (match) return match;
-  } catch { /* fall through */ }
-  return REGIONS[0]; // UK default
-}
-
 export function getOFFBaseUrl(region: Region): string {
   return `https://${region.subdomain}.openfoodfacts.org`;
+}
+
+/**
+ * Resolves a country code to a Region row. Falls back to Global when
+ * the code doesn't match a supported region (i.e. user signed up in
+ * a country we don't yet have a dedicated OFF subdomain for).
+ */
+function regionForCountry(code: string | null): Region {
+  if (!code) return GLOBAL_REGION;
+  const match = REGIONS.find((r) => r.code === code);
+  return match ?? GLOBAL_REGION;
 }
 
 // ─── Shared PlusTag component ───────────────────────────────────────────────────
@@ -53,35 +56,88 @@ export { PlusBadge as PlusTag } from '@/components/PlusBadge';
 interface RegionContextValue {
   selectedRegion: Region;
   setSelectedRegion: (region: Region) => void;
+  /** ISO 3166-1 alpha-2 lowercase country code captured at signup, or
+   *  null while the profile is still loading. 'world' = unsupported. */
+  homeCountryCode: string | null;
+  /** True when the user can use this region without Plus.
+   *  Free users: only their home country is accessible.
+   *  Plus users: every region is accessible. */
+  isRegionAccessible: (region: Region) => boolean;
 }
 
-const RegionContext = createContext<RegionContextValue>({
-  selectedRegion: REGIONS[0],
-  setSelectedRegion: () => {},
-});
-
-/** Global region — used as the Plus default */
 const GLOBAL_REGION = REGIONS.find((r) => r.code === 'world')!;
-/** UK region — used as the free-tier default */
-const UK_REGION = REGIONS[0];
+
+const RegionContext = createContext<RegionContextValue>({
+  selectedRegion: GLOBAL_REGION,
+  setSelectedRegion: () => {},
+  homeCountryCode: null,
+  isRegionAccessible: () => false,
+});
 
 export function RegionProvider({ children }: { children: ReactNode }) {
   const { isPlus } = useSubscription();
-  const [selectedRegion, setSelectedRegion] = useState<Region>(UK_REGION);
-  const hasAppliedDefault = useRef(false);
+  const { session } = useAuth();
 
-  // Once subscription state is known, set the appropriate default:
-  //   Free users → UK only
-  //   Plus users → Global
-  // Only applies once (on initial load) — after that, manual selection takes over.
+  // Hydrate from the in-memory cache straight away if it's already
+  // warm (avoids a flash of UK while we wait for the profile fetch).
+  const cachedAtMount = getCachedProfile();
+  const initialHome =
+    cachedAtMount?.profile.home_country_code ?? null;
+
+  const [homeCountryCode, setHomeCountryCode] = useState<string | null>(initialHome);
+  const [selectedRegion, setSelectedRegion] = useState<Region>(
+    isPlus ? GLOBAL_REGION : regionForCountry(initialHome),
+  );
+  const hasAppliedDefault = useRef(initialHome !== null);
+
+  // ── Load home_country_code from the user's profile ────────────
+  // Once the auth session is known, fetch the profile (cached, so
+  // this is a no-op when the dashboard has already warmed it up).
+  useEffect(() => {
+    let cancelled = false;
+    if (!session?.user?.id) {
+      setHomeCountryCode(null);
+      hasAppliedDefault.current = false;
+      return;
+    }
+    fetchAndCacheProfile(session.user.id).then((cached) => {
+      if (cancelled) return;
+      const code = cached?.profile.home_country_code ?? null;
+      setHomeCountryCode(code);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.user?.id]);
+
+  // ── Apply the appropriate default region once we know enough ──
+  // Free users land on their home country; Plus users land on Global
+  // (so they immediately see the broadest dataset). Only fires once
+  // per session — after that, manual selection wins.
   useEffect(() => {
     if (hasAppliedDefault.current) return;
+    if (homeCountryCode === null) return; // wait for profile
     hasAppliedDefault.current = true;
-    setSelectedRegion(isPlus ? GLOBAL_REGION : UK_REGION);
-  }, [isPlus]);
+    setSelectedRegion(isPlus ? GLOBAL_REGION : regionForCountry(homeCountryCode));
+  }, [homeCountryCode, isPlus]);
+
+  // ── Accessibility check ───────────────────────────────────────
+  // Single source of truth used by the UI so the dropdown gating
+  // and the "tap = upsell" logic can't drift apart.
+  function isRegionAccessible(region: Region): boolean {
+    if (isPlus) return true;
+    if (homeCountryCode === null) return false; // fail-safe while loading
+    if (region.code === homeCountryCode) return true;
+    // Users from unsupported countries default to 'world' — let
+    // them keep Global free. All dedicated regions still Plus-gated.
+    if (homeCountryCode === 'world' && region.code === 'world') return true;
+    return false;
+  }
 
   return (
-    <RegionContext.Provider value={{ selectedRegion, setSelectedRegion }}>
+    <RegionContext.Provider
+      value={{ selectedRegion, setSelectedRegion, homeCountryCode, isRegionAccessible }}
+    >
       {children}
     </RegionContext.Provider>
   );

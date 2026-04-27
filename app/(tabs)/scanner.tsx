@@ -31,7 +31,7 @@ export default function ScannerScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanning, setScanning] = useState(true);
   const [processing, setProcessing] = useState(false);
-  const { selectedRegion, setSelectedRegion } = useRegion();
+  const { selectedRegion, setSelectedRegion, isRegionAccessible } = useRegion();
   const [regionPickerVisible, setRegionPickerVisible] = useState(false);
   const router = useRouter();
   const { session } = useAuth();
@@ -107,10 +107,11 @@ export default function ScannerScreen() {
     }
   }
 
-  /** Handle region selection — gate premium regions behind Plus (UK always free) */
+  /** Handle region selection — only the user's home country is free
+   *  on the freemium plan; every other region opens the upsell.
+   *  Plus users can pick anything. */
   function handleRegionSelect(region: Region) {
-    if (region.code !== 'gb' && !isPlus) {
-      // Non-UK regions require Plus subscription
+    if (!isRegionAccessible(region)) {
       setRegionPickerVisible(false);
       showUpsell();
       return;
@@ -426,7 +427,7 @@ export default function ScannerScreen() {
           {/* Other regions */}
           <View style={styles.regionOthersList}>
             {REGIONS.filter((r) => r.code !== selectedRegion.code).map((region) => {
-              const isFree = region.code === 'gb';
+              const accessible = isRegionAccessible(region);
               return (
                 <TouchableOpacity
                   key={region.code}
@@ -436,7 +437,7 @@ export default function ScannerScreen() {
                 >
                   <Image source={FLAG_IMAGES[region.code]} style={styles.flagImage} resizeMode="contain" />
                   <Text style={styles.regionRowLabel}>{region.label}</Text>
-                  {!isFree && !isPlus && <PlusTag />}
+                  {!accessible && <PlusTag />}
                 </TouchableOpacity>
               );
             })}

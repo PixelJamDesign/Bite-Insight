@@ -98,7 +98,7 @@ export default function FoodSearchScreen() {
   // Page-level entrance/exit animation
   const { opacity: pageOpacity, translateX: pageTranslateX, animateExit: pageExit } = usePageTransition();
 
-  const { selectedRegion, setSelectedRegion } = useRegion();
+  const { selectedRegion, setSelectedRegion, isRegionAccessible } = useRegion();
   const { menuOpen, menuVisible, menuAnim, openMenu, closeMenu, closeMenuInstant } = useMenu();
   const [regionPickerVisible, setRegionPickerVisible] = useState(false);
   const [query, setQuery] = useState('');
@@ -157,9 +157,10 @@ export default function FoodSearchScreen() {
     return Math.round(DEBOUNCE_MIN + ratio * (DEBOUNCE_MAX - DEBOUNCE_MIN));
   }
 
-  /** Handle region selection — gate premium regions behind Plus (UK always free) */
+  /** Handle region selection — only the user's home country is free
+   *  on the freemium plan; every other region opens the upsell. */
   function handleRegionSelect(region: Region) {
-    if (region.code !== 'gb' && !isPlus) {
+    if (!isRegionAccessible(region)) {
       setRegionPickerVisible(false);
       showUpsell();
       return;
@@ -984,18 +985,21 @@ export default function FoodSearchScreen() {
 
               {/* Other regions */}
               <View style={styles.regionOthersList}>
-                {REGIONS.filter((r) => r.code !== selectedRegion.code).map((region) => (
-                  <TouchableOpacity
-                    key={region.code}
-                    style={styles.regionRow}
-                    activeOpacity={0.7}
-                    onPress={() => handleRegionSelect(region)}
-                  >
-                    <RNImage source={FLAG_IMAGES[region.code]} style={styles.flagImage} resizeMode="contain" />
-                    <Text style={styles.regionRowLabel}>{region.label}</Text>
-                    {region.code !== 'gb' && !isPlus && <PlusTag />}
-                  </TouchableOpacity>
-                ))}
+                {REGIONS.filter((r) => r.code !== selectedRegion.code).map((region) => {
+                  const accessible = isRegionAccessible(region);
+                  return (
+                    <TouchableOpacity
+                      key={region.code}
+                      style={styles.regionRow}
+                      activeOpacity={0.7}
+                      onPress={() => handleRegionSelect(region)}
+                    >
+                      <RNImage source={FLAG_IMAGES[region.code]} style={styles.flagImage} resizeMode="contain" />
+                      <Text style={styles.regionRowLabel}>{region.label}</Text>
+                      {!accessible && <PlusTag />}
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             </View>
           </View>
