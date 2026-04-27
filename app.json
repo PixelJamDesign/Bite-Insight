@@ -7,11 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "biteinsight",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#e2f1ee"
-    },
     "ios": {
       "newArchEnabled": true,
       "supportsTablet": false,
@@ -34,11 +29,6 @@
     },
     "android": {
       "newArchEnabled": true,
-      "splash": {
-        "image": "./assets/images/splash.png",
-        "resizeMode": "cover",
-        "backgroundColor": "#e2f1ee"
-      },
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#e2f1ee"
@@ -111,6 +101,21 @@
             "targetSdkVersion": 35,
             "buildToolsVersion": "35.0.0",
             "ndkVersion": "27.1.12297006"
+          }
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#e2f1ee",
+          "android": {
+            "image": "./assets/images/splash-icon-android.png",
+            "imageWidth": 200,
+            "resizeMode": "contain",
+            "backgroundColor": "#e2f1ee"
           }
         }
       ]

@@ -299,7 +299,21 @@ function RootLayoutInner() {
       <StatusBar style="dark" />
       <View style={{ flex: 1, backgroundColor: '#e2f1ee' }}>
         <Animated.View style={{ flex: 1, opacity: contentOpacity }}>
-          <Stack screenOptions={{ headerShown: false, animation: 'fade', contentStyle: { flex: 1, padding: 0, margin: 0, backgroundColor: '#e2f1ee' } }}>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              // Subtle slide-up + fade. Pure 'fade' on Android cross-fades
+              // two screens that both retain native fragment elevation —
+              // the leaving screen's shadow leaks through and creates a
+              // visible border around the panel during transition. The
+              // 'fade_from_bottom' variant slides slightly which avoids
+              // the cross-fade flash, and feels native on both platforms.
+              animation: 'fade_from_bottom',
+              animationDuration: 220,
+              navigationBarColor: '#e2f1ee',
+              contentStyle: { flex: 1, padding: 0, margin: 0, backgroundColor: '#e2f1ee' },
+            }}
+          >
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="onboarding" />
