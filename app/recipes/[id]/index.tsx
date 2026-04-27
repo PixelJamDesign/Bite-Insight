@@ -373,6 +373,14 @@ export default function RecipeDetailScreen() {
   // signed in, AuthGuard sends them to login first; after auth +
   // onboarding they land on the recipe.
   async function handleShareWithFriend() {
+    // Wait for the RecipeActionsSheet's close animation to finish
+    // before presenting the iOS share UIActivityViewController.
+    // Without this delay, the bottom sheet's modal dismissal racing
+    // with the share sheet's presentation causes iOS to immediately
+    // dismiss the share sheet — appearing as the drawer "flashing
+    // open then closing" and freezing interaction. 350ms covers
+    // gorhom/bottom-sheet's default close animation (~250ms).
+    await new Promise((resolve) => setTimeout(resolve, 350));
     // Universal link — when iOS / Android sees this URL on a device
     // with the app installed, the OS hands the URL to the app
     // before the browser opens, landing the recipient on the recipe
