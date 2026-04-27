@@ -40,12 +40,23 @@ interface RecipePreview {
   id: string;
   name: string;
   cover_image_url: string | null;
-  author: { full_name: string | null } | null;
+  nutriscore_grade: string | null;
+  like_count: number | null;
+  author: { full_name: string | null; avatar_url: string | null } | null;
 }
 
 const APP_STORE_URL = 'https://apps.apple.com/app/bite-insight/id6739489541';
 const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.biteinsightapp.gcahill';
 const FALLBACK_OG_IMAGE = 'https://biteinsight.app/og-default.png';
+
+// Nutri-score colour map — matches the in-app palette.
+const NUTRISCORE_COLORS: Record<string, string> = {
+  a: '#009a1f',
+  b: '#b8d828',
+  c: '#ffc72d',
+  d: '#ff8736',
+  e: '#ff3f42',
+};
 
 export default async function handler(req: Request): Promise<Response> {
   const url = new URL(req.url);
@@ -58,7 +69,8 @@ export default async function handler(req: Request): Promise<Response> {
       const res = await fetch(
         `${SUPABASE_URL}/rest/v1/recipes?id=eq.${encodeURIComponent(id)}` +
           `&visibility=eq.public&limit=1` +
-          `&select=id,name,cover_image_url,author:profiles!recipes_user_id_fkey(full_name)`,
+          `&select=id,name,cover_image_url,nutriscore_grade,like_count,` +
+          `author:profiles!recipes_user_id_fkey(full_name,avatar_url)`,
         {
           headers: {
             apikey: SUPABASE_ANON_KEY,
@@ -93,9 +105,13 @@ export default async function handler(req: Request): Promise<Response> {
     title,
     description,
     ogImage,
+    recipeId: id,
     recipeName: recipe?.name ?? null,
     author,
+    authorAvatar: recipe?.author?.avatar_url ?? null,
     coverImage: recipe?.cover_image_url ?? null,
+    nutriscore: recipe?.nutriscore_grade ?? null,
+    likeCount: recipe?.like_count ?? null,
   });
 
   return new Response(html, {
@@ -124,9 +140,13 @@ function renderHtml(args: {
   title: string;
   description: string;
   ogImage: string;
+  recipeId: string;
   recipeName: string | null;
   author: string | null;
+  authorAvatar: string | null;
   coverImage: string | null;
+  nutriscore: string | null;
+  likeCount: number | null;
 }): string {
   const t = escapeHtml(args.title);
   const d = escapeHtml(args.description);
@@ -135,6 +155,15 @@ function renderHtml(args: {
   const recipeName = args.recipeName ? escapeHtml(args.recipeName) : null;
   const author = args.author ? escapeHtml(args.author) : null;
   const cover = args.coverImage ? escapeHtml(args.coverImage) : null;
+  const avatar = args.authorAvatar ? escapeHtml(args.authorAvatar) : null;
+  const grade = args.nutriscore ? args.nutriscore.toLowerCase() : null;
+  const gradeColor = grade && NUTRISCORE_COLORS[grade] ? NUTRISCORE_COLORS[grade] : null;
+  const likeCount =
+    typeof args.likeCount === 'number' && args.likeCount > 0 ? args.likeCount : null;
+  const initial =
+    args.author && args.author.trim().length > 0
+      ? escapeHtml(args.author.trim().charAt(0).toUpperCase())
+      : 'B';
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -174,149 +203,270 @@ function renderHtml(args: {
         --secondary: #00776f;
         --accent: #3b9586;
         --stroke: #aad4cd;
+        --mint: #b8dfd6;
+        --spring-water: #e2f1ee;
       }
       * { box-sizing: border-box; }
       html, body { margin: 0; padding: 0; }
       body {
         background: var(--bg);
         color: var(--primary);
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        font-family: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         min-height: 100vh;
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding: 24px 16px 48px;
+        padding: 60px 24px 48px;
+        gap: 32px;
       }
-      .wrap {
-        width: 100%;
-        max-width: 480px;
+
+      /* ── Brand block (app icon + wordmark + tagline) ─────────── */
+      .brand {
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        align-items: center;
+        gap: 32px;
       }
-      .brand {
-        font-weight: 700;
-        font-size: 18px;
-        letter-spacing: -0.4px;
-        color: var(--primary);
-        text-align: center;
-        margin-top: 8px;
-      }
-      .card {
-        background: var(--surface);
-        border: 1px solid var(--stroke);
-        border-radius: 16px;
-        overflow: hidden;
-        box-shadow: 0 12px 24px rgba(2, 52, 50, 0.08);
-      }
-      .cover {
-        width: 100%;
-        aspect-ratio: 16 / 10;
-        object-fit: cover;
-        display: block;
-        background: var(--bg);
-      }
-      .cover-placeholder {
-        width: 100%;
-        aspect-ratio: 16 / 10;
+      .app-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 13px;
+        background: linear-gradient(180deg, #ffffff 0%, var(--spring-water) 100%);
+        box-shadow: inset 0 0 14px rgba(59, 149, 134, 0.3);
         display: flex;
         align-items: center;
         justify-content: center;
+        overflow: hidden;
+      }
+      .app-icon img { width: 100%; height: 100%; object-fit: cover; }
+      .wordmark { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+      .wordmark img.logo { width: 194px; height: auto; display: block; }
+      .wordmark img.tagline { width: 178px; height: auto; display: block; }
+
+      /* ── Recipe card ──────────────────────────────────────────── */
+      .feed {
+        width: 100%;
+        max-width: 640px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+      }
+      .card {
+        position: relative;
+        width: 100%;
+        background: #ffffff;
+        border: 1px solid var(--stroke);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 12px 12px rgba(68, 71, 112, 0.1);
+      }
+      .cover-wrap {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 320 / 180;
         background: var(--bg);
+      }
+      .cover-wrap img.cover {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .cover-placeholder {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         color: var(--secondary);
         font-weight: 700;
       }
+      .nutri-pill {
+        position: absolute;
+        right: 9px;
+        bottom: -12px;
+        width: 24px;
+        height: 36px;
+        border-radius: 999px;
+        border: 2px solid #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 16px;
+        line-height: 20px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.29);
+        box-shadow: 0 4px 4px rgba(68, 71, 112, 0.3);
+      }
       .body {
-        padding: 16px 20px 20px;
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .avatar {
+        flex: 0 0 auto;
+        width: 48px;
+        height: 48px;
+        border-radius: 999px;
+        border: 3px solid #ffffff;
+        background: var(--spring-water);
+        overflow: hidden;
+        box-shadow: 0 3px 5px rgba(140, 166, 161, 0.22);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+        font-weight: 700;
+        font-size: 18px;
+      }
+      .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .meta {
+        flex: 1 1 auto;
+        min-width: 0;
         display: flex;
         flex-direction: column;
         gap: 4px;
       }
       .name {
-        font-size: 24px;
-        line-height: 30px;
+        font-size: 16px;
+        line-height: 20px;
         font-weight: 700;
-        letter-spacing: -0.48px;
+        color: var(--primary);
         margin: 0;
       }
       .author {
-        font-size: 16px;
-        line-height: 24px;
+        font-size: 14px;
+        line-height: 21px;
         font-weight: 300;
         color: var(--secondary);
         margin: 0;
+        letter-spacing: -0.14px;
       }
+      .likes {
+        flex: 0 0 auto;
+        background: var(--spring-water);
+        border-radius: 8px;
+        padding: 4px 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        color: var(--secondary);
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: -0.26px;
+        line-height: 1.2;
+      }
+      .likes svg { width: 14px; height: 14px; flex: 0 0 auto; }
+
+      /* ── Primary CTA ──────────────────────────────────────────── */
       .cta {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        margin-top: 8px;
-      }
-      .btn {
+        width: 100%;
+        max-width: 640px;
+        background: var(--secondary);
+        color: #ffffff;
+        text-decoration: none;
+        text-align: center;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 20px;
+        padding: 16px 24px;
+        border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 16px;
-        border-radius: 8px;
-        font-size: 16px;
+      }
+
+      /* ── Download block ─────────────────────────────────────── */
+      .download {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+      }
+      .download h2 {
+        margin: 0;
+        font-size: 18px;
+        line-height: 22px;
         font-weight: 700;
-        text-decoration: none;
-        text-align: center;
-        line-height: 20px;
-      }
-      .btn-primary {
-        background: var(--secondary);
-        color: #fff;
-      }
-      .btn-secondary {
-        background: var(--surface);
         color: var(--primary);
-        border: 1px solid var(--stroke);
+        letter-spacing: -0.36px;
+        text-align: center;
       }
       .stores {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: center;
       }
-      .footer {
-        font-size: 13px;
-        color: var(--secondary);
-        text-align: center;
-        line-height: 18px;
-        margin-top: 8px;
-      }
+      .stores a { display: inline-flex; }
+      .stores img.app-store { height: 42px; width: auto; display: block; }
+      .stores img.google-play { height: 60px; width: auto; display: block; margin: -9px 0; }
     </style>
   </head>
   <body>
-    <div class="wrap">
-      <div class="brand">Bite Insight</div>
+    <!-- Brand: app icon + wordmark + tagline -->
+    <div class="brand">
+      <div class="app-icon">
+        <img src="/share/app-icon.png" alt="Bite Insight" />
+      </div>
+      <div class="wordmark">
+        <img class="logo" src="/share/logo-full.svg" alt="Bite Insight" />
+        <img class="tagline" src="/share/tagline.svg" alt="Scan your snacks. Know the facts." />
+      </div>
+    </div>
 
+    <!-- Recipe card -->
+    <div class="feed">
       <div class="card">
-        ${cover
-          ? `<img class="cover" src="${cover}" alt="${t}" />`
-          : `<div class="cover-placeholder">No cover image</div>`}
+        <div class="cover-wrap">
+          ${cover
+            ? `<img class="cover" src="${cover}" alt="${t}" />`
+            : `<div class="cover-placeholder">No cover image</div>`}
+          ${gradeColor
+            ? `<div class="nutri-pill" style="background:${gradeColor}">${escapeHtml(grade!.toUpperCase())}</div>`
+            : ''}
+        </div>
         <div class="body">
-          <h1 class="name">${recipeName ?? 'Recipe'}</h1>
-          ${author ? `<p class="author">By ${author}</p>` : ''}
+          <div class="avatar">
+            ${avatar
+              ? `<img src="${avatar}" alt="${author ?? 'Avatar'}" />`
+              : `<span>${initial}</span>`}
+          </div>
+          <div class="meta">
+            <h1 class="name">${recipeName ?? 'Recipe'}</h1>
+            ${author ? `<p class="author">by ${author}</p>` : ''}
+          </div>
+          ${likeCount
+            ? `<span class="likes">
+                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                   <path d="M2 9h4v12H2zM22 11a2 2 0 0 0-2-2h-6l1-4.5c.2-1-.6-1.9-1.6-1.5L8 9v12h11.3a2 2 0 0 0 2-1.6L22 11z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                 </svg>
+                 ${likeCount} ${likeCount === 1 ? 'like' : 'likes'}
+               </span>`
+            : ''}
         </div>
       </div>
 
-      <div class="cta">
-        <a class="btn btn-primary" href="biteinsight://recipes/${escapeHtml(args.canonical.split('/').pop() ?? '')}">
-          Open in Bite Insight
+      <a class="cta" href="biteinsight://recipes/${escapeHtml(args.recipeId)}">
+        Open Bite Insight app
+      </a>
+    </div>
+
+    <!-- Download block -->
+    <div class="download">
+      <h2>Download the app today</h2>
+      <div class="stores">
+        <a href="${APP_STORE_URL}" aria-label="Download on the App Store">
+          <img class="app-store" src="/share/app-store-badge.svg" alt="Download on the App Store" />
+        </a>
+        <a href="${PLAY_STORE_URL}" aria-label="Get it on Google Play">
+          <img class="google-play" src="/share/google-play-badge.png" alt="Get it on Google Play" />
         </a>
       </div>
-
-      <div class="stores">
-        <a class="btn btn-secondary" href="${APP_STORE_URL}">App Store</a>
-        <a class="btn btn-secondary" href="${PLAY_STORE_URL}">Google Play</a>
-      </div>
-
-      <p class="footer">
-        Tap "Open in Bite Insight" if you've got the app.
-        Otherwise grab it on the App Store or Google Play.
-      </p>
     </div>
 
     <script>
@@ -330,7 +480,7 @@ function renderHtml(args: {
         var ua = navigator.userAgent || '';
         var isMobile = /iPhone|iPad|iPod|Android/i.test(ua);
         if (!isMobile) return;
-        var id = ${JSON.stringify(args.canonical.split('/').pop() ?? '')};
+        var id = ${JSON.stringify(args.recipeId)};
         if (!id) return;
         // Slight delay so the page renders the OG fallback first;
         // if the deep link works, the user never notices.
