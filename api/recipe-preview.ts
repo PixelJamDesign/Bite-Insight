@@ -370,8 +370,11 @@ function renderHtml(args: {
         text-align: center;
         font-size: 16px;
         font-weight: 700;
+        font-family: inherit;
         line-height: 20px;
         padding: 16px 24px;
+        border: 0;
+        cursor: pointer;
         border-radius: 8px;
         display: flex;
         align-items: center;
@@ -449,9 +452,9 @@ function renderHtml(args: {
         </div>
       </div>
 
-      <a class="cta" href="biteinsight://recipes/${escapeHtml(args.recipeId)}">
+      <button id="open-app-btn" class="cta" type="button">
         Open Bite Insight app
-      </a>
+      </button>
     </div>
 
     <!-- Download block -->
@@ -468,23 +471,64 @@ function renderHtml(args: {
     </div>
 
     <script>
-      // If the user has the app, the OS handles the universal link
-      // before this page ever loads — they never see this. For users
-      // who do reach this page, attempt a soft custom-scheme open in
-      // case the app is installed but not yet associated with the
-      // domain (e.g. fresh install, AASA cache not warmed). If that
-      // does nothing, the on-page CTA buttons take over.
+      // The big "Open Bite Insight app" button needs to do the right
+      // thing on three different surfaces:
+      //   • iOS / Android with the app installed → custom-scheme
+      //     deep link launches straight into the recipe.
+      //   • iOS / Android without the app → fall through to the
+      //     platform's App Store / Play Store after ~1.2s.
+      //   • Desktop browsers → can't launch a native app at all, so
+      //     send them to the App Store directly. Otherwise the click
+      //     would silently do nothing (which is the bug we just hit).
       (function () {
-        var ua = navigator.userAgent || '';
-        var isMobile = /iPhone|iPad|iPod|Android/i.test(ua);
-        if (!isMobile) return;
         var id = ${JSON.stringify(args.recipeId)};
-        if (!id) return;
-        // Slight delay so the page renders the OG fallback first;
-        // if the deep link works, the user never notices.
-        setTimeout(function () {
+        var ua = navigator.userAgent || '';
+        var isIos = /iPhone|iPad|iPod/i.test(ua);
+        var isAndroid = /Android/i.test(ua);
+        var isMobile = isIos || isAndroid;
+        var APP_STORE_URL = ${JSON.stringify(APP_STORE_URL)};
+        var PLAY_STORE_URL = ${JSON.stringify(PLAY_STORE_URL)};
+        var storeUrl = isAndroid ? PLAY_STORE_URL : APP_STORE_URL;
+
+        function openApp() {
+          if (!isMobile) {
+            // No native app on desktop — send them to the store.
+            window.location.href = storeUrl;
+            return;
+          }
+          if (!id) {
+            window.location.href = storeUrl;
+            return;
+          }
+          // Try the custom scheme. If the app is installed the
+          // browser switches context and our setTimeout never fires.
+          // If nothing handles the scheme, the timer ticks and we
+          // forward the user to the relevant store.
+          var start = Date.now();
+          var timer = setTimeout(function () {
+            if (Date.now() - start < 2000 && document.visibilityState === 'visible') {
+              window.location.href = storeUrl;
+            }
+          }, 1200);
+          // If the page becomes hidden, the deep link worked — clear
+          // the fallback timer so the user doesn't get bounced to
+          // the store after returning to Safari later.
+          document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'hidden') clearTimeout(timer);
+          }, { once: true });
           window.location.href = 'biteinsight://recipes/' + id;
-        }, 500);
+        }
+
+        var btn = document.getElementById('open-app-btn');
+        if (btn) btn.addEventListener('click', openApp);
+
+        // Auto-attempt on first load for mobile users — gives the
+        // app the chance to take over before the user has to tap
+        // anything. Desktop users always need an explicit click
+        // (auto-redirecting them to the App Store would be hostile).
+        if (isMobile && id) {
+          setTimeout(openApp, 500);
+        }
       })();
     </script>
   </body>
