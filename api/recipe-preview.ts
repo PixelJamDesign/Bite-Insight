@@ -298,7 +298,7 @@ function renderHtml(args: {
       .nutri-pill {
         position: absolute;
         right: 9px;
-        bottom: -12px;
+        bottom: 9px;
         width: 24px;
         height: 36px;
         border-radius: 999px;
