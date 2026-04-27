@@ -298,7 +298,18 @@ function RootLayoutInner() {
       <WhatsNewGuard />
       <StatusBar style="dark" />
       <View style={{ flex: 1, backgroundColor: '#e2f1ee' }}>
-        <Animated.View style={{ flex: 1, opacity: contentOpacity }}>
+        {/* needsOffscreenAlphaCompositing fixes the Android-only "grey
+            border around every shadowed card during a fade" bug. Without
+            it, every child view with `elevation` renders its drop
+            shadow as a separate compositing layer when the parent
+            opacity drops below 1, leaking visible rectangles around
+            each card. With the flag, Android renders the whole
+            subtree to an offscreen buffer first, then applies the
+            opacity to the buffer as a single unit. */}
+        <Animated.View
+          style={{ flex: 1, opacity: contentOpacity }}
+          needsOffscreenAlphaCompositing
+        >
           <Stack
             screenOptions={{
               headerShown: false,
