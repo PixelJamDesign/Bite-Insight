@@ -17,6 +17,7 @@ import {
   FlatList,
   Image,
   ActivityIndicator,
+  useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -41,6 +42,10 @@ type TabKey = 'my' | 'community';
 export default function RecipesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  // Two-column layout on tablets and the web build at >=640px wide.
+  // Below that we keep the original single-column phone layout.
+  const { width: windowWidth } = useWindowDimensions();
+  const numColumns = windowWidth >= 640 ? 2 : 1;
   const { recipes, loading, refresh } = useRecipes();
   const community = usePublicRecipes();
   const { isPlus } = useSubscription();
@@ -199,24 +204,31 @@ export default function RecipesScreen() {
           ) : (
             <FlatList
               data={community.recipes}
+              key={`community-${numColumns}`}
               keyExtractor={(r) => r.id}
               refreshing={community.loading}
               onRefresh={community.refresh}
+              numColumns={numColumns}
+              columnWrapperStyle={
+                numColumns > 1 ? styles.columnWrapper : undefined
+              }
               contentContainerStyle={[
                 styles.listContent,
                 { paddingBottom: contentBottomPadding },
               ]}
               renderItem={({ item }) => (
-                <RecipeCard
-                  recipe={item}
-                  variant="community"
-                  liked={likedIds.has(item.id)}
-                  likeCountOverride={likeOverrides[item.id]}
-                  onToggleLike={() => handleToggleFeedLike(item.id)}
-                  onPress={() =>
-                    router.push(`/recipes/${item.id}?viewer=1` as never)
-                  }
-                />
+                <View style={numColumns > 1 ? styles.columnItem : undefined}>
+                  <RecipeCard
+                    recipe={item}
+                    variant="community"
+                    liked={likedIds.has(item.id)}
+                    likeCountOverride={likeOverrides[item.id]}
+                    onToggleLike={() => handleToggleFeedLike(item.id)}
+                    onPress={() =>
+                      router.push(`/recipes/${item.id}?viewer=1` as never)
+                    }
+                  />
+                </View>
               )}
               ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
             />
@@ -226,18 +238,25 @@ export default function RecipesScreen() {
         ) : (
           <FlatList
             data={recipes}
+            key={`my-${numColumns}`}
             keyExtractor={(r) => r.id}
             refreshing={loading}
             onRefresh={refresh}
+            numColumns={numColumns}
+            columnWrapperStyle={
+              numColumns > 1 ? styles.columnWrapper : undefined
+            }
             contentContainerStyle={[
               styles.listContent,
               { paddingBottom: contentBottomPadding },
             ]}
             renderItem={({ item }) => (
-              <RecipeCard
-                recipe={item}
-                onPress={() => router.push(`/recipes/${item.id}` as never)}
-              />
+              <View style={numColumns > 1 ? styles.columnItem : undefined}>
+                <RecipeCard
+                  recipe={item}
+                  onPress={() => router.push(`/recipes/${item.id}` as never)}
+                />
+              </View>
             )}
             ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
           />
@@ -670,10 +689,20 @@ const styles = StyleSheet.create({
     letterSpacing: -0.32,
   },
 
-  // Full-width card list (Figma: single column)
+  // Full-width card list (Figma: single column on phones, two columns
+  // at >=640px wide for tablets and the web build).
   listContent: {
     paddingHorizontal: Spacing.m,
     paddingTop: Spacing.s,
+  },
+  // Spacing between cards in the same row of a multi-column layout.
+  columnWrapper: {
+    gap: 16,
+  },
+  // Each card needs flex:1 inside the row so the two columns share
+  // available width evenly.
+  columnItem: {
+    flex: 1,
   },
   card: {
     backgroundColor: Colors.surface.secondary,
