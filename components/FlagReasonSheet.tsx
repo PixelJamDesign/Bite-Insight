@@ -456,10 +456,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.s,
     paddingHorizontal: Spacing.m,
     borderRadius: Radius.m,
-    shadowColor: 'rgba(132,161,159,1)',
-    shadowOffset: { width: 0, height: 7 },
-    shadowOpacity: 0.19,
-    shadowRadius: 14,
   },
   cancelBtnText: {
     // Heading 5

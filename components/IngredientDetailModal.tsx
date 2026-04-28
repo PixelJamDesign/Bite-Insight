@@ -198,10 +198,6 @@ const styles = StyleSheet.create({
     borderRadius: 80,
     zIndex: 2,
     marginBottom: -80,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.2,
-    shadowRadius: 28,
   },
   imageClip: {
     width: 160,

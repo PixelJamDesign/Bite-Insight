@@ -572,10 +572,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 24,
     gap: 10,
-    shadowColor: 'rgba(86,138,130,0.1)',
-    shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: 1,
-    shadowRadius: 32,
   },
   introCardTitle: {
     fontSize: 18,

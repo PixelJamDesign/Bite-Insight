@@ -226,10 +226,6 @@ const styles = StyleSheet.create({
     height: 60,
     width: '100%',
     maxWidth: 600,
-    shadowColor: Platform.OS === 'android' ? '#aab4b3' : '#444770',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
     elevation: Platform.OS === 'android' ? 0 : 6,
   },
   blurClip: {
@@ -253,10 +249,6 @@ const styles = StyleSheet.create({
     height: 48,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.5)',
-    shadowColor: Platform.OS === 'android' ? '#aab4b3' : '#444770',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
     elevation: Platform.OS === 'android' ? 1 : 4,
   },
   iconContainer: {
@@ -276,10 +268,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: Platform.OS === 'android' ? '#aab4b3' : '#444770',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
     elevation: Platform.OS === 'android' ? 1 : 8,
   },
   avatarCircle: {
@@ -292,10 +280,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'rgba(255,255,255,0.9)',
     overflow: 'hidden',
-    shadowColor: Platform.OS === 'android' ? '#aab4b3' : '#444770',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
     elevation: Platform.OS === 'android' ? 1 : 4,
   },
   avatarImage: {

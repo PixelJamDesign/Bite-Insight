@@ -1207,10 +1207,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    shadowColor: '#444770',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.18,
-    shadowRadius: 10,
   },
   avatarImage: {
     width: 120,
@@ -1465,10 +1461,6 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: 'rgba(86,138,130,0.1)',
-    shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: 1,
-    shadowRadius: 32,
   },
   conditionPillText: {
     fontSize: 13,

@@ -233,10 +233,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.stroke.primary,
     padding: 24,
     gap: 24,
-    shadowColor: '#444770',
-    shadowOffset: { width: 0, height: 24 },
-    shadowOpacity: 0.05,
-    shadowRadius: 24,
   },
   cardHeader: { gap: 4 },
   cardTitle: {

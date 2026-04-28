@@ -107,10 +107,6 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 27,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
   image: {
     width: 60,

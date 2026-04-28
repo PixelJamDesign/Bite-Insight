@@ -658,10 +658,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.stroke.primary,
     padding: 24,
     gap: 24,
-    shadowColor: '#444770',
-    shadowOffset: { width: 0, height: 24 },
-    shadowOpacity: 0.05,
-    shadowRadius: 24,
   },
   cardHeader: { gap: 4 },
   cardTitle: {
@@ -886,10 +882,6 @@ const desktopStyles = StyleSheet.create({
     borderColor: Colors.stroke.primary,
     padding: 24,
     gap: 24,
-    shadowColor: '#444770',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
   },
 
   // ── Decorative floating cards ─────────────────────────────────────────────────
@@ -897,10 +889,6 @@ const desktopStyles = StyleSheet.create({
     position: 'absolute',
     backgroundColor: Colors.surface.secondary,
     borderRadius: 10,
-    shadowColor: '#3f6962',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
   },
   productCard: {
     left: '38%',

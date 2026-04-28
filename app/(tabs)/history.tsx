@@ -652,10 +652,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 24,
     paddingBottom: 0,
-    shadowColor: '#444770',
-    shadowOffset: { width: 0, height: 24 },
-    shadowOpacity: 0.05,
-    shadowRadius: 24,
   },
   calHeader: {
     flexDirection: 'row',

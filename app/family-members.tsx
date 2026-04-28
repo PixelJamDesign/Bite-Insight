@@ -521,10 +521,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: 8,
     paddingVertical: 8,
-    shadowColor: '#444770',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
   },
   dragHandle: {
     width: 36, height: 36, alignItems: 'center', justifyContent: 'center',
@@ -533,10 +529,6 @@ const styles = StyleSheet.create({
     width: 80, height: 80, borderRadius: 999,
     backgroundColor: Colors.accent, alignItems: 'center', justifyContent: 'center',
     borderWidth: 4, borderColor: '#fff', overflow: 'hidden',
-    shadowColor: '#444770',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
   },
   avatarText: {
     fontSize: 22, fontWeight: '700', fontFamily: 'Figtree_700Bold',

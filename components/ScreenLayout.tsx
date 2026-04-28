@@ -198,9 +198,5 @@ const styles = StyleSheet.create({
     borderColor: Colors.stroke.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#444770',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
   },
 });

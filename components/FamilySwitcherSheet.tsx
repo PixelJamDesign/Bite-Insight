@@ -415,10 +415,6 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: '#fff',
     overflow: 'hidden',
-    shadowColor: '#444770',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
   },
   avatarText: {
     fontSize: 20,
