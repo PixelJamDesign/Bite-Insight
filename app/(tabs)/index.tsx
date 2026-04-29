@@ -636,7 +636,7 @@ export default function HomeDashboard() {
 
       {/* ── Header (always on top) ── */}
       <View style={[styles.header, menuOpen && styles.headerMenu, { paddingTop: insets.top + 24 }]}>
-        <TouchableOpacity onPress={() => router.push('/(tabs)/' as any)} activeOpacity={0.7} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+        <TouchableOpacity onPress={() => router.push('/(tabs)' as any)} activeOpacity={0.7} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
           <Logo width={141} height={36} />
         </TouchableOpacity>
         <TouchableOpacity

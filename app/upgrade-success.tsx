@@ -198,7 +198,7 @@ export default function UpgradeSuccessScreen() {
         <TouchableOpacity
           style={styles.primaryBtn}
           activeOpacity={0.85}
-          onPress={() => router.replace('/(tabs)/')}
+          onPress={() => router.replace('/(tabs)')}
         >
           <Text style={styles.primaryBtnText}>Get Started</Text>
         </TouchableOpacity>
