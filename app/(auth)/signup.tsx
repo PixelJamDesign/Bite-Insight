@@ -221,11 +221,17 @@ export default function SignUpScreen() {
   // ── Sign-up / Finish ─────────────────────────────────────────────────────────
   async function handleFinish() {
     setLoading(true);
+    // Detect country BEFORE signUp so we can pass it through user
+    // metadata. The handle_new_user() trigger reads it and writes
+    // home_country_code directly to profiles — this is the only path
+    // that works when email confirmation is on (no session yet means
+    // the post-signup upsert below is blocked by RLS).
+    const { country_code } = await detectCountry();
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName },
+        data: { full_name: fullName, home_country_code: country_code },
         emailRedirectTo: 'biteinsight://verify',
       },
     });
@@ -236,10 +242,12 @@ export default function SignUpScreen() {
     }
     const user = data.user;
     if (user) {
-      // Detect the user's country via IP (Edge Function). Never
-      // blocks signup — failures fall back to 'world' silently.
-      const { country_code } = await detectCountry();
       if (avatarUri) await uploadAvatar(user.id, avatarUri);
+      // This upsert only succeeds when there's an active session
+      // (email confirmation off). When confirmation is on it's
+      // rejected by RLS — that's fine, the trigger already wrote
+      // full_name and home_country_code. The remaining fields will
+      // be filled in on first sign-in instead.
       await supabase.from('profiles').upsert({
         id: user.id,
         full_name: fullName,
@@ -264,11 +272,14 @@ export default function SignUpScreen() {
   async function handleCreateAndSkip() {
     if (!fullName.trim() || !email.trim() || !password.trim()) return;
     setLoading(true);
+    // See handleFinish for why detection runs BEFORE signUp and the
+    // country code is passed through user metadata.
+    const { country_code } = await detectCountry();
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName },
+        data: { full_name: fullName, home_country_code: country_code },
         emailRedirectTo: 'biteinsight://verify',
       },
     });
@@ -279,9 +290,6 @@ export default function SignUpScreen() {
     }
     const user = data.user;
     if (user) {
-      // Detect the user's country via IP (Edge Function). Never
-      // blocks signup — failures fall back to 'world' silently.
-      const { country_code } = await detectCountry();
       if (avatarUri) await uploadAvatar(user.id, avatarUri);
       await supabase.from('profiles').upsert({
         id: user.id,

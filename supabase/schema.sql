@@ -18,14 +18,18 @@ create table if not exists public.profiles (
   updated_at      timestamptz default now() not null
 );
 
--- Auto-create profile row on sign-up
+-- Auto-create profile row on sign-up.
+-- Reads home_country_code out of raw_user_meta_data because the
+-- post-signup client upsert is blocked by RLS when email
+-- confirmation is on (no session yet → auth.uid() is NULL).
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer as $$
 begin
-  insert into public.profiles (id, full_name)
+  insert into public.profiles (id, full_name, home_country_code)
   values (
     new.id,
-    new.raw_user_meta_data ->> 'full_name'
+    new.raw_user_meta_data ->> 'full_name',
+    nullif(lower(new.raw_user_meta_data ->> 'home_country_code'), '')
   );
   return new;
 end;

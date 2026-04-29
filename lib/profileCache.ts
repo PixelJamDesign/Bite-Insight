@@ -4,6 +4,7 @@
 // scan-result so nutrition insights render without waiting for network.
 
 import { supabase } from './supabase';
+import { detectCountry } from './detectCountry';
 import type { UserProfile } from './types';
 
 interface CachedProfile {
@@ -89,5 +90,45 @@ export async function fetchAndCacheProfile(userId: string): Promise<CachedProfil
     fetchedAt: Date.now(),
   };
   setCachedProfile(result);
+
+  // Backfill home_country_code for users who signed up during the
+  // window where the post-signup upsert was silently rejected by RLS
+  // (see migration 20260428_handle_new_user_home_country.sql). Runs
+  // fire-and-forget so it never blocks the caller. RLS allows users
+  // to update their own profile, so this works without a session
+  // refresh. Once written, the trigger-driven flow takes over for
+  // any future signups.
+  if (profile.home_country_code == null) {
+    detectCountry()
+      .then(({ country_code }) => {
+        if (!country_code) return;
+        return supabase
+          .from('profiles')
+          .update({ home_country_code: country_code })
+          .eq('id', userId)
+          .is('home_country_code', null) // don't clobber a value set in the meantime
+          .then(({ error }) => {
+            if (error) {
+              console.warn('[profileCache] backfill home_country_code failed:', error.message);
+              return;
+            }
+            // Reflect the new value in the in-memory cache so the
+            // UI picks it up without another fetch.
+            const current = getCachedProfile();
+            if (current && current.profile.id === userId) {
+              setCachedProfile({
+                ...current,
+                profile: { ...current.profile, home_country_code: country_code },
+              });
+            }
+          });
+      })
+      .catch(() => {
+        // detectCountry already swallows errors; this catch is a
+        // belt-and-braces guard so a runtime exception never bubbles
+        // up into an unhandled promise rejection warning.
+      });
+  }
+
   return result;
 }
