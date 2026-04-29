@@ -129,9 +129,12 @@ function JourneyGuard() {
       return <Redirect href={stepToRoute(onboardingStep) as any} />;
     }
   } else if (LOCKED_JOURNEY_SEGMENTS.has(currentSegment)) {
-    // Journey complete but on a locked journey screen — send to main app
+    // Journey complete but on a locked journey screen — send to main app.
+    // Use the explicit dashboard path (not the group root '/(tabs)')
+    // because the group route was occasionally resolving through to
+    // +not-found.tsx during the disclaimer→tabs transition.
     // (app-tour is intentionally NOT locked so users can re-view it from the menu)
-    return <Redirect href="/(tabs)" />;
+    return <Redirect href={'/(tabs)/index' as any} />;
   }
 
   return null;

@@ -105,12 +105,19 @@ export default function DisclaimerScreen() {
       setSaving(true);
       try {
         await advanceTo('complete');
-        // Navigate explicitly to the dashboard. We can't rely on
-        // JourneyGuard's reactive <Redirect> alone — there's a brief
-        // window between the disclaimer unmounting and the (tabs)
-        // group mounting where expo-router can fall through to
-        // +not-found.tsx. An explicit replace closes that window.
-        router.replace('/(tabs)');
+        // One-tick delay so React flushes the setOnboardingStep
+        // queued inside advanceTo BEFORE we navigate. Otherwise the
+        // very next render sees step='complete' on segment='(tabs)'
+        // (we've already navigated) and JourneyGuard does nothing,
+        // but expo-router itself can briefly fall through to
+        // +not-found while the (tabs) layout boots for the first
+        // time — particularly on a fresh install.
+        await new Promise((r) => setTimeout(r, 0));
+        // Navigate to a SPECIFIC tab path (not the group root) so
+        // expo-router resolves directly to a registered screen
+        // instead of going through group resolution, which was
+        // landing on +not-found during the disclaimer→tabs hand-off.
+        router.replace('/(tabs)/index' as any);
       } catch {
         Alert.alert('Error', 'Failed to continue. Please try again.');
       }
