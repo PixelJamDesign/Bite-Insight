@@ -1,7 +1,9 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { useAuth } from '@/lib/auth';
-import { fetchAndCacheProfile, getCachedProfile } from '@/lib/profileCache';
+import { fetchAndCacheProfile, getCachedProfile, setCachedProfile } from '@/lib/profileCache';
+import { detectCountry } from '@/lib/detectCountry';
+import { supabase } from '@/lib/supabase';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -96,16 +98,57 @@ export function RegionProvider({ children }: { children: ReactNode }) {
   // ── Load home_country_code from the user's profile ────────────
   // Once the auth session is known, fetch the profile (cached, so
   // this is a no-op when the dashboard has already warmed it up).
+  //
+  // If the fetched profile has no home_country_code (e.g. a fresh
+  // signup race where regionContext queries before the trigger or
+  // upsert has populated it, or an older account that slipped
+  // through pre-fix), detect the country here and:
+  //   1. set local state immediately so the UI reflects it on the
+  //      first render — no quit-and-restart needed
+  //   2. persist to the DB and cache fire-and-forget
+  // This is the same self-heal that profileCache does, but updates
+  // OUR state directly so the user doesn't see Global on the
+  // scanner while waiting for the cache update we can't observe.
   useEffect(() => {
     let cancelled = false;
-    if (!session?.user?.id) {
+    const userId = session?.user?.id;
+    if (!userId) {
       setHomeCountryCode(null);
       return;
     }
-    fetchAndCacheProfile(session.user.id).then((cached) => {
+    fetchAndCacheProfile(userId).then(async (cached) => {
       if (cancelled) return;
       const code = cached?.profile.home_country_code ?? null;
-      setHomeCountryCode(code);
+      if (code) {
+        setHomeCountryCode(code);
+        return;
+      }
+      // No country on the profile — detect from IP and patch.
+      try {
+        const { country_code } = await detectCountry();
+        if (cancelled) return;
+        const next = country_code || 'world';
+        setHomeCountryCode(next);
+        // Persist (RLS allows users to update their own profile).
+        supabase
+          .from('profiles')
+          .update({ home_country_code: next })
+          .eq('id', userId)
+          .is('home_country_code', null)
+          .then(() => {
+            const current = getCachedProfile();
+            if (current && current.profile.id === userId) {
+              setCachedProfile({
+                ...current,
+                profile: { ...current.profile, home_country_code: next },
+              });
+            }
+          });
+      } catch {
+        // detectCountry already swallows errors; on a failure we
+        // leave homeCountryCode null and the UI falls back to
+        // Global, which is the safest no-op.
+      }
     });
     return () => {
       cancelled = true;
