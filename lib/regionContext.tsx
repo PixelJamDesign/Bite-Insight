@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { useAuth } from '@/lib/auth';
 import { fetchAndCacheProfile, getCachedProfile } from '@/lib/profileCache';
@@ -79,16 +79,19 @@ export function RegionProvider({ children }: { children: ReactNode }) {
   const { session } = useAuth();
 
   // Hydrate from the in-memory cache straight away if it's already
-  // warm (avoids a flash of UK while we wait for the profile fetch).
+  // warm (avoids a flash of Global while we wait for the profile fetch).
   const cachedAtMount = getCachedProfile();
   const initialHome =
     cachedAtMount?.profile.home_country_code ?? null;
 
   const [homeCountryCode, setHomeCountryCode] = useState<string | null>(initialHome);
-  const [selectedRegion, setSelectedRegion] = useState<Region>(
-    isPlus ? GLOBAL_REGION : regionForCountry(initialHome),
-  );
-  const hasAppliedDefault = useRef(initialHome !== null);
+
+  // For Plus users, selectedRegion is whatever they last picked. For
+  // free users, selectedRegion is DERIVED from homeCountryCode below
+  // and this state is unused — that's the whole point: free users are
+  // hard-locked to their home country, and the lock can't be defeated
+  // by a stale render or by setSelectedRegion being called externally.
+  const [plusSelectedRegion, setPlusSelectedRegion] = useState<Region>(GLOBAL_REGION);
 
   // ── Load home_country_code from the user's profile ────────────
   // Once the auth session is known, fetch the profile (cached, so
@@ -97,7 +100,6 @@ export function RegionProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     if (!session?.user?.id) {
       setHomeCountryCode(null);
-      hasAppliedDefault.current = false;
       return;
     }
     fetchAndCacheProfile(session.user.id).then((cached) => {
@@ -110,16 +112,25 @@ export function RegionProvider({ children }: { children: ReactNode }) {
     };
   }, [session?.user?.id]);
 
-  // ── Apply the appropriate default region once we know enough ──
-  // Free users land on their home country; Plus users land on Global
-  // (so they immediately see the broadest dataset). Only fires once
-  // per session — after that, manual selection wins.
-  useEffect(() => {
-    if (hasAppliedDefault.current) return;
-    if (homeCountryCode === null) return; // wait for profile
-    hasAppliedDefault.current = true;
-    setSelectedRegion(isPlus ? GLOBAL_REGION : regionForCountry(homeCountryCode));
-  }, [homeCountryCode, isPlus]);
+  // ── Derived: the actual selected region ───────────────────────
+  // Plus members: free choice (defaults to Global until they pick).
+  // Free members: hard-locked to home country. While the profile is
+  // still loading (homeCountryCode === null), regionForCountry() falls
+  // back to Global, which is the safest no-op until the real value
+  // arrives a moment later.
+  const selectedRegion: Region = isPlus
+    ? plusSelectedRegion
+    : regionForCountry(homeCountryCode);
+
+  function setSelectedRegion(region: Region) {
+    // Free users can't change region — their selection is derived
+    // from home_country_code at all times. The picker UI in
+    // scanner.tsx / food-search.tsx already gates region taps via
+    // isRegionAccessible(); this guard is the second line of defence
+    // so a future caller can't accidentally bypass the lock.
+    if (!isPlus) return;
+    setPlusSelectedRegion(region);
+  }
 
   // ── Accessibility check ───────────────────────────────────────
   // Single source of truth used by the UI so the dropdown gating
