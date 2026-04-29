@@ -2,16 +2,15 @@
   "expo": {
     "name": "Bite Insight",
     "slug": "gcahill",
-    "version": "1.5.0",
+    "version": "1.5.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "biteinsight",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "newArchEnabled": true,
       "supportsTablet": false,
       "bundleIdentifier": "com.biteinsight.app",
-      "buildNumber": "4",
+      "buildNumber": "5",
       "icon": {
         "light": "./assets/images/icon.png",
         "dark": "./assets/images/icon-dark.png",
@@ -28,7 +27,6 @@
       }
     },
     "android": {
-      "newArchEnabled": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#e2f1ee"
@@ -97,9 +95,9 @@
         "expo-build-properties",
         {
           "android": {
-            "compileSdkVersion": 35,
-            "targetSdkVersion": 35,
-            "buildToolsVersion": "35.0.0",
+            "compileSdkVersion": 36,
+            "targetSdkVersion": 36,
+            "buildToolsVersion": "36.0.0",
             "ndkVersion": "27.1.12297006"
           }
         }
