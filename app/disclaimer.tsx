@@ -21,6 +21,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
+import { router } from 'expo-router';
 import { useJourney } from '@/lib/journeyContext';
 import { Colors, Shadows } from '@/constants/theme';
 import { TickIcon } from '@/components/MenuIcons';
@@ -104,6 +105,12 @@ export default function DisclaimerScreen() {
       setSaving(true);
       try {
         await advanceTo('complete');
+        // Navigate explicitly to the dashboard. We can't rely on
+        // JourneyGuard's reactive <Redirect> alone — there's a brief
+        // window between the disclaimer unmounting and the (tabs)
+        // group mounting where expo-router can fall through to
+        // +not-found.tsx. An explicit replace closes that window.
+        router.replace('/(tabs)');
       } catch {
         Alert.alert('Error', 'Failed to continue. Please try again.');
       }
