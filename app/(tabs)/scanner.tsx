@@ -31,7 +31,7 @@ export default function ScannerScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanning, setScanning] = useState(true);
   const [processing, setProcessing] = useState(false);
-  const { selectedRegion, setSelectedRegion, isRegionAccessible } = useRegion();
+  const { selectedRegion, setSelectedRegion, isRegionAccessible, ensureHomeCountry } = useRegion();
   const [regionPickerVisible, setRegionPickerVisible] = useState(false);
   const router = useRouter();
   const { session } = useAuth();
@@ -120,14 +120,18 @@ export default function ScannerScreen() {
     setRegionPickerVisible(false);
   }
 
-  // Reset scanner state every time the tab comes into focus
+  // Reset scanner state every time the tab comes into focus.
+  // Also re-check the user's home country — no-op when it's already
+  // set, but catches the fresh-signup race where regionContext's
+  // initial fetch ran before home_country_code was populated.
   useFocusEffect(
     useCallback(() => {
       setScanning(true);
       setProcessing(false);
       lastScan.current = null;
       scanLock.current = false;
-    }, []),
+      ensureHomeCountry();
+    }, [ensureHomeCountry]),
   );
 
   async function handleBarcodeScan(result: BarcodeScanningResult) {

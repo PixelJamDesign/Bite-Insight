@@ -98,7 +98,7 @@ export default function FoodSearchScreen() {
   // Page-level entrance/exit animation
   const { opacity: pageOpacity, translateX: pageTranslateX, animateExit: pageExit } = usePageTransition();
 
-  const { selectedRegion, setSelectedRegion, isRegionAccessible } = useRegion();
+  const { selectedRegion, setSelectedRegion, isRegionAccessible, ensureHomeCountry } = useRegion();
   const { menuOpen, menuVisible, menuAnim, openMenu, closeMenu, closeMenuInstant } = useMenu();
   const [regionPickerVisible, setRegionPickerVisible] = useState(false);
   const [query, setQuery] = useState('');
@@ -177,6 +177,13 @@ export default function FoodSearchScreen() {
       performSearch(trimmed, region);
     }
   }
+
+  // ── Re-check home country on mount ─────────────────────────────────────────
+  // food-search depends on selectedRegion to scope queries. No-op when the
+  // user's home_country_code is already set; covers the fresh-signup race.
+  useEffect(() => {
+    ensureHomeCountry();
+  }, [ensureHomeCountry]);
 
   // ── Debounced search — fires a fresh API call every time query changes ──────
   useEffect(() => {

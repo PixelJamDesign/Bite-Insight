@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { useAuth } from '@/lib/auth';
 import { fetchAndCacheProfile, getCachedProfile, setCachedProfile } from '@/lib/profileCache';
@@ -65,6 +65,12 @@ interface RegionContextValue {
    *  Free users: only their home country is accessible.
    *  Plus users: every region is accessible. */
   isRegionAccessible: (region: Region) => boolean;
+  /** Re-check the user's home country. Call this from screens that
+   *  depend on the lock (scanner, food-search) on focus, so a fresh
+   *  signup never sees Global on first open even if regionContext's
+   *  initial fetch raced ahead of the home_country_code being
+   *  populated. No-op when home_country_code is already set. */
+  ensureHomeCountry: () => void;
 }
 
 const GLOBAL_REGION = REGIONS.find((r) => r.code === 'world')!;
@@ -74,6 +80,7 @@ const RegionContext = createContext<RegionContextValue>({
   setSelectedRegion: () => {},
   homeCountryCode: null,
   isRegionAccessible: () => false,
+  ensureHomeCountry: () => {},
 });
 
 export function RegionProvider({ children }: { children: ReactNode }) {
@@ -95,20 +102,66 @@ export function RegionProvider({ children }: { children: ReactNode }) {
   // by a stale render or by setSelectedRegion being called externally.
   const [plusSelectedRegion, setPlusSelectedRegion] = useState<Region>(GLOBAL_REGION);
 
+  // Track in-flight self-heal so re-entrant calls (e.g. user
+  // bouncing between scanner and search before the first detect
+  // resolves) don't fire detectCountry repeatedly.
+  const healingRef = useRef(false);
+  // Mirror homeCountryCode for the self-heal closure so it doesn't
+  // need to be a dep on the useCallback (which would re-bind on
+  // every state change and break referential stability for the
+  // useFocusEffect callers).
+  const homeCountryCodeRef = useRef(homeCountryCode);
+  homeCountryCodeRef.current = homeCountryCode;
+
+  // ── Self-heal: detect country from IP, set state, persist ─────
+  // Called whenever we discover home_country_code is null while a
+  // session is active. Runs at most once concurrently.
+  const healHomeCountry = useCallback(async (userId: string) => {
+    if (healingRef.current) return;
+    healingRef.current = true;
+    try {
+      const { country_code } = await detectCountry();
+      const next = country_code || 'world';
+      setHomeCountryCode(next);
+      // Persist (RLS allows users to update their own profile).
+      // .is(...) so we don't clobber a value that landed in the
+      // meantime via the trigger or another path.
+      const { error } = await supabase
+        .from('profiles')
+        .update({ home_country_code: next })
+        .eq('id', userId)
+        .is('home_country_code', null);
+      if (!error) {
+        const current = getCachedProfile();
+        if (current && current.profile.id === userId) {
+          setCachedProfile({
+            ...current,
+            profile: { ...current.profile, home_country_code: next },
+          });
+        }
+      }
+    } catch {
+      // detectCountry already swallows errors; leave homeCountryCode
+      // null — the UI falls back to Global, the safest no-op.
+    } finally {
+      healingRef.current = false;
+    }
+  }, []);
+
+  // Public API: re-check on focus from scanner / food-search. No-op
+  // unless we still don't have a country code.
+  const ensureHomeCountry = useCallback(() => {
+    const userId = session?.user?.id;
+    if (!userId) return;
+    if (homeCountryCodeRef.current) return;
+    healHomeCountry(userId);
+  }, [session?.user?.id, healHomeCountry]);
+
   // ── Load home_country_code from the user's profile ────────────
   // Once the auth session is known, fetch the profile (cached, so
   // this is a no-op when the dashboard has already warmed it up).
-  //
-  // If the fetched profile has no home_country_code (e.g. a fresh
-  // signup race where regionContext queries before the trigger or
-  // upsert has populated it, or an older account that slipped
-  // through pre-fix), detect the country here and:
-  //   1. set local state immediately so the UI reflects it on the
-  //      first render — no quit-and-restart needed
-  //   2. persist to the DB and cache fire-and-forget
-  // This is the same self-heal that profileCache does, but updates
-  // OUR state directly so the user doesn't see Global on the
-  // scanner while waiting for the cache update we can't observe.
+  // If it comes back null we self-heal here too — but the focus-
+  // triggered ensureHomeCountry() above is the real safety net.
   useEffect(() => {
     let cancelled = false;
     const userId = session?.user?.id;
@@ -123,37 +176,12 @@ export function RegionProvider({ children }: { children: ReactNode }) {
         setHomeCountryCode(code);
         return;
       }
-      // No country on the profile — detect from IP and patch.
-      try {
-        const { country_code } = await detectCountry();
-        if (cancelled) return;
-        const next = country_code || 'world';
-        setHomeCountryCode(next);
-        // Persist (RLS allows users to update their own profile).
-        supabase
-          .from('profiles')
-          .update({ home_country_code: next })
-          .eq('id', userId)
-          .is('home_country_code', null)
-          .then(() => {
-            const current = getCachedProfile();
-            if (current && current.profile.id === userId) {
-              setCachedProfile({
-                ...current,
-                profile: { ...current.profile, home_country_code: next },
-              });
-            }
-          });
-      } catch {
-        // detectCountry already swallows errors; on a failure we
-        // leave homeCountryCode null and the UI falls back to
-        // Global, which is the safest no-op.
-      }
+      healHomeCountry(userId);
     });
     return () => {
       cancelled = true;
     };
-  }, [session?.user?.id]);
+  }, [session?.user?.id, healHomeCountry]);
 
   // ── Derived: the actual selected region ───────────────────────
   // Plus members: free choice (defaults to Global until they pick).
@@ -190,7 +218,7 @@ export function RegionProvider({ children }: { children: ReactNode }) {
 
   return (
     <RegionContext.Provider
-      value={{ selectedRegion, setSelectedRegion, homeCountryCode, isRegionAccessible }}
+      value={{ selectedRegion, setSelectedRegion, homeCountryCode, isRegionAccessible, ensureHomeCountry }}
     >
       {children}
     </RegionContext.Provider>
