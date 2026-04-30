@@ -23,6 +23,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
 import { useJourney } from '@/lib/journeyContext';
+import { shouldShowWhatsNew } from './whats-new';
 import { Colors, Shadows } from '@/constants/theme';
 import { TickIcon } from '@/components/MenuIcons';
 import Logo from '../assets/images/logo.svg';
@@ -105,19 +106,22 @@ export default function DisclaimerScreen() {
       setSaving(true);
       try {
         await advanceTo('complete');
-        // One-tick delay so React flushes the setOnboardingStep
-        // queued inside advanceTo BEFORE we navigate. Otherwise the
-        // very next render sees step='complete' on segment='(tabs)'
-        // (we've already navigated) and JourneyGuard does nothing,
-        // but expo-router itself can briefly fall through to
-        // +not-found while the (tabs) layout boots for the first
-        // time — particularly on a fresh install.
+        // Yield one tick so React flushes the setOnboardingStep
+        // queued inside advanceTo before we navigate.
         await new Promise((r) => setTimeout(r, 0));
-        // Navigate to a SPECIFIC tab path (not the group root) so
-        // expo-router resolves directly to a registered screen
-        // instead of going through group resolution, which was
-        // landing on +not-found during the disclaimer→tabs hand-off.
-        router.replace('/(tabs)/index' as any);
+        // Branch on whether the user should see the What's New
+        // screen for the current version. First-time users always
+        // hit it; returning users only when the version has bumped.
+        const showWhatsNew = await shouldShowWhatsNew();
+        if (showWhatsNew) {
+          // /whats-new is in PASSTHROUGH_SEGMENTS so JourneyGuard
+          // won't bounce us. Dismiss handler in whats-new.tsx
+          // routes onward to the dashboard.
+          router.replace('/whats-new');
+        } else {
+          // Skip straight to the dashboard.
+          router.replace('/(tabs)/dashboard' as any);
+        }
       } catch {
         Alert.alert('Error', 'Failed to continue. Please try again.');
       }

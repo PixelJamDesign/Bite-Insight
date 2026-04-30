@@ -13,7 +13,7 @@ export default function NotFoundScreen() {
         <Text style={styles.subtitle}>
           The page you're looking for doesn't exist or has been moved.
         </Text>
-        <Link href="/(tabs)" style={styles.link}>
+        <Link href={'/(tabs)/dashboard' as any} style={styles.link}>
           <Text style={styles.linkText}>Back to Home</Text>
         </Link>
       </View>

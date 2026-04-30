@@ -91,11 +91,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   bulbIcon: {
-    width: 30,
-    height: 56,
+    width: 32,
+    height: 60,
     resizeMode: 'contain',
-    overflow: 'visible',
-    marginBottom: -8,
   },
   title: {
     fontSize: 18,

@@ -118,7 +118,7 @@ export function ScreenLayout({ title, headerExtension, children }: ScreenLayoutP
           { paddingTop: insets.top + 24 },
         ]}
       >
-        <TouchableOpacity onPress={() => router.push('/(tabs)' as any)} activeOpacity={0.7} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+        <TouchableOpacity onPress={() => router.push('/(tabs)/dashboard' as any)} activeOpacity={0.7} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
           <Logo width={141} height={36} />
         </TouchableOpacity>
         <TouchableOpacity

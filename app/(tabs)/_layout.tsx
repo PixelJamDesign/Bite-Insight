@@ -93,7 +93,7 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 
         {state.routes.map((route, index) => {
           // Skip routes that aren't part of the visible tab pill
-          if (!['index', 'recipes', 'scanner', 'history'].includes(route.name)) return null;
+          if (!['dashboard', 'recipes', 'scanner', 'history'].includes(route.name)) return null;
 
           const isFocused = state.index === index;
           const isScanner = route.name === 'scanner';
@@ -159,7 +159,7 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
               }}
             >
               <View style={styles.iconContainer}>
-                {route.name === 'index' && <DashboardIcon color={iconColor} size={24} />}
+                {route.name === 'dashboard' && <DashboardIcon color={iconColor} size={24} />}
                 {route.name === 'recipes' && <RecipesIcon color={iconColor} size={24} />}
                 {route.name === 'history' && <HistoryIcon color={iconColor} size={24} />}
               </View>
@@ -328,8 +328,9 @@ export default function TabLayout() {
           <Tabs
             tabBar={(props) => <CustomTabBar {...props} />}
             screenOptions={{ headerShown: false }}
+            initialRouteName="dashboard"
           >
-            <Tabs.Screen name="index" options={{ title: t('tabs.dashboard') }} />
+            <Tabs.Screen name="dashboard" options={{ title: t('tabs.dashboard') }} />
             <Tabs.Screen name="recipes" options={{ title: t('tabs.recipes') }} />
             <Tabs.Screen name="scanner" options={{ title: t('tabs.scanner') }} />
             <Tabs.Screen name="history" options={{ title: t('tabs.history') }} />

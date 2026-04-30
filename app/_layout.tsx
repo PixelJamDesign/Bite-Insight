@@ -46,7 +46,7 @@ function stepToRoute(step: OnboardingStep): string {
     case 'create_profile': return '/onboarding';
     case 'disclaimer':     return '/disclaimer';
     case 'app_tour':       return '/app-tour';
-    case 'complete':       return '/(tabs)';
+    case 'complete':       return '/(tabs)/dashboard';
   }
 }
 
@@ -129,12 +129,9 @@ function JourneyGuard() {
       return <Redirect href={stepToRoute(onboardingStep) as any} />;
     }
   } else if (LOCKED_JOURNEY_SEGMENTS.has(currentSegment)) {
-    // Journey complete but on a locked journey screen — send to main app.
-    // Use the explicit dashboard path (not the group root '/(tabs)')
-    // because the group route was occasionally resolving through to
-    // +not-found.tsx during the disclaimer→tabs transition.
-    // (app-tour is intentionally NOT locked so users can re-view it from the menu)
-    return <Redirect href={'/(tabs)/index' as any} />;
+    // Journey complete but on a locked journey screen — send to the
+    // dashboard.
+    return <Redirect href={'/(tabs)/dashboard' as any} />;
   }
 
   return null;

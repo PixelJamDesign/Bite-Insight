@@ -841,7 +841,7 @@ export default function FoodSearchScreen() {
       <Animated.View style={{ flex: 1, opacity: pageOpacity, transform: [{ translateX: pageTranslateX }] }}>
       {/* ── Logo + menu header ── */}
       <View style={styles.navHeader}>
-        <TouchableOpacity onPress={() => router.push('/(tabs)' as any)} activeOpacity={0.7} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+        <TouchableOpacity onPress={() => router.push('/(tabs)/dashboard' as any)} activeOpacity={0.7} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
           <Logo width={141} height={36} />
         </TouchableOpacity>
         <TouchableOpacity

@@ -1643,7 +1643,7 @@ function MainScreen({
       <View style={styles.sectionGap}>
         <Text style={styles.whereLabel}>{t('main.whereLabel')}</Text>
         <View style={styles.navList}>
-          <NavItem icon={<MenuDashboardIcon color={Colors.secondary} />} label={t('main.dashboard')} onPress={() => go('/(tabs)')} />
+          <NavItem icon={<MenuDashboardIcon color={Colors.secondary} />} label={t('main.dashboard')} onPress={() => go('/(tabs)/dashboard')} />
           <NavItem icon={<MenuIngredientsIcon color={Colors.secondary} />} label={t('main.myIngredients')} onPress={() => onNavigate('ingredients')} chevron />
           <NavItem icon={<MenuScannerIcon color={Colors.secondary} />} label={t('main.foodScanner')} onPress={() => go('/(tabs)/scanner')} />
           <NavItem icon={<MenuHistoryIcon color={Colors.secondary} />} label={t('main.scanHistory')} onPress={() => go('/(tabs)/history')} />

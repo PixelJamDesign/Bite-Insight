@@ -165,7 +165,7 @@ export default function WhatsNewScreen() {
 
   async function dismiss() {
     await markWhatsNewSeen();
-    router.replace('/(tabs)');
+    router.replace('/(tabs)/dashboard' as any);
   }
 
   return (
