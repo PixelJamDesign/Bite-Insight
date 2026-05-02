@@ -68,11 +68,16 @@ function BulletMarker({ size = 18 }: { size?: number }) {
 
 // ── Card Data ───────────────────────────────────────────────────────────────
 
+/** A bullet is either a plain string ("Pregnancy") or a structured
+ *  item with a bold title and an optional sub-line in lighter type
+ *  (e.g. "Cancer Support" + "(Sub types include: …)"). */
+type Bullet = string | { title: string; sub?: string };
+
 interface CardData {
   badge: string;
   title: string;
   description: string;
-  subsections?: { heading: string; bullets: string[] }[];
+  subsections?: { heading: string; bullets: Bullet[] }[];
   /** When true, the Plus chip sits next to the title to flag the
    *  feature as Plus-only. */
   plus?: boolean;
@@ -83,54 +88,23 @@ interface CardData {
 
 const CARDS: CardData[] = [
   {
-    badge: 'New feature!',
-    title: 'Your recipe book',
-    icon: RecipeBookIcon,
-    description:
-      "Build recipes from the foods you scan. Drop in ingredients, set the servings, and the nutrition totals itself up as you go.",
-  },
-  {
-    badge: 'New feature!',
-    title: 'Community recipes',
-    plus: true,
-    icon: CommunityIcon,
-    description:
-      "Post your recipes for everyone to see, and pinch ones you like the look of. Tap the heart on the cards you love and save the keepers to your own book.",
-  },
-  {
-    badge: 'New feature!',
-    title: 'Family-aware recipe insights',
-    plus: true,
-    icon: FamilyInsightsIcon,
-    description:
-      "Cooking for the household? Tap any family member on a recipe to see which ingredients to watch for them and whether the meal's a good fit.",
-  },
-  {
-    badge: 'New feature!',
-    title: 'Flagged ingredients for family members',
-    plus: true,
-    icon: FlagIcon,
-    description:
-      "Set liked, disliked and flagged ingredients for each person in your family. Scans and recipes then warn you about things that don't suit them, separately from your own list.",
-  },
-  {
-    badge: 'New additions!',
-    title: 'New Conditions, Allergies & Diets',
+    badge: 'New Additions!',
+    title: 'New Conditions',
     icon: ProfileAdditionsIcon,
     description:
-      "A few new things to add to your profile so the app fits how you actually live:",
+      "You spoke, and we listened. We have updated the health conditions, allergies and diets to now include:",
     subsections: [
-      { heading: 'Health Conditions', bullets: ['No Gallbladder', 'IBS (with subtype)', 'Pregnancy'] },
-      { heading: 'Dietary Preferences', bullets: ['Halal (with auto-detection)', 'Low Fibre'] },
+      {
+        heading: 'Health Conditions',
+        bullets: [
+          {
+            title: 'Cancer Support',
+            sub: '(Sub types include: Colorectal/Bowel, Breast, Prostate, Stomach/Gastric and General)',
+          },
+          { title: 'Cystic Fibrosis' },
+        ],
+      },
     ],
-  },
-  {
-    badge: 'Improvement',
-    title: 'Flagged ingredient accuracy',
-    plus: true,
-    icon: AccuracyIcon,
-    description:
-      "Greater accuracy of flagged ingredients when scanning or searching products.",
   },
 ];
 
@@ -190,9 +164,9 @@ export default function WhatsNewScreen() {
         <Text style={styles.greetingName}>{firstName}</Text>
 
         {/* ── Headline ── */}
-        <Text style={styles.headline}>A few new things</Text>
+        <Text style={styles.headline}>We've made some updates!</Text>
         <Text style={styles.subtitle}>
-          Quick tour of what's changed in this version.
+          Thanks to your feedback we've updated Bite Insight to improve your experience.
         </Text>
 
         {/* ── Cards ── */}
@@ -222,16 +196,32 @@ export default function WhatsNewScreen() {
               {/* Description */}
               <Text style={styles.cardDesc}>{card.description}</Text>
 
-              {/* Sub-sections (card 4 only) */}
+              {/* Sub-sections — bullets are either plain strings or
+                  { title, sub? } pairs for bold-title + small caption. */}
               {card.subsections?.map((sub, j) => (
                 <View key={j} style={styles.subsection}>
                   <Text style={styles.subsectionHeading}>{sub.heading}</Text>
-                  {sub.bullets.map((bullet, k) => (
-                    <View key={k} style={styles.bulletRow}>
-                      <BulletMarker size={18} />
-                      <Text style={styles.bulletText}>{bullet}</Text>
-                    </View>
-                  ))}
+                  {sub.bullets.map((bullet, k) => {
+                    const isStructured = typeof bullet !== 'string';
+                    return (
+                      <View key={k} style={styles.bulletRow}>
+                        <BulletMarker size={18} />
+                        {isStructured ? (
+                          <Text style={styles.bulletText}>
+                            <Text style={styles.bulletTitle}>{bullet.title}</Text>
+                            {bullet.sub ? (
+                              <>
+                                {'\n'}
+                                <Text style={styles.bulletSub}>{bullet.sub}</Text>
+                              </>
+                            ) : null}
+                          </Text>
+                        ) : (
+                          <Text style={styles.bulletText}>{bullet}</Text>
+                        )}
+                      </View>
+                    );
+                  })}
                 </View>
               ))}
             </View>
@@ -412,11 +402,11 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_700Bold',
     letterSpacing: 0,
     color: Colors.primary,
-    marginBottom: Spacing.xxs,
+    marginBottom: Spacing.s,
   },
   bulletRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: Spacing.s,
     marginBottom: 2,
   },
@@ -428,6 +418,22 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
     color: Colors.secondary,
     flex: 1,
+  },
+  bulletTitle: {
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    letterSpacing: -0.32,
+    color: Colors.secondary,
+  },
+  bulletSub: {
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
+    letterSpacing: -0.14,
+    color: Colors.secondary,
   },
 
   // ── Footer ────────────────────────────────────────────────────────────────
