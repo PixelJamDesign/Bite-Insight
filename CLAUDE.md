@@ -250,6 +250,19 @@ Always use `useAuth()` from `@/lib/auth` to get the current session. Never call 
 
 ---
 
+## Planned Features
+
+Before starting any v1.6.0 work, read the relevant feature spec file first.
+
+| Feature | Spec file | Status |
+|---|---|---|
+| Cancer health condition | `FEATURE-cancer-condition.md` | Ready to implement |
+| Cystic Fibrosis condition | `FEATURE-cystic-fibrosis-condition.md` | Ready to implement |
+
+Each spec file contains: research summary, all code blocks pre-written in the exact format of the target files, a subtype design, conflict rules, localisation keys, copy guidelines, and a testing checklist. Implement by reading the spec and applying each section to the listed files in order.
+
+---
+
 ## Bug Tracking System
 
 BiteInsight uses a local bug tracker stored in `bugs.json` at the project root. A companion HTML UI lives at `bug-tracker.html`.

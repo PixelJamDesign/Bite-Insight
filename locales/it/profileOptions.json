@@ -20,7 +20,9 @@
     "sibo": "SIBO",
     "uc": "Colite ulcerosa",
     "noGallbladder": "Senza cistifellea",
-    "pregnancy": "Gravidanza"
+    "pregnancy": "Gravidanza",
+    "cancer": "Cancro",
+    "cf": "Fibrosi Cistica"
   },
   "allergies": {
     "celery": "Allergia al sedano",
@@ -80,5 +82,51 @@
     "sister": "Sorella",
     "brother": "Fratello",
     "other": "Altro"
-  }
+  },
+  "cancerSubtypes": {
+    "colorectal": {
+      "title": "Colorettale",
+      "subtitle": "Le fibre aiutano di più. Segnaleremo carne processata e rossa."
+    },
+    "breast": {
+      "title": "Seno",
+      "subtitle": "I pasti a base vegetale aiutano. Segnaleremo alcol e grassi saturi."
+    },
+    "prostate": {
+      "title": "Prostata",
+      "subtitle": "Lo stile mediterraneo aiuta. Segnaleremo i grassi saturi."
+    },
+    "stomach": {
+      "title": "Stomaco / Gastrico",
+      "subtitle": "Meno sale aiuta. Segnaleremo cibi sotto sale e in salamoia."
+    },
+    "other": {
+      "title": "Altro / Generale",
+      "subtitle": "Linee guida generali WCRF. Vegetale, poco processato."
+    }
+  },
+  "cancerSubtypePrompt": "Quale corrisponde alla tua situazione?",
+  "cancerSubtypeSubheading": "Ogni tipo risponde meglio a cibi diversi. La tua risposta orienta cosa evidenziamo durante la scansione.",
+  "cancerSubtypeReassurance": "Puoi cambiarlo in qualsiasi momento dal tuo profilo.",
+  "cfSubtypes": {
+    "standard": {
+      "title": "Gestione standard della FC",
+      "subtitle": "I cibi calorici aiutano di più. Segnaleremo i prodotti \"light\" e a basso contenuto di grassi."
+    },
+    "modulator": {
+      "title": "In terapia con modulatori CFTR",
+      "subtitle": "Trikafta o Kaftrio. L'assorbimento è migliorato, quindi alleggeriamo la spinta calorica."
+    },
+    "cfrd": {
+      "title": "Diabete correlato alla FC (CFRD)",
+      "subtitle": "Mantieni la dieta ipercalorica. Aggiungeremo l'attenzione ai carboidrati per l'insulina."
+    },
+    "all": {
+      "title": "Tutti i sottotipi",
+      "subtitle": "Con modulatore e CFRD. Osserviamo i carboidrati e alleggeriamo la spinta calorica."
+    }
+  },
+  "cfSubtypePrompt": "Quale corrisponde meglio alla tua FC ora?",
+  "cfSubtypeSubheading": "I trattamenti cambiano molto la dieta. La tua risposta regola cosa evidenziamo.",
+  "cfSubtypeReassurance": "Puoi cambiarlo in qualsiasi momento dal tuo profilo."
 }

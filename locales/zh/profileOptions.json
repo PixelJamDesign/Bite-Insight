@@ -20,7 +20,9 @@
     "sibo": "西博",
     "uc": "溃疡性结肠炎",
     "noGallbladder": "无胆囊",
-    "pregnancy": "怀孕"
+    "pregnancy": "怀孕",
+    "cancer": "癌症",
+    "cf": "囊性纤维化"
   },
   "allergies": {
     "celery": "芹菜过敏",
@@ -80,5 +82,51 @@
     "sister": "姐姐",
     "brother": "兄弟",
     "other": "其他"
-  }
+  },
+  "cancerSubtypes": {
+    "colorectal": {
+      "title": "结直肠癌",
+      "subtitle": "膳食纤维最有帮助。我们会标记加工肉和红肉。"
+    },
+    "breast": {
+      "title": "乳腺癌",
+      "subtitle": "植物为主的餐食有帮助。我们会标记酒精和饱和脂肪。"
+    },
+    "prostate": {
+      "title": "前列腺癌",
+      "subtitle": "地中海式饮食有帮助。我们会标记饱和脂肪。"
+    },
+    "stomach": {
+      "title": "胃癌",
+      "subtitle": "减少盐分有帮助。我们会标记腌制和腌渍食品。"
+    },
+    "other": {
+      "title": "其他 / 一般",
+      "subtitle": "WCRF 一般指引。以植物为主、少加工的饮食。"
+    }
+  },
+  "cancerSubtypePrompt": "哪一项符合您的情况?",
+  "cancerSubtypeSubheading": "不同类型对不同食物的反应不同。您的回答有助于我们在扫描时聚焦相关内容。",
+  "cancerSubtypeReassurance": "您可以随时在个人资料中修改此选项。",
+  "cfSubtypes": {
+    "standard": {
+      "title": "标准CF管理",
+      "subtitle": "高热量食物最有帮助。我们会标记\"减肥\"和低脂产品。"
+    },
+    "modulator": {
+      "title": "正在使用CFTR调节剂",
+      "subtitle": "Trikafta或Kaftrio。吸收已改善,因此减轻高热量饮食的强度。"
+    },
+    "cfrd": {
+      "title": "囊性纤维化相关糖尿病(CFRD)",
+      "subtitle": "保持高热量饮食。我们会加上碳水化合物关注以配合胰岛素。"
+    },
+    "all": {
+      "title": "所有亚型",
+      "subtitle": "正在使用调节剂且患有CFRD。我们关注碳水化合物,同时减轻高热量饮食的强度。"
+    }
+  },
+  "cfSubtypePrompt": "哪一项最贴近您当前的CF状况?",
+  "cfSubtypeSubheading": "不同治疗对饮食的影响很大。您的回答会调整我们重点显示的内容。",
+  "cfSubtypeReassurance": "您可以随时在个人资料中修改此选项。"
 }

@@ -25,6 +25,8 @@ export type OnboardingStep =
   | 'complete';
 
 export type IbsSubtype = 'C' | 'D' | 'M' | 'unsure';
+export type CancerSubtype = 'colorectal' | 'breast' | 'prostate' | 'stomach' | 'other';
+export type CfSubtype = 'standard' | 'modulator' | 'cfrd' | 'all';
 export type PregnancyStatus = 'pregnant' | 'breastfeeding';
 
 export interface UserProfile {
@@ -58,6 +60,10 @@ export interface UserProfile {
   onboarding_step: OnboardingStep;
   // IBS subtype (only meaningful when health_conditions contains 'ibs')
   ibs_subtype: IbsSubtype | null;
+  // Cancer subtype (only meaningful when health_conditions contains 'cancer')
+  cancer_subtype: CancerSubtype | null;
+  // Cystic Fibrosis subtype (only meaningful when health_conditions contains 'cf')
+  cf_subtype: CfSubtype | null;
   // Pregnancy tracking
   pregnancy_due_date: string | null;
   pregnancy_status: PregnancyStatus | null;
@@ -117,6 +123,8 @@ export interface FamilyProfile {
   disliked_ingredients: string[] | null;
   flagged_ingredients: string[] | null;
   ibs_subtype: IbsSubtype | null;
+  cancer_subtype: CancerSubtype | null;
+  cf_subtype: CfSubtype | null;
   pregnancy_due_date: string | null;
   pregnancy_status: PregnancyStatus | null;
   // Forward-compat pointer to a real user account — populated only via

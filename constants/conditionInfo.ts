@@ -22,6 +22,16 @@ export const CONDITION_INFO: Record<string, ConditionInfoEntry> = {
     description:
       'Autism can affect sensory processing, which often influences food preferences and tolerances. Some people on the spectrum are sensitive to certain textures, tastes or additives. A varied, nutrient-dense diet is important, and identifying personal trigger foods can help with comfort and wellbeing.',
   },
+  cancer: {
+    fullName: 'Cancer',
+    description:
+      "Diet can play a meaningful role in cancer prevention, treatment support and survivorship. BiteInsight uses evidence from the World Cancer Research Fund and American Cancer Society to highlight ingredients research has linked to cancer risk — like processed meat preservatives, excess saturated fat and added sugars — and surfaces nutrients worth prioritising, like dietary fibre. This is dietary support, not medical advice. Always follow guidance from your oncology or medical team.",
+  },
+  cf: {
+    fullName: 'Cystic Fibrosis',
+    description:
+      "Cystic fibrosis (CF) means your body produces thick, sticky mucus that affects your lungs and digestive system. Because your gut struggles to absorb fat and nutrients, people with CF typically need significantly more calories and fat than others — often 110–200% of the standard daily requirement. BiteInsight highlights products that are calorie-dense and nutritious, and flags 'diet', 'light' or low-fat products that may not meet your energy needs. It also tracks vitamins A, D, E and K, calcium, zinc and iron — nutrients that are commonly low in CF due to malabsorption. If you're on a CFTR modulator like Trikafta or Kaftrio, your needs may have shifted — pick the matching subtype to adjust the recommendations. Always follow guidance from your CF dietitian.",
+  },
   ckd: {
     fullName: 'Chronic Kidney Disease (CKD)',
     description:

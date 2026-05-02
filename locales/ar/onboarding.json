@@ -10,7 +10,9 @@
     "ingredients": "Ingredient Preferences",
     "ibsSubtype": "نوع القولون العصبي",
     "pregnancy": "الحمل",
-    "conflicts": "مراجعة"
+    "conflicts": "مراجعة",
+    "cancerSubtype": "نوع السرطان",
+    "cfSubtype": "إدارة التليف الكيسي"
   },
   "question": {
     "healthCondition": "هل لديك أي حالة صحية؟",

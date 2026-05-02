@@ -10,7 +10,9 @@
     "ingredients": "Ingredient Preferences",
     "ibsSubtype": "IBS类型",
     "pregnancy": "怀孕",
-    "conflicts": "检查"
+    "conflicts": "检查",
+    "cancerSubtype": "癌症类型",
+    "cfSubtype": "CF管理"
   },
   "question": {
     "healthCondition": "您有健康状况吗？",

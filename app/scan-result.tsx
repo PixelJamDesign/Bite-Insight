@@ -70,7 +70,7 @@ function toNum(primary: unknown, fallback: unknown): number | undefined {
 import { ALLERGY_KEYWORDS, type AllergyEntry } from '@/lib/allergenKeywords';
 import { getDerivatives } from '@/lib/ingredientDerivatives';
 import { getAdditiveSeverity, computeAdditiveSeverity, type AdditiveEntry } from '@/constants/additiveSeverity';
-import { HEALTH_CONDITION_INGREDIENTS, DIETARY_PREFERENCE_INGREDIENTS, type HealthFlagEntry } from '@/constants/healthIngredientFlags';
+import { HEALTH_CONDITION_INGREDIENTS, DIETARY_PREFERENCE_INGREDIENTS, resolveHealthConditionKeys, type HealthFlagEntry } from '@/constants/healthIngredientFlags';
 import { getSubstitutes, type FlagReason } from '@/lib/ingredientSubstitutes';
 import {
   type NutrientKey, type Threshold, DRI, NUTRIENT_LABELS, NUTRIENT_UNITS,
@@ -1618,7 +1618,13 @@ export default function ScanResultScreen() {
     categoriesArray,
     [...(activeFamilyProfile?.health_conditions ?? profile?.health_conditions ?? []),
      ...(activeFamilyProfile?.dietary_preferences?.map((d) => DIETARY_LABELS[d] ?? d) ?? profile?.dietary_preferences?.map((d) => DIETARY_LABELS[d] ?? d) ?? [])],
-    activeFamilyProfile?.health_conditions ?? profile?.health_conditions ?? [],
+    resolveHealthConditionKeys(
+      activeFamilyProfile?.health_conditions ?? profile?.health_conditions ?? [],
+      {
+        cancerSubtype: activeFamilyProfile?.cancer_subtype ?? profile?.cancer_subtype ?? null,
+        cfSubtype: activeFamilyProfile?.cf_subtype ?? profile?.cf_subtype ?? null,
+      },
+    ),
     (activeFamilyProfile?.dietary_preferences ?? profile?.dietary_preferences ?? []) as string[],
   );
 
@@ -1711,7 +1717,14 @@ export default function ScanResultScreen() {
   const activeDietaryLabels = activeFamilyProfile
     ? activeFamilyProfile.dietary_preferences ?? []
     : profile?.dietary_preferences ?? [];
-  const nutrientThresholds = buildThresholds(activeConditions, activeAllergies, activeDietaryLabels);
+  const nutrientThresholds = buildThresholds(
+    resolveHealthConditionKeys(activeConditions, {
+      cancerSubtype: activeFamilyProfile?.cancer_subtype ?? profile?.cancer_subtype ?? null,
+      cfSubtype: activeFamilyProfile?.cf_subtype ?? profile?.cf_subtype ?? null,
+    }),
+    activeAllergies,
+    activeDietaryLabels,
+  );
 
   // ── Halal certification from OFF labels_tags ──────────────────────────────
   const userWantsHalal = activeDietaryLabels.includes('halal' as any);

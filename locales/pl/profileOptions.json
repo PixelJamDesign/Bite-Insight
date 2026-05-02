@@ -20,7 +20,9 @@
     "sibo": "SIBO",
     "uc": "Wrzodziejące zapalenie okrężnicy",
     "noGallbladder": "Brak woreczka żółciowego",
-    "pregnancy": "Ciąża"
+    "pregnancy": "Ciąża",
+    "cancer": "Rak",
+    "cf": "Mukowiscydoza"
   },
   "allergies": {
     "celery": "Alergia na seler",
@@ -80,5 +82,51 @@
     "sister": "Siostra",
     "brother": "Brat",
     "other": "Inny"
-  }
+  },
+  "cancerSubtypes": {
+    "colorectal": {
+      "title": "Jelito grube",
+      "subtitle": "Najwięcej pomaga błonnik. Oznaczymy mięso przetworzone i czerwone."
+    },
+    "breast": {
+      "title": "Piersi",
+      "subtitle": "Posiłki roślinne pomagają. Oznaczymy alkohol i tłuszcze nasycone."
+    },
+    "prostate": {
+      "title": "Prostata",
+      "subtitle": "Dieta śródziemnomorska pomaga. Oznaczymy tłuszcze nasycone."
+    },
+    "stomach": {
+      "title": "Żołądek",
+      "subtitle": "Mniej soli pomaga. Oznaczymy kiszonki i konserwy."
+    },
+    "other": {
+      "title": "Inny / Ogólny",
+      "subtitle": "Ogólne zalecenia WCRF. Roślinne, mało przetworzone."
+    }
+  },
+  "cancerSubtypePrompt": "Który pasuje do Twojej sytuacji?",
+  "cancerSubtypeSubheading": "Każdy typ inaczej reaguje na różne produkty. Twoja odpowiedź ukierunkowuje, co podkreślamy przy skanowaniu.",
+  "cancerSubtypeReassurance": "Możesz to zmienić w dowolnym momencie w profilu.",
+  "cfSubtypes": {
+    "standard": {
+      "title": "Standardowe zarządzanie CF",
+      "subtitle": "Produkty wysokokaloryczne pomagają najbardziej. Oznaczymy produkty „diet\" i niskotłuszczowe."
+    },
+    "modulator": {
+      "title": "Na modulatorze CFTR",
+      "subtitle": "Trikafta lub Kaftrio. Wchłanianie się poprawiło, więc łagodzimy nacisk kaloryczny."
+    },
+    "cfrd": {
+      "title": "Cukrzyca związana z CF (CFRD)",
+      "subtitle": "Utrzymuj wysokokaloryczną dietę. Dodamy uwagę na węglowodany dla insuliny."
+    },
+    "all": {
+      "title": "Wszystkie podtypy",
+      "subtitle": "Na modulatorze z CFRD. Pilnujemy węglowodanów i łagodzimy nacisk kaloryczny."
+    }
+  },
+  "cfSubtypePrompt": "Co najlepiej pasuje do Twojej obecnej sytuacji?",
+  "cfSubtypeSubheading": "Terapie sporo zmieniają w diecie. Twoja odpowiedź dostosowuje to, co wyróżniamy.",
+  "cfSubtypeReassurance": "Możesz to zmienić w dowolnym momencie w profilu."
 }

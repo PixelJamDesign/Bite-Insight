@@ -48,13 +48,15 @@ import { SuggestionSheet, type SuggestionCategory } from '@/components/Suggestio
 import { CONDITION_INFO } from '@/constants/conditionInfo';
 import Logo from '../assets/images/logo.svg';
 import { IbsSubtypePicker } from '@/components/IbsSubtypePicker';
+import { CancerSubtypePicker } from '@/components/CancerSubtypePicker';
+import { CfSubtypePicker } from '@/components/CfSubtypePicker';
 import { PregnancyStep } from '@/components/PregnancyStep';
 import { ConflictReviewStep } from '@/components/ConflictReviewStep';
 import { detectProfileConflicts } from '@/lib/profileConflicts';
-import type { IbsSubtype, PregnancyStatus } from '@/lib/types';
+import type { IbsSubtype, CancerSubtype, CfSubtype, PregnancyStatus } from '@/lib/types';
 
 // ── Step types ────────────────────────────────────────────────────────────────
-type StepKey = 'about' | 'health' | 'ibsSubtype' | 'pregnancy' | 'nutrients' | 'allergies' | 'dietary' | 'conflicts';
+type StepKey = 'about' | 'health' | 'ibsSubtype' | 'cancerSubtype' | 'cfSubtype' | 'pregnancy' | 'nutrients' | 'allergies' | 'dietary' | 'conflicts';
 
 // ── Condition key helpers ──────────────────────────────────────────────────
 // CONDITION_NUTRIENT_MAP uses legacy English keys ("Diabetes") while the
@@ -63,7 +65,19 @@ const KEY_TO_LEGACY: Record<string, string> = {};
 for (const [legacy, key] of Object.entries(HEALTH_CONDITION_LEGACY_MAP)) {
   KEY_TO_LEGACY[key] = legacy;
 }
-function conditionMapKey(conditionKey: string): string {
+function conditionMapKey(conditionKey: string, opts?: { cancerSubtype?: string | null }): string {
+  // Cancer has subtype-specific nutrient profiles in CONDITION_NUTRIENT_MAP
+  // ('Cancer (Colorectal)', 'Cancer (Breast)', etc). When the caller knows
+  // the subtype, route there. Falls back to the generic 'Cancer' entry for
+  // 'other' or unset subtype.
+  if (conditionKey === 'cancer' && opts?.cancerSubtype) {
+    const subtype = opts.cancerSubtype;
+    if (subtype === 'colorectal') return 'Cancer (Colorectal)';
+    if (subtype === 'breast')     return 'Cancer (Breast)';
+    if (subtype === 'prostate')   return 'Cancer (Prostate)';
+    if (subtype === 'stomach')    return 'Cancer (Stomach)';
+    // 'other' falls through to the generic Cancer entry
+  }
   return KEY_TO_LEGACY[conditionKey] ?? conditionKey;
 }
 
@@ -90,13 +104,13 @@ type ConditionGroup = {
 };
 
 /** Build de-duped unique nutrients from selected health conditions */
-function buildUniqueNutrients(conditions: string[]): UniqueNutrient[] {
+function buildUniqueNutrients(conditions: string[], cancerSubtype?: string | null): UniqueNutrient[] {
   const map = new Map<string, UniqueNutrient>();
   const limitKeys = new Set<string>();
   const boostKeys = new Set<string>();
 
   for (const condition of conditions) {
-    const profile = CONDITION_NUTRIENT_MAP[conditionMapKey(condition)];
+    const profile = CONDITION_NUTRIENT_MAP[conditionMapKey(condition, { cancerSubtype })];
     if (!profile) continue;
 
     for (const item of profile.limit) {
@@ -127,10 +141,10 @@ function buildUniqueNutrients(conditions: string[]): UniqueNutrient[] {
 }
 
 /** Build per-condition nutrient groups for the grouped card layout */
-function buildConditionGroups(conditions: string[]): ConditionGroup[] {
+function buildConditionGroups(conditions: string[], cancerSubtype?: string | null): ConditionGroup[] {
   return conditions
     .map((conditionKey) => {
-      const profile = CONDITION_NUTRIENT_MAP[conditionMapKey(conditionKey)];
+      const profile = CONDITION_NUTRIENT_MAP[conditionMapKey(conditionKey, { cancerSubtype })];
       if (!profile) return null;
 
       const nutrients: ConditionNutrientItem[] = [
@@ -184,6 +198,8 @@ export default function OnboardingScreen() {
   const [allergies, setAllergies] = useState<string[]>([]);
   const [dietaryPrefs, setDietaryPrefs] = useState<string[]>([]);
   const [ibsSubtype, setIbsSubtype] = useState<IbsSubtype | null>(null);
+  const [cancerSubtype, setCancerSubtype] = useState<CancerSubtype | null>(null);
+  const [cfSubtype, setCfSubtype] = useState<CfSubtype | null>(null);
   const [pregnancyStatus, setPregnancyStatus] = useState<PregnancyStatus | null>(null);
   const [pregnancyDueDate, setPregnancyDueDate] = useState<string | null>(null);
 
@@ -218,15 +234,15 @@ export default function OnboardingScreen() {
   const showNutrientStep = healthConditions.length > 0;
 
   const uniqueNutrients = useMemo(
-    () => buildUniqueNutrients(healthConditions),
+    () => buildUniqueNutrients(healthConditions, cancerSubtype),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [healthConditions.join(',')],
+    [healthConditions.join(','), cancerSubtype],
   );
 
   const conditionGroups = useMemo(
-    () => buildConditionGroups(healthConditions),
+    () => buildConditionGroups(healthConditions, cancerSubtype),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [healthConditions.join(',')],
+    [healthConditions.join(','), cancerSubtype],
   );
 
   // Auto-populate choices with recommended directions
@@ -253,6 +269,8 @@ export default function OnboardingScreen() {
   }
 
   const hasIbs = healthConditions.includes('ibs');
+  const hasCancer = healthConditions.includes('cancer');
+  const hasCf = healthConditions.includes('cf');
   const hasPregnancy = healthConditions.includes('pregnancy');
 
   const conflictResult = useMemo(
@@ -262,9 +280,11 @@ export default function OnboardingScreen() {
         allergies,
         dietaryPreferences: dietaryPrefs,
         ibsSubtype,
+        cancerSubtype,
+        cfSubtype,
         pregnancyStatus,
       }),
-    [healthConditions, allergies, dietaryPrefs, ibsSubtype, pregnancyStatus],
+    [healthConditions, allergies, dietaryPrefs, ibsSubtype, cancerSubtype, cfSubtype, pregnancyStatus],
   );
   const showConflictStep =
     conflictResult.hardConflicts.length > 0 || conflictResult.redundancies.length > 0;
@@ -274,12 +294,14 @@ export default function OnboardingScreen() {
     'about',
     'health',
     ...(hasIbs ? ['ibsSubtype' as StepKey] : []),
+    ...(hasCancer ? ['cancerSubtype' as StepKey] : []),
+    ...(hasCf ? ['cfSubtype' as StepKey] : []),
     ...(hasPregnancy ? ['pregnancy' as StepKey] : []),
     ...(showNutrientStep ? ['nutrients' as StepKey] : []),
     'allergies',
     'dietary',
     ...(showConflictStep ? ['conflicts' as StepKey] : []),
-  ], [hasIbs, hasPregnancy, showNutrientStep, showConflictStep]);
+  ], [hasIbs, hasCancer, hasCf, hasPregnancy, showNutrientStep, showConflictStep]);
 
   const currentStepKey = stepSequence[pos] ?? 'about';
   const isLastStep = pos === stepSequence.length - 1;
@@ -519,6 +541,14 @@ export default function OnboardingScreen() {
       Alert.alert('Pick an option', 'Please pick the IBS subtype that fits best, or choose "I\'m not sure".');
       return;
     }
+    if (currentStepKey === 'cancerSubtype' && !cancerSubtype) {
+      Alert.alert('Pick an option', 'Please pick the cancer type that best fits your situation, or choose "Other / General".');
+      return;
+    }
+    if (currentStepKey === 'cfSubtype' && !cfSubtype) {
+      Alert.alert('Pick an option', 'Please pick the CF management option that best fits your situation.');
+      return;
+    }
     if (currentStepKey === 'pregnancy') {
       if (!pregnancyStatus) {
         Alert.alert('Pick an option', "Please tell us whether you're currently pregnant or breastfeeding.");
@@ -563,6 +593,8 @@ export default function OnboardingScreen() {
           dietary_preferences: resolved.dietaryPreferences,
           nutrient_watchlist: buildFinalWatchlist(),
           ibs_subtype: hasIbs ? ibsSubtype : null,
+          cancer_subtype: hasCancer ? cancerSubtype : null,
+          cf_subtype: hasCf ? cfSubtype : null,
           pregnancy_status: hasPregnancy ? pregnancyStatus : null,
           pregnancy_due_date: hasPregnancy ? pregnancyDueDate : null,
         })
@@ -831,10 +863,18 @@ export default function OnboardingScreen() {
         {/* Per-condition groups */}
         {conditionGroups.map((group) => (
           <View key={group.conditionKey} style={styles.conditionSection}>
-            {/* Pill tag */}
+            {/* Pill tag — cancer / cf additionally show the subtype if set.
+                Cancer uses parens ("Cancer (Colorectal)") because no subtype
+                title contains parens. CF uses a colon because some subtypes
+                already contain parens (e.g. "CF-Related Diabetes (CFRD)") and
+                wrapping in another set of parens looks broken. */}
             <View style={styles.conditionPill}>
               <Text style={styles.conditionPillText}>
-                {tpo(`healthConditions.${group.conditionKey}`)}
+                {group.conditionKey === 'cancer' && cancerSubtype
+                  ? `${tpo(`healthConditions.${group.conditionKey}`)} (${tpo(`cancerSubtypes.${cancerSubtype}.title`)})`
+                  : group.conditionKey === 'cf' && cfSubtype
+                    ? `${tpo(`healthConditions.${group.conditionKey}`)}: ${tpo(`cfSubtypes.${cfSubtype}.title`)}`
+                    : tpo(`healthConditions.${group.conditionKey}`)}
               </Text>
             </View>
 
@@ -1005,6 +1045,16 @@ export default function OnboardingScreen() {
               {/* IBS Subtype (conditional follow-up to Health) */}
               {currentStepKey === 'ibsSubtype' && (
                 <IbsSubtypePicker value={ibsSubtype} onChange={setIbsSubtype} />
+              )}
+
+              {/* Cancer Subtype (conditional follow-up to Health) */}
+              {currentStepKey === 'cancerSubtype' && (
+                <CancerSubtypePicker value={cancerSubtype} onChange={setCancerSubtype} />
+              )}
+
+              {/* Cystic Fibrosis Subtype (conditional follow-up to Health) */}
+              {currentStepKey === 'cfSubtype' && (
+                <CfSubtypePicker value={cfSubtype} onChange={setCfSubtype} />
               )}
 
               {/* Pregnancy (conditional follow-up to Health) */}

@@ -10,7 +10,9 @@
     "ingredients": "Ingredient Preferences",
     "ibsSubtype": "PDS-type",
     "pregnancy": "Zwangerschap",
-    "conflicts": "Controleren"
+    "conflicts": "Controleren",
+    "cancerSubtype": "Type Kanker",
+    "cfSubtype": "CF-beheer"
   },
   "question": {
     "healthCondition": "Heeft u een gezondheidsprobleem?",

@@ -20,7 +20,9 @@
     "sibo": "SIBO",
     "uc": "Rectocolite hémorragique",
     "noGallbladder": "Sans vésicule biliaire",
-    "pregnancy": "Grossesse"
+    "pregnancy": "Grossesse",
+    "cancer": "Cancer",
+    "cf": "Mucoviscidose"
   },
   "allergies": {
     "celery": "Allergie au céleri",
@@ -80,5 +82,51 @@
     "sister": "Sœur",
     "brother": "Frère",
     "other": "Autre"
-  }
+  },
+  "cancerSubtypes": {
+    "colorectal": {
+      "title": "Colorectal",
+      "subtitle": "Les fibres aident le plus. Nous signalerons les viandes transformées et rouges."
+    },
+    "breast": {
+      "title": "Sein",
+      "subtitle": "Les repas végétaux aident. Nous signalerons l'alcool et les graisses saturées."
+    },
+    "prostate": {
+      "title": "Prostate",
+      "subtitle": "Le régime méditerranéen aide. Nous signalerons les graisses saturées."
+    },
+    "stomach": {
+      "title": "Estomac",
+      "subtitle": "Moins de sel aide. Nous signalerons les aliments saumurés et marinés."
+    },
+    "other": {
+      "title": "Autre / Général",
+      "subtitle": "Recommandations générales WCRF. À base de plantes, peu transformé."
+    }
+  },
+  "cancerSubtypePrompt": "Lequel correspond à votre situation ?",
+  "cancerSubtypeSubheading": "Chaque type réagit mieux à certains aliments. Votre réponse cible ce que nous mettons en avant lors du scan.",
+  "cancerSubtypeReassurance": "Vous pouvez modifier cela à tout moment depuis votre profil.",
+  "cfSubtypes": {
+    "standard": {
+      "title": "Gestion standard de la mucoviscidose",
+      "subtitle": "Les aliments caloriques aident le plus. Nous signalerons les produits \"light\" et allégés."
+    },
+    "modulator": {
+      "title": "Sous modulateur CFTR",
+      "subtitle": "Trikafta ou Kaftrio. L'absorption s'est améliorée, on lève donc la pression calorique."
+    },
+    "cfrd": {
+      "title": "Diabète lié à la mucoviscidose (DLM)",
+      "subtitle": "Gardez l'alimentation hypercalorique. Nous ajoutons le suivi des glucides pour l'insuline."
+    },
+    "all": {
+      "title": "Tous les sous-types",
+      "subtitle": "Sous modulateur avec DLM. On surveille les glucides et on lève la pression calorique."
+    }
+  },
+  "cfSubtypePrompt": "Qu'est-ce qui correspond le mieux à votre situation actuelle ?",
+  "cfSubtypeSubheading": "Les traitements modifient pas mal l'alimentation. Votre réponse ajuste ce que nous mettons en avant.",
+  "cfSubtypeReassurance": "Vous pouvez modifier cela à tout moment depuis votre profil."
 }

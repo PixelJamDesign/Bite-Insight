@@ -10,7 +10,9 @@
     "ingredients": "Ingredient Preferences",
     "ibsSubtype": "RDS-Typ",
     "pregnancy": "Schwangerschaft",
-    "conflicts": "Prüfen"
+    "conflicts": "Prüfen",
+    "cancerSubtype": "Krebsart",
+    "cfSubtype": "CF-Management"
   },
   "question": {
     "healthCondition": "Haben Sie gesundheitliche Probleme?",

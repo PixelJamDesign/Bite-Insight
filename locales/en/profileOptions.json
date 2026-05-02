@@ -31,7 +31,9 @@
     "ra": "Rheumatoid Arthritis",
     "sibo": "SIBO",
     "uc": "Ulcerative Colitis",
-    "pregnancy": "Pregnancy"
+    "pregnancy": "Pregnancy",
+    "cancer": "Cancer",
+    "cf": "Cystic Fibrosis"
   },
   "allergies": {
     "celery": "Celery Allergy",
@@ -95,5 +97,51 @@
     "sister": "Sister",
     "brother": "Brother",
     "other": "Other"
-  }
+  },
+  "cancerSubtypes": {
+    "colorectal": {
+      "title": "Colorectal / Bowel",
+      "subtitle": "Fibre helps most. We'll flag processed and red meat."
+    },
+    "breast": {
+      "title": "Breast",
+      "subtitle": "Plant-rich meals help. We'll flag alcohol and saturated fat."
+    },
+    "prostate": {
+      "title": "Prostate",
+      "subtitle": "Mediterranean-style meals help. We'll flag saturated fat."
+    },
+    "stomach": {
+      "title": "Stomach / Gastric",
+      "subtitle": "Less salt helps. We'll flag pickled and salt-cured foods."
+    },
+    "other": {
+      "title": "Other / General",
+      "subtitle": "General WCRF guidance. Plant-rich, less processed."
+    }
+  },
+  "cancerSubtypePrompt": "Which type fits your situation?",
+  "cancerSubtypeSubheading": "Different types respond best to different foods. Your answer focuses what the scanner highlights.",
+  "cancerSubtypeReassurance": "You can change this any time from your profile.",
+  "cfSubtypes": {
+    "standard": {
+      "title": "Standard CF management",
+      "subtitle": "Calorie-dense foods help most. We'll flag 'diet' and low-fat products."
+    },
+    "modulator": {
+      "title": "On a CFTR modulator",
+      "subtitle": "Trikafta or Kaftrio. Absorption has improved, so we ease off the high-calorie push."
+    },
+    "cfrd": {
+      "title": "CF-Related Diabetes (CFRD)",
+      "subtitle": "Keep the high-calorie diet. We'll add carb awareness for insulin."
+    },
+    "all": {
+      "title": "All subtypes",
+      "subtitle": "On a modulator with CFRD. We watch carbs but ease off the high-calorie push."
+    }
+  },
+  "cfSubtypePrompt": "Which best fits your CF right now?",
+  "cfSubtypeSubheading": "Different treatments change the diet a lot. Your answer adjusts what we highlight.",
+  "cfSubtypeReassurance": "You can change this any time in your profile."
 }

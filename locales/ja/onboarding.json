@@ -10,7 +10,9 @@
     "ingredients": "Ingredient Preferences",
     "ibsSubtype": "IBSのタイプ",
     "pregnancy": "妊娠",
-    "conflicts": "確認"
+    "conflicts": "確認",
+    "cancerSubtype": "がんの種類",
+    "cfSubtype": "CF管理"
   },
   "question": {
     "healthCondition": "健康状態はありますか？",

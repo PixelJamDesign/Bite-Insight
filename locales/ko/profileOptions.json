@@ -20,7 +20,9 @@
     "sibo": "시보",
     "uc": "궤양성 대장염",
     "noGallbladder": "담낭 없음",
-    "pregnancy": "임신"
+    "pregnancy": "임신",
+    "cancer": "암",
+    "cf": "낭포성 섬유증"
   },
   "allergies": {
     "celery": "셀러리 알레르기",
@@ -80,5 +82,51 @@
     "sister": "자매",
     "brother": "형제",
     "other": "다른"
-  }
+  },
+  "cancerSubtypes": {
+    "colorectal": {
+      "title": "대장",
+      "subtitle": "섬유질이 가장 도움이 됩니다. 가공육과 붉은 고기를 알려드려요."
+    },
+    "breast": {
+      "title": "유방",
+      "subtitle": "식물 위주 식사가 도움이 됩니다. 알코올과 포화 지방을 알려드려요."
+    },
+    "prostate": {
+      "title": "전립선",
+      "subtitle": "지중해식 식사가 도움이 됩니다. 포화 지방을 알려드려요."
+    },
+    "stomach": {
+      "title": "위",
+      "subtitle": "소금을 줄이면 도움이 됩니다. 절임과 염장 식품을 알려드려요."
+    },
+    "other": {
+      "title": "기타 / 일반",
+      "subtitle": "WCRF 일반 지침. 식물 위주, 가공 적은 식단."
+    }
+  },
+  "cancerSubtypePrompt": "어느 것이 본인의 상황과 맞나요?",
+  "cancerSubtypeSubheading": "암 종류에 따라 잘 맞는 음식이 다릅니다. 답변에 따라 스캔 시 강조하는 내용을 맞춥니다.",
+  "cancerSubtypeReassurance": "프로필에서 언제든지 변경할 수 있습니다.",
+  "cfSubtypes": {
+    "standard": {
+      "title": "표준 CF 관리",
+      "subtitle": "칼로리가 높은 음식이 가장 도움이 됩니다. \"다이어트\" 및 저지방 제품을 알려드려요."
+    },
+    "modulator": {
+      "title": "CFTR 조절제 복용 중",
+      "subtitle": "Trikafta 또는 Kaftrio. 흡수가 개선되어 고칼로리 권장을 완화합니다."
+    },
+    "cfrd": {
+      "title": "CF 관련 당뇨병(CFRD)",
+      "subtitle": "고칼로리 식단을 유지합니다. 인슐린을 위한 탄수화물 주의를 추가합니다."
+    },
+    "all": {
+      "title": "모든 하위 유형",
+      "subtitle": "CFTR 조절제와 CFRD 모두 해당. 탄수화물에 주의하며 고칼로리 권장을 완화합니다."
+    }
+  },
+  "cfSubtypePrompt": "지금 본인의 CF에 가장 맞는 것은?",
+  "cfSubtypeSubheading": "치료에 따라 식단이 크게 달라집니다. 답변에 따라 강조하는 내용을 조정합니다.",
+  "cfSubtypeReassurance": "프로필에서 언제든지 변경할 수 있습니다."
 }

@@ -20,7 +20,9 @@
     "sibo": "SIBO",
     "uc": "Colitis ulcerosa",
     "noGallbladder": "Keine Gallenblase",
-    "pregnancy": "Schwangerschaft"
+    "pregnancy": "Schwangerschaft",
+    "cancer": "Krebs",
+    "cf": "Mukoviszidose"
   },
   "allergies": {
     "celery": "Sellerie-Allergie",
@@ -80,5 +82,51 @@
     "sister": "Schwester",
     "brother": "Bruder",
     "other": "Andere"
-  }
+  },
+  "cancerSubtypes": {
+    "colorectal": {
+      "title": "Darmkrebs",
+      "subtitle": "Ballaststoffe helfen am meisten. Wir markieren verarbeitetes und rotes Fleisch."
+    },
+    "breast": {
+      "title": "Brust",
+      "subtitle": "Pflanzliche Mahlzeiten helfen. Wir markieren Alkohol und gesättigte Fette."
+    },
+    "prostate": {
+      "title": "Prostata",
+      "subtitle": "Mediterrane Ernährung hilft. Wir markieren gesättigte Fette."
+    },
+    "stomach": {
+      "title": "Magen",
+      "subtitle": "Weniger Salz hilft. Wir markieren eingelegte und gepökelte Lebensmittel."
+    },
+    "other": {
+      "title": "Sonstige / Allgemein",
+      "subtitle": "Allgemeine WCRF-Richtlinien. Pflanzlich, wenig verarbeitet."
+    }
+  },
+  "cancerSubtypePrompt": "Welcher passt zu Ihrer Situation?",
+  "cancerSubtypeSubheading": "Jede Art reagiert anders auf bestimmte Lebensmittel. Ihre Antwort fokussiert das, was beim Scannen hervorgehoben wird.",
+  "cancerSubtypeReassurance": "Sie können dies jederzeit in Ihrem Profil ändern.",
+  "cfSubtypes": {
+    "standard": {
+      "title": "Standard-CF-Management",
+      "subtitle": "Kalorienreiche Lebensmittel helfen am meisten. Wir markieren \"Diät\"- und Magerprodukte."
+    },
+    "modulator": {
+      "title": "CFTR-Modulator-Therapie",
+      "subtitle": "Trikafta oder Kaftrio. Die Absorption hat sich verbessert, daher reduzieren wir den Kalorienschub."
+    },
+    "cfrd": {
+      "title": "CF-bedingter Diabetes (CFRD)",
+      "subtitle": "Kalorienreiche Ernährung beibehalten. Wir ergänzen die Kohlenhydrat-Aufmerksamkeit für Insulin."
+    },
+    "all": {
+      "title": "Alle Subtypen",
+      "subtitle": "Auf einem Modulator mit CFRD. Wir achten auf Kohlenhydrate und reduzieren den Kalorienschub."
+    }
+  },
+  "cfSubtypePrompt": "Was passt aktuell am besten zu Ihrer CF?",
+  "cfSubtypeSubheading": "Behandlungen verändern die Ernährung stark. Ihre Antwort passt an, was wir hervorheben.",
+  "cfSubtypeReassurance": "Sie können dies jederzeit in Ihrem Profil ändern."
 }

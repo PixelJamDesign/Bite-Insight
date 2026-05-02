@@ -39,7 +39,7 @@ export const NUTRIENT_LABELS: Record<NutrientKey, string> = {
   fiber: 'Fibre',
   proteins: 'Protein',
   netCarbs: 'Net Carbs',
-  salt: 'Salt',
+  salt: 'Sodium',
 };
 
 export const NUTRIENT_UNITS: Record<NutrientKey, string> = {
@@ -108,6 +108,78 @@ export const CONDITION_OVERRIDES: Record<string, Partial<Record<NutrientKey, Par
   },
   ibs: {
     fiber: { low: 1.5, moderate: 3, inverted: true },
+  },
+  // ── Cancer (baseline — applies to all subtypes) ──
+  // WCRF/AICR: limit saturated fat, added sugars, processed foods, alcohol.
+  // Boost: dietary fibre (≥30g/day target), antioxidant-rich plant foods.
+  cancer: {
+    saturatedFat: { low: 1.5,  moderate: 5 },
+    sugars:       { low: 3,    moderate: 10 },
+    salt:         { low: 0.25, moderate: 0.75 },
+    fiber:        { low: 2,    moderate: 4,   inverted: true },
+  },
+  // Colorectal subtype: stricter saturated fat (red meat linkage); fibre
+  // threshold lowered to strongly reward high-fibre products.
+  cancerColorectal: {
+    saturatedFat: { low: 1,    moderate: 3 },
+    sugars:       { low: 3,    moderate: 10 },
+    salt:         { low: 0.25, moderate: 0.75 },
+    fiber:        { low: 1.5,  moderate: 3,   inverted: true },
+  },
+  // Stomach subtype: salt is the dominant concern (matches hypertension level).
+  cancerStomach: {
+    saturatedFat: { low: 1.5,  moderate: 5 },
+    sugars:       { low: 3,    moderate: 10 },
+    salt:         { low: 0.1,  moderate: 0.3 },
+    fiber:        { low: 2,    moderate: 4,   inverted: true },
+  },
+  // ── Cystic Fibrosis — Standard subtype ──────────────────────────────────────
+  // CF inverts the usual logic: high fat and calories are NEEDED, salt is
+  // actively supplemented (2-4× higher sweat losses). Fat is inverted so
+  // higher fat = better rating; salt thresholds are set extremely high so
+  // products effectively never trigger a salt warning for CF users.
+  // Sugar is mildly relaxed because sugar still provides usable calories.
+  cfStandard: {
+    fat:          { low: 10,  moderate: 20,  inverted: true },
+    saturatedFat: { low: 5,   moderate: 15,  inverted: true },
+    salt:         { low: 999, moderate: 999 },
+    sugars:       { low: 10,  moderate: 25 },
+    fiber:        { low: 1,   moderate: 3,   inverted: true },
+  },
+  // ── Cystic Fibrosis — CFTR Modulator subtype ───────────────────────────────
+  // Trikafta/Kaftrio/Alyftrek have normalised absorption. Fat is no longer
+  // a calorie shortage problem; weight management is now a real concern.
+  // Use near-default thresholds. Salt still relaxed (still higher losses
+  // than the general population, just not as severe as untreated CF).
+  cfModulator: {
+    fat:          { low: 3,    moderate: 17.5 },
+    saturatedFat: { low: 3,    moderate: 17.5 },
+    salt:         { low: 1.0,  moderate: 2.5 },
+    sugars:       { low: 5,    moderate: 22.5 },
+  },
+  // ── Cystic Fibrosis — CF-Related Diabetes (CFRD) subtype ───────────────────
+  // High calorie / high fat maintained — CFRD diet stays high-fat, but
+  // adds carbohydrate awareness for insulin dosing (NOT carb restriction).
+  // Sugars mildly tighter than standard CF to flag empty-calorie products.
+  cfCfrd: {
+    fat:          { low: 8,    moderate: 18,  inverted: true },
+    saturatedFat: { low: 4,    moderate: 12,  inverted: true },
+    salt:         { low: 999,  moderate: 999 },
+    sugars:       { low: 8,    moderate: 20 },
+    carbs:        { low: 10,   moderate: 30 },
+  },
+  // ── Cystic Fibrosis — All of the above (modulator + CFRD) ─────────────────
+  // For users who manage all three: standard CF baseline, on a modulator,
+  // AND have CFRD. Modulator's normalised absorption dominates (no fat
+  // inversion, weight-aware), with CFRD's carb threshold layered on.
+  // Salt is relaxed (still higher losses than the general population, but
+  // not as severe as untreated CF) to match the modulator profile.
+  cfAll: {
+    fat:          { low: 3,    moderate: 17.5 },
+    saturatedFat: { low: 3,    moderate: 17.5 },
+    salt:         { low: 1.0,  moderate: 2.5 },
+    sugars:       { low: 5,    moderate: 22.5 },
+    carbs:        { low: 10,   moderate: 30 },
   },
   crohns: {
     fiber: { low: 1.5, moderate: 3, inverted: true },
@@ -312,6 +384,31 @@ export function buildThresholds(
       if (patch.moderate != null && patch.moderate < current.moderate) current.moderate = patch.moderate;
       if (patch.inverted != null) current.inverted = patch.inverted;
       if (patch.labels) current.labels = patch.labels;
+    }
+  }
+
+  // ── CF override pass ───────────────────────────────────────────────────────
+  // CF's nutritional logic is genuinely inverted — high fat is encouraged
+  // and salt is actively supplemented. The "strictest wins" merge above
+  // would pin CF users to default salt thresholds (0.3 / 1.5) regardless
+  // of CF's relaxed values (999 / 999). Run a second pass for fat / salt /
+  // saturatedFat that REPLACES the merged value with CF's value when CF
+  // is active. Modulator subtype is excluded because modulator users have
+  // normalised absorption and shouldn't get the inverted-fat treatment.
+  const cfReplaceKey = all.includes('cfCfrd')
+    ? 'cfCfrd'
+    : all.includes('cfStandard')
+      ? 'cfStandard'
+      : null;
+  if (cfReplaceKey) {
+    const cfOverride = CONDITION_OVERRIDES[cfReplaceKey];
+    if (cfOverride) {
+      for (const nutrient of ['salt', 'fat', 'saturatedFat'] as NutrientKey[]) {
+        const cfPatch = cfOverride[nutrient];
+        if (cfPatch) {
+          merged[nutrient] = { ...merged[nutrient], ...cfPatch };
+        }
+      }
     }
   }
 

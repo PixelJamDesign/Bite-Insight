@@ -81,6 +81,25 @@ const CONDITION_KEYWORDS: Record<string, string[]> = {
   'egg allergy': ['egg', 'eggs', 'albumin'],
   'peanut allergy': ['peanut', 'groundnut'],
   'tree nut allergy': ['almond', 'hazelnut', 'walnut', 'cashew', 'pecan', 'pistachio'],
+  // Cancer — flag IARC-classified ingredients for household members
+  // monitoring or managing cancer risk.
+  cancer: [
+    'bacon', 'ham', 'salami', 'pepperoni', 'chorizo', 'prosciutto',
+    'hot dog', 'frankfurter', 'sausage', 'luncheon meat', 'corned beef',
+    'beef jerky', 'pastrami', 'smoked meat',
+    'sodium nitrite', 'potassium nitrite', 'e249', 'e250', 'e251', 'e252',
+    'alcohol', 'wine', 'beer',
+  ],
+  // Cystic Fibrosis — INVERTED flagging. Surfaces "diet" / "low-fat" /
+  // sugar-substitute products that work against the high-calorie,
+  // high-fat dietary pattern most CF patients need.
+  cf: [
+    'diet', 'light', 'lite', 'low calorie', 'low-calorie', 'reduced calorie',
+    'low fat', 'low-fat', 'reduced fat', 'fat free', 'fat-free',
+    'skimmed', 'semi-skimmed',
+    'sugar free', 'sugar-free', 'zero sugar', 'no added sugar',
+    'aspartame', 'sucralose', 'saccharin', 'acesulfame',
+  ],
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
