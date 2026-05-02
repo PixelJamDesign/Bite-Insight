@@ -10,7 +10,9 @@
     "ingredients": "Ingredient Preferences",
     "ibsSubtype": "IBS 유형",
     "pregnancy": "임신",
-    "conflicts": "확인"
+    "conflicts": "확인",
+    "cancerSubtype": "암 유형",
+    "cfSubtype": "CF 관리"
   },
   "question": {
     "healthCondition": "건강상의 문제가 있나요?",

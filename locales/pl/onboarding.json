@@ -10,7 +10,9 @@
     "ingredients": "Ingredient Preferences",
     "ibsSubtype": "Typ IBS",
     "pregnancy": "Ciąża",
-    "conflicts": "Sprawdź"
+    "conflicts": "Sprawdź",
+    "cancerSubtype": "Rodzaj Nowotworu",
+    "cfSubtype": "Zarządzanie CF"
   },
   "question": {
     "healthCondition": "Czy masz jakieś problemy zdrowotne?",

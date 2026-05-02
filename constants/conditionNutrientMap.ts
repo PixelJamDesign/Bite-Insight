@@ -167,14 +167,345 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // 3. Cancer
+  // Sources: WCRF/AICR Third Expert Report, American Cancer Society Guidelines
+  // for Cancer Survivors, NCI Nutrition in Cancer Care.
+  //
+  // IMPORTANT: Users always confirm/customise. This is NOT medical advice.
+  // Supplement use is NOT recommended for cancer prevention (WCRF position).
+  // All items here are food-source nutrients only.
+  // ═══════════════════════════════════════════════════════════════════════════
+  Cancer: {
+    limit: [
+      {
+        nutrient: 'Saturated Fat',
+        offKey: 'saturated-fat_100g',
+        unit: 'g',
+        reason:
+          'Diets high in saturated fat are associated with increased risk of breast and colorectal cancers, and poorer survival outcomes. The WCRF recommends a predominantly plant-based diet low in animal fats.',
+      },
+      {
+        nutrient: 'Added Sugars',
+        offKey: 'sugars_100g',
+        unit: 'g',
+        reason:
+          'High sugar intake contributes to excess body weight, an established cancer risk factor linked to at least 13 types of cancer. Limiting added sugars supports a healthy body weight.',
+      },
+      {
+        nutrient: 'Sodium',
+        offKey: 'salt_100g',
+        unit: 'g',
+        reason:
+          'High salt intake is strongly associated with stomach (gastric) cancer risk. The WCRF recommends limiting processed, salt-preserved and pickled foods. Aim for under 6g of salt per day.',
+      },
+    ],
+    boost: [
+      {
+        nutrient: 'Dietary Fibre',
+        offKey: 'fiber_100g',
+        unit: 'g',
+        reason:
+          'Every 10g increase in dietary fibre per day is associated with a 7–10% reduction in colorectal cancer risk (WCRF). Fibre from whole grains, vegetables, legumes and fruit is most beneficial. The WCRF recommends at least 30g of fibre daily.',
+      },
+      {
+        nutrient: 'Calcium',
+        offKey: 'calcium_100g',
+        unit: 'mg',
+        reason:
+          'Adequate calcium intake from food (dairy, fortified plant milks, leafy greens) is associated with reduced colorectal cancer risk. The protective effect is seen at around 700–1000mg per day from dietary sources.',
+        userConfirmRequired: true,
+      },
+      {
+        nutrient: 'Vitamin D',
+        offKey: 'vitamin-d_100g',
+        unit: 'µg',
+        reason:
+          "Low vitamin D levels are associated with higher risk of several cancers, including colorectal and breast. Food sources include oily fish, eggs and fortified foods. Note: supplementation guidance varies — follow your doctor's advice.",
+        userConfirmRequired: true,
+      },
+      {
+        nutrient: 'Omega-3 Fatty Acids',
+        offKey: 'omega-3-fat_100g',
+        unit: 'g',
+        reason:
+          'Anti-inflammatory omega-3 fats (from oily fish, flaxseed, walnuts) are associated with reduced cancer risk and better outcomes in prostate and breast cancer survivors. The Mediterranean diet pattern — high in omega-3 — is linked to lower cancer mortality.',
+        userConfirmRequired: true,
+      },
+    ],
+  },
+
+  // ── Cancer subtype profiles ────────────────────────────────────────────────
+  // Selected via the cancer_subtype column on the user's profile. Resolved
+  // by conditionMapKey() in onboarding/edit-profile when the user has
+  // 'cancer' selected. If a subtype-specific entry isn't matched, the
+  // generic 'Cancer' entry above is used as the fallback.
+
+  // Colorectal — fibre is the headline. WCRF: every 10g/day fibre cuts
+  // colorectal cancer risk 7–10%. Saturated fat secondary (red meat link).
+  'Cancer (Colorectal)': {
+    limit: [
+      {
+        nutrient: 'Saturated Fat',
+        offKey: 'saturated-fat_100g',
+        unit: 'g',
+        reason:
+          'Saturated fat from red and processed meat is the strongest dietary link to colorectal cancer risk. The WCRF recommends limiting red meat and avoiding processed meat where possible.',
+      },
+      {
+        nutrient: 'Added Sugars',
+        offKey: 'sugars_100g',
+        unit: 'g',
+        reason:
+          'High sugar intake contributes to excess body weight, an independent risk factor for colorectal cancer recurrence and incidence.',
+      },
+    ],
+    boost: [
+      {
+        nutrient: 'Dietary Fibre',
+        offKey: 'fiber_100g',
+        unit: 'g',
+        reason:
+          'For colorectal cancer this is the single most important dietary lever. Every 10g/day of fibre is associated with a 7–10% reduction in risk (WCRF). Whole grains, legumes, vegetables and fruit all count toward the 30g/day target.',
+      },
+      {
+        nutrient: 'Calcium',
+        offKey: 'calcium_100g',
+        unit: 'mg',
+        reason:
+          'Adequate calcium from food (700–1000mg/day) is associated with reduced colorectal cancer risk. Dairy, fortified plant milks and leafy greens are good sources.',
+        userConfirmRequired: true,
+      },
+      {
+        nutrient: 'Vitamin D',
+        offKey: 'vitamin-d_100g',
+        unit: 'µg',
+        reason:
+          'Low vitamin D is associated with higher colorectal cancer risk. Food sources include oily fish, eggs and fortified foods.',
+        userConfirmRequired: true,
+      },
+    ],
+  },
+
+  // Breast — alcohol (handled via ingredient flags) plus saturated fat
+  // and weight-management nutrients. Omega-3 helps survivorship outcomes.
+  'Cancer (Breast)': {
+    limit: [
+      {
+        nutrient: 'Saturated Fat',
+        offKey: 'saturated-fat_100g',
+        unit: 'g',
+        reason:
+          'High saturated-fat intake is associated with breast cancer risk and poorer survival outcomes. The WCRF recommends a predominantly plant-based diet low in animal fats.',
+      },
+      {
+        nutrient: 'Added Sugars',
+        offKey: 'sugars_100g',
+        unit: 'g',
+        reason:
+          'Excess body weight is one of the strongest dietary risk factors for postmenopausal breast cancer. Limiting added sugars supports weight management.',
+      },
+    ],
+    boost: [
+      {
+        nutrient: 'Dietary Fibre',
+        offKey: 'fiber_100g',
+        unit: 'g',
+        reason:
+          'Higher fibre intake is associated with reduced breast cancer risk, partly through its role in regulating circulating oestrogen levels.',
+      },
+      {
+        nutrient: 'Omega-3 Fatty Acids',
+        offKey: 'omega-3-fat_100g',
+        unit: 'g',
+        reason:
+          'Anti-inflammatory omega-3 fats from oily fish, flaxseed and walnuts are associated with better outcomes in breast cancer survivors.',
+        userConfirmRequired: true,
+      },
+      {
+        nutrient: 'Vitamin D',
+        offKey: 'vitamin-d_100g',
+        unit: 'µg',
+        reason:
+          'Low vitamin D levels are associated with higher breast cancer risk. Oily fish, eggs and fortified foods are the main dietary sources.',
+        userConfirmRequired: true,
+      },
+    ],
+  },
+
+  // Prostate — Mediterranean dietary pattern; saturated fat is the main
+  // limit; omega-3 the headline boost (linked to better survivor outcomes).
+  'Cancer (Prostate)': {
+    limit: [
+      {
+        nutrient: 'Saturated Fat',
+        offKey: 'saturated-fat_100g',
+        unit: 'g',
+        reason:
+          'High saturated-fat intake is associated with more aggressive prostate cancer and poorer survival. Replacing animal fats with plant fats (olive oil, nuts) is the core Mediterranean recommendation.',
+      },
+    ],
+    boost: [
+      {
+        nutrient: 'Omega-3 Fatty Acids',
+        offKey: 'omega-3-fat_100g',
+        unit: 'g',
+        reason:
+          'Anti-inflammatory omega-3 fats from oily fish are associated with better outcomes in prostate cancer survivors. The Mediterranean diet pattern is linked to lower prostate cancer mortality.',
+        userConfirmRequired: true,
+      },
+      {
+        nutrient: 'Dietary Fibre',
+        offKey: 'fiber_100g',
+        unit: 'g',
+        reason:
+          'Higher fibre intake is associated with reduced prostate cancer risk and supports the plant-rich Mediterranean dietary pattern.',
+      },
+    ],
+  },
+
+  // Stomach (Gastric) — salt is the dominant concern. WCRF strongly
+  // recommends limiting salt-preserved, pickled and salt-cured foods.
+  'Cancer (Stomach)': {
+    limit: [
+      {
+        nutrient: 'Sodium',
+        offKey: 'salt_100g',
+        unit: 'g',
+        reason:
+          'High salt intake is the strongest dietary risk factor for stomach (gastric) cancer. The WCRF recommends limiting processed, salt-preserved and pickled foods. Aim for under 6g of salt per day.',
+      },
+      {
+        nutrient: 'Added Sugars',
+        offKey: 'sugars_100g',
+        unit: 'g',
+        reason:
+          'Excess body weight is an independent risk factor for stomach cancer. Limiting added sugars supports weight management.',
+      },
+    ],
+    boost: [
+      {
+        nutrient: 'Dietary Fibre',
+        offKey: 'fiber_100g',
+        unit: 'g',
+        reason:
+          'A diet rich in fibre, fruit and vegetables is associated with reduced stomach cancer risk. Fresh produce supports the gastric mucosa and provides protective antioxidants.',
+      },
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CYSTIC FIBROSIS (CF)
+  // Sources: CFF Clinical Care Guidelines, ESPEN-ESPGHAN-ECFS CF Nutrition
+  // Guidelines, Cystic Fibrosis Trust dietary guidance.
+  //
+  // Key principle: CF causes malabsorption of fat and fat-soluble nutrients.
+  // Deficiencies of vitamins A, D, E, K and minerals calcium, zinc, iron
+  // are universal enough to warrant pre-selecting all of them.
+  //
+  // IMPORTANT: Salt is in the boost list — CF patients lose 2-4× more sodium
+  // in sweat than healthy individuals. This is intentional, not a typo.
+  // ═══════════════════════════════════════════════════════════════════════════
+  CF: {
+    limit: [
+      {
+        nutrient: 'Added Sugars (empty calories)',
+        offKey: 'sugars_100g',
+        unit: 'g',
+        reason:
+          'Sugar still provides calories, but high-sugar products with little fat or protein offer low nutrient density for the calorie budget. Prioritising calorie-dense foods that also bring fat or protein gives better nutritional return. This matters less during illness, when any calories are welcome.',
+        userConfirmRequired: true,
+      },
+    ],
+    boost: [
+      {
+        nutrient: 'Energy (Calories)',
+        offKey: 'energy-kcal_100g',
+        unit: 'g',
+        reason:
+          'People with CF typically need 110–200% of the standard daily calorie requirement due to higher energy expenditure and fat malabsorption. Maintaining a healthy weight is strongly linked to better lung function and fewer chest infections.',
+      },
+      {
+        nutrient: 'Fat',
+        offKey: 'fat_100g',
+        unit: 'g',
+        reason:
+          'Fat is the most calorie-dense macronutrient (9 kcal/g) and is essential for meeting CF energy needs. Even with pancreatic enzyme replacement, people with CF still absorb fat less efficiently than healthy individuals, so higher fat intake is recommended by the CFF and ESPEN guidelines.',
+      },
+      {
+        nutrient: 'Protein',
+        offKey: 'proteins_100g',
+        unit: 'g',
+        reason:
+          'Adequate protein supports lung muscle strength and immune function — both critical in CF. CF Foundation guidelines recommend protein at the higher end of normal intake. Good sources include meat, fish, eggs, dairy and legumes.',
+      },
+      {
+        nutrient: 'Vitamin A',
+        offKey: 'vitamin-a_100g',
+        unit: 'µg',
+        reason:
+          'Vitamin A deficiency is common in CF due to fat malabsorption. It supports healthy lungs, immune function and vision. People with CF typically need a water-miscible supplement form, since standard fat-soluble supplements absorb poorly without sufficient fat digestion.',
+      },
+      {
+        nutrient: 'Vitamin D',
+        offKey: 'vitamin-d_100g',
+        unit: 'µg',
+        reason:
+          'Vitamin D deficiency affects most CF patients and contributes to CF-related osteoporosis. Food sources include oily fish, egg yolks and fortified foods. The CFF recommends annual vitamin D level monitoring and water-soluble supplementation for most CF patients.',
+      },
+      {
+        nutrient: 'Vitamin E',
+        offKey: 'vitamin-e_100g',
+        unit: 'mg',
+        reason:
+          'Vitamin E is a fat-soluble antioxidant frequently deficient in CF. It supports immune function and nervous system health. Good food sources include vegetable oils, nuts, seeds and fortified foods.',
+      },
+      {
+        nutrient: 'Vitamin K',
+        offKey: 'vitamin-k_100g',
+        unit: 'µg',
+        reason:
+          'Vitamin K is needed for blood clotting and bone health. CF patients are at higher risk of deficiency due to fat malabsorption and frequent antibiotic use (which disrupts gut bacteria that produce vitamin K). Green leafy vegetables are the best food source.',
+      },
+      {
+        nutrient: 'Calcium',
+        offKey: 'calcium_100g',
+        unit: 'mg',
+        reason:
+          'CF patients aged 9+ should aim for 1,300–1,500 mg of calcium daily (CFF guidelines) to support bone density. Low vitamin D impairs calcium absorption, creating a compounding deficiency. Best sources: dairy, calcium-fortified plant milks and leafy greens.',
+      },
+      {
+        nutrient: 'Zinc',
+        offKey: 'zinc_100g',
+        unit: 'mg',
+        reason:
+          'Zinc deficiency is well-documented in CF and contributes to impaired immune function, poor growth and reduced appetite. Fat malabsorption and intestinal inflammation reduce zinc absorption. Meat, shellfish, seeds and dairy are good dietary sources.',
+      },
+      {
+        nutrient: 'Iron',
+        offKey: 'iron_100g',
+        unit: 'mg',
+        reason:
+          'Iron deficiency is common in CF, partly due to chronic infection and inflammation (which sequesters iron) and partly due to poor absorption. Iron is essential for oxygen transport and immune function. Red meat, fortified cereals, legumes and dark leafy greens are good sources.',
+      },
+      {
+        nutrient: 'Sodium',
+        offKey: 'salt_100g',
+        unit: 'g',
+        reason:
+          'People with CF lose 2–4× more salt in sweat than healthy individuals, which raises the risk of dehydration and electrolyte imbalance — especially during exercise or hot weather. The CFF recommends extra salt intake. Note: if you are on a CFTR modulator, your salt losses may be lower — check with your CF team.',
+      },
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // 3a. Chronic Kidney Disease (CKD)
   // ═══════════════════════════════════════════════════════════════════════════
   'Chronic Kidney Disease': {
     limit: [
       {
         nutrient: 'Sodium',
-        offKey: 'sodium_100g',
-        unit: 'mg',
+        offKey: 'salt_100g',
+        unit: 'g',
         reason:
           'High sodium intake increases blood pressure and fluid retention, accelerating kidney damage in CKD',
       },
@@ -308,8 +639,8 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
     limit: [
       {
         nutrient: 'Sodium',
-        offKey: 'sodium_100g',
-        unit: 'mg',
+        offKey: 'salt_100g',
+        unit: 'g',
         reason:
           'People with diabetes are at higher cardiovascular risk; sodium intake should be limited to <2,300 mg/day per ADA guidelines',
       },
@@ -493,8 +824,8 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
     limit: [
       {
         nutrient: 'Sodium',
-        offKey: 'sodium_100g',
-        unit: 'mg',
+        offKey: 'salt_100g',
+        unit: 'g',
         reason:
           'AHA recommends <2,300 mg/day (ideally <1,500 mg); excess sodium raises blood pressure and strains the heart',
       },
@@ -599,8 +930,8 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
     limit: [
       {
         nutrient: 'Sodium',
-        offKey: 'sodium_100g',
-        unit: 'mg',
+        offKey: 'salt_100g',
+        unit: 'g',
         reason:
           'DASH diet limits sodium to <2,300 mg/day (ideally <1,500 mg); sodium raises blood pressure by increasing extracellular fluid volume',
       },
@@ -734,8 +1065,8 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
     limit: [
       {
         nutrient: 'Sodium',
-        offKey: 'sodium_100g',
-        unit: 'mg',
+        offKey: 'salt_100g',
+        unit: 'g',
         reason:
           'SLE patients should restrict sodium to <3 g/day; excess sodium raises blood pressure and cardiovascular risk, already elevated in lupus',
       },
@@ -858,8 +1189,8 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
     limit: [
       {
         nutrient: 'Sodium',
-        offKey: 'sodium_100g',
-        unit: 'mg',
+        offKey: 'salt_100g',
+        unit: 'g',
         reason:
           'Metabolic syndrome includes hypertension; DASH diet guidance recommends limiting sodium to <2,300 mg/day',
       },
@@ -932,8 +1263,8 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
     limit: [
       {
         nutrient: 'Sodium',
-        offKey: 'sodium_100g',
-        unit: 'mg',
+        offKey: 'salt_100g',
+        unit: 'g',
         reason:
           'High sodium intake may trigger migraines through dehydration and blood pressure changes; moderation is recommended',
         userConfirmRequired: true,
@@ -980,8 +1311,8 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
     limit: [
       {
         nutrient: 'Sodium',
-        offKey: 'sodium_100g',
-        unit: 'mg',
+        offKey: 'salt_100g',
+        unit: 'g',
         reason:
           'Preclinical studies show high salt promotes pro-inflammatory Th17 cells; limit to <2,300 mg/day for general health, though human evidence is mixed',
         userConfirmRequired: true,
@@ -1036,8 +1367,8 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
     limit: [
       {
         nutrient: 'Sodium',
-        offKey: 'sodium_100g',
-        unit: 'mg',
+        offKey: 'salt_100g',
+        unit: 'g',
         reason:
           'Every 2,300 mg of sodium causes ~40 mg calcium loss in urine; limit to <2,300 mg/day to protect bone density',
       },
@@ -1120,8 +1451,8 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
     limit: [
       {
         nutrient: 'Sodium',
-        offKey: 'sodium_100g',
-        unit: 'mg',
+        offKey: 'salt_100g',
+        unit: 'g',
         reason:
           'PCOS increases cardiovascular risk; DASH eating plan recommends 1,500 mg/day sodium limit',
       },
@@ -1195,8 +1526,8 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
     limit: [
       {
         nutrient: 'Sodium',
-        offKey: 'sodium_100g',
-        unit: 'mg',
+        offKey: 'salt_100g',
+        unit: 'g',
         reason:
           'Salt intake >6 g/day may promote inflammation via immune system changes; aim for <1,500 mg/day, especially on steroids',
       },

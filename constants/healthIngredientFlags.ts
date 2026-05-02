@@ -391,6 +391,141 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
     ],
   },
 
+  // ── CANCER (baseline — applies to all subtypes) ────────────────────────────
+  // Sources: WCRF/AICR Third Expert Report, IARC Monographs, Cancer Research
+  // UK, American Cancer Society dietary guidelines.
+  //
+  // Primary flags:
+  //   • Processed meat — IARC Group 1 carcinogen (definite cause of colorectal cancer)
+  //   • Nitrite/nitrate preservatives (E249–E252) — form N-nitroso compounds
+  //     that damage DNA; present in most processed meats
+  //   • Alcohol — increases risk of 7 cancer types at any intake level
+  cancer: {
+    keywords: [
+      // Processed meats (IARC Group 1 — definite colorectal carcinogen)
+      'bacon', 'streaky bacon', 'back bacon', 'smoked bacon', 'cured bacon',
+      'ham', 'cooked ham', 'cured ham', 'smoked ham', 'gammon',
+      'salami', 'pepperoni', 'chorizo', 'mortadella', 'prosciutto',
+      'pancetta', 'coppa', 'nduja', 'lardons', 'bresaola',
+      'hot dog', 'hotdog', 'frankfurter', 'wiener', 'bratwurst',
+      'sausage', 'pork sausage', 'beef sausage', 'chipolata', 'cumberland sausage',
+      'luncheon meat', 'spam', 'corned beef', 'beef jerky', 'jerky',
+      'pastrami', 'bologna', 'polony', 'devon', 'liverwurst', 'braunschweiger',
+      'smoked sausage', 'smoked meat', 'smoked chicken', 'smoked turkey',
+      // Nitrite/nitrate preservatives — the key carcinogenic mechanism
+      'sodium nitrite', 'potassium nitrite', 'sodium nitrate', 'potassium nitrate',
+      'e249', 'e250', 'e251', 'e252',
+      // Alcohol — any level increases risk for breast, liver, colorectal,
+      // oral and oesophageal cancers
+      'alcohol', 'ethanol', 'wine', 'beer', 'spirits', 'liqueur', 'brandy',
+      'whisky', 'rum', 'vodka', 'gin', 'champagne', 'cider', 'mead',
+      'sake', 'port', 'sherry',
+    ],
+    ingredientIds: [
+      'en:bacon', 'en:smoked-bacon', 'en:cured-bacon',
+      'en:ham', 'en:cooked-ham', 'en:cured-ham', 'en:smoked-ham', 'en:gammon',
+      'en:salami', 'en:pepperoni', 'en:chorizo', 'en:mortadella',
+      'en:prosciutto', 'en:pancetta', 'en:coppa', 'en:nduja', 'en:lardons',
+      'en:hot-dog', 'en:frankfurter', 'en:wiener', 'en:bratwurst',
+      'en:sausage', 'en:pork-sausage', 'en:beef-sausage',
+      'en:luncheon-meat', 'en:corned-beef', 'en:beef-jerky',
+      'en:pastrami', 'en:bologna', 'en:liverwurst',
+      'en:smoked-sausage', 'en:smoked-meat',
+      'en:sodium-nitrite', 'en:potassium-nitrite',
+      'en:sodium-nitrate', 'en:potassium-nitrate',
+      'en:e249', 'en:e250', 'en:e251', 'en:e252',
+      'en:alcohol', 'en:ethanol', 'en:wine', 'en:beer', 'en:spirits',
+    ],
+  },
+
+  // ── CANCER — Colorectal / Bowel subtype additional flags ───────────────────
+  // Strongest dietary evidence of any cancer type. Red meat is IARC Group 2A
+  // (probable carcinogen). Merged with baseline `cancer` flags when
+  // cancer_subtype === 'colorectal'.
+  cancerColorectal: {
+    keywords: [
+      // Red meat (IARC Group 2A — probable colorectal carcinogen)
+      'beef', 'beef mince', 'ground beef', 'minced beef', 'beef steak',
+      'lamb', 'lamb mince', 'minced lamb', 'mutton',
+      'pork', 'pork mince', 'minced pork', 'pork belly', 'pork shoulder',
+      'veal', 'venison', 'bison', 'goat',
+      'red meat', 'mince', 'minced meat',
+      // High-temperature cooking markers on packaged products
+      'chargrilled', 'char-grilled', 'charbroiled', 'bbq sauce', 'smoked',
+    ],
+    ingredientIds: [
+      'en:beef', 'en:minced-beef', 'en:beef-steak',
+      'en:lamb', 'en:minced-lamb', 'en:mutton',
+      'en:pork', 'en:minced-pork', 'en:pork-belly',
+      'en:veal', 'en:venison', 'en:bison',
+    ],
+  },
+
+  // ── CYSTIC FIBROSIS (standard + cfrd subtypes) ─────────────────────────────
+  // Sources: CFF Nutritional Guidelines, CFF Healthy High-Calorie Eating,
+  // ESPEN-ESPGHAN-ECFS guidelines, Cystic Fibrosis Trust dietary guidance.
+  //
+  // Inverted vs every other condition: CF flags products that are
+  // counterproductive for high-calorie/high-fat eating — "diet", "light",
+  // low-fat, sugar-free, etc. Carcinogen-style flagging doesn't apply.
+  //
+  // Salt is NOT flagged for CF — extra salt is recommended (2-4× higher
+  // sweat sodium losses).
+  //
+  // The 'modulator' subtype suppresses these flags entirely — see
+  // resolveHealthConditionKeys(): when cf_subtype === 'modulator', the 'cf'
+  // key is excluded from the active list so none of these flags fire.
+  cf: {
+    keywords: [
+      // "Diet" / "Light" / "Low-calorie" product markers
+      'diet', 'light', 'lite', 'low calorie', 'low-calorie', 'reduced calorie',
+      'calorie controlled', 'calorie-controlled', 'slimming', 'weight control',
+      // Low-fat / fat-free product markers — counterproductive for standard CF
+      'low fat', 'low-fat', 'reduced fat', 'reduced-fat', 'fat free', 'fat-free',
+      'skimmed', 'semi-skimmed', '0% fat', '0.1% fat',
+      // "No added sugar" markers — typically signal calorie reduction
+      'no added sugar', 'sugar free', 'sugar-free', 'zero sugar',
+      // Artificial / non-nutritive sweeteners that replace caloric sugar
+      'aspartame', 'saccharin', 'sucralose', 'acesulfame', 'acesulfame k',
+      'acesulfame potassium', 'steviol glycosides', 'stevia extract',
+      'erythritol', 'sorbitol', 'xylitol', 'mannitol', 'isomalt',
+      'e951', 'e954', 'e955', 'e950', 'e960',
+    ],
+    ingredientIds: [
+      'en:skimmed-milk', 'en:semi-skimmed-milk', 'en:fat-free-milk',
+      'en:low-fat-yogurt', 'en:fat-free-yogurt',
+      'en:aspartame', 'en:saccharin', 'en:sucralose',
+      'en:acesulfame-k', 'en:steviol-glycosides', 'en:erythritol',
+      'en:sorbitol', 'en:xylitol', 'en:mannitol', 'en:isomalt',
+      'en:e951', 'en:e954', 'en:e955', 'en:e950', 'en:e960',
+    ],
+  },
+
+  // ── CANCER — Stomach / Gastric subtype additional flags ────────────────────
+  // Salt and pickled/cured foods are established risk factors for gastric
+  // cancer. Merged with baseline `cancer` flags when cancer_subtype === 'stomach'.
+  cancerStomach: {
+    keywords: [
+      // High-salt preserved foods
+      'salt', 'sea salt', 'table salt', 'rock salt', 'himalayan salt',
+      'sodium chloride', 'msg', 'monosodium glutamate',
+      'soy sauce', 'tamari', 'fish sauce', 'oyster sauce', 'miso',
+      'stock cube', 'bouillon', 'yeast extract', 'marmite', 'vegemite',
+      // Pickled and fermented preserved foods (salt-heavy)
+      'pickled', 'pickle', 'gherkin', 'pickled cucumber', 'pickled onion',
+      'sauerkraut', 'kimchi', 'brined', 'salt-cured', 'salt-preserved',
+      'anchovies', 'salted fish', 'dried fish',
+    ],
+    ingredientIds: [
+      'en:salt', 'en:sea-salt', 'en:sodium-chloride',
+      'en:msg', 'en:monosodium-glutamate',
+      'en:soy-sauce', 'en:fish-sauce', 'en:oyster-sauce', 'en:miso',
+      'en:stock-cube', 'en:yeast-extract',
+      'en:pickled-cucumber', 'en:gherkin', 'en:sauerkraut', 'en:kimchi',
+      'en:anchovies', 'en:salted-fish',
+    ],
+  },
+
   noGallbladder: {
     keywords: [
       // Fried / high-fat preparations (hardest without stored bile)
@@ -1200,3 +1335,69 @@ export const DIETARY_PREFERENCE_INGREDIENTS: Record<string, HealthFlagEntry> = {
     ],
   },
 };
+
+/**
+ * Resolve a profile's effective health-condition keys for ingredient flagging.
+ *
+ * The cancer condition has subtypes (colorectal, breast, prostate, stomach,
+ * other). When `cancer` is present and a subtype with extra ingredient flags
+ * is set (colorectal or stomach), this function injects the synthetic subtype
+ * key (`cancerColorectal` / `cancerStomach`) so the consumer's keyword/ID
+ * union picks up both the baseline `cancer` flags and the subtype-specific
+ * additions.
+ *
+ * Subtypes without extra ingredient flags (breast, prostate, other) — their
+ * dietary differences are handled through nutrient thresholds, not extra
+ * ingredient flagging — fall through with just the baseline `cancer` entry.
+ */
+export function resolveHealthConditionKeys(
+  conditionKeys: readonly string[] | null | undefined,
+  options?: { cancerSubtype?: string | null; cfSubtype?: string | null },
+): string[] {
+  let keys = [...(conditionKeys ?? [])];
+  if (keys.includes('cancer')) {
+    switch (options?.cancerSubtype) {
+      case 'colorectal':
+        keys.push('cancerColorectal');
+        break;
+      case 'stomach':
+        keys.push('cancerStomach');
+        break;
+      // 'breast' | 'prostate' | 'other' | null — baseline only
+    }
+  }
+  if (keys.includes('cf')) {
+    // Each CF subtype has its own threshold-override entry in
+    // CONDITION_OVERRIDES (cfStandard/cfModulator/cfCfrd). We push the
+    // matching synthetic key here so buildThresholds() picks it up.
+    // The synthetic keys are no-ops for ingredient flagging (no
+    // HEALTH_CONDITION_INGREDIENTS entries) — only thresholds use them.
+    //
+    // Modulator subtype additionally strips the 'cf' key so the
+    // diet-product flag set doesn't fire — Trikafta/Kaftrio normalise
+    // absorption and weight management is now the bigger concern, so
+    // those flags would push users in the wrong direction.
+    switch (options?.cfSubtype) {
+      case 'modulator':
+        keys = keys.filter((k) => k !== 'cf');
+        keys.push('cfModulator');
+        break;
+      case 'cfrd':
+        keys.push('cfCfrd');
+        break;
+      case 'all':
+        // Modulator + CFRD combined: strip diet-product flags (modulator
+        // part, normalised absorption) and apply the merged 'cfAll'
+        // threshold profile (modulator-style fat/sat-fat with CFRD's
+        // carb awareness layered on).
+        keys = keys.filter((k) => k !== 'cf');
+        keys.push('cfAll');
+        break;
+      case 'standard':
+      default:
+        keys.push('cfStandard');
+        break;
+    }
+  }
+  return keys;
+}

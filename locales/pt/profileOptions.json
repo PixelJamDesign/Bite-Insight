@@ -20,7 +20,9 @@
     "sibo": "SIBO",
     "uc": "Colite ulcerativa",
     "noGallbladder": "Sem vesícula biliar",
-    "pregnancy": "Gravidez"
+    "pregnancy": "Gravidez",
+    "cancer": "Cancro",
+    "cf": "Fibrose Quística"
   },
   "allergies": {
     "celery": "Alergia ao aipo",
@@ -80,5 +82,51 @@
     "sister": "Irmã",
     "brother": "Irmão",
     "other": "Outro"
-  }
+  },
+  "cancerSubtypes": {
+    "colorectal": {
+      "title": "Colorretal",
+      "subtitle": "A fibra ajuda mais. Sinalizaremos carnes processadas e vermelhas."
+    },
+    "breast": {
+      "title": "Mama",
+      "subtitle": "Refeições com muitos vegetais ajudam. Sinalizaremos álcool e gorduras saturadas."
+    },
+    "prostate": {
+      "title": "Próstata",
+      "subtitle": "Estilo mediterrânico ajuda. Sinalizaremos gorduras saturadas."
+    },
+    "stomach": {
+      "title": "Estômago / Gástrico",
+      "subtitle": "Menos sal ajuda. Sinalizaremos alimentos em conserva e salgados."
+    },
+    "other": {
+      "title": "Outro / Geral",
+      "subtitle": "Orientações gerais da WCRF. À base de plantas, pouco processada."
+    }
+  },
+  "cancerSubtypePrompt": "Qual corresponde à sua situação?",
+  "cancerSubtypeSubheading": "Cada tipo responde melhor a alimentos diferentes. A sua resposta foca o que destacamos ao analisar.",
+  "cancerSubtypeReassurance": "Pode alterar isto a qualquer momento no seu perfil.",
+  "cfSubtypes": {
+    "standard": {
+      "title": "Gestão padrão da FQ",
+      "subtitle": "Os alimentos calóricos ajudam mais. Vamos sinalizar os produtos \"diet\" e magros."
+    },
+    "modulator": {
+      "title": "Com modulador CFTR",
+      "subtitle": "Trikafta ou Kaftrio. A absorção melhorou, por isso aliviamos a pressão calórica."
+    },
+    "cfrd": {
+      "title": "Diabetes relacionada com a FQ (CFRD)",
+      "subtitle": "Mantenha a dieta hipercalórica. Adicionamos atenção aos hidratos para a insulina."
+    },
+    "all": {
+      "title": "Todos os subtipos",
+      "subtitle": "Com modulador e CFRD. Vigiamos os hidratos e aliviamos a pressão calórica."
+    }
+  },
+  "cfSubtypePrompt": "O que melhor descreve a sua FQ neste momento?",
+  "cfSubtypeSubheading": "Os tratamentos mudam bastante a alimentação. A sua resposta ajusta o que destacamos.",
+  "cfSubtypeReassurance": "Pode alterar isto a qualquer momento no seu perfil."
 }

@@ -20,7 +20,9 @@
     "sibo": "シボ",
     "uc": "潰瘍性大腸炎",
     "noGallbladder": "胆嚢なし",
-    "pregnancy": "妊娠中"
+    "pregnancy": "妊娠中",
+    "cancer": "がん",
+    "cf": "嚢胞性線維症"
   },
   "allergies": {
     "celery": "セロリアレルギー",
@@ -80,5 +82,51 @@
     "sister": "妹",
     "brother": "兄弟",
     "other": "他の"
-  }
+  },
+  "cancerSubtypes": {
+    "colorectal": {
+      "title": "大腸",
+      "subtitle": "食物繊維が最も効果的。加工肉と赤身肉を警告します。"
+    },
+    "breast": {
+      "title": "乳",
+      "subtitle": "植物中心の食事が役立ちます。アルコールと飽和脂肪を警告します。"
+    },
+    "prostate": {
+      "title": "前立腺",
+      "subtitle": "地中海式の食事が役立ちます。飽和脂肪を警告します。"
+    },
+    "stomach": {
+      "title": "胃",
+      "subtitle": "塩分を減らすと効果的。塩漬けや漬物を警告します。"
+    },
+    "other": {
+      "title": "その他 / 一般",
+      "subtitle": "WCRFの一般的な指針。植物中心で加工度が低い食事。"
+    }
+  },
+  "cancerSubtypePrompt": "あなたの状況に合うのはどれですか?",
+  "cancerSubtypeSubheading": "種類によって相性のよい食事が異なります。回答により、スキャン時に強調する内容を絞り込みます。",
+  "cancerSubtypeReassurance": "プロフィールからいつでも変更できます。",
+  "cfSubtypes": {
+    "standard": {
+      "title": "標準的なCF管理",
+      "subtitle": "カロリー密度の高い食品が最も役立ちます。「ダイエット」食品や低脂肪製品を警告します。"
+    },
+    "modulator": {
+      "title": "CFTRモジュレーター使用中",
+      "subtitle": "TrikaftaやKaftrio。吸収が改善したため、高カロリー推奨を緩めます。"
+    },
+    "cfrd": {
+      "title": "CF関連糖尿病(CFRD)",
+      "subtitle": "高カロリー食を維持します。インスリンのため炭水化物への注意を追加します。"
+    },
+    "all": {
+      "title": "すべてのサブタイプ",
+      "subtitle": "モジュレーター使用中でCFRDあり。炭水化物に注意しつつ、高カロリー推奨を緩めます。"
+    }
+  },
+  "cfSubtypePrompt": "現在のCF管理に最も近いのはどれ?",
+  "cfSubtypeSubheading": "治療によって食事は大きく変わります。回答により、強調する内容を調整します。",
+  "cfSubtypeReassurance": "プロフィールからいつでも変更できます。"
 }

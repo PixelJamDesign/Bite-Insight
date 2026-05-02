@@ -20,7 +20,9 @@
     "sibo": "SIBO",
     "uc": "Colitis ulcerosa",
     "noGallbladder": "Geen galblaas",
-    "pregnancy": "Zwangerschap"
+    "pregnancy": "Zwangerschap",
+    "cancer": "Kanker",
+    "cf": "Taaislijmziekte"
   },
   "allergies": {
     "celery": "Selderijallergie",
@@ -80,5 +82,51 @@
     "sister": "Zus",
     "brother": "Broer",
     "other": "Ander"
-  }
+  },
+  "cancerSubtypes": {
+    "colorectal": {
+      "title": "Colorectaal / Darm",
+      "subtitle": "Vezels helpen het meest. We markeren bewerkt en rood vlees."
+    },
+    "breast": {
+      "title": "Borst",
+      "subtitle": "Plantaardige maaltijden helpen. We markeren alcohol en verzadigd vet."
+    },
+    "prostate": {
+      "title": "Prostaat",
+      "subtitle": "Mediterrane maaltijden helpen. We markeren verzadigd vet."
+    },
+    "stomach": {
+      "title": "Maag",
+      "subtitle": "Minder zout helpt. We markeren gezouten en ingelegde voeding."
+    },
+    "other": {
+      "title": "Anders / Algemeen",
+      "subtitle": "Algemene WCRF-richtlijnen. Plantaardig, weinig bewerkt."
+    }
+  },
+  "cancerSubtypePrompt": "Welke past bij uw situatie?",
+  "cancerSubtypeSubheading": "Elk type reageert anders op bepaalde voeding. Uw antwoord stuurt wat we tijdens het scannen uitlichten.",
+  "cancerSubtypeReassurance": "U kunt dit op elk moment in uw profiel wijzigen.",
+  "cfSubtypes": {
+    "standard": {
+      "title": "Standaard CF-beheer",
+      "subtitle": "Calorierijke voeding helpt het meest. We markeren \"diet\"- en magere producten."
+    },
+    "modulator": {
+      "title": "Op een CFTR-modulator",
+      "subtitle": "Trikafta of Kaftrio. De opname is verbeterd, dus we lossen de calorie-druk wat."
+    },
+    "cfrd": {
+      "title": "CF-gerelateerde diabetes (CFRD)",
+      "subtitle": "Hou het calorierijke dieet aan. We voegen koolhydraataandacht toe voor insuline."
+    },
+    "all": {
+      "title": "Alle subtypes",
+      "subtitle": "Op een modulator met CFRD. We letten op koolhydraten en lossen de calorie-druk wat."
+    }
+  },
+  "cfSubtypePrompt": "Wat past nu het best bij uw CF?",
+  "cfSubtypeSubheading": "Behandelingen veranderen het dieet behoorlijk. Uw antwoord stuurt wat we uitlichten.",
+  "cfSubtypeReassurance": "U kunt dit op elk moment in uw profiel wijzigen."
 }

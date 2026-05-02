@@ -250,10 +250,47 @@ export default function ScannerScreen() {
 
       // ── Pick mode — add directly to draft recipe and return ────────────
       if (pickMode) {
+        // Tier 3 fallback for pick mode: scan-history (Tier 1) and offline
+        // DB (Tier 2) above might both have missed. The normal scan flow
+        // would punt this to /scan-result which fetches from OFF, but in
+        // pick mode we never go there — so we have to do the OFF lookup
+        // here, otherwise products that aren't in the user's history land
+        // on a "Product not found" toast even when OFF has them.
+        const initialProductFound = productName !== tScan('product.unknownName') && productName !== '';
+        if (!initialProductFound) {
+          try {
+            const offRegionSubdomain = selectedRegion.subdomain;
+            const res = await fetch(
+              `https://${offRegionSubdomain}.openfoodfacts.org/api/v0/product/${result.data}.json?lc=en`,
+              { headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' } },
+            );
+            const data = await res.json();
+            if (data.status === 1 && data.product) {
+              const op = data.product;
+              const n = op.nutriments ?? {};
+              productName = op.product_name || op.product_name_en || op.abbreviated_product_name || op.generic_name || '';
+              brand = op.brands || '';
+              imageUrl = op.image_front_url || op.image_url || '';
+              nutriscoreGrade = op.nutriscore_grade || op.nutrition_grade_fr || '';
+              if (n['energy-kcal_100g'] != null) energyKcal = n['energy-kcal_100g'];
+              if (n.fat_100g != null) fat = n.fat_100g;
+              if (n['saturated-fat_100g'] != null) saturatedFat = n['saturated-fat_100g'];
+              if (n.carbohydrates_100g != null) carbs = n.carbohydrates_100g;
+              if (n.sugars_100g != null) sugars = n.sugars_100g;
+              if (n.fiber_100g != null) fiber = n.fiber_100g;
+              if (n.proteins_100g != null) proteins = n.proteins_100g;
+              if (n.salt_100g != null) salt = n.salt_100g;
+              ingredientsText = op.ingredients_text_en || op.ingredients_text || '';
+              allergens = (op.allergens_tags ?? []) as string[];
+            }
+          } catch (e) {
+            console.warn('[scanner pickMode] OFF fallback failed:', e);
+          }
+        }
         const productFound = productName !== tScan('product.unknownName') && productName !== '';
         setProcessing(false);
         if (!productFound) {
-          // Can't build a useful snapshot without at least a name
+          // Truly nothing — even OFF doesn't know this barcode
           showToast({
             message: "Product not found. Try a different barcode or search manually.",
             variant: 'error',

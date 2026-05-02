@@ -12,6 +12,8 @@
 export const HEALTH_CONDITION_KEYS = [
   'adhd',
   'autism',
+  'cancer',
+  'cf',
   'ckd',
   'coeliac',
   'crohns',
@@ -45,6 +47,33 @@ export const HEALTH_CONDITION_KEYS = [
 ] as const;
 
 export type HealthConditionKey = (typeof HEALTH_CONDITION_KEYS)[number];
+
+// Cancer subtypes (only meaningful when 'cancer' is in HealthConditionKey).
+// Determines which ingredient flags and nutrient threshold overrides
+// stack on top of the shared cancer baseline.
+export const CANCER_SUBTYPE_KEYS = [
+  'colorectal',
+  'breast',
+  'prostate',
+  'stomach',
+  'other',
+] as const;
+
+export type CancerSubtypeKey = (typeof CANCER_SUBTYPE_KEYS)[number];
+
+// Cystic Fibrosis subtypes (only meaningful when 'cf' is in HealthConditionKey).
+// Determines which threshold overrides and ingredient flags apply:
+//   • standard — high calorie/fat needed; salt is a boost; "diet" products flagged
+//   • modulator — CFTR modulator therapy has normalised absorption; weight matters again
+//   • cfrd — CF-Related Diabetes; high-fat maintained but carb-aware
+export const CF_SUBTYPE_KEYS = [
+  'standard',
+  'modulator',
+  'cfrd',
+  'all',
+] as const;
+
+export type CfSubtypeKey = (typeof CF_SUBTYPE_KEYS)[number];
 
 // ── Allergies ────────────────────────────────────────────────────────────────
 export const ALLERGY_KEYS = [
@@ -118,6 +147,15 @@ export type RelationshipKey = (typeof RELATIONSHIP_KEYS)[number];
 export const HEALTH_CONDITION_LEGACY_MAP: Record<string, HealthConditionKey> = {
   'ADHD': 'adhd',
   'Autism': 'autism',
+  // Order matters here: KEY_TO_LEGACY (the reverse map built in
+  // onboarding/edit-profile) iterates entries in insertion order and
+  // the LAST one wins. CONDITION_NUTRIENT_MAP keys the cancer entry
+  // as 'Cancer', so 'Cancer' must come last for the lookup to resolve.
+  'Cancer (General)': 'cancer',
+  'Cancer': 'cancer',
+  // Same ordering rule: CONDITION_NUTRIENT_MAP keys cf as 'CF'.
+  'Cystic Fibrosis': 'cf' as HealthConditionKey,
+  'CF': 'cf' as HealthConditionKey,
   'CKD': 'ckd',
   'Chronic Kidney Disease': 'ckd',
   "Chron's Disease": 'crohns',

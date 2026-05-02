@@ -10,7 +10,9 @@
     "ingredients": "Ingredient Preferences",
     "ibsSubtype": "IBS Type",
     "pregnancy": "Pregnancy Details",
-    "conflicts": "Review"
+    "conflicts": "Review",
+    "cancerSubtype": "Cancer Type",
+    "cfSubtype": "CF Management"
   },
   "question": {
     "healthCondition": "Do you have any health condition?",

@@ -20,7 +20,9 @@
     "sibo": "SIBO",
     "uc": "Colitis ulcerosa",
     "noGallbladder": "Sin vesícula biliar",
-    "pregnancy": "Embarazo"
+    "pregnancy": "Embarazo",
+    "cancer": "Cáncer",
+    "cf": "Fibrosis Quística"
   },
   "allergies": {
     "celery": "Alergia al apio",
@@ -80,5 +82,51 @@
     "sister": "Hermana",
     "brother": "Hermano",
     "other": "Otro"
-  }
+  },
+  "cancerSubtypes": {
+    "colorectal": {
+      "title": "Colorrectal",
+      "subtitle": "La fibra ayuda mucho. Marcaremos las carnes procesadas y rojas."
+    },
+    "breast": {
+      "title": "Mama",
+      "subtitle": "Las comidas con muchas plantas ayudan. Marcaremos el alcohol y la grasa saturada."
+    },
+    "prostate": {
+      "title": "Próstata",
+      "subtitle": "El estilo mediterráneo ayuda. Marcaremos la grasa saturada."
+    },
+    "stomach": {
+      "title": "Estómago / Gástrico",
+      "subtitle": "Menos sal ayuda. Marcaremos los encurtidos y salazones."
+    },
+    "other": {
+      "title": "Otro / General",
+      "subtitle": "Pautas generales de la WCRF. A base de plantas, poco procesada."
+    }
+  },
+  "cancerSubtypePrompt": "¿Cuál encaja con tu situación?",
+  "cancerSubtypeSubheading": "Cada tipo responde mejor a alimentos distintos. Tu respuesta enfoca lo que destacamos al escanear.",
+  "cancerSubtypeReassurance": "Puedes cambiarlo cuando quieras desde tu perfil.",
+  "cfSubtypes": {
+    "standard": {
+      "title": "Manejo estándar de FQ",
+      "subtitle": "Los alimentos con muchas calorías ayudan más. Marcaremos los productos \"diet\" y bajos en grasa."
+    },
+    "modulator": {
+      "title": "En un modulador CFTR",
+      "subtitle": "Trikafta o Kaftrio. Ha mejorado la absorción, así que aliviamos el empuje calórico."
+    },
+    "cfrd": {
+      "title": "Diabetes relacionada con FQ (CFRD)",
+      "subtitle": "Mantén la dieta hipercalórica. Añadiremos el seguimiento de carbohidratos para la insulina."
+    },
+    "all": {
+      "title": "Todos los subtipos",
+      "subtitle": "Con modulador y CFRD. Vigilamos los carbohidratos y aliviamos el empuje calórico."
+    }
+  },
+  "cfSubtypePrompt": "¿Qué encaja mejor con tu FQ ahora mismo?",
+  "cfSubtypeSubheading": "Los tratamientos cambian bastante la dieta. Tu respuesta ajusta qué destacamos.",
+  "cfSubtypeReassurance": "Puedes cambiarlo cuando quieras desde tu perfil."
 }

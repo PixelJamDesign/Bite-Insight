@@ -17,6 +17,8 @@ export interface ProfileSelection {
   allergies: string[];
   dietaryPreferences: string[];
   ibsSubtype?: 'C' | 'D' | 'M' | 'unsure' | null;
+  cancerSubtype?: 'colorectal' | 'breast' | 'prostate' | 'stomach' | 'other' | null;
+  cfSubtype?: 'standard' | 'modulator' | 'cfrd' | 'all' | null;
   pregnancyStatus?: 'pregnant' | 'breastfeeding' | null;
 }
 
@@ -122,6 +124,23 @@ export function detectProfileConflicts(selection: ProfileSelection): ConflictRes
     });
   }
 
+  // Cancer + Keto: keto is very low in dietary fibre, which directly
+  // counters the WCRF's primary cancer prevention recommendation
+  // (≥30g/day fibre).
+  if (has(hc, 'cancer') && has(dp, 'keto')) {
+    hardConflicts.push({
+      tier: 'hard',
+      id: 'cancer_vs_keto',
+      title: 'Cancer and Keto',
+      message:
+        "The keto diet is very low in fibre, but increasing dietary fibre is one of the strongest evidence-based recommendations for cancer prevention and colorectal cancer risk reduction. Worth discussing with your oncology or medical team before combining these.",
+      selections: [
+        { category: 'health', key: 'cancer' },
+        { category: 'dietary', key: 'keto' },
+      ],
+    });
+  }
+
   // Pregnancy + keto: medical consensus against
   if (has(hc, 'pregnancy') && has(dp, 'keto')) {
     hardConflicts.push({
@@ -132,6 +151,26 @@ export function detectProfileConflicts(selection: ProfileSelection): ConflictRes
       selections: [
         { category: 'health', key: 'pregnancy' },
         { category: 'dietary', key: 'keto' },
+      ],
+    });
+  }
+
+  // CF + Weight Loss: directly contradictory for standard CF.
+  // Most CF patients need significantly more calories than average, not
+  // fewer. Modulator subtype users may have weight management as a
+  // legitimate concern, but that's a clinical decision for their CF team
+  // — not something the app should silently endorse via a weight-loss
+  // dietary preference.
+  if (has(hc, 'cf') && has(dp, 'weightLoss')) {
+    hardConflicts.push({
+      tier: 'hard',
+      id: 'cf_vs_weightloss',
+      title: 'Cystic Fibrosis and Weight Loss',
+      message:
+        "A weight loss diet restricts calories, but most people with cystic fibrosis need significantly more calories than average — not fewer. These two goals work against each other. If you're on a CFTR modulator and weight management has become a concern, your CF dietitian can help find the right approach.",
+      selections: [
+        { category: 'health', key: 'cf' },
+        { category: 'dietary', key: 'weightLoss' },
       ],
     });
   }
@@ -282,6 +321,8 @@ export function detectProfileConflicts(selection: ProfileSelection): ConflictRes
       (k) => !removed.some((r) => r?.category === 'dietary' && r.key === k),
     ),
     ibsSubtype: selection.ibsSubtype ?? null,
+    cancerSubtype: selection.cancerSubtype ?? null,
+    cfSubtype: selection.cfSubtype ?? null,
     pregnancyStatus: selection.pregnancyStatus ?? null,
   };
 

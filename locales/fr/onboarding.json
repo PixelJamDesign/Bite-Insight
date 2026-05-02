@@ -10,7 +10,9 @@
     "ingredients": "Ingredient Preferences",
     "ibsSubtype": "Type de SII",
     "pregnancy": "Grossesse",
-    "conflicts": "Vérifier"
+    "conflicts": "Vérifier",
+    "cancerSubtype": "Type de Cancer",
+    "cfSubtype": "Gestion de la mucoviscidose"
   },
   "question": {
     "healthCondition": "Avez-vous un problème de santé ?",

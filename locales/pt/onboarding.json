@@ -10,7 +10,9 @@
     "ingredients": "Ingredient Preferences",
     "ibsSubtype": "Tipo de SII",
     "pregnancy": "Gravidez",
-    "conflicts": "Rever"
+    "conflicts": "Rever",
+    "cancerSubtype": "Tipo de Cancro",
+    "cfSubtype": "Gestão de FQ"
   },
   "question": {
     "healthCondition": "Você tem algum problema de saúde?",
