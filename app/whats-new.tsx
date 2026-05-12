@@ -38,10 +38,21 @@ export async function markWhatsNewSeen(): Promise<void> {
   await AsyncStorage.setItem(STORAGE_KEY, getAppVersion());
 }
 
-/** Returns true if the user hasn't seen the What's New screen for the current version. */
+/** Returns true if the user hasn't seen the What's New screen for the
+ *  current version AND there's content worth showing. When the CARDS
+ *  array is empty (e.g. the start of a new release cycle before any
+ *  changes have been featured), this returns false so users don't see
+ *  a half-empty screen — the version is silently marked seen so the
+ *  gate doesn't keep firing. */
 export async function shouldShowWhatsNew(): Promise<boolean> {
   const lastSeen = await AsyncStorage.getItem(STORAGE_KEY);
-  return lastSeen !== getAppVersion();
+  if (lastSeen === getAppVersion()) return false;
+  if (CARDS.length === 0) {
+    // Mark this version seen so we don't re-check every cold launch.
+    await markWhatsNewSeen();
+    return false;
+  }
+  return true;
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -86,27 +97,12 @@ interface CardData {
   icon: CardIcon;
 }
 
-const CARDS: CardData[] = [
-  {
-    badge: 'New Additions!',
-    title: 'New Conditions',
-    icon: ProfileAdditionsIcon,
-    description:
-      "You spoke, and we listened. We have updated the health conditions, allergies and diets to now include:",
-    subsections: [
-      {
-        heading: 'Health Conditions',
-        bullets: [
-          {
-            title: 'Cancer Support',
-            sub: '(Sub types include: Colorectal/Bowel, Breast, Prostate, Stomach/Gastric and General)',
-          },
-          { title: 'Cystic Fibrosis' },
-        ],
-      },
-    ],
-  },
-];
+// v1.6.1 — add card entries here as changes are made during the
+// release cycle. When this array is empty, shouldShowWhatsNew() still
+// fires on first open of the new version but the screen has no content
+// to show — see below: when there are no cards, the screen auto-marks
+// itself seen and routes straight to the dashboard.
+const CARDS: CardData[] = [];
 
 // ── Screen ──────────────────────────────────────────────────────────────────
 
