@@ -19,6 +19,8 @@ export const REGIONS: Region[] = [
   { code: 'de',    label: 'Germany',        subdomain: 'de',    countryTag: 'en:germany' },
   { code: 'es',    label: 'Spain',          subdomain: 'es',    countryTag: 'en:spain' },
   { code: 'fr',    label: 'France',         subdomain: 'fr',    countryTag: 'en:france' },
+  { code: 'in',    label: 'India',          subdomain: 'in',    countryTag: 'en:india' },
+  { code: 'au',    label: 'Australia',      subdomain: 'au',    countryTag: 'en:australia' },
 ];
 
 export const FLAG_IMAGES: Record<string, any> = {
@@ -29,6 +31,8 @@ export const FLAG_IMAGES: Record<string, any> = {
   de:    require('@/assets/images/region_germany.webp'),
   es:    require('@/assets/images/region_spain.webp'),
   fr:    require('@/assets/images/region_france.webp'),
+  in:    require('@/assets/images/region_india.webp'),
+  au:    require('@/assets/images/region_australia.webp'),
 };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────

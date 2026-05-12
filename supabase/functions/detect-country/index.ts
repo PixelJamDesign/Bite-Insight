@@ -33,7 +33,7 @@
 //   p50 < 5 ms when the cf-ipcountry header is present (no
 //   network lookup). Worst case ~250 ms when ipapi fallback runs.
 
-const SUPPORTED = new Set(['gb', 'us', 'fr', 'de', 'it', 'es']);
+const SUPPORTED = new Set(['gb', 'us', 'fr', 'de', 'it', 'es', 'in', 'au']);
 
 interface DetectResult {
   country_code: string;
