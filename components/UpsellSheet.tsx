@@ -12,6 +12,7 @@ import {
   Dimensions,
   ActivityIndicator,
   Linking,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,6 +20,7 @@ import { router } from 'expo-router';
 import { useUpsellSheet } from '@/lib/upsellSheetContext';
 import { useSubscription } from '@/lib/subscriptionContext';
 import BiteInsightPlusLogo from '../assets/images/logo-biteinsight-plus.svg';
+import { TrialUpsellSheet } from './TrialUpsellSheet';
 
 // Feature icon image sources — local assets
 const ICON_FAMILY   = require('@/assets/icons/upsell/family.webp');
@@ -65,7 +67,13 @@ function FeatureRow({
 
 export function UpsellSheet() {
   const { visible, hideUpsell } = useUpsellSheet();
-  const { isPlus, purchasing, priceString, purchasePlus, restorePurchases } = useSubscription();
+  const { isPlus, purchasing, priceString, trialEligible, trialDays, purchasePlus, restorePurchases } = useSubscription();
+
+  // Resolve the trial length for display copy. Default to 7 if the
+  // store returned a trial but didn't report a parseable duration —
+  // 7 matches what we configured on App Store Connect / Play Console.
+  const displayTrialDays = trialDays ?? 7;
+  const showTrial = trialEligible;
 
   // When purchase completes (isPlus flips to true while the sheet is open),
   // dismiss the sheet and navigate to the success screen.
@@ -139,7 +147,27 @@ export function UpsellSheet() {
         />
       </Animated.View>
 
-      {/* Sheet */}
+      {/* Sheet — branches on trial eligibility. Eligible users see the
+          family-hero TrialUpsellSheet variant (full-screen, with the
+          three-step trial timeline). Everyone else (returning subscribers,
+          ineligible users) gets the existing paid sheet below. */}
+      {showTrial ? (
+        <Animated.View
+          style={[
+            styles.trialSheet,
+            { transform: [{ translateY: slideAnim }] },
+          ]}
+        >
+          <TrialUpsellSheet
+            priceString={priceString}
+            trialDays={displayTrialDays}
+            purchasing={purchasing}
+            onClose={hideUpsell}
+            onStartTrial={purchasePlus}
+            onRestorePurchases={restorePurchases}
+          />
+        </Animated.View>
+      ) : (
       <Animated.View
         style={[
           styles.sheet,
@@ -178,8 +206,20 @@ export function UpsellSheet() {
 
         {/* ── Sticky Pricing + CTAs ── */}
         <View style={[styles.ctaSection, { paddingBottom: insets.bottom + 24 }]}>
+          {/* Trial badge — only shown to users eligible for the
+              intro offer. App Store Connect / Play Console enforces
+              one-trial-per-account, so returning subscribers see the
+              standard pricing block instead. */}
+          {showTrial && (
+            <View style={styles.trialBadge}>
+              <Ionicons name="gift" size={14} color="#023432" />
+              <Text style={styles.trialBadgeText}>
+                {displayTrialDays}-day free trial
+              </Text>
+            </View>
+          )}
           <View style={styles.pricingSection}>
-            <Text style={styles.pricingJust}>Just</Text>
+            <Text style={styles.pricingJust}>{showTrial ? 'Then just' : 'Just'}</Text>
             <View style={styles.priceRow}>
               <Text style={styles.priceAmount}>{priceString ?? '£3.99'}</Text>
               <Text style={styles.priceUnit}> / month</Text>
@@ -194,11 +234,15 @@ export function UpsellSheet() {
             {purchasing ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Text style={styles.primaryBtnText}>Upgrade to Bite Insight+</Text>
+              <Text style={styles.primaryBtnText}>
+                {showTrial ? `Start ${displayTrialDays}-day free trial` : 'Upgrade to Bite Insight+'}
+              </Text>
             )}
           </TouchableOpacity>
           <Text style={styles.priceFineprint}>
-            Subscription renews automatically. Cancel anytime.
+            {showTrial
+              ? `Free for ${displayTrialDays} days, then ${priceString ?? '£3.99'}/month. Cancel anytime in your ${Platform.OS === 'ios' ? 'App Store' : 'Play Store'} subscriptions before the trial ends to avoid being charged.`
+              : 'Subscription renews automatically. Cancel anytime.'}
           </Text>
           <View style={styles.legalRow}>
             <TouchableOpacity onPress={() => Linking.openURL('https://biteinsight.co.uk/terms.html')} activeOpacity={0.6}>
@@ -214,6 +258,7 @@ export function UpsellSheet() {
           </TouchableOpacity>
         </View>
       </Animated.View>
+      )}
     </Modal>
   );
 }
@@ -233,6 +278,15 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     overflow: 'hidden',
+  },
+  // Trial variant fills the screen — the family hero sits at the
+  // top and the dark-teal panel slides up from the bottom.
+  trialSheet: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
   },
   closeBtn: {
     position: 'absolute',
@@ -320,6 +374,25 @@ const styles = StyleSheet.create({
     letterSpacing: -0.14,
     lineHeight: 21,
     marginTop: 2,
+  },
+  // ── Trial badge ──
+  trialBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 6,
+    backgroundColor: '#b8d828',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    marginBottom: 4,
+  },
+  trialBadgeText: {
+    fontSize: 13,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: '#023432',
+    letterSpacing: -0.26,
   },
   // ── Pricing ──
   pricingSection: {

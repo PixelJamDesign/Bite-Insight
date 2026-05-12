@@ -17,6 +17,14 @@ interface SubscriptionContextValue {
   isPlus: boolean;
   purchasing: boolean;
   priceString: string | null;
+  /** True when the active offering has a free-trial intro phase AND
+   *  the current user is eligible (i.e. hasn't used the trial on
+   *  this Apple ID / Google account before). When false the UpsellSheet
+   *  should fall back to the standard "Upgrade" CTA. */
+  trialEligible: boolean;
+  /** Length of the trial in days, parsed from the intro offer's
+   *  ISO-8601 billing period (e.g. "P7D" → 7). Null when no trial. */
+  trialDays: number | null;
   purchasePlus: () => Promise<void>;
   restorePurchases: () => Promise<void>;
 }
@@ -25,9 +33,31 @@ const SubscriptionContext = createContext<SubscriptionContextValue>({
   isPlus: false,
   purchasing: false,
   priceString: null,
+  trialEligible: false,
+  trialDays: null,
   purchasePlus: async () => {},
   restorePurchases: async () => {},
 });
+
+/** Parse an ISO-8601 duration like "P7D" / "P1W" / "P1M" into days.
+ *  Returns null when the input doesn't match those simple forms — we
+ *  don't currently configure anything more exotic on App Store
+ *  Connect / Play Console, so anything else is treated as "show no
+ *  number" rather than misleading the user. */
+function parseTrialDurationDays(iso: string | null | undefined): number | null {
+  if (!iso) return null;
+  const m = /^P(\d+)([DWMY])$/.exec(iso);
+  if (!m) return null;
+  const n = parseInt(m[1], 10);
+  if (Number.isNaN(n)) return null;
+  switch (m[2]) {
+    case 'D': return n;
+    case 'W': return n * 7;
+    case 'M': return n * 30; // close enough for UI copy
+    case 'Y': return n * 365;
+    default:  return null;
+  }
+}
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const { session } = useAuth();
@@ -35,6 +65,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [isVip, setIsVip] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
   const [priceString, setPriceString] = useState<string | null>(null);
+  const [trialEligible, setTrialEligible] = useState(false);
+  const [trialDays, setTrialDays] = useState<number | null>(null);
   // Tracks whether Purchases.configure() has actually succeeded this session.
   // Guards purchasePlus / restorePurchases so they never call into an
   // unconfigured SDK (Expo Go, placeholder key, or configure() threw).
@@ -56,16 +88,74 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     const rcReady = Platform.OS !== 'web' && Purchases &&
       rcKey && !rcKey.startsWith('appl_REPLACE') && !rcKey.startsWith('goog_REPLACE');
 
+    // ── Dev fallback: surface the trial UI in Expo Go / sim ────────────
+    // RevenueCat can't return an intro offer in Expo Go (no native
+    // StoreKit / Play Billing), so trialEligible would stay false and
+    // the UpsellSheet would render the paid variant — making it
+    // impossible to QA the trial sheet in a sim. When __DEV__ is on
+    // AND RC won't configure, fake a trial offer so the UI fires.
+    // The real production build still relies entirely on RC.
+    if (__DEV__ && !rcReady) {
+      setTrialEligible(true);
+      setTrialDays(7);
+      setPriceString('£3.99');
+    }
+
     if (rcReady && Purchases) {
       try {
         Purchases.configure({ apiKey: rcKey! });
         rcConfigured.current = true;
         if (__DEV__ && LOG_LEVEL) Purchases.setLogLevel(LOG_LEVEL.DEBUG);
         Purchases.logIn(userId).catch(() => {});
-        // Fetch the monthly price from the store so the upsell sheet can display it
-        Purchases.getOfferings().then((offerings) => {
+        // Fetch the monthly price + intro-offer details so the upsell
+        // sheet can display the trial copy when one is configured.
+        // Trial eligibility is checked against StoreKit / Play Billing
+        // directly — RevenueCat won't return an `introPrice` for users
+        // who've already used the trial on this Apple ID / Google
+        // account, so we only show the trial CTA to genuinely-eligible
+        // users.
+        Purchases.getOfferings().then(async (offerings) => {
           const pkg = offerings.current?.monthly ?? offerings.current?.availablePackages[0];
-          if (pkg) setPriceString(pkg.product.priceString);
+          if (!pkg) return;
+          setPriceString(pkg.product.priceString);
+
+          // RevenueCat surfaces the intro offer on the product. Free
+          // trials have priceString "Free" / price 0 and a non-null
+          // periodNumberOfUnits + periodUnit. We use the ISO period
+          // when available (Android), falling back to the
+          // numberOfUnits + unit pair (iOS-flavoured field set).
+          const intro: any = (pkg.product as any).introPrice;
+          const isFreeTrial =
+            !!intro &&
+            (intro.price === 0 || intro.priceString === 'Free' || intro.priceString === '0');
+          if (!isFreeTrial) return;
+
+          // Try iso period first ("P7D"), then unit-based fields.
+          let days: number | null = parseTrialDurationDays(intro.period);
+          if (days == null && typeof intro.periodNumberOfUnits === 'number' && intro.periodUnit) {
+            const unitsToDays: Record<string, number> = {
+              DAY: 1, WEEK: 7, MONTH: 30, YEAR: 365,
+              day: 1, week: 7, month: 30, year: 365,
+            };
+            const multiplier = unitsToDays[intro.periodUnit] ?? null;
+            if (multiplier != null) days = intro.periodNumberOfUnits * multiplier;
+          }
+          setTrialDays(days);
+
+          // Per-user eligibility check — defaults to "eligible" if the
+          // SDK can't tell (older Android, missing receipt). False
+          // negatives are worse than false positives here: a user who
+          // sees "Start free trial" but isn't eligible just falls back
+          // to a paid purchase on the store sheet, no harm done.
+          try {
+            const productId = pkg.product.identifier;
+            const eligibility = await Purchases!.checkTrialOrIntroductoryPriceEligibility([productId]);
+            const status = eligibility[productId]?.status;
+            // status: 0=unknown, 1=ineligible, 2=eligible, 3=no_intro_offer
+            setTrialEligible(status === 2 || status === 0);
+          } catch {
+            setTrialEligible(true);
+          }
         }).catch(() => {});
 
         Purchases.addCustomerInfoUpdateListener((info) => {
@@ -221,7 +311,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <SubscriptionContext.Provider value={{ isPlus: isPlus || isVip, purchasing, priceString, purchasePlus, restorePurchases }}>
+    <SubscriptionContext.Provider value={{ isPlus: isPlus || isVip, purchasing, priceString, trialEligible, trialDays, purchasePlus, restorePurchases }}>
       {children}
     </SubscriptionContext.Provider>
   );
