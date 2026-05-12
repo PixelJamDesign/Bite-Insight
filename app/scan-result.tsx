@@ -3805,9 +3805,13 @@ const styles = StyleSheet.create({
   },
 
   // ── Impact panels (Important for you section) ────────────────────────────
+  // Use justifyContent: 'space-between' with explicit '48%' widths on each
+  // panel rather than `flex: 1` + gap. flex:1 with mismatched icon/pill
+  // intrinsic widths was still leaving a 1-2px gap difference between the
+  // two cards. Explicit widths force pixel-perfect equality.
   impactPanelsRow: {
     flexDirection: 'row',
-    gap: Spacing.s,
+    justifyContent: 'space-between',
     width: '100%',
   },
   impactPanelsCol: {
@@ -3844,7 +3848,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   impactPanel: {
-    flex: 1,
+    width: '48.5%',  // matches a Spacing.s (16px) gap at typical screen widths
     backgroundColor: Colors.surface.tertiary,
     borderRadius: 16,
     padding: Spacing.s,
