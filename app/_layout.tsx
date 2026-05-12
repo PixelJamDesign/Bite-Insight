@@ -29,6 +29,8 @@ import type { OnboardingStep } from '@/lib/types';
 import { UpsellSheet } from '@/components/UpsellSheet';
 import { MyPlanSheet } from '@/components/MyPlanSheet';
 import { PregnancyStatusPrompt, shouldShowPregnancyPrompt } from '@/components/PregnancyStatusPrompt';
+import { UpdateToast } from '@/components/UpdateToast';
+import { useUpdateAvailable } from '@/lib/useUpdateAvailable';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { prefetchFoodImages } from '@/components/FoodCarousel';
 
@@ -349,8 +351,19 @@ function RootLayoutInner() {
       <UpsellSheet />
       <MyPlanSheet />
       <PregnancyPromptGate />
+      <UpdateToastGate />
     </>
   );
+}
+
+// ── Update Toast gate ───────────────────────────────────────────────────────
+// Compares the installed app version to app_config.latest_app_version on
+// every cold start (and when a fresh session lands), surfacing a top-of-
+// screen toast that links to the platform's store listing when the user
+// is behind. Dismiss is session-scoped — a relaunch re-evaluates.
+function UpdateToastGate() {
+  const { visible, dismiss } = useUpdateAvailable();
+  return <UpdateToast visible={visible} onDismiss={dismiss} />;
 }
 
 // ── Pregnancy auto-prompt gate ──────────────────────────────────────────────

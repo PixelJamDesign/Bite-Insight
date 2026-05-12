@@ -23,7 +23,7 @@ const ANDROID_PACKAGE  = 'com.biteinsightapp.gcahill';   // matches app.json exp
  * app instantly if installed) with a web fallback for devices without
  * Play Services (e.g. Amazon tablets).
  */
-async function openStoreReview() {
+export async function openStoreReview() {
   if (Platform.OS === 'ios') {
     const url = `https://apps.apple.com/app/id${IOS_APP_STORE_ID}?action=write-review`;
     await Linking.openURL(url).catch((err) => {

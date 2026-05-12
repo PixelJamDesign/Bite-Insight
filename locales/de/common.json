@@ -116,5 +116,10 @@
     "recipes": "Rezepte",
     "scanner": "Scanner",
     "history": "Verlauf"
+  },
+  "updateToast": {
+    "title": "Update verfügbar!",
+    "body": "Hol dir die neuesten Funktionen im neuesten Update.",
+    "button": "Aktualisieren"
   }
 }

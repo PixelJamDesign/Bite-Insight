@@ -116,5 +116,10 @@
     "recipes": "食谱",
     "scanner": "扫描仪",
     "history": "历史"
+  },
+  "updateToast": {
+    "title": "有可用更新!",
+    "body": "获取最新更新中的新功能。",
+    "button": "更新"
   }
 }

@@ -116,5 +116,10 @@
     "recipes": "Recepten",
     "scanner": "Scanner",
     "history": "Geschiedenis"
+  },
+  "updateToast": {
+    "title": "Update beschikbaar!",
+    "body": "Krijg de nieuwste functies in de laatste update.",
+    "button": "Bijwerken"
   }
 }

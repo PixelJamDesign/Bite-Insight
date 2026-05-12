@@ -116,5 +116,10 @@
     "recipes": "レシピ",
     "scanner": "スキャナー",
     "history": "履歴"
+  },
+  "updateToast": {
+    "title": "アップデートあり!",
+    "body": "最新のアップデートで新機能を入手しよう。",
+    "button": "更新"
   }
 }

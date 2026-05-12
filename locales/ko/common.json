@@ -116,5 +116,10 @@
     "recipes": "레시피",
     "scanner": "스캐너",
     "history": "기록"
+  },
+  "updateToast": {
+    "title": "업데이트 가능!",
+    "body": "최신 업데이트에서 새로운 기능을 만나보세요.",
+    "button": "업데이트"
   }
 }
