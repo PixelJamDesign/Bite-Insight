@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { Linking, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
@@ -7,6 +8,40 @@ import { useAuth } from '@/lib/auth';
 const THRESHOLDS = [20, 40];
 const STORAGE_KEY_COMPLETED = 'review_prompt_completed'; // user said "yes!"
 const STORAGE_KEY_DISMISS_COUNT = 'review_prompt_dismiss_count'; // how many times dismissed
+
+// Store identifiers, used to deep-link the user straight into the review
+// flow on the right store for their platform.
+const IOS_APP_STORE_ID = '6760033160';                  // matches App Store Connect
+const ANDROID_PACKAGE  = 'com.biteinsightapp.gcahill';   // matches app.json expo.android.package
+
+/**
+ * Opens the platform's store review page. iOS deep-links directly into
+ * the "write a review" sheet; Android opens the Play Store listing
+ * where users can scroll to the rating + review controls.
+ *
+ * Uses the `market://` scheme on Android first (opens the Play Store
+ * app instantly if installed) with a web fallback for devices without
+ * Play Services (e.g. Amazon tablets).
+ */
+async function openStoreReview() {
+  if (Platform.OS === 'ios') {
+    const url = `https://apps.apple.com/app/id${IOS_APP_STORE_ID}?action=write-review`;
+    await Linking.openURL(url).catch((err) => {
+      console.warn('[ReviewPrompt] Could not open App Store:', err);
+    });
+    return;
+  }
+  if (Platform.OS === 'android') {
+    const marketUrl = `market://details?id=${ANDROID_PACKAGE}`;
+    const webUrl = `https://play.google.com/store/apps/details?id=${ANDROID_PACKAGE}`;
+    const canOpenMarket = await Linking.canOpenURL(marketUrl).catch(() => false);
+    await Linking.openURL(canOpenMarket ? marketUrl : webUrl).catch((err) => {
+      console.warn('[ReviewPrompt] Could not open Play Store:', err);
+    });
+    return;
+  }
+  // Web / other — just no-op gracefully.
+}
 
 /**
  * Hook that triggers a "loving the app?" prompt after scan milestones.
@@ -74,10 +109,12 @@ export function useReviewPrompt() {
     await AsyncStorage.setItem(STORAGE_KEY_DISMISS_COUNT, String(current + 1));
   }, []);
 
-  /** User tapped "yes, I love it!" — mark complete, never ask again */
+  /** User tapped "yes, I love it!" — mark complete, deep-link to the
+   *  right store for their platform, never ask again. */
   const completeReviewPrompt = useCallback(async () => {
     setShowReviewPrompt(false);
     await AsyncStorage.setItem(STORAGE_KEY_COMPLETED, 'true');
+    await openStoreReview();
   }, []);
 
   return {
