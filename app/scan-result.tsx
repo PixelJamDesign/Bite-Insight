@@ -445,6 +445,22 @@ function categoriseIngredients(
   // NOT in the ingredient list (which would be "wheat flour, water, yeast...").
   const productMatchedNames = new Set<string>();
 
+  // Product-level negation: if the product NAME contains a negation
+  // pattern for a flagged term ("sugar free", "no added sugar", etc.),
+  // treat the product as authoritatively NOT containing that ingredient.
+  // The flag must be suppressed across ALL match sources (name, category,
+  // ingredient list) — without this, OFF categories like 'en:sugars' or
+  // 'en:sugar-substitutes' fire the flag even when the product is clearly
+  // sugar-free. The product name is the source of truth.
+  const productNegatedTerms = new Set<string>();
+  if (productName && flaggedNames.length > 0) {
+    for (const flagged of flaggedNames) {
+      if (isNegatedInContext(productName, flagged)) {
+        productNegatedTerms.add(flagged.toLowerCase());
+      }
+    }
+  }
+
   if (flaggedNames.length > 0) {
     // Check product name
     if (productName) {
@@ -475,6 +491,7 @@ function categoriseIngredients(
         if (catMatch) {
           const lc = catMatch.toLowerCase();
           if (productMatchedNames.has(lc)) continue; // already flagged via product name
+          if (productNegatedTerms.has(lc)) continue; // product name says no
           productMatchedNames.add(lc);
           let personalReason: { category: string; text: string } | undefined;
           if (flagReasonMap && flaggedNameToIdMap) {
@@ -520,14 +537,14 @@ function categoriseIngredients(
       // Use the smart matching function that handles plurals, synonyms,
       // and negated contexts (e.g. "sugar-free")
       const match = matchesFlaggedIngredient(ing.text, flaggedNames, false);
-      if (match) {
+      if (match && !productNegatedTerms.has(match.toLowerCase())) {
         reason = 'user_flagged';
         matchedFlaggedName = match.toLowerCase();
       }
       // Also check the OFF id (e.g. "en:potatoes" should match "potato")
       if (!reason && ingId) {
         const idMatch = matchesFlaggedIngredient(ingId, flaggedNames, false);
-        if (idMatch) {
+        if (idMatch && !productNegatedTerms.has(idMatch.toLowerCase())) {
           reason = 'user_flagged';
           matchedFlaggedName = idMatch.toLowerCase();
         }
@@ -546,10 +563,17 @@ function categoriseIngredients(
       const entry: FlaggedIngredient = { ...ing, flagReason: reason, personalReason, matchSource: 'ingredient', matchedFlagName: matchedFlaggedName?.toLowerCase() };
       if (reason === 'user_flagged') {
         userFlagged.push(entry);
+        // Don't `continue` here — let the cascade fall through to the
+        // health-condition / vegan / additive checks below. If the
+        // same ingredient ALSO matches a health condition (e.g. Sugar
+        // for a diabetic user), it should appear in the red harmful
+        // section too, not just the orange user-flag callout. The
+        // 'flagged' section in the breakdown filters out anything
+        // already in harmful to avoid double-listing.
       } else {
         harmful.push(entry);
+        continue; // vegan / vegetarian is terminal
       }
-      continue;
     }
 
     // ── Health condition / dietary preference ingredient flagging ────────────
@@ -1658,17 +1682,21 @@ export default function ScanResultScreen() {
     return names;
   }, [ingredientTree]);
 
-  // Filtered categorised lists for Insight Groups (excludes parent ingredients)
+  // Filtered categorised lists for Insight Groups.
+  //
+  // Parent ingredients (depth-0 with children, e.g. "Wheat flour" with
+  // kids "Calcium carbonate, Niacin, Iron, Thiamin") are filtered out
+  // of the SAFE bucket only — they tend to be grouping labels that
+  // would otherwise duplicate alongside their children in the list.
+  //
+  // But when a parent is itself flagged/harmful/ok (e.g. "Wheat flour"
+  // matched as harmful for a Keto user), it MUST stay visible — the
+  // parent is the substantive ingredient the user wants to see, not
+  // the additives nested inside it.
   const filteredCategorised = useMemo(() => ({
-    userFlagged: categorised.userFlagged.filter(
-      (ing) => !parentIngredientNames.has(ing.text.toLowerCase()),
-    ),
-    harmful: categorised.harmful.filter(
-      (ing) => !parentIngredientNames.has(ing.text.toLowerCase()),
-    ),
-    ok: categorised.ok.filter(
-      (ing) => !parentIngredientNames.has(ing.text.toLowerCase()),
-    ),
+    userFlagged: categorised.userFlagged,
+    harmful: categorised.harmful,
+    ok: categorised.ok,
     safe: categorised.safe.filter(
       (ing) => !parentIngredientNames.has(ing.text.toLowerCase()),
     ),
@@ -2284,6 +2312,75 @@ export default function ScanResultScreen() {
                 </View>
               </View>
             )}
+
+            {/* ── User-flagged ingredients that are actually in this product ──
+                The orange callout panel above is the high-priority warning
+                summary. This section lists each flagged ingredient inside
+                the regular ingredient breakdown so the user can see the
+                ingredient in its natural place — not as "safe" or "ok",
+                but clearly labelled as something they've flagged. Only
+                ingredient-match-source entries appear here; product-name
+                / category matches stay in the callout only since they
+                aren't real ingredients to list. */}
+            {(() => {
+              // Show user-flagged ingredients that are in this product's
+              // ingredient list AND haven't already been classified as
+              // harmful by health-condition matching. The harmful section
+              // below takes priority for those (red X, "harmful" label) so
+              // we don't double-list them here with an orange flag icon.
+              const harmfulNames = new Set(
+                filteredCategorised.harmful.map((i) => i.text.toLowerCase()),
+              );
+              const inListFlagged = filteredCategorised.userFlagged.filter(
+                (ing) =>
+                  ing.matchSource === 'ingredient' &&
+                  !harmfulNames.has(ing.text.toLowerCase()),
+              );
+              if (inListFlagged.length === 0) return null;
+              return (
+                <View style={styles.section}>
+                  <View style={styles.ingCategoryCard}>
+                    <Text style={styles.ingCategoryHeading}>
+                      <Text style={styles.ingCount}>
+                        {t('ingredients.ingredient', { count: inListFlagged.length })}
+                      </Text>
+                      <Text style={styles.ingMiddle}>
+                        {' '}
+                        {inListFlagged.length === 1 ? t('ingredients.is') : t('ingredients.are')}{' '}
+                      </Text>
+                      <Text style={[styles.ingWord, { color: '#ff8736' }]}>
+                        {t('ingredients.flagged', { defaultValue: 'flagged' })}
+                      </Text>
+                    </Text>
+                    <View style={{ gap: 4 }}>
+                      {inListFlagged.map((ing, i) => (
+                        <View key={`ov-uf-list-${ing.id ?? i}`} style={styles.ingRow}>
+                          <View style={{ width: 28, alignItems: 'center' }}>
+                            <MenuFlaggedIcon color="#ff8736" size={22} />
+                          </View>
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.ingName} numberOfLines={2}>
+                              {sentenceCase(ing.text)}
+                            </Text>
+                          </View>
+                          <TouchableOpacity
+                            style={styles.ingInfoContainer}
+                            onPress={() => setFlaggedSheetIng(ing)}
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                          >
+                            <Ionicons
+                              name="information-circle-outline"
+                              size={16}
+                              color={Colors.secondary}
+                            />
+                          </TouchableOpacity>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                </View>
+              );
+            })()}
 
             {/* ── Flagged ingredients (Figma node 3263-6094) ── */}
             {filteredCategorised.harmful.length > 0 && (

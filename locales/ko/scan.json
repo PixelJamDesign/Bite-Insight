@@ -91,7 +91,8 @@
     "safe": "안전한",
     "listed": "나열된",
     "matchProductName": "제품 이름과 일치합니다.",
-    "matchCategory": "제품 카테고리와 일치"
+    "matchCategory": "제품 카테고리와 일치",
+    "flagged": "플래그됨"
   },
   "toggle": {
     "perServing": "1회 제공량당",

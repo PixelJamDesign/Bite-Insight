@@ -91,7 +91,8 @@
     "safe": "veilig",
     "listed": "vermeld",
     "matchProductName": "Komt overeen met de productnaam",
-    "matchCategory": "Komt overeen met productcategorie"
+    "matchCategory": "Komt overeen met productcategorie",
+    "flagged": "gemarkeerd"
   },
   "toggle": {
     "perServing": "Per portie",

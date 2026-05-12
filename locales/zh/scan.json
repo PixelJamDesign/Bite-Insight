@@ -91,7 +91,8 @@
     "safe": "安全的",
     "listed": "列出",
     "matchProductName": "匹配产品名称",
-    "matchCategory": "匹配产品类别"
+    "matchCategory": "匹配产品类别",
+    "flagged": "已标记"
   },
   "toggle": {
     "perServing": "每份",

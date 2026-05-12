@@ -91,7 +91,8 @@
     "safe": "sûr",
     "listed": "répertorié",
     "matchProductName": "Correspond au nom du produit",
-    "matchCategory": "Correspond à la catégorie de produit"
+    "matchCategory": "Correspond à la catégorie de produit",
+    "flagged": "signalé"
   },
   "toggle": {
     "perServing": "Par portion",

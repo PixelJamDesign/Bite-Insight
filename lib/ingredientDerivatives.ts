@@ -608,15 +608,14 @@ export const INGREDIENT_DERIVATIVES = new Map<string, string[]>([
     // Maltodextrin / dextrins
     'maltodextrin', 'dextrin',
     'isoglucose', 'isomaltose',
-    // Sugar alcohols (partial sugar impact)
-    'sorbitol', 'e420',
-    'mannitol', 'e421',
-    'xylitol', 'e967',
-    'maltitol', 'e965',
-    'erythritol', 'e968',
-    'isomalt', 'e953',
-    'lactitol', 'e966',
-    'hydrogenated starch hydrolysate',
+    // NOTE: Sugar alcohols (sorbitol, mannitol, xylitol, maltitol,
+    // erythritol, isomalt, lactitol, etc.) are NOT listed here as
+    // sugar derivatives. They are sugar SUBSTITUTES — chemically
+    // distinct from sucrose/glucose/fructose and specifically used in
+    // products marketed as "sugar-free". Flagging a sugar-free product
+    // because it contains sugar alcohols would be misleading. Users
+    // who want to flag sugar alcohols separately can do so via a
+    // dedicated 'sugar alcohol' flag (not implemented yet).
     // Others
     'sucanat', 'panela',
     'tagatose',

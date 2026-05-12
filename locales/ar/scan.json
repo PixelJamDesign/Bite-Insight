@@ -91,7 +91,8 @@
     "safe": "آمن",
     "listed": "المدرجة",
     "matchProductName": "يطابق اسم المنتج",
-    "matchCategory": "يطابق فئة المنتج"
+    "matchCategory": "يطابق فئة المنتج",
+    "flagged": "مُعلَّمة"
   },
   "toggle": {
     "perServing": "لكل حصة",

@@ -91,7 +91,8 @@
     "safe": "bezpieczna",
     "listed": "katalogowany",
     "matchProductName": "Pasuje do nazwy produktu",
-    "matchCategory": "Pasuje do kategorii produktu"
+    "matchCategory": "Pasuje do kategorii produktu",
+    "flagged": "oznaczone"
   },
   "toggle": {
     "perServing": "Na porcję",

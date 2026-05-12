@@ -124,7 +124,8 @@
     "safe": "safe",
     "listed": "listed",
     "matchProductName": "Matches product name",
-    "matchCategory": "Matches product category"
+    "matchCategory": "Matches product category",
+    "flagged": "flagged"
   },
   "toggle": {
     "perServing": "Per Serving",
@@ -133,8 +134,8 @@
     "dri": "DRI (%)"
   },
   "loading": {
-    "nutritionalData": "Loading nutritional data\u2026",
-    "ingredients": "Loading ingredients\u2026"
+    "nutritionalData": "Loading nutritional data…",
+    "ingredients": "Loading ingredients…"
   },
   "empty": {
     "limitedDataTitle": "Limited product data",

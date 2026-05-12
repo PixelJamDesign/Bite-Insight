@@ -91,7 +91,8 @@
     "safe": "seguro",
     "listed": "listado",
     "matchProductName": "Coincide con el nombre del producto",
-    "matchCategory": "Coincide con la categoría de producto"
+    "matchCategory": "Coincide con la categoría de producto",
+    "flagged": "marcado"
   },
   "toggle": {
     "perServing": "Por porción",

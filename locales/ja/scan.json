@@ -91,7 +91,8 @@
     "safe": "安全",
     "listed": "リスト化された",
     "matchProductName": "製品名と一致します",
-    "matchCategory": "製品カテゴリと一致する"
+    "matchCategory": "製品カテゴリと一致する",
+    "flagged": "マークされた"
   },
   "toggle": {
     "perServing": "1食分あたり",
