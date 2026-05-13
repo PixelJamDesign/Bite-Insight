@@ -58,6 +58,19 @@ export function useTrialUpsellTrigger() {
 
     const userId = session?.user?.id;
     if (!userId) return;
+
+    // DEV-ONLY override — bypass every rule (Plus, eligibility, grace
+    // period, cooldown, max-shows, coin flip) so the sheet is visible
+    // on every cold launch in Expo Go / sim. Lets you QA the trial
+    // sheet without flipping Supabase state or waiting 48h. Strip
+    // before shipping or just leave it — __DEV__ is false in release
+    // builds so prod is unaffected.
+    if (__DEV__ && !firedThisLaunchRef.current) {
+      firedThisLaunchRef.current = true;
+      setTimeout(() => showTrialUpsell(), SHOW_DELAY_MS);
+      return;
+    }
+
     if (isPlus) return;
     if (!trialEligible) return;
     if (firedThisLaunchRef.current) return;

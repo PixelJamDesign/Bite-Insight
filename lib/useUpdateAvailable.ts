@@ -19,11 +19,13 @@
  * through to "up to date" so a malformed config row can't lock
  * users out of the app.
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
+import { useSegments } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
+import { useTrialUpsell } from '@/lib/trialUpsellContext';
 
 const SESSION_DISMISS_KEY = '__bi_update_toast_dismissed';
 
@@ -49,9 +51,19 @@ function isOlder(installed: string, latest: string): boolean {
   return false;
 }
 
+/** Delay between conditions becoming favourable and the toast
+ *  actually appearing. Long enough for the trial sheet to claim
+ *  priority if it's about to show (it triggers at +1.5s on dashboard
+ *  mount); short enough that the user doesn't feel kept waiting. */
+const SHOW_DELAY_MS = 2500;
+
 export function useUpdateAvailable() {
   const { session } = useAuth();
+  const segments = useSegments();
+  const { visible: trialVisible } = useTrialUpsell();
+  const [updateAvailable, setUpdateAvailable] = useState(false);
   const [visible, setVisible] = useState(false);
+  const shownThisSessionRef = useRef(false);
 
   // Web is always running the latest bundle (no app stores, no
   // installed-version drift) so the toast has nothing meaningful
@@ -71,6 +83,10 @@ export function useUpdateAvailable() {
     (Constants.manifest as any)?.version ??
     '0.0.0';
 
+  // ── Detection ─────────────────────────────────────────────────
+  // Decide *whether* an update is available — independent of when
+  // we'll surface the toast. The actual show decision lives in the
+  // gating effect below.
   useEffect(() => {
     if (!isNativePlatform || dismissed) return;
     let cancelled = false;
@@ -83,7 +99,7 @@ export function useUpdateAvailable() {
           .maybeSingle();
         if (cancelled || error || !data?.value) return;
         if (isOlder(installedVersion, data.value)) {
-          setVisible(true);
+          setUpdateAvailable(true);
         }
       } catch {
         // Network failure — silently skip; we'll try again next launch.
@@ -94,6 +110,39 @@ export function useUpdateAvailable() {
     };
     // Re-run when the user signs in so the toast shows after auth.
   }, [installedVersion, dismissed, session?.user?.id, isNativePlatform]);
+
+  // ── Gating ────────────────────────────────────────────────────
+  // The toast may only appear when:
+  //   - An update is available
+  //   - The user is on the home dashboard tab (not in onboarding,
+  //     scan-result, settings, etc.)
+  //   - No higher-priority sheet is currently visible (the trial
+  //     upsell is the only known sibling today; add more checks
+  //     here as new launch-time prompts land).
+  //   - The toast hasn't already been shown or dismissed in this
+  //     session.
+  //
+  // A small delay buffers the show — gives the trial-upsell trigger
+  // (which fires ~1.5s after dashboard mount) time to claim priority
+  // before we commit to showing the toast.
+  useEffect(() => {
+    if (!updateAvailable) return;
+    if (shownThisSessionRef.current) return;
+    if (dismissed) return;
+
+    const onDashboard = segments[0] === '(tabs)' && segments[1] === 'dashboard';
+    if (!onDashboard) return;
+    if (trialVisible) return;
+
+    const timer = setTimeout(() => {
+      // Re-check inside the timer in case the trial sheet appeared
+      // during the delay window.
+      shownThisSessionRef.current = true;
+      setVisible(true);
+    }, SHOW_DELAY_MS);
+
+    return () => clearTimeout(timer);
+  }, [updateAvailable, segments, trialVisible, dismissed]);
 
   // Backfill profiles.app_version once per session per user so we
   // have aggregate visibility into which builds are still active.
