@@ -31,6 +31,9 @@ import { MyPlanSheet } from '@/components/MyPlanSheet';
 import { PregnancyStatusPrompt, shouldShowPregnancyPrompt } from '@/components/PregnancyStatusPrompt';
 import { UpdateToast } from '@/components/UpdateToast';
 import { useUpdateAvailable } from '@/lib/useUpdateAvailable';
+import { TrialUpsellProvider } from '@/lib/trialUpsellContext';
+import { TrialUpsellSheet } from '@/components/TrialUpsellSheet';
+import { useTrialUpsellTrigger } from '@/lib/useTrialUpsellTrigger';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { prefetchFoodImages } from '@/components/FoodCarousel';
 
@@ -352,8 +355,21 @@ function RootLayoutInner() {
       <MyPlanSheet />
       <PregnancyPromptGate />
       <UpdateToastGate />
+      <TrialUpsellSheet />
+      <TrialUpsellTriggerGate />
     </>
   );
+}
+
+// ── Trial Upsell trigger gate ───────────────────────────────────────────────
+// Evaluates the rules in useTrialUpsellTrigger every session and, if all
+// pass, surfaces the family-hero free-trial sheet. Renders nothing — the
+// sheet itself lives next to UpdateToastGate above. Separate component so
+// the trigger hook can read from RegionProvider / SubscriptionProvider
+// without coupling them to _layout's body.
+function TrialUpsellTriggerGate() {
+  useTrialUpsellTrigger();
+  return null;
 }
 
 // ── Update Toast gate ───────────────────────────────────────────────────────
@@ -403,6 +419,7 @@ export default function RootLayout() {
             <ActiveFamilyProvider>
               <RegionProvider>
                 <UpsellSheetProvider>
+                  <TrialUpsellProvider>
                   <MyPlanSheetProvider>
                     <MenuProvider>
                       <DraftRecipeProvider>
@@ -414,6 +431,7 @@ export default function RootLayout() {
                       </DraftRecipeProvider>
                     </MenuProvider>
                   </MyPlanSheetProvider>
+                  </TrialUpsellProvider>
                 </UpsellSheetProvider>
               </RegionProvider>
             </ActiveFamilyProvider>

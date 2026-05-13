@@ -1,20 +1,23 @@
 /**
- * TrialUpsellSheet — full-screen, family-hero variant of the upsell.
+ * TrialUpsellSheet — opportunistic, full-screen free-trial pitch.
  *
- * Shown to users who are eligible for the App Store / Play Store free
- * trial (i.e. haven't used one before on this account). The paid-only
- * sheet (current UpsellSheet content) is the fallback for everyone
- * else.
+ * NOT the same flow as UpsellSheet. UpsellSheet is the contextual
+ * upgrade prompt (shown when a user taps a Plus-locked feature).
+ * This sheet is the *re-engagement* prompt — shown on app open
+ * to a non-Plus user when the trigger rules in
+ * `useTrialUpsellTrigger` decide to fire, regardless of what the
+ * user was about to do.
  *
- * Layout mirrors Figma node 4997:9763:
- *   - Hero image of a family fills the top ~360px of the screen.
+ * Visual spec from Figma node 4997:9763:
+ *   - Family-photo hero fills the top ~360px of the screen.
  *   - A dark-teal panel slides up from the bottom with rounded top
  *     corners, containing the headline, three-step trial timeline,
  *     CTA, and cancellation note.
  *
- * The Modal + slide + backdrop wiring lives in the parent UpsellSheet
- * so we can swap this body in / out without re-implementing animations.
+ * State is owned by `lib/trialUpsellContext`; this component is
+ * a pure consumer of `visible` + `dismissTrialUpsell`.
  */
+import { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -25,19 +28,17 @@ import {
   ActivityIndicator,
   Linking,
   Platform,
+  Modal,
+  Animated,
+  Dimensions,
+  Easing,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import { useTrialUpsell } from '@/lib/trialUpsellContext';
+import { useSubscription } from '@/lib/subscriptionContext';
 import BiteInsightPlusLogo from '../assets/images/logo-biteinsight-plus.svg';
-
-interface TrialUpsellSheetProps {
-  priceString: string | null;
-  trialDays: number;
-  purchasing: boolean;
-  onClose: () => void;
-  onStartTrial: () => void;
-  onRestorePurchases: () => void;
-}
 
 interface TimelineStep {
   day: string;
@@ -45,20 +46,76 @@ interface TimelineStep {
   state: 'active' | 'future';
 }
 
-export function TrialUpsellSheet({
-  priceString,
-  trialDays,
-  purchasing,
-  onClose,
-  onStartTrial,
-  onRestorePurchases,
-}: TrialUpsellSheetProps) {
+const SCREEN_HEIGHT = Dimensions.get('window').height;
+
+export function TrialUpsellSheet() {
+  const { visible, dismissTrialUpsell, recordConversion } = useTrialUpsell();
+  const { isPlus, purchasing, priceString, trialDays, purchasePlus, restorePurchases } =
+    useSubscription();
   const insets = useSafeAreaInsets();
 
-  // Localise day-count language for the two supported "future" steps.
-  // Hardcoded English to match the rest of UpsellSheet; localise in a
-  // future pass when the full sheet goes through i18n.
-  const reminderDay = trialDays - 1;
+  // Animation refs — slide-up from bottom with backdrop fade.
+  const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+  const backdropAnim = useRef(new Animated.Value(0)).current;
+  const hasShownRef = useRef(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    if (visible) {
+      hasShownRef.current = true;
+      setMounted(true);
+      slideAnim.setValue(SCREEN_HEIGHT);
+      backdropAnim.setValue(0);
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 400,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(backdropAnim, {
+          toValue: 1,
+          duration: 280,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else if (hasShownRef.current) {
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: SCREEN_HEIGHT,
+          duration: 300,
+          easing: Easing.in(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(backdropAnim, {
+          toValue: 0,
+          duration: 220,
+          useNativeDriver: true,
+        }),
+      ]).start(() => setMounted(false));
+    }
+  }, [visible, slideAnim, backdropAnim]);
+
+  // When the user converts (isPlus flips true while sheet is open),
+  // mark the conversion in trial-upsell state, dismiss the sheet,
+  // and route to the upgrade-success screen.
+  useEffect(() => {
+    if (isPlus && visible) {
+      recordConversion();
+      dismissTrialUpsell();
+      router.replace('/upgrade-success');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPlus]);
+
+  if (!mounted) return null;
+
+  // Resolve trial length for display copy. Default to 7 if the store
+  // hasn't reported a parseable duration — matches the App Store
+  // Connect / Play Console config.
+  const displayTrialDays = trialDays ?? 7;
+  const reminderDay = displayTrialDays - 1;
+
   const steps: TimelineStep[] = [
     {
       day: 'Today',
@@ -71,139 +128,169 @@ export function TrialUpsellSheet({
       state: 'future',
     },
     {
-      day: `In ${trialDays} day${trialDays === 1 ? '' : 's'}`,
+      day: `In ${displayTrialDays} day${displayTrialDays === 1 ? '' : 's'}`,
       body: "You'll be charged, cancel anytime before.",
       state: 'future',
     },
   ];
 
   return (
-    <View style={styles.root}>
-      {/* ── Hero image ────────────────────────────────────────────── */}
-      {/* Sits in the dark area above the sheet. The user needs to
-          drop the real family photo into assets/images/trial-hero-
-          family.png — Figma's MCP exporter returned a blank
-          placeholder, so the file in-repo is a stub until you swap
-          in the production asset. */}
-      <Image
-        source={require('@/assets/images/trial-hero-family.png')}
-        style={styles.hero}
-        resizeMode="cover"
-      />
-
-      {/* ── Close button — top-right, sits on the hero ───────────── */}
-      <TouchableOpacity
-        style={[styles.closeBtn, { top: insets.top + 8 }]}
-        onPress={onClose}
-        activeOpacity={0.8}
+    <Modal
+      visible={mounted}
+      transparent
+      animationType="none"
+      onRequestClose={dismissTrialUpsell}
+      statusBarTranslucent
+    >
+      {/* Backdrop — tap-to-dismiss */}
+      <Animated.View
+        style={[styles.backdrop, { opacity: backdropAnim }]}
+        pointerEvents="box-none"
       >
-        <Ionicons name="close" size={20} color="#fff" />
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={StyleSheet.absoluteFill}
+          onPress={dismissTrialUpsell}
+          activeOpacity={1}
+        />
+      </Animated.View>
 
-      {/* ── Bottom sheet panel ───────────────────────────────────── */}
-      <View style={styles.sheet}>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={[
-            styles.sheetContent,
-            { paddingBottom: insets.bottom + 32 },
-          ]}
-          bounces={false}
+      <Animated.View
+        style={[styles.root, { transform: [{ translateY: slideAnim }] }]}
+      >
+        {/* ── Hero image ──────────────────────────────────────────── */}
+        {/* The image fill in Figma is a placeholder until you drop in
+            the production family photo — overwrite
+            assets/images/trial-hero-family.png with the exported
+            asset from Figma, no code change needed. */}
+        <Image
+          source={require('@/assets/images/trial-hero-family.png')}
+          style={styles.hero}
+          resizeMode="cover"
+        />
+
+        {/* Close button — sits on the hero, top-right corner */}
+        <TouchableOpacity
+          style={[styles.closeBtn, { top: insets.top + 8 }]}
+          onPress={dismissTrialUpsell}
+          activeOpacity={0.8}
         >
-          {/* Logo + headline group */}
-          <View style={styles.headerGroup}>
-            <BiteInsightPlusLogo width={164} height={42} />
-            <Text style={styles.title}>Start your {trialDays} day FREE trial</Text>
-            <Text style={styles.subhead}>
-              Get full access to Bite Insight+ for a week.
-            </Text>
-            <Text style={styles.subheadBody}>
-              If you love it, keep it. If you don't, cancel it.
-            </Text>
-          </View>
+          <Ionicons name="close" size={20} color="#fff" />
+        </TouchableOpacity>
 
-          {/* Three-step trial timeline */}
-          <View style={styles.timeline}>
-            <View style={styles.timelineRail}>
-              {steps.map((step, i) => (
-                <View key={i} style={styles.railCell}>
-                  <View
-                    style={[
-                      styles.railDot,
-                      step.state === 'active' && styles.railDotActive,
-                    ]}
-                  >
-                    {step.state === 'active' && (
-                      <Ionicons name="checkmark" size={12} color="#ffffff" />
-                    )}
+        {/* ── Bottom sheet panel ──────────────────────────────────── */}
+        <View style={styles.sheet}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={[
+              styles.sheetContent,
+              { paddingBottom: insets.bottom + 32 },
+            ]}
+            bounces={false}
+          >
+            {/* Logo + headline */}
+            <View style={styles.headerGroup}>
+              <BiteInsightPlusLogo width={164} height={42} />
+              <Text style={styles.title}>
+                Start your {displayTrialDays} day FREE trial
+              </Text>
+              <Text style={styles.subhead}>
+                Get full access to Bite Insight+ for a week.
+              </Text>
+              <Text style={styles.subheadBody}>
+                If you love it, keep it. If you don't, cancel it.
+              </Text>
+            </View>
+
+            {/* Three-step trial timeline */}
+            <View style={styles.timeline}>
+              <View style={styles.timelineRail}>
+                {steps.map((step, i) => (
+                  <View key={i} style={styles.railCell}>
+                    <View
+                      style={[
+                        styles.railDot,
+                        step.state === 'active' && styles.railDotActive,
+                      ]}
+                    >
+                      {step.state === 'active' && (
+                        <Ionicons name="checkmark" size={12} color="#ffffff" />
+                      )}
+                    </View>
+                    {i < steps.length - 1 && <View style={styles.railLine} />}
                   </View>
-                  {i < steps.length - 1 && <View style={styles.railLine} />}
-                </View>
-              ))}
+                ))}
+              </View>
+              <View style={styles.timelineCards}>
+                {steps.map((step, i) => (
+                  <View key={i} style={styles.stepCard}>
+                    <Text style={styles.stepTitle}>{step.day}</Text>
+                    <Text style={styles.stepBody}>{step.body}</Text>
+                  </View>
+                ))}
+              </View>
             </View>
-            <View style={styles.timelineCards}>
-              {steps.map((step, i) => (
-                <View key={i} style={styles.stepCard}>
-                  <Text style={styles.stepTitle}>{step.day}</Text>
-                  <Text style={styles.stepBody}>{step.body}</Text>
-                </View>
-              ))}
+
+            {/* CTA + cancellation note */}
+            <View style={styles.ctaGroup}>
+              <TouchableOpacity
+                style={[styles.primaryBtn, purchasing && styles.primaryBtnDisabled]}
+                onPress={purchasePlus}
+                activeOpacity={0.85}
+                disabled={purchasing}
+              >
+                {purchasing ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.primaryBtnText}>
+                    Start your {displayTrialDays} day FREE trial for {priceString ?? '£0.00'}
+                  </Text>
+                )}
+              </TouchableOpacity>
+              <Text style={styles.cancelNote}>
+                Cancel anytime in the {Platform.OS === 'ios' ? 'App Store' : 'Play Store'}
+              </Text>
             </View>
-          </View>
 
-          {/* Primary CTA + cancellation note */}
-          <View style={styles.ctaGroup}>
-            <TouchableOpacity
-              style={[styles.primaryBtn, purchasing && styles.primaryBtnDisabled]}
-              onPress={onStartTrial}
-              activeOpacity={0.85}
-              disabled={purchasing}
-            >
-              {purchasing ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Text style={styles.primaryBtnText}>
-                  Start your {trialDays} day FREE trial for {priceString ?? '£0.00'}
-                </Text>
-              )}
-            </TouchableOpacity>
-            <Text style={styles.cancelNote}>
-              Cancel anytime in the {Platform.OS === 'ios' ? 'App Store' : 'Play Store'}
-            </Text>
-          </View>
-
-          {/* Legal row — terms + privacy + restore. Kept compact so
-              the timeline + CTA remain the visual focus. */}
-          <View style={styles.legalRow}>
-            <TouchableOpacity
-              onPress={() => Linking.openURL('https://biteinsight.co.uk/terms.html')}
-              activeOpacity={0.6}
-            >
-              <Text style={styles.legalLink}>Terms</Text>
-            </TouchableOpacity>
-            <Text style={styles.legalSeparator}>·</Text>
-            <TouchableOpacity
-              onPress={() => Linking.openURL('https://biteinsight.co.uk/privacy.html')}
-              activeOpacity={0.6}
-            >
-              <Text style={styles.legalLink}>Privacy</Text>
-            </TouchableOpacity>
-            <Text style={styles.legalSeparator}>·</Text>
-            <TouchableOpacity onPress={onRestorePurchases} activeOpacity={0.6}>
-              <Text style={styles.legalLink}>Restore</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </View>
-    </View>
+            {/* Legal row */}
+            <View style={styles.legalRow}>
+              <TouchableOpacity
+                onPress={() => Linking.openURL('https://biteinsight.co.uk/terms.html')}
+                activeOpacity={0.6}
+              >
+                <Text style={styles.legalLink}>Terms</Text>
+              </TouchableOpacity>
+              <Text style={styles.legalSeparator}>·</Text>
+              <TouchableOpacity
+                onPress={() => Linking.openURL('https://biteinsight.co.uk/privacy.html')}
+                activeOpacity={0.6}
+              >
+                <Text style={styles.legalLink}>Privacy</Text>
+              </TouchableOpacity>
+              <Text style={styles.legalSeparator}>·</Text>
+              <TouchableOpacity onPress={restorePurchases} activeOpacity={0.6}>
+                <Text style={styles.legalLink}>Restore</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </View>
+      </Animated.View>
+    </Modal>
   );
 }
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+  },
   root: {
-    flex: 1,
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
     backgroundColor: '#001f1a',
   },
   hero: {
@@ -301,8 +388,6 @@ const styles = StyleSheet.create({
   railLine: {
     width: 4,
     backgroundColor: '#003d36',
-    // Total step card height (98) + the 8px gap between cards minus
-    // the dot dimensions — keeps the line meeting the dots cleanly.
     height: 86,
     marginVertical: 0,
   },
@@ -364,6 +449,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: '#ffffff',
+    textAlign: 'center',
   },
   cancelNote: {
     fontSize: 14,
