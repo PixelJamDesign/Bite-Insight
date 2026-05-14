@@ -23,7 +23,8 @@
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "BiteInsight needs camera access to scan food labels and barcodes.",
         "NSPhotoLibraryUsageDescription": "BiteInsight needs access to your photo library.",
-        "NSFaceIDUsageDescription": "BiteInsight uses Face ID to let you sign in quickly and securely."
+        "NSFaceIDUsageDescription": "BiteInsight uses Face ID to let you sign in quickly and securely.",
+        "UIBackgroundModes": ["remote-notification"]
       }
     },
     "android": {
