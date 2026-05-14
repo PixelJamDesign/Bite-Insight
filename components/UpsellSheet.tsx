@@ -29,14 +29,14 @@ const ICON_FREE     = require('@/assets/icons/upsell/plus.webp');
 
 const FEATURES = [
   { icon: ICON_FAMILY,  label: 'Create and manage family profiles' },
-  { icon: ICON_FLAG,    label: 'Flag ingredients you want to avoid' },
+  { icon: ICON_FLAG,    label: 'Report ingredients you want to avoid' },
   { icon: ICON_RECIPE,  label: 'Recipe ideas based on your preferences' },
   {
     icon: ICON_BARCODE,
-    label: 'Barcode scanning for Global products',
-    subLabel: '(Access to over 4.2 millions products - Powered by a global food database)',
+    label: 'Global Barcode Scanner',
+    subLabel: '(Access to over 4.2 million products - Powered by a global food database)',
   },
-  { icon: ICON_FREE,    label: 'Plus, everything in the Free version' },
+  { icon: ICON_FREE,    label: 'Plus everything in the free version' },
 ];
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
@@ -163,7 +163,7 @@ export function UpsellSheet() {
           <View style={styles.logoSection}>
             <BiteInsightPlusLogo width={190} height={50} />
             <Text style={styles.tagline}>
-              Extra tools to support healthier food choices for you and your family.
+              Additional tools to support healthier food choices for you and your family.
             </Text>
           </View>
 
@@ -203,18 +203,26 @@ export function UpsellSheet() {
           <Text style={styles.priceFineprint}>
             Subscription renews automatically. Cancel anytime.
           </Text>
+          {/* "No thanks" — primary dismiss action per the latest Figma.
+              Replaces the formal Terms/Privacy/Restore row as the most
+              prominent secondary action; the legal links remain below
+              at a smaller scale so App Review still finds them. */}
+          <TouchableOpacity style={styles.noThanksBtn} onPress={hideUpsell} activeOpacity={0.6}>
+            <Text style={styles.noThanksText}>No thanks</Text>
+          </TouchableOpacity>
           <View style={styles.legalRow}>
             <TouchableOpacity onPress={() => Linking.openURL('https://biteinsight.co.uk/terms.html')} activeOpacity={0.6}>
-              <Text style={styles.legalLink}>Terms of Use</Text>
+              <Text style={styles.legalLink}>Terms</Text>
             </TouchableOpacity>
-            <Text style={styles.legalSeparator}>|</Text>
+            <Text style={styles.legalSeparator}>·</Text>
             <TouchableOpacity onPress={() => Linking.openURL('https://biteinsight.co.uk/privacy.html')} activeOpacity={0.6}>
-              <Text style={styles.legalLink}>Privacy Policy</Text>
+              <Text style={styles.legalLink}>Privacy</Text>
+            </TouchableOpacity>
+            <Text style={styles.legalSeparator}>·</Text>
+            <TouchableOpacity onPress={restorePurchases} activeOpacity={0.6}>
+              <Text style={styles.legalLink}>Restore</Text>
             </TouchableOpacity>
           </View>
-          <TouchableOpacity style={styles.restoreBtn} onPress={restorePurchases} activeOpacity={0.6}>
-            <Text style={styles.restoreBtnText}>Restore purchases</Text>
-          </TouchableOpacity>
         </View>
       </Animated.View>
     </Modal>
@@ -428,15 +436,16 @@ const styles = StyleSheet.create({
     color: '#aad4cd',
     opacity: 0.5,
   },
-  restoreBtn: {
-    paddingVertical: 8,
+  noThanksBtn: {
+    paddingVertical: 12,
+    marginTop: 4,
   },
-  restoreBtnText: {
-    fontSize: 13,
-    fontWeight: '300',
-    fontFamily: 'Figtree_300Light',
-    color: '#aad4cd',
-    letterSpacing: -0.13,
-    textDecorationLine: 'underline',
+  noThanksText: {
+    fontSize: 16,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: '#ffffff',
+    letterSpacing: 0,
+    textAlign: 'center',
   },
 });

@@ -143,16 +143,16 @@ export function TrialUpsellSheet() {
   const steps: TimelineStep[] = [
     {
       day: 'Today',
-      body: 'Unlock full access to the Bite Insight+ membership.',
+      body: 'Unlock full access to Bite Insight+ subscription.',
     },
     {
       // Lowercase 'in' to match Figma exactly (4997:12413).
       day: `in ${reminderDay} day${reminderDay === 1 ? '' : 's'}`,
-      body: "We'll send you a reminder that your trial is ending soon.",
+      body: "We'll remind you when your trial is ending soon.",
     },
     {
       day: `in ${displayTrialDays} day${displayTrialDays === 1 ? '' : 's'}`,
-      body: "You'll be charged, cancel anytime before.",
+      body: 'You will be charged, cancel anytime before then.',
     },
   ];
 
@@ -231,7 +231,7 @@ export function TrialUpsellSheet() {
                   adjustsFontSizeToFit
                   minimumFontScale={0.85}
                 >
-                  Start your {displayTrialDays} day FREE trial
+                  Start your FREE {displayTrialDays}-day trial
                 </Text>
                 <View style={styles.subheadGroup}>
                   <Text
@@ -243,7 +243,7 @@ export function TrialUpsellSheet() {
                     Get full access to Bite Insight+ for a week.
                   </Text>
                   <Text style={styles.subheadBody}>
-                    If you love it, keep it. If you don't, cancel it.
+                    If you like it, keep it. Otherwise, cancel.
                   </Text>
                 </View>
               </View>
@@ -295,7 +295,7 @@ export function TrialUpsellSheet() {
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
                   <Text style={styles.primaryBtnText}>
-                    Start your {displayTrialDays} day FREE trial for {priceString ?? '£0.00'}
+                    Start your FREE {displayTrialDays}-day trial for {priceString ?? '£0.00'}
                   </Text>
                 )}
               </TouchableOpacity>
@@ -363,7 +363,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 16,
     right: 18,
-    zIndex: 10,
     width: 48,
     height: 48,
     backgroundColor: SURFACE_TERTIARY,

@@ -11,6 +11,7 @@ import {
   Dimensions,
   Linking,
   Platform,
+  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,20 +21,26 @@ import { useSubscription } from '@/lib/subscriptionContext';
 import { supabase } from '@/lib/supabase';
 import BiteInsightPlusLogo from '../assets/images/logo-biteinsight-plus.svg';
 
+// Reuse the illustrated icons from the Plus upsell sheet so the
+// stat cards on the My Plan sheet feel like part of the same visual
+// system (rather than thin Ionicons outlines).
+const ICON_FAMILY = require('@/assets/icons/upsell/family.webp');
+const ICON_FLAG   = require('@/assets/icons/upsell/flag.webp');
+
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
 function StatCard({
-  iconName,
+  icon,
   count,
   label,
 }: {
-  iconName: React.ComponentProps<typeof Ionicons>['name'];
+  icon: number; // require()'d image source
   count: number;
   label: string;
 }) {
   return (
     <View style={styles.statCard}>
-      <Ionicons name={iconName} size={32} color="#aad4cd" />
+      <Image source={icon} style={styles.statIcon} resizeMode="contain" />
       <Text style={styles.statCount}>{count}</Text>
       <Text style={styles.statLabel}>{label}</Text>
     </View>
@@ -188,8 +195,8 @@ export function MyPlanSheet() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Your account summary</Text>
             <View style={styles.statsRow}>
-              <StatCard iconName="people-outline" count={familyCount} label="Family members" />
-              <StatCard iconName="flag-outline" count={flaggedCount} label="Flagged ingredients" />
+              <StatCard icon={ICON_FAMILY} count={familyCount} label="Family members" />
+              <StatCard icon={ICON_FLAG} count={flaggedCount} label="Flagged ingredients" />
             </View>
           </View>
 
@@ -202,7 +209,7 @@ export function MyPlanSheet() {
             </View>
             <Text style={styles.renewText}>
               {renewalDate
-                ? `Renews ${new Date(renewalDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`
+                ? `Renewal on ${new Date(renewalDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`
                 : 'Your subscription is active'}
             </Text>
           </View>
@@ -215,7 +222,7 @@ export function MyPlanSheet() {
               activeOpacity={0.85}
             >
               <Ionicons name="open-outline" size={16} color="#fff" />
-              <Text style={styles.primaryBtnText}>Manage Subscription</Text>
+              <Text style={styles.primaryBtnText}>Manage subscription</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.cancelBtn}
@@ -339,6 +346,10 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: 'center',
     gap: 8,
+  },
+  statIcon: {
+    width: 40,
+    height: 40,
   },
   statCount: {
     fontSize: 30,
