@@ -52,6 +52,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import BiteInsightPlusIcon from '../assets/icons/bite-insight-plus-menu-icon.svg';
+import { useDebugMenu } from '@/lib/debugMenuContext';
 import { Colors } from '@/constants/theme';
 import { useTransition } from '@/lib/transitionContext';
 import { useUpsellSheet } from '@/lib/upsellSheetContext';
@@ -106,9 +107,21 @@ function NavItem({ icon, label, onPress, chevron = false, plus = false }: NavIte
 
 function Footer() {
   const { t } = useTranslation('menu');
+  const { showDebugMenu } = useDebugMenu();
   return (
     <View style={styles.footer}>
-      <Text style={styles.footerText}>{t('footer.version')}</Text>
+      {/* 3-second long-press on the version footer opens the hidden
+          debug menu. Available in all builds (incl. TestFlight + App
+          Store) so QA can drive sheet triggers and reset state on
+          production-signed builds. Gesture is undiscoverable to real
+          users — nobody long-presses a version number. */}
+      <TouchableOpacity
+        onLongPress={showDebugMenu}
+        delayLongPress={3000}
+        activeOpacity={1}
+      >
+        <Text style={styles.footerText}>{t('footer.version')}</Text>
+      </TouchableOpacity>
       <TouchableOpacity activeOpacity={0.7} onPress={() => Linking.openURL('https://biteinsight.co.uk/report.html')}>
         <Text style={[styles.footerText, styles.footerLink]}>{t('footer.reportProblem')}</Text>
       </TouchableOpacity>

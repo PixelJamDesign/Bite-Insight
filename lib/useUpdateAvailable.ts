@@ -19,7 +19,7 @@
  * through to "up to date" so a malformed config row can't lock
  * users out of the app.
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 import { useSegments } from 'expo-router';
@@ -165,5 +165,32 @@ export function useUpdateAvailable() {
     setVisible(false);
   }, []);
 
-  return { visible, dismiss };
+  /** Bypass every gate (route, trial visibility, cooldown, dismiss flag)
+   *  and surface the toast immediately. Used by the hidden debug menu
+   *  so QA can verify the toast UI without bumping app_config. */
+  const debugForceShow = useCallback(() => {
+    (globalThis as any)[SESSION_DISMISS_KEY] = false;
+    setVisible(true);
+  }, []);
+
+  // Register the force-show fn at module level so the DebugMenu can
+  // invoke it without prop drilling or sharing context. Only one
+  // gate mounts the hook so the singleton pattern is safe.
+  useLayoutEffect(() => {
+    _moduleForceShow = debugForceShow;
+    return () => {
+      _moduleForceShow = null;
+    };
+  }, [debugForceShow]);
+
+  return { visible, dismiss, debugForceShow };
+}
+
+let _moduleForceShow: (() => void) | null = null;
+
+/** Trigger the update toast from anywhere — bypasses all gating
+ *  rules. Used by the hidden debug menu. No-op if the toast gate
+ *  isn't mounted (e.g. before auth). */
+export function debugForceShowUpdateToast(): void {
+  _moduleForceShow?.();
 }

@@ -34,6 +34,8 @@ import { useUpdateAvailable } from '@/lib/useUpdateAvailable';
 import { TrialUpsellProvider } from '@/lib/trialUpsellContext';
 import { TrialUpsellSheet } from '@/components/TrialUpsellSheet';
 import { useTrialUpsellTrigger } from '@/lib/useTrialUpsellTrigger';
+import { DebugMenuProvider } from '@/lib/debugMenuContext';
+import { DebugMenu } from '@/components/DebugMenu';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { prefetchFoodImages } from '@/components/FoodCarousel';
 
@@ -357,6 +359,7 @@ function RootLayoutInner() {
       <UpdateToastGate />
       <TrialUpsellSheet />
       <TrialUpsellTriggerGate />
+      <DebugMenu />
     </>
   );
 }
@@ -420,6 +423,7 @@ export default function RootLayout() {
               <RegionProvider>
                 <UpsellSheetProvider>
                   <TrialUpsellProvider>
+                  <DebugMenuProvider>
                   <MyPlanSheetProvider>
                     <MenuProvider>
                       <DraftRecipeProvider>
@@ -431,6 +435,7 @@ export default function RootLayout() {
                       </DraftRecipeProvider>
                     </MenuProvider>
                   </MyPlanSheetProvider>
+                  </DebugMenuProvider>
                   </TrialUpsellProvider>
                 </UpsellSheetProvider>
               </RegionProvider>
