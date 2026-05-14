@@ -36,6 +36,8 @@ import { TrialUpsellSheet } from '@/components/TrialUpsellSheet';
 import { useTrialUpsellTrigger } from '@/lib/useTrialUpsellTrigger';
 import { DebugMenuProvider } from '@/lib/debugMenuContext';
 import { DebugMenu } from '@/components/DebugMenu';
+import { TrialDay6ReminderProvider } from '@/lib/trialDay6ReminderContext';
+import { TrialDay6ReminderSheet } from '@/components/TrialDay6ReminderSheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { prefetchFoodImages } from '@/components/FoodCarousel';
 
@@ -359,6 +361,7 @@ function RootLayoutInner() {
       <UpdateToastGate />
       <TrialUpsellSheet />
       <TrialUpsellTriggerGate />
+      <TrialDay6ReminderSheet />
       <DebugMenu />
     </>
   );
@@ -423,6 +426,7 @@ export default function RootLayout() {
               <RegionProvider>
                 <UpsellSheetProvider>
                   <TrialUpsellProvider>
+                  <TrialDay6ReminderProvider>
                   <DebugMenuProvider>
                   <MyPlanSheetProvider>
                     <MenuProvider>
@@ -436,6 +440,7 @@ export default function RootLayout() {
                     </MenuProvider>
                   </MyPlanSheetProvider>
                   </DebugMenuProvider>
+                  </TrialDay6ReminderProvider>
                   </TrialUpsellProvider>
                 </UpsellSheetProvider>
               </RegionProvider>

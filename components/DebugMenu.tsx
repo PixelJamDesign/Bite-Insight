@@ -28,6 +28,7 @@ import { Colors, Spacing, Radius, Typography } from '@/constants/theme';
 import { useDebugMenu } from '@/lib/debugMenuContext';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { useTrialUpsell, TRIAL_UPSELL_KEYS } from '@/lib/trialUpsellContext';
+import { useTrialDay6Reminder } from '@/lib/trialDay6ReminderContext';
 import { useUpsellSheet } from '@/lib/upsellSheetContext';
 import { useMyPlanSheet } from '@/lib/myPlanSheetContext';
 import { useRegion } from '@/lib/regionContext';
@@ -71,6 +72,7 @@ export function DebugMenu() {
   const { session } = useAuth();
   const { isPlus, priceString, trialEligible, trialDays } = useSubscription();
   const { showTrialUpsell } = useTrialUpsell();
+  const { showTrialDay6Reminder } = useTrialDay6Reminder();
   const { showUpsell } = useUpsellSheet();
   const { showMyPlan } = useMyPlanSheet();
   const { selectedRegion, homeCountryCode } = useRegion();
@@ -115,6 +117,11 @@ export function DebugMenu() {
   const triggerTrialSheet = () => {
     hideDebugMenu();
     showTrialUpsell();
+  };
+
+  const triggerTrialDay6 = () => {
+    hideDebugMenu();
+    showTrialDay6Reminder();
   };
 
   const triggerUpdateToast = () => {
@@ -204,6 +211,7 @@ export function DebugMenu() {
             <Section title="Sheets">
               <ActionButton label="Show What's New" onPress={triggerWhatsNew} />
               <ActionButton label="Show Trial sheet" onPress={triggerTrialSheet} />
+              <ActionButton label="Show Day-6 reminder" onPress={triggerTrialDay6} />
               <ActionButton label="Show Update toast" onPress={triggerUpdateToast} />
               <ActionButton label="Show paid Upsell sheet" onPress={triggerPaidUpsell} />
               <ActionButton label="Show My Plan sheet" onPress={triggerMyPlan} />

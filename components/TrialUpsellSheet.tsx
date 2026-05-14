@@ -150,16 +150,16 @@ export function TrialUpsellSheet() {
   const steps: TimelineStep[] = [
     {
       day: 'Today',
-      body: 'Unlock full access to Bite Insight+ subscription.',
+      body: 'Unlock full access to the Bite Insight+ membership.',
     },
     {
       // Lowercase 'in' to match Figma exactly (4997:12413).
       day: `in ${reminderDay} day${reminderDay === 1 ? '' : 's'}`,
-      body: "We'll remind you when your trial is ending soon.",
+      body: "We'll send you a reminder that your trial is ending soon.",
     },
     {
       day: `in ${displayTrialDays} day${displayTrialDays === 1 ? '' : 's'}`,
-      body: 'You will be charged, cancel anytime before then.',
+      body: "You'll be charged, cancel anytime before.",
     },
   ];
 
@@ -233,7 +233,7 @@ export function TrialUpsellSheet() {
                   adjustsFontSizeToFit
                   minimumFontScale={0.85}
                 >
-                  Start your FREE {displayTrialDays}-day trial
+                  Start your {displayTrialDays} day FREE trial
                 </Text>
                 <View style={styles.subheadGroup}>
                   <Text
@@ -245,7 +245,7 @@ export function TrialUpsellSheet() {
                     Get full access to Bite Insight+ for a week.
                   </Text>
                   <Text style={styles.subheadBody}>
-                    If you like it, keep it. Otherwise, cancel.
+                    If you love it, keep it. If you don't, cancel it.
                   </Text>
                 </View>
               </View>
@@ -301,7 +301,7 @@ export function TrialUpsellSheet() {
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
                 <Text style={styles.primaryBtnText}>
-                  Start your FREE {displayTrialDays}-day trial for {trialPriceLabel}
+                  Start your {displayTrialDays} day FREE trial for {trialPriceLabel}
                 </Text>
               )}
             </TouchableOpacity>
