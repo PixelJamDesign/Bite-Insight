@@ -17,6 +17,7 @@ import FamilyInsightsIcon from '@/assets/icons/whats-new/family-insights.svg';
 import FlagIcon from '@/assets/icons/whats-new/flag.svg';
 import ProfileAdditionsIcon from '@/assets/icons/whats-new/profile-additions.svg';
 import AccuracyIcon from '@/assets/icons/whats-new/accuracy.svg';
+import WaveIcon from '@/assets/icons/whats-new/wave.svg';
 import Constants from 'expo-constants';
 import { useTranslation } from 'react-i18next';
 import { Colors, Spacing, Radius, Shadows } from '@/constants/theme';
@@ -97,12 +98,20 @@ interface CardData {
   icon: CardIcon;
 }
 
-// v1.6.1 — add card entries here as changes are made during the
-// release cycle. When this array is empty, shouldShowWhatsNew() still
-// fires on first open of the new version but the screen has no content
-// to show — see below: when there are no cards, the screen auto-marks
-// itself seen and routes straight to the dashboard.
-const CARDS: CardData[] = [];
+// v1.6.1 — only the regions expansion is featured. The free trial gets
+// discovered via its own dedicated sheet (TrialUpsellSheet) on the
+// dashboard; the new health conditions surface in profile settings;
+// the sharper ingredient flagging is invisible to users by design.
+// Adding more cards here would dilute the announcement.
+const CARDS: CardData[] = [
+  {
+    badge: 'New Locations',
+    title: 'Hello India 🇮🇳 Hello Australia 🇦🇺',
+    description:
+      'Bite Insight now works in India and Australia. The scanner picks the right local product database automatically.',
+    icon: WaveIcon,
+  },
+];
 
 // ── Screen ──────────────────────────────────────────────────────────────────
 
