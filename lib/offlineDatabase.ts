@@ -17,7 +17,7 @@ import { Platform } from 'react-native';
 import { CachedProduct } from '@/lib/productCache';
 
 // ── Types ────────────────────────────────────────────────────────────────────
-export type RegionCode = 'gb' | 'us' | 'fr' | 'de' | 'es' | 'it';
+export type RegionCode = 'gb' | 'us' | 'fr' | 'de' | 'es' | 'it' | 'in' | 'au';
 
 export const REGION_INFO: Record<RegionCode, { label: string; flag: string }> = {
   gb: { label: 'United Kingdom', flag: '🇬🇧' },
@@ -26,9 +26,16 @@ export const REGION_INFO: Record<RegionCode, { label: string; flag: string }> = 
   de: { label: 'Germany', flag: '🇩🇪' },
   es: { label: 'Spain', flag: '🇪🇸' },
   it: { label: 'Italy', flag: '🇮🇹' },
+  in: { label: 'India', flag: '🇮🇳' },
+  au: { label: 'Australia', flag: '🇦🇺' },
 };
 
-export const ALL_REGIONS: RegionCode[] = ['gb', 'us', 'fr', 'de', 'es', 'it'];
+// All regions the app can theoretically scan against. The MenuModal
+// download list filters this further to only show regions that
+// actually appear in the published manifest, so adding a code here
+// won't surface a broken Download button until the SQLite file is
+// built and uploaded to GitHub Releases.
+export const ALL_REGIONS: RegionCode[] = ['gb', 'us', 'fr', 'de', 'es', 'it', 'in', 'au'];
 
 export type OfflineDbStatus = 'not-downloaded' | 'downloading' | 'ready' | 'error';
 

@@ -69,6 +69,16 @@ const REGION_FILTERS = {
     flag: '🇮🇹',
     tags: ['en:italy'],
   },
+  in: {
+    label: 'India',
+    flag: '🇮🇳',
+    tags: ['en:india'],
+  },
+  au: {
+    label: 'Australia',
+    flag: '🇦🇺',
+    tags: ['en:australia'],
+  },
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────

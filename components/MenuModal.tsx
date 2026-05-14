@@ -969,6 +969,16 @@ function OfflineDatabaseScreen({ goBack }: { goBack: () => void }) {
   const downloadedRegions = ALL_REGIONS.filter((c) => regions[c].info.status === 'ready');
   const totalBytes = downloadedRegions.reduce((sum, c) => sum + (regions[c].info.fileSizeBytes ?? 0), 0);
 
+  // Visible regions = (published in the manifest) OR (already
+  // downloaded locally — even if dropped from the manifest later).
+  // Lets us list new RegionCode entries (e.g. India, Australia)
+  // in ALL_REGIONS before their SQLite databases ship — they stay
+  // hidden until the GitHub Releases manifest catches up.
+  const visibleRegions = ALL_REGIONS.filter((c) => {
+    const r = regions[c];
+    return r.info.status === 'ready' || r.remoteSize !== null;
+  });
+
   return (
     <>
       <View style={styles.subHeader}>
@@ -993,7 +1003,7 @@ function OfflineDatabaseScreen({ goBack }: { goBack: () => void }) {
           <>
             {/* ── Region list ── */}
             <View style={{ gap: 12 }}>
-              {ALL_REGIONS.map((code) => {
+              {visibleRegions.map((code) => {
                 const r = regions[code];
                 const { label, flag } = REGION_INFO[code];
                 const { status, downloadProgress, productCount, fileSizeBytes, error } = r.info;
