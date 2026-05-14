@@ -41,7 +41,15 @@ Deno.serve(async (req) => {
     }
   }
 
-  let body: { event?: { type?: string; app_user_id?: string; expiration_at_ms?: number } };
+  let body: {
+    event?: {
+      type?: string;
+      app_user_id?: string;
+      expiration_at_ms?: number;
+      event_timestamp_ms?: number;
+      period_type?: string; // 'NORMAL' | 'TRIAL' | 'INTRO' | 'PROMOTIONAL'
+    };
+  };
   try {
     body = await req.json();
   } catch {
@@ -66,6 +74,29 @@ Deno.serve(async (req) => {
     if (body.event?.expiration_at_ms) {
       update.subscription_renewal_date = new Date(body.event.expiration_at_ms).toISOString();
     }
+
+    // Trial detection — record trial boundaries when the user is in
+    // their intro-offer period so the Day-6 reminder cron has
+    // accurate timestamps. We treat INITIAL_PURCHASE with
+    // period_type=TRIAL as the canonical "trial started" signal.
+    // INTRO covers Apple's "pay as you go / pay up front" intro
+    // offers — not currently used, but folded in defensively.
+    const periodType = body.event?.period_type;
+    const isTrialPeriod = periodType === 'TRIAL' || periodType === 'INTRO';
+
+    if (eventType === 'INITIAL_PURCHASE' && isTrialPeriod) {
+      const startedAt = body.event?.event_timestamp_ms
+        ? new Date(body.event.event_timestamp_ms).toISOString()
+        : new Date().toISOString();
+      update.trial_started_at = startedAt;
+      if (body.event?.expiration_at_ms) {
+        update.trial_ends_at = new Date(body.event.expiration_at_ms).toISOString();
+      }
+      // Clear any stale reminder flag from a prior trial cycle so
+      // the Day-6 push fires for this one.
+      update.trial_reminder_sent_at = null;
+    }
+
     await supabase.from('profiles').update(update).eq('id', userId);
   } else if (INACTIVE_EVENTS.has(eventType)) {
     // Never downgrade VIP users — they have lifetime access regardless of subscription state

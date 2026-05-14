@@ -159,19 +159,45 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         }).catch(() => {});
 
         Purchases.addCustomerInfoUpdateListener((info) => {
-          const active = !!info.entitlements.active['plus'];
+          const plusEnt = info.entitlements.active['plus'];
+          const active = !!plusEnt;
           if (active) {
             // Only sync to Supabase when RevenueCat confirms an active entitlement.
             // Never write false — RevenueCat may simply have no record of a
             // subscription that was granted via another channel (manual, promo, etc.).
             setIsPlus(true);
+
+            // Trial detection — RevenueCat reports periodType='trial'
+            // while the user is in their intro-offer period. We capture
+            // trial_started_at / trial_ends_at so the Day-6 reminder
+            // cron has accurate boundaries. Once periodType flips to
+            // 'normal' (post-trial paid) we leave the timestamps alone
+            // — they're a historical record.
+            const isTrial = (plusEnt as any).periodType === 'trial';
+            const update: Record<string, any> = { is_plus: true };
+            if (isTrial) {
+              const trialEndsAt = (plusEnt as any).expirationDate;
+              if (trialEndsAt) {
+                update.trial_ends_at = trialEndsAt;
+                // Stamp trial_started_at on first observation. The
+                // server-side RC webhook is the canonical writer for
+                // this (handles users who don't open the app right
+                // after purchase), but writing client-side too means
+                // the value is set within seconds for normal flows.
+                update.trial_started_at = new Date().toISOString();
+                // Clear any stale reminder flag from a previous trial
+                // cycle so the Day-6 push fires again.
+                update.trial_reminder_sent_at = null;
+              }
+            }
+
             supabase
               .from('profiles')
-              .update({ is_plus: true })
+              .update(update)
               .eq('id', userId)
               .then(({ error }) => {
                 if (error) console.warn('[RC→Supabase] sync failed:', error.message);
-                else console.log('[RC→Supabase] is_plus = true');
+                else console.log('[RC→Supabase] is_plus = true', isTrial ? '(trial)' : '');
               });
           }
         });

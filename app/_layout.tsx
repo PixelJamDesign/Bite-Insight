@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Redirect, Stack, useRootNavigationState, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
-import { Animated, Linking, View, Text } from 'react-native';
+import { Animated, Linking, View, Text, Platform } from 'react-native';
 import { Session } from '@supabase/supabase-js';
 import { shouldShowWhatsNew } from './whats-new';
 import {
@@ -36,8 +36,10 @@ import { TrialUpsellSheet } from '@/components/TrialUpsellSheet';
 import { useTrialUpsellTrigger } from '@/lib/useTrialUpsellTrigger';
 import { DebugMenuProvider } from '@/lib/debugMenuContext';
 import { DebugMenu } from '@/components/DebugMenu';
-import { TrialDay6ReminderProvider } from '@/lib/trialDay6ReminderContext';
+import { TrialDay6ReminderProvider, useTrialDay6Reminder } from '@/lib/trialDay6ReminderContext';
 import { TrialDay6ReminderSheet } from '@/components/TrialDay6ReminderSheet';
+import { useExpoPushToken } from '@/lib/useExpoPushToken';
+import * as Notifications from 'expo-notifications';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { prefetchFoodImages } from '@/components/FoodCarousel';
 
@@ -362,9 +364,61 @@ function RootLayoutInner() {
       <TrialUpsellSheet />
       <TrialUpsellTriggerGate />
       <TrialDay6ReminderSheet />
+      <PushTokenGate />
+      <TrialReminderPushGate />
       <DebugMenu />
     </>
   );
+}
+
+// ── Push token gate ─────────────────────────────────────────────────────────
+// On every authenticated session, prompts for notification permission
+// (if undetermined), captures the device's Expo push token, and
+// persists it to profiles.expo_push_token. Required for the Day-6
+// trial reminder push to reach the device.
+function PushTokenGate() {
+  useExpoPushToken();
+  return null;
+}
+
+// ── Trial reminder push handler ─────────────────────────────────────────────
+// When a Day-6 reminder push is tapped, Expo opens the app and we
+// receive the notification payload here. If the data.deepLink matches
+// 'biteinsight://trial-day6-reminder', surface the in-app Day-6 sheet.
+// Foreground notifications (received while the app is open) also
+// trigger the sheet — same end-state.
+function TrialReminderPushGate() {
+  const { showTrialDay6Reminder } = useTrialDay6Reminder();
+
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+
+    // Handler for notifications tapped while app was backgrounded or
+    // cold-started from the notification.
+    const responseSub = Notifications.addNotificationResponseReceivedListener((response) => {
+      const data = response.notification.request.content.data as any;
+      if (data?.type === 'trial_day6_reminder' || data?.deepLink === 'biteinsight://trial-day6-reminder') {
+        showTrialDay6Reminder();
+      }
+    });
+
+    // Also handle the case where the app is foregrounded and a
+    // notification arrives — we surface the sheet directly rather
+    // than letting it sit in the notification tray.
+    const receivedSub = Notifications.addNotificationReceivedListener((notif) => {
+      const data = notif.request.content.data as any;
+      if (data?.type === 'trial_day6_reminder') {
+        showTrialDay6Reminder();
+      }
+    });
+
+    return () => {
+      responseSub.remove();
+      receivedSub.remove();
+    };
+  }, [showTrialDay6Reminder]);
+
+  return null;
 }
 
 // ── Trial Upsell trigger gate ───────────────────────────────────────────────
