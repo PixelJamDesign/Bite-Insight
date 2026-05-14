@@ -620,9 +620,14 @@ function PrivacyContent() {
               <BulletList>
                 <Bullet>Products scanned</Bullet>
                 <Bullet>Features used</Bullet>
-                <Bullet>General interaction data</Bullet>
+                <Bullet>Screens viewed and interaction events</Bullet>
+                <Bullet>Device type and app version</Bullet>
               </BulletList>
-              <BodySmall>This helps us improve the app.</BodySmall>
+              <BodySmall>
+                This data is processed by PostHog (hosted in the EU) so we can
+                understand how the app is used and improve it. We never share
+                identifiable health information with analytics providers.
+              </BodySmall>
             </AccordionItem>
 
             <AccordionItem title="D. Payment information">
@@ -721,9 +726,12 @@ function PrivacyContent() {
           <SectionTitle>Third-party services</SectionTitle>
           <BodyLarge>We may share limited data with:</BodyLarge>
           <BulletList>
-            <Bullet>Open Food Facts (product database)</Bullet>
-            <Bullet>Payment processors (Stripe, Apple, Google)</Bullet>
-            <Bullet>Analytics tools (if implemented)</Bullet>
+            <Bullet>Open Food Facts (product database lookups)</Bullet>
+            <Bullet>Supabase (account, profile, and scan history storage — EU)</Bullet>
+            <Bullet>RevenueCat (subscription state management)</Bullet>
+            <Bullet>Apple, Google, and Stripe (payment processing)</Bullet>
+            <Bullet>PostHog (anonymised product analytics — hosted in the EU)</Bullet>
+            <Bullet>Expo Push Service (delivery of in-app notifications)</Bullet>
           </BulletList>
           <Body>These providers maintain separate privacy policies.</Body>
         </SectionContent>

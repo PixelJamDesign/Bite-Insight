@@ -40,6 +40,8 @@ import { TrialDay6ReminderProvider, useTrialDay6Reminder } from '@/lib/trialDay6
 import { TrialDay6ReminderSheet } from '@/components/TrialDay6ReminderSheet';
 import { useExpoPushToken } from '@/lib/useExpoPushToken';
 import * as Notifications from 'expo-notifications';
+import { PostHogProvider } from '@/lib/posthogProvider';
+import { usePostHogIdentify } from '@/lib/usePostHogIdentify';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { prefetchFoodImages } from '@/components/FoodCarousel';
 
@@ -366,9 +368,19 @@ function RootLayoutInner() {
       <TrialDay6ReminderSheet />
       <PushTokenGate />
       <TrialReminderPushGate />
+      <PostHogIdentifyGate />
       <DebugMenu />
     </>
   );
+}
+
+// ── PostHog identify gate ───────────────────────────────────────────────────
+// Attaches the authenticated user's id + properties to the PostHog
+// analytics stream so screen views and (later) custom events tie to
+// a known user. Renders nothing — pure side-effect gate.
+function PostHogIdentifyGate() {
+  usePostHogIdentify();
+  return null;
 }
 
 // ── Push token gate ─────────────────────────────────────────────────────────
@@ -473,6 +485,12 @@ function PregnancyPromptGate() {
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      {/* PostHogProvider wraps everything below so any nested component
+          can call usePostHog() to capture events. It auto-captures
+          screen changes from expo-router's navigation. The provider
+          becomes a no-op pass-through when EXPO_PUBLIC_POSTHOG_API_KEY
+          isn't set — safe to run in any environment. */}
+      <PostHogProvider>
       <SessionProvider>
         <JourneyProvider>
           <SubscriptionProvider>
@@ -502,6 +520,7 @@ export default function RootLayout() {
           </SubscriptionProvider>
         </JourneyProvider>
       </SessionProvider>
+      </PostHogProvider>
     </GestureHandlerRootView>
   );
 }
