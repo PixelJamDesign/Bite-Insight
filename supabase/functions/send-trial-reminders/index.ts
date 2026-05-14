@@ -48,19 +48,34 @@ const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send';
 const CHUNK_SIZE = 100;
 
 Deno.serve(async (req) => {
-  // Auth: accept either
-  //  - SUPABASE_SERVICE_ROLE_KEY (used for manual testing via curl)
-  //  - CRON_AUTH_TOKEN (used by the daily pg_cron job; stored in
-  //    vault as `cron_auth_token` and passed in Authorization header)
+  // Auth: Supabase's edge function gateway already verifies the JWT
+  // signature (verify_jwt: true). We only need to confirm the caller
+  // has the right role — service_role — not anon. Comparing the
+  // bearer string against an env var breaks when Supabase rotates
+  // keys or runs old + new key formats in parallel, so we decode the
+  // JWT claims directly and check the role.
   const authHeader = req.headers.get('authorization') ?? '';
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  const cronAuthToken = Deno.env.get('CRON_AUTH_TOKEN');
-  const expectedAuths = [
-    serviceRoleKey ? `Bearer ${serviceRoleKey}` : null,
-    cronAuthToken ? `Bearer ${cronAuthToken}` : null,
-  ].filter(Boolean) as string[];
-  if (!expectedAuths.includes(authHeader)) {
-    return new Response('Unauthorized', { status: 401 });
+  const match = authHeader.match(/^Bearer\s+(.+)$/);
+  if (!match) {
+    return new Response('Unauthorized: missing bearer', { status: 401 });
+  }
+  const jwt = match[1].trim();
+  const parts = jwt.split('.');
+  if (parts.length !== 3) {
+    return new Response('Unauthorized: malformed JWT', { status: 401 });
+  }
+  let claims: Record<string, unknown>;
+  try {
+    // base64url → bytes → JSON
+    const payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded = payload + '='.repeat((4 - (payload.length % 4)) % 4);
+    const json = atob(padded);
+    claims = JSON.parse(json);
+  } catch {
+    return new Response('Unauthorized: undecodable JWT', { status: 401 });
+  }
+  if (claims.role !== 'service_role') {
+    return new Response('Unauthorized: insufficient role', { status: 401 });
   }
 
   const supabase = createClient(
