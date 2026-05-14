@@ -159,7 +159,9 @@ export function TrialUpsellSheet() {
     },
     {
       day: `in ${displayTrialDays} day${displayTrialDays === 1 ? '' : 's'}`,
-      body: "You'll be charged, cancel anytime before.",
+      // priceString is locale-aware (e.g. "£3.99" / "$5.99" / "€4.59")
+      // so this line shows the right currency for each storefront.
+      body: `You'll be charged ${priceString ?? '£3.99'} per month, cancel anytime before.`,
     },
   ];
 
@@ -548,13 +550,15 @@ const styles = StyleSheet.create({
   // Body/Small — 14/21 light. Letter spacing -0.14 per the inline
   // tailwind in the design context (the variable says -1 but tailwind
   // wins as it's the rendered value).
+  // Step body — Body/Regular (16/24/0). Bumped from Body/Small per
+  // the latest Figma update; matches the subhead body weight scale.
   stepBody: {
-    fontSize: 14,
-    lineHeight: 21,
+    fontSize: 16,
+    lineHeight: 24,
     fontWeight: '300',
     fontFamily: 'Figtree_300Light',
     color: '#ffffff',
-    letterSpacing: -0.14,
+    letterSpacing: 0,
   },
 
   // ── CTA group ──
