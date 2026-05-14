@@ -55,6 +55,7 @@ import { useAuth } from '@/lib/auth';
 import BiteInsightPlusIcon from '../assets/icons/bite-insight-plus-menu-icon.svg';
 import { useDebugMenu } from '@/lib/debugMenuContext';
 import { FLAG_IMAGES } from '@/lib/regionContext';
+import OfflineDbDownloadIcon from '../assets/icons/offline-db-download.svg';
 import { Colors, Shadows } from '@/constants/theme';
 import { useTransition } from '@/lib/transitionContext';
 import { useUpsellSheet } from '@/lib/upsellSheetContext';
@@ -1055,7 +1056,7 @@ function OfflineDatabaseScreen({ goBack }: { goBack: () => void }) {
                           onPress={() => handleDownload(code)}
                           activeOpacity={0.8}
                         >
-                          <Ionicons name="download-outline" size={16} color="#fff" />
+                          <OfflineDbDownloadIcon width={16} height={16} color="#fff" />
                           {remoteSize && (
                             <Text style={offlineDbStyles.actionBtnText}>{remoteSize}</Text>
                           )}
