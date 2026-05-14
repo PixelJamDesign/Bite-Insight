@@ -1197,23 +1197,27 @@ const offlineDbStyles = StyleSheet.create({
     gap: 12,
     ...Shadows.level3,
   },
+  // Top-aligned row so the flag sits next to the title rather than
+  // floating between title and product count. The action button on
+  // the right uses alignSelf:'center' to vertically centre itself
+  // against the full row height.
   regionRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 8,
   },
-  // Image-based flag (20×20). Replaces the emoji flag from the
-  // previous version so all 8 regions render with the same visual
-  // style as the region picker.
+  // Image-based flag (24×24). marginTop fine-tunes the flag's
+  // vertical centre to match the title cap-height, matching the
+  // pt:4 nudge in Figma 5031:11217.
   regionFlag: {
     width: 24,
     height: 24,
     borderRadius: 12,
+    marginTop: 3,
   },
   regionTextCol: {
     flex: 1,
     minWidth: 0,
-    justifyContent: 'center',
   },
   // Body/Large Bold per Figma — 20pt bold, lineHeight 26, ls -0.5.
   regionLabel: {
@@ -1235,10 +1239,13 @@ const offlineDbStyles = StyleSheet.create({
   },
   // Right-hand action button — dark teal pill with icon + size text.
   // Stays a fixed visual width regardless of state so cards align.
+  // alignSelf:'center' so it sits at the vertical centre of the row
+  // even though the row itself is alignItems:flex-start.
   actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    alignSelf: 'center',
     gap: 4,
     backgroundColor: Colors.secondary,
     borderRadius: 8,
