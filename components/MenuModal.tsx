@@ -14,6 +14,7 @@ import {
   Alert,
   TextInput,
   Linking,
+  Image,
 } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
@@ -53,7 +54,8 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import BiteInsightPlusIcon from '../assets/icons/bite-insight-plus-menu-icon.svg';
 import { useDebugMenu } from '@/lib/debugMenuContext';
-import { Colors } from '@/constants/theme';
+import { FLAG_IMAGES } from '@/lib/regionContext';
+import { Colors, Shadows } from '@/constants/theme';
 import { useTransition } from '@/lib/transitionContext';
 import { useUpsellSheet } from '@/lib/upsellSheetContext';
 import { useMyPlanSheet } from '@/lib/myPlanSheetContext';
@@ -1005,90 +1007,115 @@ function OfflineDatabaseScreen({ goBack }: { goBack: () => void }) {
             <View style={{ gap: 12 }}>
               {visibleRegions.map((code) => {
                 const r = regions[code];
-                const { label, flag } = REGION_INFO[code];
+                const { label } = REGION_INFO[code];
+                const flagImage = FLAG_IMAGES[code];
                 const { status, downloadProgress, productCount, fileSizeBytes, error } = r.info;
+
+                // Products count for the meta line — prefer locally-known
+                // count when downloaded, fall back to manifest's remote count.
+                const products =
+                  status === 'ready'
+                    ? productCount ?? null
+                    : r.remoteProductCount ?? null;
+
+                // Size shown on the right-hand button. For not-downloaded
+                // states this is the remote size from the manifest; for
+                // ready/error/downloading it's used contextually below.
+                const remoteSize = r.remoteSize ? formatBytes(r.remoteSize) : null;
+                const localSize = fileSizeBytes ? formatBytes(fileSizeBytes) : null;
 
                 return (
                   <View key={code} style={offlineDbStyles.regionCard}>
-                    {/* Header row: flag + label + size */}
-                    <View style={offlineDbStyles.regionHeader}>
-                      <Text style={offlineDbStyles.regionFlag}>{flag}</Text>
-                      <View style={{ flex: 1 }}>
-                        <Text style={offlineDbStyles.regionLabel}>{label}</Text>
-                        <Text style={offlineDbStyles.regionMeta}>
-                          {status === 'ready'
-                            ? `${(productCount ?? 0).toLocaleString()} ${t('offlineDb.products')}  ·  ${fileSizeBytes ? formatBytes(fileSizeBytes) : '-'}`
-                            : r.remoteProductCount
-                              ? `${(r.remoteProductCount).toLocaleString()} ${t('offlineDb.products')}  ·  ${r.remoteSize ? formatBytes(r.remoteSize) : '-'}`
-                              : r.remoteSize
-                                ? formatBytes(r.remoteSize)
-                                : ''
-                          }
+                    <View style={offlineDbStyles.regionRow}>
+                      {/* Flag (using region image, not emoji) */}
+                      {flagImage && (
+                        <Image
+                          source={flagImage}
+                          style={offlineDbStyles.regionFlag}
+                          resizeMode="cover"
+                        />
+                      )}
+
+                      {/* Label + product count column */}
+                      <View style={offlineDbStyles.regionTextCol}>
+                        <Text style={offlineDbStyles.regionLabel} numberOfLines={1}>
+                          {label}
                         </Text>
-                      </View>
-                    </View>
-
-                    {/* Action area */}
-                    {status === 'not-downloaded' && (
-                      <TouchableOpacity
-                        style={offlineDbStyles.downloadBtn}
-                        onPress={() => handleDownload(code)}
-                        activeOpacity={0.7}
-                      >
-                        <MenuOfflineDbIcon color="#fff" size={18} />
-                        <Text style={offlineDbStyles.downloadBtnText}>{t('offlineDb.downloadButton')}</Text>
-                      </TouchableOpacity>
-                    )}
-
-                    {status === 'error' && (
-                      <>
-                        {error && <Text style={offlineDbStyles.errorText}>{error}</Text>}
-                        <TouchableOpacity
-                          style={offlineDbStyles.downloadBtn}
-                          onPress={() => handleDownload(code)}
-                          activeOpacity={0.7}
-                        >
-                          <Ionicons name="refresh-outline" size={18} color="#fff" />
-                          <Text style={offlineDbStyles.downloadBtnText}>{t('offlineDb.retryButton')}</Text>
-                        </TouchableOpacity>
-                      </>
-                    )}
-
-                    {status === 'downloading' && (
-                      <View style={{ gap: 8 }}>
-                        <View style={offlineDbStyles.progressCard}>
-                          <Text style={offlineDbStyles.progressLabel}>
-                            {t('offlineDb.downloading', { percentage: Math.round(downloadProgress * 100) })}
+                        {products !== null && (
+                          <Text style={offlineDbStyles.regionMeta} numberOfLines={1}>
+                            {products.toLocaleString()} {t('offlineDb.products')}
                           </Text>
-                          <View style={offlineDbStyles.progressTrack}>
-                            <View
-                              style={[
-                                offlineDbStyles.progressFill,
-                                { width: `${Math.round(downloadProgress * 100)}%` as any },
-                              ]}
-                            />
-                          </View>
-                        </View>
-                        <TouchableOpacity onPress={() => handleCancel(code)} activeOpacity={0.7}>
-                          <Text style={offlineDbStyles.cancelBtnText}>{tc('buttons.cancel')}</Text>
-                        </TouchableOpacity>
+                        )}
                       </View>
-                    )}
 
-                    {status === 'ready' && (
-                      <View style={offlineDbStyles.readyRow}>
-                        <View style={offlineDbStyles.readyBadge}>
-                          <Ionicons name="checkmark-circle" size={16} color={Colors.status.positive} />
-                          <Text style={offlineDbStyles.readyText}>{t('offlineDb.downloaded')}</Text>
-                        </View>
+                      {/* Right-hand action button — content varies by state */}
+                      {status === 'not-downloaded' && (
                         <TouchableOpacity
+                          style={offlineDbStyles.actionBtn}
+                          onPress={() => handleDownload(code)}
+                          activeOpacity={0.8}
+                        >
+                          <Ionicons name="download-outline" size={16} color="#fff" />
+                          {remoteSize && (
+                            <Text style={offlineDbStyles.actionBtnText}>{remoteSize}</Text>
+                          )}
+                        </TouchableOpacity>
+                      )}
+
+                      {status === 'downloading' && (
+                        <TouchableOpacity
+                          style={offlineDbStyles.actionBtn}
+                          onPress={() => handleCancel(code)}
+                          activeOpacity={0.8}
+                        >
+                          <ActivityIndicator size="small" color="#fff" />
+                          <Text style={offlineDbStyles.actionBtnText}>
+                            {Math.round(downloadProgress * 100)}%
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+
+                      {status === 'ready' && (
+                        <TouchableOpacity
+                          style={[offlineDbStyles.actionBtn, offlineDbStyles.actionBtnReady]}
                           onPress={() => setDeleteTarget(code)}
-                          activeOpacity={0.7}
+                          activeOpacity={0.8}
                           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                         >
-                          <Ionicons name="trash-outline" size={18} color={Colors.status.negative} />
+                          <Ionicons name="checkmark" size={16} color="#fff" />
+                          {localSize && (
+                            <Text style={offlineDbStyles.actionBtnText}>{localSize}</Text>
+                          )}
                         </TouchableOpacity>
+                      )}
+
+                      {status === 'error' && (
+                        <TouchableOpacity
+                          style={[offlineDbStyles.actionBtn, offlineDbStyles.actionBtnError]}
+                          onPress={() => handleDownload(code)}
+                          activeOpacity={0.8}
+                        >
+                          <Ionicons name="refresh-outline" size={16} color="#fff" />
+                          <Text style={offlineDbStyles.actionBtnText}>{t('offlineDb.retryButton')}</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+
+                    {/* Progress bar — only shown while downloading, below the row */}
+                    {status === 'downloading' && (
+                      <View style={offlineDbStyles.progressTrack}>
+                        <View
+                          style={[
+                            offlineDbStyles.progressFill,
+                            { width: `${Math.round(downloadProgress * 100)}%` as any },
+                          ]}
+                        />
                       </View>
+                    )}
+
+                    {/* Error message — only shown on error, below the row */}
+                    {status === 'error' && error && (
+                      <Text style={offlineDbStyles.errorText}>{error}</Text>
                     )}
                   </View>
                 );
@@ -1158,55 +1185,81 @@ const offlineDbStyles = StyleSheet.create({
     letterSpacing: 0,
     lineHeight: 24,
   },
+  // Region card — single-row layout matching Figma 5031:11210.
+  // White surface, light teal border, Elevation 3 shadow on iOS.
   regionCard: {
     backgroundColor: Colors.surface.secondary,
     borderWidth: 1,
     borderColor: '#aad4cd',
     borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    padding: 16,
     gap: 12,
+    ...Shadows.level3,
   },
-  regionHeader: {
+  regionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
   },
+  // Image-based flag (20×20). Replaces the emoji flag from the
+  // previous version so all 8 regions render with the same visual
+  // style as the region picker.
   regionFlag: {
-    fontSize: 28,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
   },
+  regionTextCol: {
+    flex: 1,
+    minWidth: 0,
+    justifyContent: 'center',
+  },
+  // Body/Large Bold per Figma — 20pt bold, lineHeight 26, ls -0.5.
   regionLabel: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
-    letterSpacing: 0,
-    lineHeight: 20,
+    letterSpacing: -0.5,
+    lineHeight: 26,
   },
+  // Body/Small per Figma — 14pt light, lineHeight 21 (~1.5).
   regionMeta: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '300',
     fontFamily: 'Figtree_300Light',
     color: Colors.secondary,
-    letterSpacing: -0.13,
-    lineHeight: 18,
-    marginTop: 2,
+    letterSpacing: -0.14,
+    lineHeight: 21,
   },
-  downloadBtn: {
+  // Right-hand action button — dark teal pill with icon + size text.
+  // Stays a fixed visual width regardless of state so cards align.
+  actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    backgroundColor: Colors.primary,
-    borderRadius: 12,
-    paddingVertical: 12,
+    gap: 4,
+    backgroundColor: Colors.secondary,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    minWidth: 92,
   },
-  downloadBtnText: {
-    fontSize: 14,
+  // Ready state — accent teal (positive signal) instead of secondary.
+  actionBtnReady: {
+    backgroundColor: Colors.accent,
+  },
+  // Error state — red so users know something needs attention.
+  actionBtnError: {
+    backgroundColor: Colors.status.negative,
+  },
+  actionBtnText: {
+    fontSize: 16,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: '#fff',
-    letterSpacing: -0.28,
+    letterSpacing: 0,
+    lineHeight: 20,
   },
   cancelBtnText: {
     fontSize: 14,
