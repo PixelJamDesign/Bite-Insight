@@ -319,12 +319,12 @@ export function TrialUpsellSheet() {
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
-// Scaled down from Figma's 335pt (designed on a 912pt-tall frame) so
-// the entire sheet — logo, title, three cards, CTA, cancel note —
-// fits without scrolling on iPhone 16 Pro (852pt) and smaller. The
-// hero still dominates visually; we just give the sheet body more
-// room than the Figma frame allows.
-const HERO_HEIGHT = 220;
+// Scaled down from Figma's 335pt (designed on a 912pt-tall frame).
+// The latest Figma update bumped step body copy from Body/Small to
+// Body/Regular which adds ~30pt to the timeline height, so we trim
+// the hero a touch more to keep all content visible without scroll
+// on iPhone 16 Pro (852pt).
+const HERO_HEIGHT = 200;
 
 const styles = StyleSheet.create({
   backdrop: {
