@@ -52,7 +52,10 @@ const SHEET_BG = '#002923';
 const BUTTON_BG = '#3b9586';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
-const HERO_HEIGHT = 220;
+// Hero trimmed from 220→180 to absorb the larger Body/Regular step
+// copy without forcing scroll on iPhone 16 Pro. The hand+phone+
+// produce composition remains readable at this height.
+const HERO_HEIGHT = 180;
 
 export function TrialDay6ReminderSheet() {
   const { visible, hideTrialDay6Reminder } = useTrialDay6Reminder();
@@ -219,7 +222,7 @@ export function TrialDay6ReminderSheet() {
                 <View style={styles.stepCard}>
                   <Text style={styles.stepTitle}>Tomorrow</Text>
                   <Text style={styles.stepBody}>
-                    Your subscription begins. {priceString ?? '£3.99'} per month cancel anytime before.
+                    Your subscription begins. {priceString ?? '£3.99'} per month, cancel anytime before.
                   </Text>
                 </View>
               </View>
@@ -436,13 +439,15 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     letterSpacing: 0,
   },
+  // Step body — Body/Regular (16/24/0) per latest Figma. Matches
+  // the typography scale used by the trial sheet.
   stepBody: {
-    fontSize: 14,
-    lineHeight: 21,
+    fontSize: 16,
+    lineHeight: 24,
     fontWeight: '300',
     fontFamily: 'Figtree_300Light',
     color: '#ffffff',
-    letterSpacing: -0.14,
+    letterSpacing: 0,
   },
 
   // ── Sticky footer with two CTAs ──
