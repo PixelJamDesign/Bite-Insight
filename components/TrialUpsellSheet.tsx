@@ -140,6 +140,13 @@ export function TrialUpsellSheet() {
   const displayTrialDays = trialDays ?? 7;
   const reminderDay = displayTrialDays - 1;
 
+  // Extract the currency symbol from priceString (e.g. "£3.99" → "£",
+  // "$5.99" → "$", "€4.59" → "€") so the CTA's "for {currency}0.00"
+  // line localises automatically. Falls back to £ for UK-first behaviour
+  // when RC hasn't reported a price yet.
+  const currencySymbol = priceString?.match(/^[^\d.,\s]+/)?.[0] ?? '£';
+  const trialPriceLabel = `${currencySymbol}0.00`;
+
   const steps: TimelineStep[] = [
     {
       day: 'Today',
@@ -195,12 +202,13 @@ export function TrialUpsellSheet() {
         </View>
 
         {/* ── Bottom sheet panel ──────────────────────────────────── */}
+        {/* Sheet is split into two stacked regions:
+            1. ScrollView (flex:1) — header + timeline, scrolls if
+               content overflows on shorter devices.
+            2. Sticky footer — CTA + cancel note, always pinned to
+               the bottom of the sheet so the primary action is
+               thumb-reachable and visually anchors the screen. */}
         <View style={styles.sheet}>
-          {/* Close button — Figma 4997:9826 places this at y=257 in
-              a 912-tall frame where the sheet starts at y=220, i.e.
-              ~37px below the sheet's top edge. We mirror that here
-              relative to the sheet so it stays anchored regardless of
-              device height. */}
           <TouchableOpacity
             style={styles.closeBtn}
             onPress={dismissTrialUpsell}
@@ -208,23 +216,17 @@ export function TrialUpsellSheet() {
           >
             <Ionicons name="close" size={24} color="#fff" />
           </TouchableOpacity>
+
           <ScrollView
+            style={styles.scrollPart}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={[
-              styles.sheetContent,
-              { paddingBottom: Math.max(insets.bottom, 16) + 16 },
-            ]}
+            contentContainerStyle={styles.scrollContent}
             bounces={false}
           >
             {/* Header group — logo + title + subhead */}
             <View style={styles.headerGroup}>
               <BiteInsightPlusLogo width={205} height={52} />
               <View style={styles.titleGroup}>
-                {/* adjustsFontSizeToFit lets the headline preserve
-                    Figma's 30pt size on wider iPhones (Plus, Pro Max)
-                    while gracefully scaling down to a minimum of 85%
-                    on narrower devices (Mini, regular Pro). Keeps the
-                    headline single-line as the design intends. */}
                 <Text
                   style={styles.title}
                   numberOfLines={1}
@@ -251,8 +253,6 @@ export function TrialUpsellSheet() {
 
             {/* Three-step trial timeline */}
             <View style={styles.timeline}>
-              {/* Rail — explicit structure so each line gets its
-                  correct Figma-derived height. */}
               <View style={styles.timelineRail}>
                 <View style={styles.activeDotWrapper}>
                   <View style={styles.activeDotInner}>
@@ -282,29 +282,33 @@ export function TrialUpsellSheet() {
                 ))}
               </View>
             </View>
-
-            {/* CTA + cancellation note */}
-            <View style={styles.ctaGroup}>
-              <TouchableOpacity
-                style={[styles.primaryBtn, purchasing && styles.primaryBtnDisabled]}
-                onPress={purchasePlus}
-                activeOpacity={0.85}
-                disabled={purchasing}
-              >
-                {purchasing ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Text style={styles.primaryBtnText}>
-                    Start your FREE {displayTrialDays}-day trial for {priceString ?? '£0.00'}
-                  </Text>
-                )}
-              </TouchableOpacity>
-              <Text style={styles.cancelNote}>
-                Cancel anytime in the {Platform.OS === 'ios' ? 'App Store' : 'Play Store'}
-              </Text>
-            </View>
-
           </ScrollView>
+
+          {/* Sticky footer — CTA + cancellation note */}
+          <View
+            style={[
+              styles.stickyFooter,
+              { paddingBottom: Math.max(insets.bottom, 16) + 16 },
+            ]}
+          >
+            <TouchableOpacity
+              style={[styles.primaryBtn, purchasing && styles.primaryBtnDisabled]}
+              onPress={purchasePlus}
+              activeOpacity={0.85}
+              disabled={purchasing}
+            >
+              {purchasing ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.primaryBtnText}>
+                  Start your FREE {displayTrialDays}-day trial for {trialPriceLabel}
+                </Text>
+              )}
+            </TouchableOpacity>
+            <Text style={styles.cancelNote}>
+              Cancel anytime in the {Platform.OS === 'ios' ? 'App Store' : 'Play Store'}
+            </Text>
+          </View>
         </View>
       </Animated.View>
     </Modal>
@@ -396,13 +400,30 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 16,
     overflow: 'hidden',
   },
-  sheetContent: {
-    paddingHorizontal: 24, // tightened from Figma's 32 (gap/L) to claw
-                            // back horizontal width on narrower iPhones
-                            // so the title fits at full 30pt.
-    paddingTop: 28,         // tightened from Figma's 48 (gap/XL) to
-                            // keep all content on one screen.
-    gap: 20,                // tightened from Figma's 32 (gap/L)
+  // Scrollable upper region — flex:1 so it absorbs available height,
+  // leaving the sticky footer fixed at the bottom of the sheet.
+  scrollPart: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingTop: 28,
+    paddingBottom: 16,
+    gap: 20,
+  },
+  // Sticky footer at the bottom of the sheet — CTA + cancel note.
+  // Always visible regardless of content scroll position; sits flush
+  // against the device's home indicator / safe area.
+  stickyFooter: {
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    gap: 4,
+    alignItems: 'center',
+    backgroundColor: SHEET_BG,
+    // Subtle top border so the divide between scrolling content and
+    // the sticky footer is visible when content sits behind it.
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(255,255,255,0.06)',
   },
 
   // ── Header group ──
@@ -506,15 +527,14 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 4,
   },
-  // First two cards have a fixed 98px height in the design (the body
-  // copy wraps to two lines and the height reservation prevents the
-  // rail dots from misaligning if copy length shifts later).
+  // Card heights from Figma. Switched from `height` to `minHeight` so
+  // localised / longer body copy doesn't clip when it wraps to more
+  // lines than the original design assumed.
   stepCardTall: {
-    height: 98,
+    minHeight: 98,
   },
-  // Card 3 is shorter (77px) because its body fits in a single line.
   stepCardShort: {
-    height: 77,
+    minHeight: 77,
   },
   // Heading 5 — 16/20 bold, letterSpacing 0
   stepTitle: {
