@@ -1903,7 +1903,10 @@ export function MenuModal({ onClose, onNavigate }: MenuModalProps) {
       return <><MyDataScreen goBack={() => navigate('settings', true)} /><Footer /></>;
     }
     if (s === 'offlinedb') {
-      return <><OfflineDatabaseScreen goBack={() => navigate('settings', true)} /><Footer /></>;
+      // Offline database screen omits the Footer (version + report-a-problem)
+      // to keep the page focused on the region cards. The debug menu trigger
+      // remains accessible from any other menu screen's version footer.
+      return <OfflineDatabaseScreen goBack={() => navigate('settings', true)} />;
     }
     if (s === 'password') {
       return <><ChangePasswordScreen goBack={() => navigate('security', true)} /><Footer /></>;
