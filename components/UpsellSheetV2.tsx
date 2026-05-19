@@ -23,7 +23,7 @@
  * dismiss the sheet and route to /upgrade-success (same pattern as
  * TrialUpsellSheet after the Nov fix).
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import {
   View,
   Text,
@@ -41,9 +41,24 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BiteInsightPlusLogo from '../assets/images/logo-biteinsight-plus.svg';
-import { useUpsellSheet } from '@/lib/upsellSheetContext';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { Colors, Radius } from '@/constants/theme';
+
+// ── Standalone preview store ─────────────────────────────────────────────────
+// V2 isn't wired into the existing UpsellSheet context yet — it has its own
+// tiny store so we can mount it next to the live sheet and toggle it from
+// the debug menu without affecting the production flow. When you're ready
+// to make V2 the real upsell, drop this in favour of `useUpsellSheet()`.
+let _v2Visible = false;
+const _v2Listeners = new Set<() => void>();
+function _v2Notify() { for (const l of _v2Listeners) l(); }
+function _v2Subscribe(l: () => void) {
+  _v2Listeners.add(l);
+  return () => { _v2Listeners.delete(l); };
+}
+function _v2GetSnapshot() { return _v2Visible; }
+export function showUpsellSheetV2() { _v2Visible = true; _v2Notify(); }
+export function hideUpsellSheetV2() { _v2Visible = false; _v2Notify(); }
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
@@ -82,7 +97,8 @@ const FEATURES: FeatureCardData[] = [
 ];
 
 export function UpsellSheetV2() {
-  const { visible, hideUpsell } = useUpsellSheet();
+  const visible = useSyncExternalStore(_v2Subscribe, _v2GetSnapshot, _v2GetSnapshot);
+  const hideUpsell = hideUpsellSheetV2;
   const { purchasing, priceString, purchasePlus, trialEligible, trialDays } = useSubscription();
   const insets = useSafeAreaInsets();
 
