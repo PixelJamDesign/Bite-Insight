@@ -9,10 +9,31 @@
 // Coeliac UK, Crohn's & Colitis UK, NICE guidelines, peer-reviewed literature.
 
 export interface HealthFlagEntry {
-  /** Ingredient keywords to match (lowercase) */
+  /** Ingredient keywords to match (lowercase, fuzzy match with
+   *  negation + synonym awareness). Be selective: avoid bare terms
+   *  that can match unrelated ingredients (e.g. 'caramel' would
+   *  match caramel colour E150 even though that's not sugar). */
   keywords: string[];
-  /** OFF structured ingredient IDs (lowercase, en: prefix) */
+  /** OFF structured ingredient IDs (lowercase, en: prefix).
+   *  Primary, precise match path — preferred over keyword matching
+   *  whenever OFF has parsed the ingredient. */
   ingredientIds: string[];
+  /** OFF ingredient IDs that LOOK like they'd match this condition
+   *  but explicitly should NOT. Used to suppress known false
+   *  positives. Examples:
+   *    diabetes:   en:e150*, en:caramel-colour — caramel COLOUR
+   *                is a browning agent, not a sugar source.
+   *    hypertension: en:potassium-chloride — low-sodium salt
+   *                substitute, opposite of what we'd want to flag.
+   *  Checked BEFORE id and keyword matching. */
+  denyIngredientIds?: string[];
+  /** Ingredient text patterns that LOOK like they'd match this
+   *  condition's keywords but shouldn't. Useful when OFF didn't
+   *  parse an ingredient and we're falling back to text matching.
+   *  Each entry is a lowercase substring that, if present in the
+   *  ingredient text, suppresses any keyword match for this
+   *  condition on that ingredient. */
+  denyTextPatterns?: string[];
 }
 
 // ── Health Conditions ────────────────────────────────────────────────────────
@@ -27,7 +48,7 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
       'golden syrup', 'treacle', 'molasses', 'brown sugar', 'cane sugar',
       'raw sugar', 'demerara sugar', 'muscovado', 'turbinado',
       'icing sugar', 'powdered sugar', 'confectioners sugar',
-      'invert sugar', 'invert sugar syrup', 'caramel', 'caramel syrup',
+      'invert sugar', 'invert sugar syrup', 'caramel syrup',
       'honey', 'agave', 'agave syrup', 'agave nectar',
       'maple syrup', 'rice syrup', 'brown rice syrup', 'rice malt syrup',
       'date syrup', 'coconut sugar', 'palm sugar', 'jaggery',
@@ -46,7 +67,7 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
       'en:high-fructose-corn-syrup', 'en:dextrose', 'en:maltose',
       'en:maltodextrin', 'en:corn-syrup', 'en:golden-syrup',
       'en:molasses', 'en:treacle', 'en:brown-sugar', 'en:cane-sugar',
-      'en:invert-sugar', 'en:invert-sugar-syrup', 'en:caramel',
+      'en:invert-sugar', 'en:invert-sugar-syrup',
       'en:honey', 'en:agave-syrup', 'en:maple-syrup',
       'en:rice-syrup', 'en:brown-rice-syrup', 'en:date-syrup',
       'en:coconut-sugar', 'en:palm-sugar',
@@ -54,6 +75,17 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
       'en:white-flour', 'en:wheat-flour', 'en:cornstarch',
       'en:corn-starch', 'en:modified-starch', 'en:modified-corn-starch',
       'en:potato-starch', 'en:tapioca-starch', 'en:rice-starch',
+    ],
+    denyIngredientIds: [
+      // Caramel COLOUR (browning agent, not a sugar) — E150 family
+      'en:e150', 'en:e150a', 'en:e150b', 'en:e150c', 'en:e150d',
+      'en:caramel-colour', 'en:caramel-color',
+      'en:plain-caramel', 'en:caustic-sulphite-caramel',
+      'en:ammonia-caramel', 'en:sulphite-ammonia-caramel',
+    ],
+    denyTextPatterns: [
+      'caramel colour', 'caramel color', 'caramelised sugar syrup',
+      'e150',
     ],
   },
 
@@ -63,7 +95,7 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
       'fructose', 'high fructose corn syrup', 'hfcs', 'dextrose',
       'maltose', 'maltodextrin', 'corn syrup', 'golden syrup',
       'honey', 'agave syrup', 'maple syrup', 'invert sugar',
-      'caramel', 'brown sugar', 'cane sugar', 'rice syrup',
+      'brown sugar', 'cane sugar', 'rice syrup',
       'fruit juice concentrate', 'white flour', 'refined flour',
       'cornstarch', 'modified starch',
     ],
@@ -75,13 +107,22 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
       'en:brown-sugar', 'en:cane-sugar', 'en:rice-syrup',
       'en:white-flour', 'en:cornstarch', 'en:modified-starch',
     ],
+    denyIngredientIds: [
+      'en:e150', 'en:e150a', 'en:e150b', 'en:e150c', 'en:e150d',
+      'en:caramel-colour', 'en:caramel-color',
+      'en:plain-caramel', 'en:caustic-sulphite-caramel',
+      'en:ammonia-caramel', 'en:sulphite-ammonia-caramel',
+    ],
+    denyTextPatterns: [
+      'caramel colour', 'caramel color', 'e150',
+    ],
   },
 
   insulinResistance: {
     keywords: [
       'sugar', 'sucrose', 'glucose', 'glucose syrup', 'fructose',
       'high fructose corn syrup', 'hfcs', 'dextrose', 'maltose',
-      'maltodextrin', 'corn syrup', 'invert sugar', 'caramel',
+      'maltodextrin', 'corn syrup', 'invert sugar',
       'honey', 'agave syrup', 'maple syrup', 'brown sugar', 'cane sugar',
       'white flour', 'refined flour', 'cornstarch', 'modified starch',
       'trans fat', 'partially hydrogenated', 'hydrogenated vegetable oil',
@@ -94,6 +135,15 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
       'en:honey', 'en:agave-syrup', 'en:maple-syrup',
       'en:white-flour', 'en:cornstarch', 'en:modified-starch',
       'en:hydrogenated-vegetable-oil', 'en:margarine',
+    ],
+    denyIngredientIds: [
+      'en:e150', 'en:e150a', 'en:e150b', 'en:e150c', 'en:e150d',
+      'en:caramel-colour', 'en:caramel-color',
+      'en:plain-caramel', 'en:caustic-sulphite-caramel',
+      'en:ammonia-caramel', 'en:sulphite-ammonia-caramel',
+    ],
+    denyTextPatterns: [
+      'caramel colour', 'caramel color', 'e150',
     ],
   },
 
@@ -164,7 +214,11 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
       'spelt', 'spelt flour', 'kamut', 'triticale', 'einkorn', 'emmer',
       'couscous', 'bulgur', 'seitan',
       'modified starch', 'hydrolysed wheat protein', 'hydrolyzed wheat protein',
-      'breadcrumbs', 'bread crumbs', 'flour',
+      'breadcrumbs', 'bread crumbs',
+      // Note: bare 'flour' removed — too many gluten-free flours (rice, corn,
+      // almond, coconut, chickpea, buckwheat) trigger false positives.
+      // Specific gluten flours ('wheat flour', 'rye flour', 'spelt flour',
+      // 'oat flour', 'barley malt flour') are listed explicitly above.
     ],
     ingredientIds: [
       'en:gluten', 'en:wheat', 'en:wheat-flour', 'en:wheat-starch',

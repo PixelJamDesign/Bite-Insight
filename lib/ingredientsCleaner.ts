@@ -735,6 +735,89 @@ function _findAllParentAllergens(text: string): string[] {
   return _findAllParentsCache!(text);
 }
 
+// ── Health Condition Matching ────────────────────────────────────────────────
+
+/**
+ * Minimal entry shape — kept loose so this module doesn't import from
+ * constants/healthIngredientFlags (which would create a circular dep risk).
+ */
+export interface HealthMatchEntry {
+  keywords: string[];
+  ingredientIds: string[];
+  denyIngredientIds?: string[];
+  denyTextPatterns?: string[];
+}
+
+/**
+ * Determines whether a single ingredient should be flagged for a given
+ * health condition. Designed to avoid the false-positives that a naive
+ * `text.includes(kw)` regex produces:
+ *
+ *   - Caramel COLOUR (E150*) wrongly flagging as sugar
+ *   - "sugar-free" / "no added sugar" wrongly flagging as sugar
+ *   - "potato starch" wrongly flagging as potato
+ *   - Synonyms / derivatives / E-numbers not matching at all
+ *
+ * Match order (first hit wins):
+ *   1. Deny: if the ingredient ID is in denyIngredientIds → null
+ *   2. Deny: if the text contains a denyTextPattern → null
+ *   3. Direct: if the ingredient ID is in ingredientIds (and not negated) → match
+ *   4. Fuzzy keyword match via `matchesFlaggedIngredient` (negation + synonym
+ *      + derivative aware, with refined-derivative exclusion).
+ *
+ * Pass the OFF structured id (e.g. `"en:e150c"`) plus the raw text. If the
+ * id is missing, pass null/undefined and matching falls back to text only.
+ *
+ * Returns the matched keyword/id, or null if no match.
+ */
+export function matchesHealthConditionIngredient(
+  ingredientText: string,
+  ingredientId: string | null | undefined,
+  entry: HealthMatchEntry,
+): string | null {
+  if (!ingredientText && !ingredientId) return null;
+  const text = ingredientText || '';
+  const id = (ingredientId || '').toLowerCase();
+  const lcText = text.toLowerCase();
+
+  // 1. Deny by ingredient ID (exact, plus en:e150* prefix wildcard handled
+  //    by listing each variant explicitly in the deny list).
+  if (id && entry.denyIngredientIds && entry.denyIngredientIds.length > 0) {
+    for (const denyId of entry.denyIngredientIds) {
+      if (id === denyId.toLowerCase()) return null;
+    }
+  }
+
+  // 2. Deny by text pattern (substring, case-insensitive).
+  if (entry.denyTextPatterns && entry.denyTextPatterns.length > 0) {
+    for (const pat of entry.denyTextPatterns) {
+      if (pat && lcText.includes(pat.toLowerCase())) return null;
+    }
+  }
+
+  // 3. Direct ingredient ID match (still respect negation in the surrounding
+  //    text — rare for IDs but possible if OFF parsed something inside
+  //    "no added X").
+  if (id && entry.ingredientIds && entry.ingredientIds.length > 0) {
+    for (const matchId of entry.ingredientIds) {
+      if (id === matchId.toLowerCase()) {
+        const human = matchId.replace(/^en:/, '').replace(/-/g, ' ');
+        if (text && isNegatedInContext(text, human)) continue;
+        return matchId;
+      }
+    }
+  }
+
+  // 4. Fuzzy keyword match — negation + synonym + derivative aware,
+  //    refined-derivative exclusion (isAllergyFlag=false).
+  if (text && entry.keywords && entry.keywords.length > 0) {
+    const hit = matchesFlaggedIngredient(text, entry.keywords, false);
+    if (hit) return hit;
+  }
+
+  return null;
+}
+
 /**
  * Normalises an OFF category tag for human-readable matching.
  * "en:sliced-breads" → "sliced breads"

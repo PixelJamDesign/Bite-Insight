@@ -45,6 +45,7 @@ import {
   translateToEnglish,
   cleanIngredientName,
   matchesFlaggedIngredient,
+  matchesHealthConditionIngredient,
   normaliseCategoryTag,
   isNegatedInContext,
 } from '@/lib/ingredientsCleaner';
@@ -418,22 +419,29 @@ function categoriseIngredients(
   const allergenSet = new Set(allergenTags.map((a) => a.toLowerCase()));
   const flaggedSet = new Set(flaggedNames.map((n) => n.toLowerCase()));
 
-  // ── Build health-condition + dietary-preference keyword sets ──────────────
-  // Merges all keyword lists from the user's conditions/preferences into a
-  // single set of lowercase keywords and a set of OFF ingredient IDs.
+  // ── Build per-condition health/dietary entry list ─────────────────────────
+  // Keep each entry separate so we can apply per-entry deny lists
+  // (denyIngredientIds, denyTextPatterns) during matching. The previous
+  // flat-set approach lost that context and produced false positives — most
+  // notably "caramel colour" (E150) flagging as sugar for diabetics.
+  // Also keep the merged sets for product-level (name/category) matching,
+  // which is intentionally less precise.
+  const healthEntries: Array<{ key: string; entry: HealthFlagEntry }> = [];
   const healthKeywords = new Set<string>();
   const healthIngIds = new Set<string>();
-  const healthSourceMap = new Map<string, string>(); // keyword → condition/pref key
+  const healthSourceMap = new Map<string, string>(); // keyword/id → condition/pref key
 
   for (const key of (healthConditionKeys ?? [])) {
     const entry = HEALTH_CONDITION_INGREDIENTS[key];
     if (!entry) continue;
+    healthEntries.push({ key, entry });
     for (const kw of entry.keywords) { healthKeywords.add(kw); healthSourceMap.set(kw, key); }
     for (const id of entry.ingredientIds) { healthIngIds.add(id); healthSourceMap.set(id, key); }
   }
   for (const key of (dietaryPreferenceKeys ?? [])) {
     const entry = DIETARY_PREFERENCE_INGREDIENTS[key];
     if (!entry) continue;
+    healthEntries.push({ key, entry });
     for (const kw of entry.keywords) { healthKeywords.add(kw); healthSourceMap.set(kw, key); }
     for (const id of entry.ingredientIds) { healthIngIds.add(id); healthSourceMap.set(id, key); }
   }
@@ -577,31 +585,19 @@ function categoriseIngredients(
     }
 
     // ── Health condition / dietary preference ingredient flagging ────────────
-    // Check the ingredient against the merged keyword & ID sets from the user's
-    // health conditions and dietary preferences.
-    if (healthKeywords.size > 0 || healthIngIds.size > 0) {
-      // 1. Direct OFF ingredient ID match
-      if (ingId && healthIngIds.has(ingId)) {
-        const conditionKey = healthSourceMap.get(ingId);
-        harmful.push({ ...ing, flagReason: 'health_condition', matchSource: 'ingredient', healthConditionKey: conditionKey });
-        continue;
+    // Iterate each condition/preference entry separately so per-entry deny
+    // lists (denyIngredientIds, denyTextPatterns) suppress known false
+    // positives — e.g. caramel colour (E150*) must NOT flag as sugar for
+    // diabetics. Uses the negation/synonym/derivative-aware fuzzy matcher
+    // shared with user-flagged ingredients.
+    if (healthEntries.length > 0) {
+      let healthMatchedKey: string | undefined;
+      for (const { key, entry } of healthEntries) {
+        const hit = matchesHealthConditionIngredient(ing.text, ingId, entry);
+        if (hit) { healthMatchedKey = key; break; }
       }
-      // 2. Keyword match against ingredient text
-      let healthMatched = false;
-      let matchedConditionKey: string | undefined;
-      for (const kw of healthKeywords) {
-        if (ingText === kw) { healthMatched = true; matchedConditionKey = healthSourceMap.get(kw); break; }
-        // Word-boundary match for single words, substring for multi-word
-        if (kw.includes(' ')) {
-          if (ingText.includes(kw)) { healthMatched = true; matchedConditionKey = healthSourceMap.get(kw); break; }
-        } else {
-          // Match as whole word using regex
-          const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          if (new RegExp(`\\b${escaped}\\b`).test(ingText)) { healthMatched = true; matchedConditionKey = healthSourceMap.get(kw); break; }
-        }
-      }
-      if (healthMatched) {
-        harmful.push({ ...ing, flagReason: 'health_condition', matchSource: 'ingredient', healthConditionKey: matchedConditionKey });
+      if (healthMatchedKey) {
+        harmful.push({ ...ing, flagReason: 'health_condition', matchSource: 'ingredient', healthConditionKey: healthMatchedKey });
         continue;
       }
     }
