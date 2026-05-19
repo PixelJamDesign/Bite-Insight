@@ -183,7 +183,14 @@ export function UpsellPanel() {
         {purchasing ? (
           <ActivityIndicator size="small" color="#fff" />
         ) : (
-          <Text style={styles.primaryBtnText}>{ctaLabel}</Text>
+          <Text
+            style={styles.primaryBtnText}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.85}
+          >
+            {ctaLabel}
+          </Text>
         )}
       </TouchableOpacity>
       <Text style={styles.cancelNote}>Cancel anytime in the App Store</Text>
@@ -287,7 +294,7 @@ const styles = StyleSheet.create({
     backgroundColor: ACCENT,
     borderRadius: Radius.m,
     paddingVertical: 16,
-    paddingHorizontal: 24,
+    paddingHorizontal: 12,
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
