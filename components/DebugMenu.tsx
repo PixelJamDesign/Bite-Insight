@@ -35,7 +35,6 @@ import { useMyPlanSheet } from '@/lib/myPlanSheetContext';
 import { useRegion } from '@/lib/regionContext';
 import { useAuth } from '@/lib/auth';
 import { debugForceShowUpdateToast } from '@/lib/useUpdateAvailable';
-import { showUpsellSheetV2 } from '@/components/UpsellSheetV2';
 import { ancestorsOf, matchingAncestors } from '@/lib/taxonomyWalker';
 import {
   HEALTH_CONDITION_INGREDIENTS,
@@ -222,13 +221,6 @@ export function DebugMenu() {
     showUpsell();
   };
 
-  const triggerUpsellV2 = () => {
-    hideDebugMenu();
-    // Small delay so the debug menu's fade-out completes before V2's
-    // slide-up — otherwise the modals fight for the screen.
-    setTimeout(() => showUpsellSheetV2(), 250);
-  };
-
   const triggerMyPlan = () => {
     hideDebugMenu();
     showMyPlan();
@@ -306,7 +298,6 @@ export function DebugMenu() {
               <ActionButton label="Show Day-6 reminder" onPress={triggerTrialDay6} />
               <ActionButton label="Show Update toast" onPress={triggerUpdateToast} />
               <ActionButton label="Show paid Upsell sheet" onPress={triggerPaidUpsell} />
-              <ActionButton label="Show Upsell V2 (preview)" onPress={triggerUpsellV2} />
               <ActionButton label="Show My Plan sheet" onPress={triggerMyPlan} />
             </Section>
 

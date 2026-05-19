@@ -33,7 +33,7 @@ import { IngredientDetailModal } from '@/components/IngredientDetailModal';
 import { DailyInsightCard } from '@/components/DailyInsightCard';
 import { useMenu } from '@/lib/menuContext';
 import { useSubscription } from '@/lib/subscriptionContext';
-import { UpsellBanner } from '@/components/UpsellBanner';
+import { UpsellPanel } from '@/components/UpsellPanel';
 import { PlusBadge } from '@/components/PlusBadge';
 import { CameraIcon } from '@/components/MenuIcons';
 import { FlagReasonSheet } from '@/components/FlagReasonSheet';
@@ -522,8 +522,8 @@ export default function HomeDashboard() {
           </View>
         </Animated.View>
 
-        {/* ── Upsell Banner ── */}
-        <UpsellBanner />
+        {/* ── Upsell Panel (Plus+ pitch with feature cards + trial CTA) ── */}
+        <UpsellPanel />
 
         {/* ── Ingredient Preferences ── */}
         <Animated.View style={{ opacity: fadeIngList.opacity, transform: [{ translateY: fadeIngList.translateY }] }}>
