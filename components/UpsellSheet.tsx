@@ -191,7 +191,15 @@ export function UpsellSheet() {
           <TouchableOpacity
             style={[styles.primaryBtn, purchasing && styles.primaryBtnDisabled]}
             activeOpacity={0.85}
-            onPress={purchasePlus}
+            onPress={async () => {
+              // Drive navigation off the purchase result directly — see
+              // matching pattern in TrialUpsellSheet for rationale.
+              const ok = await purchasePlus();
+              if (ok) {
+                hideUpsell();
+                setTimeout(() => router.replace('/upgrade-success'), 250);
+              }
+            }}
             disabled={purchasing}
           >
             {purchasing ? (

@@ -25,7 +25,11 @@ interface SubscriptionContextValue {
   /** Length of the trial in days, parsed from the intro offer's
    *  ISO-8601 billing period (e.g. "P7D" → 7). Null when no trial. */
   trialDays: number | null;
-  purchasePlus: () => Promise<void>;
+  /** Returns true when the purchase (or trial activation) completed
+   *  successfully, false on user cancel or error. Callers can use this
+   *  to drive immediate navigation (e.g. to /upgrade-success) without
+   *  relying on the slower isPlus state-transition effect. */
+  purchasePlus: () => Promise<boolean>;
   restorePurchases: () => Promise<void>;
 }
 
@@ -35,7 +39,7 @@ const SubscriptionContext = createContext<SubscriptionContextValue>({
   priceString: null,
   trialEligible: false,
   trialDays: null,
-  purchasePlus: async () => {},
+  purchasePlus: async () => false,
   restorePurchases: async () => {},
 });
 
@@ -242,8 +246,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     return () => { supabase.removeChannel(channel); };
   }, [session?.user.id]);
 
-  async function purchasePlus() {
-    if (!session) return;
+  async function purchasePlus(): Promise<boolean> {
+    if (!session) return false;
     setPurchasing(true);
     try {
       if (Platform.OS !== 'web' && Purchases && rcConfigured.current) {
@@ -273,18 +277,35 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
             'No subscription available',
             `We couldn't find any subscription packages. This usually means Apple is still processing your products. Please try again in a few hours.\n\nOffering: ${offerings.current?.identifier ?? 'none'}\nPackages: ${offerings.current?.availablePackages.length ?? 0}`,
           );
-          return;
+          return false;
         }
 
         const { customerInfo } = await Purchases.purchasePackage(pkg);
-        if (customerInfo.entitlements.active['plus']) {
+        // RC considers an entitlement "active" whenever it grants access
+        // right now — that includes the trial window. We also check
+        // entitlements.all as a belt-and-braces fallback for edge cases
+        // (sandbox timing, RC config quirks) where active might lag a
+        // few hundred ms behind the StoreKit transaction settling.
+        const entActive = customerInfo.entitlements.active['plus'];
+        const entAll = customerInfo.entitlements.all['plus'];
+        const expIso = entActive?.expirationDate ?? entAll?.expirationDate;
+        const stillValid = expIso ? new Date(expIso).getTime() > Date.now() : false;
+        const purchased = Boolean(entActive) || stillValid;
+        if (purchased) {
           setIsPlus(true);
           // Persist to Supabase so the server knows too
           await supabase
             .from('profiles')
             .update({ is_plus: true })
             .eq('id', session.user.id);
+          return true;
         }
+        console.warn(
+          '[RC] purchase resolved but no plus entitlement.',
+          'active keys:', Object.keys(customerInfo.entitlements.active),
+          'all keys:', Object.keys(customerInfo.entitlements.all),
+        );
+        return false;
       } else if (Platform.OS === 'web') {
         // ── Web: Stripe Checkout via Supabase Edge Function ─────────────────
         const { data, error } = await supabase.functions.invoke('create-stripe-checkout', {
@@ -292,21 +313,27 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         });
         if (error || !data?.url) {
           console.warn('create-stripe-checkout error:', error);
-          return;
+          return false;
         }
         (window as Window).location.href = data.url;
+        // The page is about to redirect; treat as "in-flight" rather than
+        // success — the actual conversion will be confirmed when Stripe
+        // redirects back and the webhook fires.
+        return false;
       } else {
         // ── Native but RevenueCat not configured (Expo Go / dev build) ──────
         Alert.alert(
           'Purchases unavailable',
           'In-app purchases are not available in Expo Go. Please use a TestFlight or App Store build to subscribe.',
         );
+        return false;
       }
     } catch (err: any) {
       // User cancelled the purchase — RevenueCat throws with userCancelled flag
-      if (err?.userCancelled) return;
+      if (err?.userCancelled) return false;
       console.warn('purchasePlus error:', err);
       Alert.alert('Purchase failed', err?.message || 'Something went wrong. Please try again.');
+      return false;
     } finally {
       setPurchasing(false);
     }

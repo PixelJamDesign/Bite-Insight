@@ -295,7 +295,23 @@ export function TrialUpsellSheet() {
           >
             <TouchableOpacity
               style={[styles.primaryBtn, purchasing && styles.primaryBtnDisabled]}
-              onPress={purchasePlus}
+              onPress={async () => {
+                // Drive navigation off the purchase result directly. This is
+                // more reliable than waiting for the isPlus state-transition
+                // effect — that effect remains as a fallback for cases where
+                // the entitlement is granted via webhook / restore / cross-
+                // device sync rather than this exact button tap.
+                const ok = await purchasePlus();
+                if (ok) {
+                  recordConversion();
+                  dismissTrialUpsell();
+                  // Small delay so the sheet's slide-down animation can begin
+                  // before the route swap. Without this the new screen mounts
+                  // behind the still-visible Modal and you see a half-second
+                  // of the trial sheet sitting on top of the success screen.
+                  setTimeout(() => router.replace('/upgrade-success'), 250);
+                }
+              }}
               activeOpacity={0.85}
               disabled={purchasing}
             >
