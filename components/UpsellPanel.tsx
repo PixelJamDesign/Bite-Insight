@@ -258,9 +258,12 @@ const styles = StyleSheet.create({
   carouselWindow: {
     width: '100%',
     overflow: 'hidden',
-    // Reserve vertical room for the icon overflow + tallest card body
-    paddingTop: 30,   // half of the 60×60 icon, since the icon negative-margins by 42
+    // Small top buffer just so the icon's outline doesn't sit flush
+    // against the headline above it. The icon negative-margins by 42
+    // into the card body so we don't need to reserve the full 60 px.
+    paddingTop: 4,
     minHeight: 220,
+    marginTop: -8,
   },
   carouselTrack: {
     flexDirection: 'row',
