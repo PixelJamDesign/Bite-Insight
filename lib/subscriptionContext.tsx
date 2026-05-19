@@ -1,7 +1,33 @@
-import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, useSyncExternalStore, ReactNode } from 'react';
 import { Platform, Linking, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from './supabase';
 import { useAuth } from './auth';
+
+// ── Debug-only "force non-Plus" toggle ───────────────────────────────────────
+// Lets QA see the dashboard's UpsellPanel (and any other non-Plus UI) while
+// signed in as a Plus user. Persisted to AsyncStorage so it survives reloads.
+// When the toggle is on, the SubscriptionContext value reports isPlus=false
+// regardless of the real entitlement.
+const DEBUG_FORCE_NON_PLUS_KEY = 'debug_force_non_plus';
+let _forceNonPlus = false;
+const _forceNonPlusListeners = new Set<() => void>();
+function _forceNonPlusNotify() { for (const l of _forceNonPlusListeners) l(); }
+function _forceNonPlusSubscribe(l: () => void) {
+  _forceNonPlusListeners.add(l);
+  return () => { _forceNonPlusListeners.delete(l); };
+}
+function _forceNonPlusGetSnapshot() { return _forceNonPlus; }
+// Hydrate the in-memory flag from disk at module load so reloads keep state.
+AsyncStorage.getItem(DEBUG_FORCE_NON_PLUS_KEY)
+  .then((v) => { if (v === '1') { _forceNonPlus = true; _forceNonPlusNotify(); } })
+  .catch(() => {});
+export function setDebugForceNonPlus(on: boolean) {
+  _forceNonPlus = on;
+  AsyncStorage.setItem(DEBUG_FORCE_NON_PLUS_KEY, on ? '1' : '0').catch(() => {});
+  _forceNonPlusNotify();
+}
+export function getDebugForceNonPlus(): boolean { return _forceNonPlus; }
 
 // react-native-purchases is a native module — not available on web.
 // We import it lazily at runtime so the web bundle never tries to load it.
@@ -363,8 +389,16 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  // Subscribe to the debug "force non-Plus" toggle. When on, we report
+  // isPlus=false to consumers regardless of the real entitlement. Has no
+  // effect in release builds unless someone explicitly flips the toggle
+  // via the debug menu, which itself only ships in the debug-accessible
+  // version footer long-press flow.
+  const forceNonPlus = useSyncExternalStore(_forceNonPlusSubscribe, _forceNonPlusGetSnapshot, _forceNonPlusGetSnapshot);
+  const effectiveIsPlus = forceNonPlus ? false : (isPlus || isVip);
+
   return (
-    <SubscriptionContext.Provider value={{ isPlus: isPlus || isVip, purchasing, priceString, trialEligible, trialDays, purchasePlus, restorePurchases }}>
+    <SubscriptionContext.Provider value={{ isPlus: effectiveIsPlus, purchasing, priceString, trialEligible, trialDays, purchasePlus, restorePurchases }}>
       {children}
     </SubscriptionContext.Provider>
   );
