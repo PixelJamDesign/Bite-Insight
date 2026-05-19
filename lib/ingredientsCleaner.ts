@@ -742,6 +742,8 @@ function _findAllParentAllergens(text: string): string[] {
  * constants/healthIngredientFlags (which would create a circular dep risk).
  */
 export interface HealthMatchEntry {
+  /** OFF taxonomy ancestor IDs — preferred path. */
+  flagsTaxonomyAncestors?: string[];
   keywords: string[];
   ingredientIds: string[];
   denyIngredientIds?: string[];
@@ -795,7 +797,25 @@ export function matchesHealthConditionIngredient(
     }
   }
 
-  // 3. Direct ingredient ID match (still respect negation in the surrounding
+  // 3. OFF taxonomy ancestor match — preferred path. If the ingredient's
+  //    OFF ID descends from any of the condition's taxonomy ancestors,
+  //    it's a match. Deterministic, no synonym guessing required.
+  //    e.g. en:dextrose → en:added-sugar → flags for diabetes
+  //         en:e150d   → root → does NOT flag for diabetes
+  if (id && entry.flagsTaxonomyAncestors && entry.flagsTaxonomyAncestors.length > 0) {
+    const matched = _matchingAncestors(id, entry.flagsTaxonomyAncestors);
+    if (matched.length > 0) {
+      // Still respect "no added X" / "X-free" negation around the text.
+      if (text) {
+        const human = matched[0].replace(/^en:/, '').replace(/-/g, ' ');
+        if (!isNegatedInContext(text, human)) return matched[0];
+      } else {
+        return matched[0];
+      }
+    }
+  }
+
+  // 4. Direct ingredient ID match (still respect negation in the surrounding
   //    text — rare for IDs but possible if OFF parsed something inside
   //    "no added X").
   if (id && entry.ingredientIds && entry.ingredientIds.length > 0) {
@@ -808,14 +828,31 @@ export function matchesHealthConditionIngredient(
     }
   }
 
-  // 4. Fuzzy keyword match — negation + synonym + derivative aware,
-  //    refined-derivative exclusion (isAllergyFlag=false).
+  // 5. Fuzzy keyword match — negation + synonym + derivative aware,
+  //    refined-derivative exclusion (isAllergyFlag=false). Used as a
+  //    fallback for ingredients OFF didn't parse to an ID.
   if (text && entry.keywords && entry.keywords.length > 0) {
     const hit = matchesFlaggedIngredient(text, entry.keywords, false);
     if (hit) return hit;
   }
 
   return null;
+}
+
+// Lazy import to avoid pulling the 216 KB taxonomy + walker module into any
+// bundle that doesn't actually need ingredient matching.
+let _matchingAncestorsCache: ((id: string, targets: string[]) => string[]) | null = null;
+function _matchingAncestors(id: string, targets: string[]): string[] {
+  if (!_matchingAncestorsCache) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const mod = require('./taxonomyWalker');
+      _matchingAncestorsCache = mod.matchingAncestors;
+    } catch {
+      _matchingAncestorsCache = () => [];
+    }
+  }
+  return _matchingAncestorsCache!(id, targets);
 }
 
 /**

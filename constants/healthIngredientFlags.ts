@@ -9,14 +9,28 @@
 // Coeliac UK, Crohn's & Colitis UK, NICE guidelines, peer-reviewed literature.
 
 export interface HealthFlagEntry {
+  /** OFF taxonomy ancestor IDs that should flag this condition.
+   *  Preferred matching path: if the scanned ingredient's OFF ID is a
+   *  descendant of any of these ancestors (per offTaxonomy.json +
+   *  taxonomyOverrides.ts), it's flagged. No keyword guessing needed.
+   *
+   *  Example for diabetes: ['en:added-sugar', 'en:refined-starch']
+   *  catches sugar, glucose, dextrose, honey, agave, HFCS, maltodextrin,
+   *  white flour, cornstarch, etc. — all via taxonomy, no synonyms list.
+   *
+   *  Leave empty for conditions that don't map cleanly to OFF tags
+   *  (e.g. some allergy edge cases).  */
+  flagsTaxonomyAncestors?: string[];
   /** Ingredient keywords to match (lowercase, fuzzy match with
-   *  negation + synonym awareness). Be selective: avoid bare terms
-   *  that can match unrelated ingredients (e.g. 'caramel' would
-   *  match caramel colour E150 even though that's not sugar). */
+   *  negation + synonym awareness). Use as a FALLBACK for ingredients
+   *  OFF didn't parse — most well-known ingredients should now be
+   *  covered by flagsTaxonomyAncestors. Be selective: avoid bare terms
+   *  that can match unrelated ingredients. */
   keywords: string[];
   /** OFF structured ingredient IDs (lowercase, en: prefix).
-   *  Primary, precise match path — preferred over keyword matching
-   *  whenever OFF has parsed the ingredient. */
+   *  Direct exact-match path — kept for backwards compat and for IDs
+   *  that don't sit cleanly under a taxonomy ancestor.  In most cases
+   *  flagsTaxonomyAncestors is the better tool. */
   ingredientIds: string[];
   /** OFF ingredient IDs that LOOK like they'd match this condition
    *  but explicitly should NOT. Used to suppress known false
@@ -40,6 +54,7 @@ export interface HealthFlagEntry {
 
 export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   diabetes: {
+    flagsTaxonomyAncestors: ['en:added-sugar', 'en:refined-starch'],
     keywords: [
       // Sugars & sweeteners that spike blood glucose
       'sugar', 'sucrose', 'glucose', 'glucose syrup', 'glucose-fructose syrup',
@@ -90,6 +105,7 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   preDiabetes: {
+    flagsTaxonomyAncestors: ['en:added-sugar', 'en:refined-starch'],
     keywords: [
       'sugar', 'sucrose', 'glucose', 'glucose syrup', 'glucose-fructose syrup',
       'fructose', 'high fructose corn syrup', 'hfcs', 'dextrose',
@@ -119,6 +135,7 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   insulinResistance: {
+    flagsTaxonomyAncestors: ['en:added-sugar', 'en:refined-starch', 'en:trans-fat-source'],
     keywords: [
       'sugar', 'sucrose', 'glucose', 'glucose syrup', 'fructose',
       'high fructose corn syrup', 'hfcs', 'dextrose', 'maltose',
@@ -148,6 +165,7 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   hypertension: {
+    flagsTaxonomyAncestors: ['en:sodium-source'],
     keywords: [
       'salt', 'sodium', 'sodium chloride', 'sea salt', 'rock salt',
       'himalayan salt', 'table salt', 'iodised salt', 'iodized salt',
@@ -168,6 +186,10 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   heartDisease: {
+    flagsTaxonomyAncestors: [
+      'en:trans-fat-source', 'en:hydrogenated-oil', 'en:animal-fat',
+      'en:sodium-source', 'en:palm-oil-and-fat',
+    ],
     keywords: [
       'trans fat', 'partially hydrogenated', 'hydrogenated vegetable oil',
       'hydrogenated fat', 'hydrogenated palm oil', 'shortening',
@@ -187,6 +209,10 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   highCholesterol: {
+    flagsTaxonomyAncestors: [
+      'en:trans-fat-source', 'en:hydrogenated-oil', 'en:animal-fat',
+      'en:palm-oil-and-fat',
+    ],
     keywords: [
       'trans fat', 'partially hydrogenated', 'hydrogenated vegetable oil',
       'hydrogenated fat', 'shortening', 'margarine',
@@ -205,6 +231,7 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   coeliac: {
+    flagsTaxonomyAncestors: ['en:gluten-cereal', 'en:gluten'],
     keywords: [
       'gluten', 'wheat', 'wheat flour', 'wheat starch', 'wheat protein',
       'wheat germ', 'wheat bran', 'durum wheat', 'semolina',
@@ -232,6 +259,7 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   ibs: {
+    flagsTaxonomyAncestors: ['en:high-fodmap', 'en:dairy-derivative', 'en:gluten-cereal'],
     keywords: [
       // High FODMAP ingredients
       'garlic', 'garlic powder', 'onion', 'onion powder', 'shallot', 'leek',
@@ -1051,6 +1079,7 @@ export const DIETARY_PREFERENCE_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   keto: {
+    flagsTaxonomyAncestors: ['en:added-sugar', 'en:refined-starch', 'en:cereal'],
     keywords: [
       'sugar', 'sucrose', 'glucose', 'glucose syrup', 'glucose-fructose syrup',
       'fructose', 'high fructose corn syrup', 'hfcs', 'dextrose',
@@ -1078,6 +1107,7 @@ export const DIETARY_PREFERENCE_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   fodmap: {
+    flagsTaxonomyAncestors: ['en:high-fodmap', 'en:dairy-derivative', 'en:gluten-cereal'],
     keywords: [
       'garlic', 'garlic powder', 'onion', 'onion powder', 'shallot', 'leek',
       'inulin', 'chicory root', 'chicory root fibre', 'fos',
@@ -1105,6 +1135,7 @@ export const DIETARY_PREFERENCE_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   dairyFree: {
+    flagsTaxonomyAncestors: ['en:dairy', 'en:dairy-derivative'],
     keywords: [
       'milk', 'whole milk', 'skimmed milk', 'semi skimmed milk',
       'milk powder', 'dried milk', 'milk solids', 'milk protein', 'milk fat',
