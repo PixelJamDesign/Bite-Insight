@@ -157,10 +157,13 @@ export function FamilyImpactSheet({
                 </View>
               </View>
 
-              {/* Flagged card(s) — one per matched ingredient */}
-              {flaggedMatches.map((match, idx) => (
-                <FlaggedCard key={`flag-${idx}`} match={match} />
-              ))}
+              {/* Flagged card — one combined card with a block per matched
+                  ingredient. Was previously one card per match, which looked
+                  noisy and repeated the headline ("This recipe contains…")
+                  for every flag. */}
+              {flaggedMatches.length > 0 && (
+                <FlaggedCard matches={flaggedMatches} />
+              )}
 
               {/* Allergen warning card(s) */}
               {allergenWarnings.map((msg, idx) => (
@@ -232,7 +235,8 @@ export function FamilyImpactSheet({
 
 // ── Alert cards ──────────────────────────────────────────────────────────
 
-function FlaggedCard({ match }: { match: FlaggedMatch }) {
+function FlaggedCard({ matches }: { matches: FlaggedMatch[] }) {
+  const isPlural = matches.length > 1;
   return (
     <View style={styles.flaggedCard}>
       <View style={styles.flaggedBadge}>
@@ -240,14 +244,20 @@ function FlaggedCard({ match }: { match: FlaggedMatch }) {
         <Text style={styles.flaggedBadgeText}>Flagged</Text>
       </View>
       <Text style={styles.flaggedHeadline}>
-        This recipe contains an ingredient that matches a flagged ingredient.
+        {isPlural
+          ? 'This recipe contains ingredients that match your flagged list.'
+          : 'This recipe contains an ingredient that matches a flagged ingredient.'}
       </Text>
-      <View style={styles.flaggedDivider} />
-      <Text style={styles.flaggedIngredient}>{match.ingredientName}</Text>
-      {match.reasons.map((reason, idx) => (
-        <View key={`${idx}-${reason.slice(0, 8)}`} style={styles.flaggedReasonRow}>
-          <BulletMarkerIcon width={18} height={18} />
-          <Text style={styles.flaggedReasonText}>{reason}</Text>
+      {matches.map((match, mIdx) => (
+        <View key={`m-${mIdx}-${match.ingredientName}`}>
+          <View style={styles.flaggedDivider} />
+          <Text style={styles.flaggedIngredient}>{match.ingredientName}</Text>
+          {match.reasons.map((reason, idx) => (
+            <View key={`${idx}-${reason.slice(0, 8)}`} style={styles.flaggedReasonRow}>
+              <BulletMarkerIcon width={18} height={18} />
+              <Text style={styles.flaggedReasonText}>{reason}</Text>
+            </View>
+          ))}
         </View>
       ))}
     </View>
