@@ -103,15 +103,11 @@ interface CardData {
 // dashboard; the new health conditions surface in profile settings;
 // the sharper ingredient flagging is invisible to users by design.
 // Adding more cards here would dilute the announcement.
-const CARDS: CardData[] = [
-  {
-    badge: 'New Locations',
-    title: 'Hello India 🇮🇳 Hello Australia 🇦🇺',
-    description:
-      'Bite Insight now works in India and Australia. The scanner picks the right local product database automatically.',
-    icon: WaveIcon,
-  },
-];
+// v1.6.2 ships silently — the matcher rewrite (taxonomy-driven flagging)
+// is a quality fix users shouldn't need to be told about. shouldShowWhatsNew
+// returns false when CARDS is empty AND silently marks the current version
+// as seen so the gate doesn't keep firing on cold launches.
+const CARDS: CardData[] = [];
 
 // ── Screen ──────────────────────────────────────────────────────────────────
 
