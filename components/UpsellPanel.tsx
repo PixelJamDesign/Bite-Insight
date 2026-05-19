@@ -25,7 +25,6 @@ import {
   ActivityIndicator,
   Animated,
   Easing,
-  LayoutChangeEvent,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -38,8 +37,8 @@ const ICON_FLAG    = require('@/assets/icons/upsell/card-flag.png');
 const ICON_RECIPES = require('@/assets/icons/upsell/card-recipes.png');
 const ICON_BARCODE = require('@/assets/icons/upsell/card-barcode.png');
 
-const SLIDE_DURATION_MS = 600;   // time to cross-fade between slides
-const DWELL_MS = 3200;           // time each slide stays fully visible
+const FADE_DURATION_MS = 500;    // length of each cross-fade
+const DWELL_MS = 3200;           // time each card stays fully visible
 
 interface CardData {
   icon: any;
@@ -72,48 +71,47 @@ const CARDS: CardData[] = [
 
 export function UpsellPanel() {
   const { isPlus, purchasing, priceString, purchasePlus, trialEligible, trialDays } = useSubscription();
-  const [carouselWidth, setCarouselWidth] = useState(0);
-  const offset = useRef(new Animated.Value(0)).current;
-  const indexRef = useRef(0);
-  const animRef = useRef<Animated.CompositeAnimation | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  // One Animated.Value per card holding its opacity. Cross-fade works by
+  // animating the outgoing card to 0 and the incoming card to 1 in parallel.
+  const opacities = useRef(CARDS.map((_, i) => new Animated.Value(i === 0 ? 1 : 0))).current;
 
-  // Schedule the next slide whenever the carousel width is known. Each
-  // step animates a single card-width to the left, then snaps back to
-  // zero once we've passed the last card to create the seamless loop.
   useEffect(() => {
-    if (carouselWidth <= 0) return;
-
     let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let current = 0;
 
     const step = () => {
       if (cancelled) return;
-      indexRef.current = (indexRef.current + 1) % CARDS.length;
-      const target = indexRef.current === 0 ? 0 : -indexRef.current * carouselWidth;
-      // When wrapping from last → first, fade through 0 instead of an
-      // ugly long scroll back. We do that by snapping invisibly: jump
-      // offset to one card past the end (so the loop appears continuous)
-      // before animating back to 0. Simpler: just animate to target
-      // with no jump — for 4 cards this looks fine and avoids the snap.
-      animRef.current = Animated.timing(offset, {
-        toValue: target,
-        duration: SLIDE_DURATION_MS,
-        easing: Easing.inOut(Easing.cubic),
-        useNativeDriver: true,
-      });
-      animRef.current.start(({ finished }) => {
+      const next = (current + 1) % CARDS.length;
+      Animated.parallel([
+        Animated.timing(opacities[current], {
+          toValue: 0,
+          duration: FADE_DURATION_MS,
+          easing: Easing.inOut(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacities[next], {
+          toValue: 1,
+          duration: FADE_DURATION_MS,
+          easing: Easing.inOut(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ]).start(({ finished }) => {
         if (!finished || cancelled) return;
-        setTimeout(step, DWELL_MS);
+        current = next;
+        setActiveIndex(next);
+        timer = setTimeout(step, DWELL_MS);
       });
     };
 
-    const initial = setTimeout(step, DWELL_MS);
+    timer = setTimeout(step, DWELL_MS);
 
     return () => {
       cancelled = true;
-      clearTimeout(initial);
-      animRef.current?.stop();
+      if (timer) clearTimeout(timer);
     };
-  }, [carouselWidth, offset]);
+  }, [opacities]);
 
   if (isPlus) return null;
 
@@ -126,18 +124,13 @@ export function UpsellPanel() {
     : `Get all the Bite Insight+ features\nfor just ${displayPrice} a month`;
   const ctaLabel = trialEligible
     ? `Start your ${days} day FREE trial for ${currencySymbol}0.00`
-    : `Upgrade to Bite Insight+`;
+    : `Upgrade for ${displayPrice} a month`;
 
   const handlePress = async () => {
     const ok = await purchasePlus();
     if (ok) {
       setTimeout(() => router.replace('/upgrade-success'), 250);
     }
-  };
-
-  const onCarouselLayout = (e: LayoutChangeEvent) => {
-    const w = e.nativeEvent.layout.width;
-    if (w && w !== carouselWidth) setCarouselWidth(w);
   };
 
   return (
@@ -153,38 +146,30 @@ export function UpsellPanel() {
       {/* Headline */}
       <Text style={styles.headline}>{headline}</Text>
 
-      {/* Carousel — fixed-width window, four slides positioned in a row,
-          animated horizontally as a single Animated.View. */}
-      <View style={styles.carouselWindow} onLayout={onCarouselLayout}>
-        {carouselWidth > 0 && (
+      {/* Carousel — all four cards rendered absolutely in the same slot,
+          opacity-driven cross-fade between them. */}
+      <View style={styles.carouselWindow}>
+        {CARDS.map((c, i) => (
           <Animated.View
-            style={[
-              styles.carouselTrack,
-              {
-                width: carouselWidth * CARDS.length,
-                transform: [{ translateX: offset }],
-              },
-            ]}
+            key={i}
+            pointerEvents={i === activeIndex ? 'auto' : 'none'}
+            style={[styles.slide, { opacity: opacities[i] }]}
           >
-            {CARDS.map((c, i) => (
-              <View key={i} style={[styles.slide, { width: carouselWidth }]}>
-                <View style={styles.iconWrap}>
-                  <Image source={c.icon} style={styles.iconImg} resizeMode="contain" />
-                </View>
-                <View style={styles.cardBody}>
-                  <Text style={styles.cardTitle}>{c.title}</Text>
-                  <Text style={styles.cardCopy}>{c.body}</Text>
-                </View>
-              </View>
-            ))}
+            <View style={styles.iconWrap}>
+              <Image source={c.icon} style={styles.iconImg} resizeMode="contain" />
+            </View>
+            <View style={styles.cardBody}>
+              <Text style={styles.cardTitle}>{c.title}</Text>
+              <Text style={styles.cardCopy}>{c.body}</Text>
+            </View>
           </Animated.View>
-        )}
+        ))}
       </View>
 
       {/* Dot indicators */}
       <View style={styles.dots}>
         {CARDS.map((_, i) => (
-          <DotIndicator key={i} index={i} offset={offset} carouselWidth={carouselWidth} />
+          <View key={i} style={[styles.dot, i !== activeIndex && styles.dotInactive]} />
         ))}
       </View>
 
@@ -204,33 +189,6 @@ export function UpsellPanel() {
       <Text style={styles.cancelNote}>Cancel anytime in the App Store</Text>
     </LinearGradient>
   );
-}
-
-// ── Dot indicator ────────────────────────────────────────────────────────────
-// Interpolates from the same offset value so the dots stay in sync with
-// the actual carousel position — fade-in the active dot as it nears center.
-function DotIndicator({
-  index,
-  offset,
-  carouselWidth,
-}: {
-  index: number;
-  offset: Animated.Value;
-  carouselWidth: number;
-}) {
-  if (carouselWidth <= 0) {
-    return <View style={[styles.dot, styles.dotInactive]} />;
-  }
-  const opacity = offset.interpolate({
-    inputRange: [
-      -carouselWidth * (index + 1),
-      -carouselWidth * index,
-      -carouselWidth * (index - 1),
-    ],
-    outputRange: [0.3, 1, 0.3],
-    extrapolate: 'clamp',
-  });
-  return <Animated.View style={[styles.dot, { opacity }]} />;
 }
 
 const ACCENT = '#3b9586';
@@ -257,18 +215,18 @@ const styles = StyleSheet.create({
   },
   carouselWindow: {
     width: '100%',
-    overflow: 'hidden',
-    // Small top buffer just so the icon's outline doesn't sit flush
-    // against the headline above it. The icon negative-margins by 42
-    // into the card body so we don't need to reserve the full 60 px.
+    // Small top buffer for the floating icon. The icon negative-margins
+    // by 42 into the card body so we don't need the full 60 px.
     paddingTop: 4,
     minHeight: 220,
     marginTop: -8,
-  },
-  carouselTrack: {
-    flexDirection: 'row',
+    position: 'relative',
   },
   slide: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
     alignItems: 'center',
     justifyContent: 'flex-start',
     paddingHorizontal: 4,

@@ -29,6 +29,30 @@ export function setDebugForceNonPlus(on: boolean) {
 }
 export function getDebugForceNonPlus(): boolean { return _forceNonPlus; }
 
+// ── Debug-only "force trial-eligible" toggle ─────────────────────────────────
+// Pairs with the force-non-Plus toggle. RevenueCat isn't configured in the
+// sim, so trialEligible is normally false there — meaning the UpsellPanel
+// only ever shows the price version. This override forces it true so the
+// trial version of any trial-aware UI is previewable.
+const DEBUG_FORCE_TRIAL_ELIGIBLE_KEY = 'debug_force_trial_eligible';
+let _forceTrialEligible = false;
+const _forceTrialEligibleListeners = new Set<() => void>();
+function _forceTrialEligibleNotify() { for (const l of _forceTrialEligibleListeners) l(); }
+function _forceTrialEligibleSubscribe(l: () => void) {
+  _forceTrialEligibleListeners.add(l);
+  return () => { _forceTrialEligibleListeners.delete(l); };
+}
+function _forceTrialEligibleGetSnapshot() { return _forceTrialEligible; }
+AsyncStorage.getItem(DEBUG_FORCE_TRIAL_ELIGIBLE_KEY)
+  .then((v) => { if (v === '1') { _forceTrialEligible = true; _forceTrialEligibleNotify(); } })
+  .catch(() => {});
+export function setDebugForceTrialEligible(on: boolean) {
+  _forceTrialEligible = on;
+  AsyncStorage.setItem(DEBUG_FORCE_TRIAL_ELIGIBLE_KEY, on ? '1' : '0').catch(() => {});
+  _forceTrialEligibleNotify();
+}
+export function getDebugForceTrialEligible(): boolean { return _forceTrialEligible; }
+
 // react-native-purchases is a native module — not available on web.
 // We import it lazily at runtime so the web bundle never tries to load it.
 let Purchases: typeof import('react-native-purchases').default | null = null;
@@ -395,10 +419,12 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   // via the debug menu, which itself only ships in the debug-accessible
   // version footer long-press flow.
   const forceNonPlus = useSyncExternalStore(_forceNonPlusSubscribe, _forceNonPlusGetSnapshot, _forceNonPlusGetSnapshot);
+  const forceTrialEligible = useSyncExternalStore(_forceTrialEligibleSubscribe, _forceTrialEligibleGetSnapshot, _forceTrialEligibleGetSnapshot);
   const effectiveIsPlus = forceNonPlus ? false : (isPlus || isVip);
+  const effectiveTrialEligible = forceTrialEligible ? true : trialEligible;
 
   return (
-    <SubscriptionContext.Provider value={{ isPlus: effectiveIsPlus, purchasing, priceString, trialEligible, trialDays, purchasePlus, restorePurchases }}>
+    <SubscriptionContext.Provider value={{ isPlus: effectiveIsPlus, purchasing, priceString, trialEligible: effectiveTrialEligible, trialDays, purchasePlus, restorePurchases }}>
       {children}
     </SubscriptionContext.Provider>
   );

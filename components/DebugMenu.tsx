@@ -38,6 +38,8 @@ import { debugForceShowUpdateToast } from '@/lib/useUpdateAvailable';
 import {
   setDebugForceNonPlus,
   getDebugForceNonPlus,
+  setDebugForceTrialEligible,
+  getDebugForceTrialEligible,
 } from '@/lib/subscriptionContext';
 import { ancestorsOf, matchingAncestors } from '@/lib/taxonomyWalker';
 import {
@@ -237,6 +239,18 @@ export function DebugMenu() {
     );
   };
 
+  const toggleForceTrialEligible = () => {
+    const next = !getDebugForceTrialEligible();
+    setDebugForceTrialEligible(next);
+    hideDebugMenu();
+    Alert.alert(
+      next ? 'Force trial-eligible: ON' : 'Force trial-eligible: OFF',
+      next
+        ? 'UpsellPanel will show the FREE trial version. Useful in the sim since RevenueCat isn\'t configured here.'
+        : 'Back to the real trial-eligible state (likely false in the sim).',
+    );
+  };
+
   const triggerMyPlan = () => {
     hideDebugMenu();
     showMyPlan();
@@ -321,6 +335,10 @@ export function DebugMenu() {
               <ActionButton
                 label={getDebugForceNonPlus() ? '✓ Force non-Plus (ON)' : 'Force non-Plus (preview UpsellPanel)'}
                 onPress={toggleForceNonPlus}
+              />
+              <ActionButton
+                label={getDebugForceTrialEligible() ? '✓ Force trial-eligible (ON)' : 'Force trial-eligible (trial copy)'}
+                onPress={toggleForceTrialEligible}
               />
             </Section>
 
