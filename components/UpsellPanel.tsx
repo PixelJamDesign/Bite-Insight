@@ -70,9 +70,15 @@ const FEATURES: FeatureCardData[] = [
   },
 ];
 
-export function UpsellPanel() {
+interface UpsellPanelProps {
+  /** Preview override — when true, skip the isPlus hide check so the
+   *  panel renders for Plus users (debug menu only). */
+  forceShow?: boolean;
+}
+
+export function UpsellPanel({ forceShow = false }: UpsellPanelProps = {}) {
   const { isPlus, purchasing, priceString, purchasePlus, trialEligible, trialDays } = useSubscription();
-  if (isPlus) return null;
+  if (isPlus && !forceShow) return null;
 
   const days = trialDays ?? 7;
   const currencySymbol = priceString?.match(/^[^\d.,\s]+/)?.[0] ?? '£';

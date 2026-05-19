@@ -27,6 +27,7 @@ import { JourneyProvider, useJourney } from '@/lib/journeyContext';
 import { savePendingDeepLink, consumePendingDeepLink } from '@/lib/pendingDeepLink';
 import type { OnboardingStep } from '@/lib/types';
 import { UpsellSheet } from '@/components/UpsellSheet';
+import { UpsellPanelPreview } from '@/components/UpsellPanelPreview';
 import { MyPlanSheet } from '@/components/MyPlanSheet';
 import { PregnancyStatusPrompt, shouldShowPregnancyPrompt } from '@/components/PregnancyStatusPrompt';
 import { UpdateToast } from '@/components/UpdateToast';
@@ -360,6 +361,7 @@ function RootLayoutInner() {
         </Animated.View>
       </View>
       <UpsellSheet />
+      <UpsellPanelPreview />
       <MyPlanSheet />
       <PregnancyPromptGate />
       <UpdateToastGate />
