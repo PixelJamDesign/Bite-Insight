@@ -287,6 +287,9 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   crohns: {
+    flagsTaxonomyAncestors: [
+      'en:high-fodmap', 'en:polyol', 'en:caffeine-source', 'en:alcohol-source',
+    ],
     keywords: [
       'inulin', 'chicory root', 'chicory root fibre',
       'sorbitol', 'mannitol', 'xylitol', 'maltitol', 'isomalt',
@@ -309,6 +312,10 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   uc: {
+    flagsTaxonomyAncestors: [
+      'en:high-fodmap', 'en:polyol', 'en:caffeine-source', 'en:alcohol-source',
+      'en:sulphite-preservative',
+    ],
     keywords: [
       'inulin', 'chicory root', 'chicory root fibre',
       'sorbitol', 'mannitol', 'xylitol', 'maltitol',
@@ -330,6 +337,11 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   gerd: {
+    flagsTaxonomyAncestors: [
+      'en:caffeine-source', 'en:alcohol-source', 'en:chocolate-source',
+      'en:mint-source', 'en:citrus-derivative', 'en:nightshade',
+      'en:onion-family-vegetable', 'en:carbonated-drink-source', 'en:spicy-food',
+    ],
     keywords: [
       'tomato', 'tomato paste', 'tomato puree', 'tomato sauce', 'tomato powder',
       'citric acid', 'lemon juice', 'lime juice', 'orange juice',
@@ -353,6 +365,9 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   gout: {
+    flagsTaxonomyAncestors: [
+      'en:high-purine', 'en:alcohol-source', 'en:added-sugar',
+    ],
     keywords: [
       // High-purine foods
       'yeast extract', 'yeast', 'brewers yeast', 'nutritional yeast',
@@ -374,6 +389,9 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   ckd: {
+    flagsTaxonomyAncestors: [
+      'en:sodium-source', 'en:high-potassium', 'en:high-phosphorus',
+    ],
     keywords: [
       // High potassium
       'potassium chloride', 'potassium sorbate', 'potassium citrate',
@@ -404,6 +422,10 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   nafld: {
+    flagsTaxonomyAncestors: [
+      'en:added-sugar', 'en:trans-fat-source', 'en:hydrogenated-oil',
+      'en:alcohol-source',
+    ],
     keywords: [
       'sugar', 'sucrose', 'fructose', 'high fructose corn syrup', 'hfcs',
       'glucose syrup', 'glucose-fructose syrup', 'corn syrup',
@@ -421,6 +443,11 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   pregnancy: {
+    flagsTaxonomyAncestors: [
+      'en:high-mercury-fish', 'en:raw-animal-product', 'en:unpasteurised-dairy',
+      'en:alcohol-source', 'en:caffeine-source', 'en:high-purine',
+      'en:processed-meat',
+    ],
     keywords: [
       // High-mercury fish
       'shark', 'swordfish', 'marlin', 'king mackerel', 'tilefish',
@@ -458,6 +485,9 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   breastfeeding: {
+    flagsTaxonomyAncestors: [
+      'en:alcohol-source', 'en:high-mercury-fish', 'en:caffeine-source',
+    ],
     keywords: [
       // Alcohol transfers into breast milk
       'alcohol', 'wine', 'beer', 'spirits', 'vodka', 'gin', 'whisky',
@@ -483,6 +513,9 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   //     that damage DNA; present in most processed meats
   //   • Alcohol — increases risk of 7 cancer types at any intake level
   cancer: {
+    flagsTaxonomyAncestors: [
+      'en:processed-meat', 'en:nitrite-preservative', 'en:alcohol-source',
+    ],
     keywords: [
       // Processed meats (IARC Group 1 — definite colorectal carcinogen)
       'bacon', 'streaky bacon', 'back bacon', 'smoked bacon', 'cured bacon',
@@ -525,6 +558,7 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   // (probable carcinogen). Merged with baseline `cancer` flags when
   // cancer_subtype === 'colorectal'.
   cancerColorectal: {
+    flagsTaxonomyAncestors: ['en:red-meat'],
     keywords: [
       // Red meat (IARC Group 2A — probable colorectal carcinogen)
       'beef', 'beef mince', 'ground beef', 'minced beef', 'beef steak',
@@ -587,6 +621,9 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   // Salt and pickled/cured foods are established risk factors for gastric
   // cancer. Merged with baseline `cancer` flags when cancer_subtype === 'stomach'.
   cancerStomach: {
+    flagsTaxonomyAncestors: [
+      'en:sodium-source', 'en:processed-meat',
+    ],
     keywords: [
       // High-salt preserved foods
       'salt', 'sea salt', 'table salt', 'rock salt', 'himalayan salt',
@@ -609,6 +646,10 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   noGallbladder: {
+    flagsTaxonomyAncestors: [
+      'en:trans-fat-source', 'en:hydrogenated-oil', 'en:animal-fat',
+      'en:palm-oil-and-fat', 'en:dairy', 'en:processed-meat',
+    ],
     keywords: [
       // Fried / high-fat preparations (hardest without stored bile)
       'fried', 'deep fried', 'breaded', 'battered', 'crumbed',
@@ -641,6 +682,10 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   pcos: {
+    flagsTaxonomyAncestors: [
+      'en:added-sugar', 'en:refined-starch', 'en:trans-fat-source',
+      'en:hydrogenated-oil', 'en:soy-derivative',
+    ],
     keywords: [
       'sugar', 'sucrose', 'glucose', 'glucose syrup', 'fructose',
       'high fructose corn syrup', 'hfcs', 'dextrose', 'maltose',
@@ -661,6 +706,11 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   migraine: {
+    flagsTaxonomyAncestors: [
+      'en:caffeine-source', 'en:alcohol-source', 'en:nitrite-preservative',
+      'en:histamine-rich', 'en:chocolate-source', 'en:artificial-sweetener',
+      'en:sodium-source', 'en:citrus-derivative',
+    ],
     keywords: [
       'msg', 'monosodium glutamate', 'e621', 'glutamate',
       'aspartame', 'e951',
@@ -685,6 +735,11 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   adhd: {
+    flagsTaxonomyAncestors: [
+      'en:southampton-six-colour', 'en:artificial-colour',
+      'en:artificial-preservative', 'en:artificial-sweetener',
+      'en:caffeine-source', 'en:added-sugar',
+    ],
     keywords: [
       // Artificial colours (Southampton Six + others)
       'tartrazine', 'e102', 'sunset yellow', 'e110',
@@ -714,6 +769,11 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   autism: {
+    flagsTaxonomyAncestors: [
+      'en:southampton-six-colour', 'en:artificial-colour',
+      'en:artificial-preservative', 'en:artificial-sweetener',
+      'en:sodium-source', 'en:gluten-cereal', 'en:dairy-derivative',
+    ],
     keywords: [
       // Same artificial colours as ADHD
       'tartrazine', 'e102', 'sunset yellow', 'e110',
@@ -735,6 +795,11 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   eczema: {
+    flagsTaxonomyAncestors: [
+      'en:artificial-colour', 'en:artificial-preservative',
+      'en:sulphite-preservative', 'en:sodium-source', 'en:histamine-rich',
+      'en:soy-derivative', 'en:dairy', 'en:gluten-cereal',
+    ],
     keywords: [
       'artificial colour', 'artificial color', 'food colouring',
       'tartrazine', 'e102', 'sunset yellow', 'e110',
@@ -758,6 +823,11 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   ra: {
+    flagsTaxonomyAncestors: [
+      'en:added-sugar', 'en:trans-fat-source', 'en:hydrogenated-oil',
+      'en:omega-6-oil', 'en:refined-starch', 'en:alcohol-source',
+      'en:sodium-source', 'en:artificial-sweetener',
+    ],
     keywords: [
       'sugar', 'sucrose', 'glucose syrup', 'high fructose corn syrup',
       'trans fat', 'partially hydrogenated', 'hydrogenated vegetable oil',
@@ -778,6 +848,10 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   lupus: {
+    flagsTaxonomyAncestors: [
+      'en:trans-fat-source', 'en:hydrogenated-oil', 'en:added-sugar',
+      'en:alcohol-source', 'en:sodium-source', 'en:artificial-sweetener',
+    ],
     keywords: [
       'alfalfa', 'alfalfa sprouts',
       'garlic', 'garlic powder',
@@ -797,6 +871,11 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   ms: {
+    flagsTaxonomyAncestors: [
+      'en:trans-fat-source', 'en:hydrogenated-oil', 'en:added-sugar',
+      'en:refined-starch', 'en:gluten-cereal', 'en:artificial-sweetener',
+      'en:alcohol-source', 'en:palm-oil-and-fat',
+    ],
     keywords: [
       'trans fat', 'partially hydrogenated', 'hydrogenated vegetable oil',
       'saturated fat', 'palm oil', 'coconut oil', 'lard', 'butter',
@@ -817,6 +896,11 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   me: {
+    flagsTaxonomyAncestors: [
+      'en:added-sugar', 'en:caffeine-source', 'en:artificial-sweetener',
+      'en:sodium-source', 'en:alcohol-source', 'en:trans-fat-source',
+      'en:artificial-colour',
+    ],
     keywords: [
       'sugar', 'sucrose', 'glucose syrup', 'high fructose corn syrup',
       'caffeine', 'coffee', 'guarana',
@@ -836,6 +920,11 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   hashimotos: {
+    flagsTaxonomyAncestors: [
+      'en:soy-derivative', 'en:goitrogen', 'en:gluten-cereal',
+      'en:added-sugar', 'en:trans-fat-source', 'en:hydrogenated-oil',
+      'en:artificial-sweetener',
+    ],
     keywords: [
       'soy', 'soya', 'soy protein', 'soy lecithin', 'soy flour', 'tofu',
       'gluten', 'wheat', 'wheat flour', 'barley', 'rye',
@@ -853,6 +942,10 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   hypothyroidism: {
+    flagsTaxonomyAncestors: [
+      'en:soy-derivative', 'en:goitrogen', 'en:gluten-cereal',
+      'en:added-sugar', 'en:trans-fat-source', 'en:hydrogenated-oil',
+    ],
     keywords: [
       'soy', 'soya', 'soy protein', 'soy lecithin', 'soy flour', 'tofu',
       'soy isoflavone',
@@ -870,6 +963,11 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   endometriosis: {
+    flagsTaxonomyAncestors: [
+      'en:trans-fat-source', 'en:hydrogenated-oil', 'en:red-meat',
+      'en:added-sugar', 'en:alcohol-source', 'en:caffeine-source',
+      'en:soy-derivative', 'en:gluten-cereal',
+    ],
     keywords: [
       'trans fat', 'partially hydrogenated', 'hydrogenated vegetable oil',
       'red meat', 'beef', 'pork', 'lamb',
@@ -888,6 +986,7 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   diverticular: {
+    flagsTaxonomyAncestors: ['en:processed-meat', 'en:red-meat'],
     keywords: [
       'popcorn', 'sweetcorn', 'whole corn',
       'sesame', 'sesame seeds',
@@ -907,6 +1006,11 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   leakyGut: {
+    flagsTaxonomyAncestors: [
+      'en:gluten-cereal', 'en:added-sugar', 'en:alcohol-source',
+      'en:artificial-sweetener', 'en:emulsifier', 'en:sodium-source',
+      'en:soy-derivative', 'en:trans-fat-source', 'en:hydrogenated-oil',
+    ],
     keywords: [
       'gluten', 'wheat', 'wheat flour', 'barley', 'rye',
       'sugar', 'sucrose', 'high fructose corn syrup', 'corn syrup',
@@ -930,6 +1034,11 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   fibromyalgia: {
+    flagsTaxonomyAncestors: [
+      'en:artificial-sweetener', 'en:sodium-source', 'en:added-sugar',
+      'en:refined-starch', 'en:trans-fat-source', 'en:hydrogenated-oil',
+      'en:caffeine-source', 'en:alcohol-source', 'en:artificial-colour',
+    ],
     keywords: [
       // Excitotoxins and additives linked to pain amplification
       'aspartame', 'monosodium glutamate', 'msg', 'e621',
@@ -951,6 +1060,10 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   sibo: {
+    flagsTaxonomyAncestors: [
+      'en:high-fodmap', 'en:polyol', 'en:dairy-derivative', 'en:gluten-cereal',
+      'en:added-sugar', 'en:onion-family-vegetable',
+    ],
     keywords: [
       // High FODMAP — same as IBS but stricter
       'garlic', 'garlic powder', 'onion', 'onion powder', 'shallot', 'leek',
@@ -980,6 +1093,9 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
 
 export const DIETARY_PREFERENCE_INGREDIENTS: Record<string, HealthFlagEntry> = {
   halal: {
+    flagsTaxonomyAncestors: [
+      'en:alcohol-source', 'en:pork-derivative', 'en:non-halal-additive',
+    ],
     keywords: [
       // Pork & pork derivatives
       'pork', 'pork fat', 'pork gelatin', 'pork gelatine', 'pork meat',
@@ -1162,6 +1278,11 @@ export const DIETARY_PREFERENCE_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   cleanEating: {
+    flagsTaxonomyAncestors: [
+      'en:artificial-colour', 'en:artificial-preservative',
+      'en:artificial-sweetener', 'en:trans-fat-source', 'en:hydrogenated-oil',
+      'en:nitrite-preservative', 'en:emulsifier', 'en:added-sugar',
+    ],
     keywords: [
       // Artificial colours
       'artificial colour', 'artificial color', 'food colouring',
@@ -1197,6 +1318,12 @@ export const DIETARY_PREFERENCE_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   childFriendly: {
+    flagsTaxonomyAncestors: [
+      'en:southampton-six-colour', 'en:artificial-colour',
+      'en:artificial-preservative', 'en:artificial-sweetener',
+      'en:caffeine-source', 'en:sodium-source', 'en:trans-fat-source',
+      'en:hydrogenated-oil', 'en:added-sugar',
+    ],
     keywords: [
       // Southampton Six artificial colours
       'tartrazine', 'e102', 'sunset yellow', 'e110',
@@ -1228,6 +1355,10 @@ export const DIETARY_PREFERENCE_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   weightLoss: {
+    flagsTaxonomyAncestors: [
+      'en:added-sugar', 'en:refined-starch', 'en:trans-fat-source',
+      'en:hydrogenated-oil', 'en:palm-oil-and-fat',
+    ],
     keywords: [
       'sugar', 'sucrose', 'glucose syrup', 'high fructose corn syrup',
       'corn syrup', 'invert sugar', 'honey', 'agave syrup',
@@ -1245,6 +1376,10 @@ export const DIETARY_PREFERENCE_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   paleo: {
+    flagsTaxonomyAncestors: [
+      'en:gluten-cereal', 'en:cereal', 'en:soy-derivative', 'en:dairy',
+      'en:added-sugar', 'en:trans-fat-source', 'en:hydrogenated-oil',
+    ],
     keywords: [
       // Grains
       'wheat', 'wheat flour', 'barley', 'rye', 'oats', 'corn', 'rice',
@@ -1272,6 +1407,11 @@ export const DIETARY_PREFERENCE_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   whole30: {
+    flagsTaxonomyAncestors: [
+      'en:gluten-cereal', 'en:cereal', 'en:soy-derivative', 'en:dairy',
+      'en:added-sugar', 'en:artificial-sweetener', 'en:alcohol-source',
+      'en:emulsifier', 'en:sulphite-preservative',
+    ],
     keywords: [
       // Grains
       'wheat', 'wheat flour', 'barley', 'rye', 'oats', 'corn', 'rice',
@@ -1304,6 +1444,11 @@ export const DIETARY_PREFERENCE_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   pregnancy: {
+    flagsTaxonomyAncestors: [
+      'en:caffeine-source', 'en:alcohol-source', 'en:high-mercury-fish',
+      'en:raw-animal-product', 'en:unpasteurised-dairy', 'en:high-purine',
+      'en:nitrite-preservative', 'en:artificial-sweetener',
+    ],
     keywords: [
       'caffeine', 'coffee', 'coffee extract', 'guarana',
       'alcohol', 'beer', 'wine', 'spirits',
@@ -1327,6 +1472,10 @@ export const DIETARY_PREFERENCE_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   postBariatric: {
+    flagsTaxonomyAncestors: [
+      'en:added-sugar', 'en:refined-starch', 'en:alcohol-source',
+      'en:polyol', 'en:carbonated-drink-source',
+    ],
     keywords: [
       'sugar', 'sucrose', 'glucose', 'glucose syrup', 'high fructose corn syrup',
       'corn syrup', 'honey', 'agave syrup', 'maple syrup',
@@ -1346,6 +1495,7 @@ export const DIETARY_PREFERENCE_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   highProtein: {
+    flagsTaxonomyAncestors: ['en:added-sugar', 'en:refined-starch'],
     keywords: [
       // Flag high-sugar / empty-carb ingredients that work against high-protein goals
       'sugar', 'sucrose', 'glucose syrup', 'high fructose corn syrup',
@@ -1360,6 +1510,10 @@ export const DIETARY_PREFERENCE_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   plantBased: {
+    flagsTaxonomyAncestors: [
+      'en:meat', 'en:fish', 'en:seafood', 'en:dairy', 'en:dairy-derivative',
+      'en:egg-product', 'en:animal-derivative', 'en:animal-fat',
+    ],
     keywords: [
       'meat', 'beef', 'pork', 'lamb', 'chicken', 'turkey', 'duck', 'veal',
       'bacon', 'ham', 'sausage', 'salami', 'pepperoni',
@@ -1383,6 +1537,7 @@ export const DIETARY_PREFERENCE_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   sustainable: {
+    flagsTaxonomyAncestors: ['en:palm-oil-and-fat'],
     keywords: [
       'palm oil', 'palm fat', 'palm kernel oil',
       'hydrogenated palm oil',
@@ -1394,6 +1549,10 @@ export const DIETARY_PREFERENCE_INGREDIENTS: Record<string, HealthFlagEntry> = {
   },
 
   mediterraneanDiet: {
+    flagsTaxonomyAncestors: [
+      'en:processed-meat', 'en:trans-fat-source', 'en:hydrogenated-oil',
+      'en:refined-starch', 'en:added-sugar', 'en:artificial-colour',
+    ],
     keywords: [
       // Processed meats — not aligned with Mediterranean principles
       'processed meat', 'deli meat', 'hot dog', 'sausage', 'salami', 'pepperoni',
