@@ -596,8 +596,14 @@ export const INGREDIENT_DERIVATIVES = new Map<string, string[]>([
     'molasses', 'blackstrap molasses',
     'maple syrup', 'maple sugar',
     'agave', 'agave syrup', 'agave nectar',
-    'rice syrup', 'rice malt syrup', 'brown rice syrup',
-    'barley malt syrup', 'malt syrup', 'malt extract',
+    'rice syrup', 'brown rice syrup',
+    // Note: 'malt extract', 'malt syrup', 'barley malt syrup', 'rice malt
+    // syrup' deliberately omitted. In savoury packaged products (gravies,
+    // burgers, breads) malt extract is used as a flavour/colour enhancer
+    // in trace amounts, not as a sweetener — flagging it as "sugar" gave
+    // misleading callouts on products with no actual sugar. Users who
+    // want it flagged can add 'malt extract' explicitly as its own
+    // user-flagged ingredient.
     'date syrup', 'date paste',
     'honey', 'manuka honey', 'raw honey',
     'invert sugar', 'inverted sugar', 'invert sugar syrup',

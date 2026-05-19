@@ -568,7 +568,23 @@ function categoriseIngredients(
           personalReason = flagReasonMap[ingredientUuid];
         }
       }
-      const entry: FlaggedIngredient = { ...ing, flagReason: reason, personalReason, matchSource: 'ingredient', matchedFlagName: matchedFlaggedName?.toLowerCase() };
+      const entry: FlaggedIngredient = {
+        ...ing,
+        flagReason: reason,
+        personalReason,
+        matchSource: 'ingredient',
+        matchedFlagName: matchedFlaggedName?.toLowerCase(),
+        // Capture the ingredient text that triggered this match so the
+        // callout can show "Sugar — found in: Malted barley extract"
+        // when the matched flag name differs from the ingredient name.
+        sourceIngredientText:
+          reason === 'user_flagged' &&
+          matchedFlaggedName &&
+          ing.text &&
+          ing.text.toLowerCase() !== matchedFlaggedName.toLowerCase()
+            ? ing.text
+            : undefined,
+      };
       if (reason === 'user_flagged') {
         userFlagged.push(entry);
         // Don't `continue` here — let the cascade fall through to the
@@ -648,8 +664,13 @@ function categoriseIngredients(
           ? item.matchedFlagName.charAt(0).toUpperCase() + item.matchedFlagName.slice(1)
           : item.text;
         byFlag.set(key, { ...item, text: displayName });
+      } else if (!existing.sourceIngredientText && item.sourceIngredientText) {
+        // If the kept entry has no source text but a later one does
+        // (e.g. product-name match landed first, then an ingredient
+        // match for the same flag), upgrade it so the user sees the
+        // concrete ingredient that triggered the flag.
+        byFlag.set(key, { ...existing, sourceIngredientText: item.sourceIngredientText });
       }
-      // Additional entries for the same flag are simply dropped
     }
     return Array.from(byFlag.values());
   };
@@ -2155,6 +2176,11 @@ export default function ScanResultScreen() {
                             <View key={`ov-uf-${ing.id ?? 'noid'}-${i}`} style={styles.flaggedIngBlock}>
                               {i > 0 && <View style={styles.flaggedDivider} />}
                               <Text style={styles.flaggedIngName}>{sentenceCase(ing.text)}</Text>
+                              {ing.sourceIngredientText && (
+                                <Text style={styles.flaggedSourceText}>
+                                  Found in: {sentenceCase(ing.sourceIngredientText)}
+                                </Text>
+                              )}
                               {reasons.length > 0 ? reasons.map((r: string, ri: number) => (
                                 <View key={ri} style={styles.flaggedBulletRow}>
                                   <BulletMarkerIcon width={18} height={18} />
@@ -3056,6 +3082,11 @@ export default function ScanResultScreen() {
                               <View key={`uf-${ing.id ?? 'noid'}-${i}`} style={styles.flaggedIngBlock}>
                                 {i > 0 && <View style={styles.flaggedDivider} />}
                                 <Text style={styles.flaggedIngName}>{sentenceCase(ing.text)}</Text>
+                                {ing.sourceIngredientText && (
+                                  <Text style={styles.flaggedSourceText}>
+                                    Found in: {sentenceCase(ing.sourceIngredientText)}
+                                  </Text>
+                                )}
                                 {reasons.length > 0 ? reasons.map((r: string, ri: number) => (
                                   <View key={ri} style={styles.flaggedBulletRow}>
                                     <BulletMarkerIcon width={18} height={18} />
@@ -4047,6 +4078,17 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     lineHeight: 20,
     letterSpacing: 0,
+  },
+  flaggedSourceText: {
+    fontSize: 13,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
+    color: Colors.secondary,
+    lineHeight: 17,
+    letterSpacing: -0.13,
+    marginTop: 2,
+    marginBottom: 2,
+    fontStyle: 'italic',
   },
   flaggedBulletRow: {
     flexDirection: 'row',

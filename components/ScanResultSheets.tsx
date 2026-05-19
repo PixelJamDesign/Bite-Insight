@@ -30,6 +30,12 @@ export type FlaggedIngredient = OffIngredient & {
   matchedFlagName?: string;  // the user-flagged name that triggered this match
   healthConditionKey?: string;  // which health condition / dietary pref triggered this flag
   additiveSeverity?: { severity: 'high' | 'moderate' | 'low'; conditions: string[]; reason: string; group?: string };
+  /** When a match was made via a derivative/synonym (e.g. user flagged
+   *  "Sugar" but the product contains "Malted barley extract"), this is
+   *  the raw ingredient text that triggered the match. Used by the
+   *  user-flagged callout to show "Sugar — found in: Malted barley
+   *  extract" so the user can see exactly what fired their flag. */
+  sourceIngredientText?: string;
 };
 
 type ImpactKey = 'low' | 'moderate' | 'high' | 'veryHigh';
