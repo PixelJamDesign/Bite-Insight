@@ -2152,7 +2152,7 @@ export default function ScanResultScreen() {
                             ? ing.personalReason.text.split(',').map((r: string) => r.trim()).filter(Boolean)
                             : [];
                           return (
-                            <View key={`ov-uf-${ing.id ?? i}`} style={styles.flaggedIngBlock}>
+                            <View key={`ov-uf-${ing.id ?? 'noid'}-${i}`} style={styles.flaggedIngBlock}>
                               {i > 0 && <View style={styles.flaggedDivider} />}
                               <Text style={styles.flaggedIngName}>{sentenceCase(ing.text)}</Text>
                               {reasons.length > 0 ? reasons.map((r: string, ri: number) => (
@@ -2350,7 +2350,7 @@ export default function ScanResultScreen() {
                     </Text>
                     <View style={{ gap: 4 }}>
                       {inListFlagged.map((ing, i) => (
-                        <View key={`ov-uf-list-${ing.id ?? i}`} style={styles.ingRow}>
+                        <View key={`ov-uf-list-${ing.id ?? 'noid'}-${i}`} style={styles.ingRow}>
                           <View style={{ width: 28, alignItems: 'center' }}>
                             <MenuFlaggedIcon color="#ff8736" size={22} />
                           </View>
@@ -2400,7 +2400,7 @@ export default function ScanResultScreen() {
                   </Text>
                   <View style={{ gap: 4 }}>
                     {filteredCategorised.harmful.map((ing, i) => (
-                      <View key={`ov-harm-${ing.id ?? i}`} style={styles.ingRow}>
+                      <View key={`ov-harm-${ing.id ?? 'noid'}-${i}`} style={styles.ingRow}>
                         <View style={{ width: 28, alignItems: 'center' }}>
                           <Ionicons name="close" size={28} color={Colors.status.negative} />
                         </View>
@@ -3053,7 +3053,7 @@ export default function ScanResultScreen() {
                               ? ing.personalReason.text.split(',').map((r: string) => r.trim()).filter(Boolean)
                               : [];
                             return (
-                              <View key={`uf-${ing.id ?? i}`} style={styles.flaggedIngBlock}>
+                              <View key={`uf-${ing.id ?? 'noid'}-${i}`} style={styles.flaggedIngBlock}>
                                 {i > 0 && <View style={styles.flaggedDivider} />}
                                 <Text style={styles.flaggedIngName}>{sentenceCase(ing.text)}</Text>
                                 {reasons.length > 0 ? reasons.map((r: string, ri: number) => (
@@ -3085,7 +3085,7 @@ export default function ScanResultScreen() {
                         </Text>
                         <View style={{ gap: 2 }}>
                           {filteredCategorised.harmful.map((ing, i) => (
-                            <View key={`harm-${ing.id ?? i}`} style={styles.ingRow}>
+                            <View key={`harm-${ing.id ?? 'noid'}-${i}`} style={styles.ingRow}>
                               <View style={{ width: 24, alignItems: 'center' }}>
                                 <Ionicons name="close" size={24} color={Colors.status.negative} />
                               </View>
@@ -3125,7 +3125,7 @@ export default function ScanResultScreen() {
                         </Text>
                         <View style={{ gap: 2 }}>
                           {filteredCategorised.ok.map((ing, i) => (
-                            <View key={`ok-${ing.id ?? i}`} style={styles.ingRowSmall}>
+                            <View key={`ok-${ing.id ?? 'noid'}-${i}`} style={styles.ingRowSmall}>
                               <View style={{ width: 24, alignItems: 'center' }}>
                                 <Ionicons name="checkmark" size={24} color={Extra.poorOrange} />
                               </View>
@@ -3157,7 +3157,7 @@ export default function ScanResultScreen() {
                         </Text>
                         <View style={{ gap: 2 }}>
                           {filteredCategorised.safe.map((ing, i) => (
-                            <View key={`safe-${ing.id ?? i}`} style={styles.ingRowSmall}>
+                            <View key={`safe-${ing.id ?? 'noid'}-${i}`} style={styles.ingRowSmall}>
                               <View style={{ width: 24, alignItems: 'center' }}>
                                 <Ionicons name="checkmark" size={24} color={Extra.positiveGreen} />
                               </View>
