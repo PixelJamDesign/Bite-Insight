@@ -9,7 +9,7 @@
  * Deliberately unstyled — no Figma frame, no animations beyond the
  * Modal's default. Looks like a debug menu because it IS one.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -19,6 +19,7 @@ import {
   Modal,
   Alert,
   Platform,
+  TextInput,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -34,6 +35,11 @@ import { useMyPlanSheet } from '@/lib/myPlanSheetContext';
 import { useRegion } from '@/lib/regionContext';
 import { useAuth } from '@/lib/auth';
 import { debugForceShowUpdateToast } from '@/lib/useUpdateAvailable';
+import { ancestorsOf, matchingAncestors } from '@/lib/taxonomyWalker';
+import {
+  HEALTH_CONDITION_INGREDIENTS,
+  DIETARY_PREFERENCE_INGREDIENTS,
+} from '@/constants/healthIngredientFlags';
 
 // ── Shared sub-components ────────────────────────────────────────────────────
 
@@ -59,6 +65,84 @@ function StateRow({ label, value }: { label: string; value: string }) {
     <View style={styles.stateRow}>
       <Text style={styles.stateLabel}>{label}</Text>
       <Text style={styles.stateValue}>{value}</Text>
+    </View>
+  );
+}
+
+// ── Flag inspector ──────────────────────────────────────────────────────────
+// Type an OFF ingredient ID (en:caramel-colour, en:e150d, en:dextrose…) or
+// a raw ingredient name (we'll lowercase + slug-ify it) and see exactly
+// which conditions/preferences would flag it, via which taxonomy ancestor.
+// Lets us debug "why did this flag?" or "why DIDN'T this flag?" without
+// rebuilding and rescanning a product.
+
+function FlagInspector() {
+  const [input, setInput] = useState('');
+
+  const normalisedId = useMemo(() => {
+    const raw = input.trim().toLowerCase();
+    if (!raw) return '';
+    if (raw.startsWith('en:')) return raw;
+    // Slug-ify a raw name into an OFF-style ID.
+    return 'en:' + raw.replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  }, [input]);
+
+  const result = useMemo(() => {
+    if (!normalisedId) return null;
+    const ancestors = Array.from(ancestorsOf(normalisedId));
+
+    // For each migrated condition + dietary pref, compute which ancestors
+    // would flag this ingredient.
+    type Hit = { key: string; via: string };
+    const hits: Hit[] = [];
+    const allEntries = [
+      ...Object.entries(HEALTH_CONDITION_INGREDIENTS),
+      ...Object.entries(DIETARY_PREFERENCE_INGREDIENTS),
+    ];
+    for (const [key, entry] of allEntries) {
+      const targets = entry.flagsTaxonomyAncestors ?? [];
+      if (targets.length === 0) continue;
+      const matched = matchingAncestors(normalisedId, targets);
+      for (const m of matched) hits.push({ key, via: m });
+    }
+    return { ancestors, hits };
+  }, [normalisedId]);
+
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>── Flag inspector ──</Text>
+      <Text style={styles.inspectorHint}>
+        Type an OFF id (en:e150d, en:dextrose) or an ingredient name.
+      </Text>
+      <TextInput
+        style={styles.inspectorInput}
+        value={input}
+        onChangeText={setInput}
+        autoCapitalize="none"
+        autoCorrect={false}
+        placeholder="en:caramel-colour"
+        placeholderTextColor={Colors.secondary}
+      />
+      {result && (
+        <View style={styles.inspectorOutput}>
+          <StateRow label="resolved id" value={normalisedId} />
+          <StateRow
+            label="ancestors"
+            value={result.ancestors.length ? result.ancestors.join(' › ') : '(root)'}
+          />
+          <View style={{ height: Spacing.xs }} />
+          <Text style={styles.inspectorVerdict}>
+            {result.hits.length === 0
+              ? '✓ would NOT flag for any migrated condition'
+              : `✗ would flag for ${result.hits.length} condition${result.hits.length > 1 ? 's' : ''}:`}
+          </Text>
+          {result.hits.map((h, i) => (
+            <Text key={i} style={styles.inspectorHit}>
+              · {h.key.padEnd(20)} (via {h.via})
+            </Text>
+          ))}
+        </View>
+      )}
     </View>
   );
 }
@@ -223,6 +307,8 @@ export function DebugMenu() {
               <ActionButton label="Nuke AsyncStorage" onPress={resetAllStorage} />
             </Section>
 
+            <FlagInspector />
+
             <Section title="State (in-memory)">
               <StateRow label="user.id" value={session?.user?.id?.slice(0, 8) ?? '—'} />
               <StateRow label="isPlus" value={String(isPlus)} />
@@ -349,6 +435,42 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     flex: 1,
     textAlign: 'right',
+  },
+  inspectorHint: {
+    ...Typography.bodySmall,
+    fontFamily: 'Figtree_300Light',
+    color: Colors.secondary,
+    marginBottom: 6,
+  },
+  inspectorInput: {
+    backgroundColor: Colors.surface.tertiary,
+    borderWidth: 1,
+    borderColor: '#aad4cd',
+    borderRadius: Radius.m,
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.s,
+    fontFamily: 'Figtree_300Light',
+    fontSize: 14,
+    color: Colors.primary,
+  },
+  inspectorOutput: {
+    marginTop: Spacing.xs,
+    padding: Spacing.xs,
+    backgroundColor: Colors.surface.tertiary,
+    borderRadius: Radius.m,
+    borderWidth: 1,
+    borderColor: '#aad4cd',
+  },
+  inspectorVerdict: {
+    ...Typography.bodySmall,
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    marginBottom: 4,
+  },
+  inspectorHit: {
+    ...Typography.bodySmall,
+    fontFamily: 'Figtree_300Light',
+    color: Colors.primary,
   },
   closeBtn: {
     backgroundColor: Colors.primary,
