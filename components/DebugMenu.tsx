@@ -34,6 +34,7 @@ import { useUpsellSheet } from '@/lib/upsellSheetContext';
 import { useMyPlanSheet } from '@/lib/myPlanSheetContext';
 import { useRegion } from '@/lib/regionContext';
 import { useAuth } from '@/lib/auth';
+import { supabase } from '@/lib/supabase';
 import { debugForceShowUpdateToast } from '@/lib/useUpdateAvailable';
 import {
   setDebugForceNonPlus,
@@ -268,6 +269,58 @@ export function DebugMenu() {
     Alert.alert('Reset', 'Trial cooldown + dismiss count cleared.');
   };
 
+  // Server-side trial-status reset. Clears the trial timestamps on the
+  // user's profile so the Day-6 reminder cron stops seeing them as
+  // in-trial and the trial-eligibility logic treats them as fresh.
+  // Also flips is_plus back to false so the upgrade UI re-appears.
+  // Note: this does NOT reset RevenueCat / Apple's intro-offer
+  // eligibility — that's controlled by the App Store account and
+  // can only be cleared via App Store Connect's sandbox tester
+  // 'Reset eligibility for introductory offer' action.
+  const resetTrialStatusOnServer = async () => {
+    if (!session?.user?.id) {
+      Alert.alert('Not signed in', 'No user to reset.');
+      return;
+    }
+    Alert.alert(
+      'Reset trial status?',
+      'Clears trial_started_at, trial_ends_at, trial_reminder_sent_at, and is_plus on your Supabase profile. Also clears the local cooldown.\n\nNote: this does NOT reset Apple sandbox trial eligibility — for that, use App Store Connect.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reset',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const { error } = await supabase
+                .from('profiles')
+                .update({
+                  trial_started_at: null,
+                  trial_ends_at: null,
+                  trial_reminder_sent_at: null,
+                  is_plus: false,
+                })
+                .eq('id', session.user.id);
+              if (error) throw error;
+              await AsyncStorage.multiRemove([
+                TRIAL_UPSELL_KEYS.firstSeenAt,
+                TRIAL_UPSELL_KEYS.lastShownAt,
+                TRIAL_UPSELL_KEYS.dismissCount,
+                TRIAL_UPSELL_KEYS.convertedAt,
+              ]);
+              Alert.alert(
+                'Trial status reset',
+                'Server fields cleared and local cooldown wiped. Restart the app to re-bootstrap subscription state.',
+              );
+            } catch (e: any) {
+              Alert.alert('Reset failed', e?.message ?? 'Unknown error');
+            }
+          },
+        },
+      ],
+    );
+  };
+
   const resetWhatsNewSeen = async () => {
     await AsyncStorage.removeItem('lastSeenWhatsNewVersion');
     Alert.alert('Reset', 'What\'s New seen flag cleared. Reopen the app to see it again.');
@@ -343,7 +396,8 @@ export function DebugMenu() {
             </Section>
 
             <Section title="Reset">
-              <ActionButton label="Reset trial cooldown" onPress={resetTrialCooldown} />
+              <ActionButton label="Reset trial cooldown (local)" onPress={resetTrialCooldown} />
+              <ActionButton label="Reset trial status (Supabase)" onPress={resetTrialStatusOnServer} />
               <ActionButton label={`Reset "What's New" seen`} onPress={resetWhatsNewSeen} />
               <ActionButton label="Nuke AsyncStorage" onPress={resetAllStorage} />
             </Section>
