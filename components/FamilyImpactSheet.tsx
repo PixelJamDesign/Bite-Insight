@@ -249,15 +249,17 @@ function FlaggedCard({ matches }: { matches: FlaggedMatch[] }) {
           : 'This recipe contains an ingredient that matches a flagged ingredient.'}
       </Text>
       {matches.map((match, mIdx) => (
-        <View key={`m-${mIdx}-${match.ingredientName}`}>
+        <View key={`m-${mIdx}-${match.ingredientName}`} style={styles.flaggedMatchBlock}>
           <View style={styles.flaggedDivider} />
           <Text style={styles.flaggedIngredient}>{match.ingredientName}</Text>
-          {match.reasons.map((reason, idx) => (
-            <View key={`${idx}-${reason.slice(0, 8)}`} style={styles.flaggedReasonRow}>
-              <BulletMarkerIcon width={18} height={18} />
-              <Text style={styles.flaggedReasonText}>{reason}</Text>
-            </View>
-          ))}
+          <View style={styles.flaggedReasonList}>
+            {match.reasons.map((reason, idx) => (
+              <View key={`${idx}-${reason.slice(0, 8)}`} style={styles.flaggedReasonRow}>
+                <BulletMarkerIcon width={18} height={18} />
+                <Text style={styles.flaggedReasonText}>{reason}</Text>
+              </View>
+            ))}
+          </View>
         </View>
       ))}
     </View>
@@ -442,6 +444,10 @@ const styles = StyleSheet.create({
   flaggedDivider: {
     height: 1,
     backgroundColor: 'rgba(255,135,54,0.35)',
+    marginVertical: 4,
+  },
+  flaggedMatchBlock: {
+    gap: 8,
   },
   flaggedIngredient: {
     fontSize: 16,
@@ -449,6 +455,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
+  },
+  flaggedReasonList: {
+    gap: 4,
   },
   flaggedReasonRow: {
     flexDirection: 'row',
