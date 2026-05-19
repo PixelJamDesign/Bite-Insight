@@ -308,9 +308,15 @@ export function DebugMenu() {
                 TRIAL_UPSELL_KEYS.dismissCount,
                 TRIAL_UPSELL_KEYS.convertedAt,
               ]);
+              // Auto-flip the sim-only overrides ON so the dashboard
+              // immediately renders the trial-version UpsellPanel — saves
+              // the user from then having to dig into Overrides. Toggle
+              // off manually when done testing.
+              setDebugForceNonPlus(true);
+              setDebugForceTrialEligible(true);
               Alert.alert(
                 'Trial status reset',
-                'Server fields cleared and local cooldown wiped. Restart the app to re-bootstrap subscription state.',
+                "Server fields cleared, local cooldown wiped, and the 'Force non-Plus' + 'Force trial-eligible' overrides turned ON so the trial upsell renders straight away. Go to the dashboard — you should see the FREE 7-day trial version.",
               );
             } catch (e: any) {
               Alert.alert('Reset failed', e?.message ?? 'Unknown error');
