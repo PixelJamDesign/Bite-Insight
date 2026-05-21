@@ -50,8 +50,26 @@ export function PostHogProvider({ children }: { children: ReactNode }) {
         // sometimes carry user IDs in query params we don't want
         // leaking into analytics.
         captureAppLifecycleEvents: true,
-        // Enable session replay later if we want; off by default.
-        enableSessionReplay: false,
+        // Session replay — captures the user's session as a replayable
+        // video. Requires posthog-react-native-session-replay (installed)
+        // and "Record user sessions" turned on in PostHog Project Settings
+        // → Session Replay. Privacy defaults: text inputs are masked,
+        // images are masked. Add `ph-no-capture` className / accessibility
+        // label to wrap anything else you want excluded.
+        enableSessionReplay: true,
+        sessionReplayConfig: {
+          // Mask all text inputs — names, emails, passwords, addresses,
+          // health-condition pickers, dietary-preference selects, etc.
+          maskAllTextInputs: true,
+          // Mask all images — avatars, scanned product photos, etc.
+          // We can revisit this if it makes replays unusable; conservative
+          // by default given the app handles health data.
+          maskAllImages: true,
+          // Mask views with the `ph-no-capture` accessibilityLabel.
+          // Wrap any sensitive component (scan result detail, family
+          // member profile editor, etc.) with this label to exclude it.
+          maskAllSandboxedViews: false,
+        },
       }}
       autocapture={{
         // Auto-capture screen views — wires into expo-router's

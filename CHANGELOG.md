@@ -4,6 +4,18 @@ Version history from initial launch (v1.0.0) to current.
 
 ---
 
+## v1.6.3 — PostHog session replay
+
+_Released May 21 2026._
+
+- Added `posthog-react-native-session-replay` so support and product can review actual user sessions to diagnose issues
+- Privacy defaults: all text inputs masked, all images masked
+- Sensitive views (scan results, family member editors, etc.) can be excluded by tagging with `ph-no-capture` accessibility labels
+- Requires "Record user sessions" turned on in PostHog Project Settings → Session Replay
+- Native build (no OTA path — session replay hooks the native view hierarchy)
+
+---
+
 ## v1.6.2 — Matcher rewrite, false-positive fixes, trial fixes, upsell redesign
 
 _Released May 19 2026._
