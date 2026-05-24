@@ -68,6 +68,40 @@ interface SearchProduct {
   unique_scans_n?: number;
 }
 
+// ─── ProductThumbnail ───────────────────────────────────────────────────────
+// A search-row image that gracefully falls through to the NoImagePlaceholder
+// when the OFF CDN fails to serve the URL (it times out on TLS handshake
+// for ~30–50% of images in practice). Previously the row checked only
+// `if (url)` to choose between Image and placeholder — products with a URL
+// that failed to load showed an empty teal box instead of the placeholder,
+// which looked broken.
+
+function ProductThumbnail({ url, cacheKey }: { url?: string; cacheKey: string }) {
+  // Reset failure state when the URL changes — FlatList recycles rows so the
+  // same component instance gets new props as you scroll.
+  const [failed, setFailed] = useState(false);
+  useEffect(() => { setFailed(false); }, [url]);
+
+  if (!url || failed) {
+    return (
+      <View style={[styles.productImage, styles.productImagePlaceholder]}>
+        <NoImagePlaceholder />
+      </View>
+    );
+  }
+  return (
+    <Image
+      source={{ uri: url }}
+      style={styles.productImage}
+      contentFit="contain"
+      cachePolicy="memory-disk"
+      transition={200}
+      recyclingKey={cacheKey}
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 // Adaptive debounce — adjusts based on actual typing speed
 const DEBOUNCE_MIN = 300;   // fastest typists
 const DEBOUNCE_MAX = 800;   // slowest typists
@@ -743,20 +777,7 @@ export default function FoodSearchScreen() {
 
     return (
       <TouchableOpacity style={styles.card} onPress={() => openProduct(item)} activeOpacity={0.75}>
-        {item.image_front_small_url ? (
-          <Image
-            source={item.image_front_small_url}
-            style={styles.productImage}
-            contentFit="contain"
-            cachePolicy="memory-disk"
-            transition={200}
-            recyclingKey={item.code}
-          />
-        ) : (
-          <View style={[styles.productImage, styles.productImagePlaceholder]}>
-            <NoImagePlaceholder />
-          </View>
-        )}
+        <ProductThumbnail url={item.image_front_small_url} cacheKey={item.code} />
         <View style={styles.cardContent}>
           {item.brands ? (
             <Text style={styles.brandName} numberOfLines={1}>{sentenceCase(item.brands)}</Text>
