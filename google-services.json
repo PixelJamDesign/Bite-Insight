@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "114297716558",
+    "project_id": "bite-insight",
+    "storage_bucket": "bite-insight.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:114297716558:android:a92ebf1031da741a2f681f",
+        "android_client_info": {
+          "package_name": "com.biteinsightapp.gcahill"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB8CNUsde92Eto1cuVyMwoukkrAhDLo7QU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

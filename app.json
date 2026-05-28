@@ -33,6 +33,7 @@
         "backgroundColor": "#e2f1ee"
       },
       "package": "com.biteinsightapp.gcahill",
+      "googleServicesFile": "./google-services.json",
       "softwareKeyboardLayoutMode": "resize",
       "permissions": [
         "android.permission.CAMERA",
