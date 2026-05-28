@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useMemo } from 'react';
-import { Swipeable } from 'react-native-gesture-handler';
+import { DismissibleRow } from '@/components/DismissibleRow';
 import {
   View,
   Text,
@@ -303,20 +303,15 @@ function CalendarPicker({
 }
 
 // ─── ScanCard ──────────────────────────────────────────────────────────────────
+// Swipe-to-delete handled by the shared DismissibleRow — same gesture
+// across the inbox + history (short swipe reveals trash, long swipe
+// auto-deletes).
 function ScanCard({ scan, onPress, onDelete }: { scan: Scan; onPress: () => void; onDelete: () => void }) {
   const grade = scan.nutriscore_grade?.toLowerCase();
   const gradeColor = grade ? NUTRISCORE_COLORS[grade] : null;
 
-  function renderRightActions() {
-    return (
-      <TouchableOpacity style={styles.deleteAction} onPress={onDelete} activeOpacity={0.85}>
-        <Ionicons name="trash-outline" size={22} color="#fff" />
-      </TouchableOpacity>
-    );
-  }
-
   return (
-    <Swipeable renderRightActions={renderRightActions} overshootRight={false} rightThreshold={40}>
+    <DismissibleRow onDismiss={onDelete} accessibilityLabel="Delete scan">
       <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.75}>
         {scan.image_url ? (
           <Image source={{ uri: scan.image_url }} style={styles.productImage} resizeMode="contain" />
@@ -340,7 +335,7 @@ function ScanCard({ scan, onPress, onDelete }: { scan: Scan; onPress: () => void
           <Ionicons name="chevron-forward" size={14} color={Colors.secondary} />
         </View>
       </TouchableOpacity>
-    </Swipeable>
+    </DismissibleRow>
   );
 }
 

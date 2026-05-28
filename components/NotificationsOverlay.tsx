@@ -12,7 +12,7 @@
  *
  * Visual reference: Figma 5363:23905.
  */
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -22,12 +22,11 @@ import {
   RefreshControl,
   Animated,
   StyleSheet as RNStyleSheet,
-  Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Swipeable } from 'react-native-gesture-handler';
+import { DismissibleRow } from '@/components/DismissibleRow';
 import Svg, { Path } from 'react-native-svg';
 import { Colors, Spacing, Radius, Shadows } from '@/constants/theme';
 import { useNotifications, type InboxNotification } from '@/lib/notificationsContext';
@@ -87,14 +86,8 @@ function MarkAsReadIcon({ size = 16, color = Colors.secondary }: { size?: number
 }
 
 // ── One card ─────────────────────────────────────────────────────────────────
-// Swipe behaviour matches iOS Mail:
-//   - Short swipe (past the 40 px threshold) → red trash button reveals,
-//     tap to confirm dismiss
-//   - Long swipe (past 60 % of screen width) → auto-dismisses without
-//     needing the tap, row animates away in one fluid motion
-const SCREEN_WIDTH = Dimensions.get('window').width;
-const LONG_SWIPE_THRESHOLD = SCREEN_WIDTH * 0.6;
-
+// Swipe behaviour is handled by the shared DismissibleRow component —
+// see components/DismissibleRow.tsx for the gesture details.
 function NotificationCard({
   item,
   onTap,
@@ -109,70 +102,8 @@ function NotificationCard({
   const isFresh =
     isUnread && Date.now() - new Date(item.sent_at).getTime() < 24 * 60 * 60 * 1000;
 
-  const swipeableRef = useRef<Swipeable>(null);
-  // Guards against multiple fires on a single swipe (the dragX listener
-  // is high-frequency; we only want the first crossing to trigger).
-  const triggeredRef = useRef(false);
-  // Tracks the (dragX, listenerId) pair we've subscribed to so we can
-  // unbind cleanly when react-native-gesture-handler hands us a new
-  // AnimatedValue (happens on each fresh swipe gesture).
-  const listenerRef = useRef<{
-    dragX: Animated.AnimatedInterpolation<number>;
-    id: string;
-  } | null>(null);
-
-  const renderRightActions = useCallback(
-    (
-      _progress: Animated.AnimatedInterpolation<number>,
-      dragX: Animated.AnimatedInterpolation<number>,
-    ) => {
-      // Re-bind the listener if Swipeable gave us a new AnimatedValue.
-      if (!listenerRef.current || listenerRef.current.dragX !== dragX) {
-        if (listenerRef.current) {
-          (listenerRef.current.dragX as Animated.Value).removeListener(listenerRef.current.id);
-        }
-        const id = (dragX as Animated.Value).addListener(({ value }) => {
-          // dragX is negative when swiping left (toward the action)
-          if (!triggeredRef.current && value < -LONG_SWIPE_THRESHOLD) {
-            triggeredRef.current = true;
-            // Close visually first so the row animates off, then call
-            // onDismiss — the soft-delete removes the item from state.
-            swipeableRef.current?.close();
-            onDismiss();
-          }
-        });
-        listenerRef.current = { dragX, id };
-      }
-
-      return (
-        <TouchableOpacity
-          style={styles.dismissAction}
-          onPress={onDismiss}
-          activeOpacity={0.85}
-          accessibilityRole="button"
-          accessibilityLabel="Dismiss notification"
-        >
-          <Ionicons name="trash-outline" size={22} color="#fff" />
-        </TouchableOpacity>
-      );
-    },
-    [onDismiss],
-  );
-
-  // Reset the trigger guard whenever the swipe collapses back to closed
-  // — that's the cleanest moment to allow the next swipe to fire.
-  const handleSwipeableClose = useCallback(() => {
-    triggeredRef.current = false;
-  }, []);
-
   return (
-    <Swipeable
-      ref={swipeableRef}
-      renderRightActions={renderRightActions}
-      onSwipeableClose={handleSwipeableClose}
-      overshootRight={false}
-      rightThreshold={40}
-    >
+    <DismissibleRow onDismiss={onDismiss} accessibilityLabel="Dismiss notification">
       <TouchableOpacity
         style={[styles.card, isUnread ? styles.cardUnread : styles.cardRead]}
         activeOpacity={0.7}
@@ -194,7 +125,7 @@ function NotificationCard({
           <Text style={styles.timestampText}>{formatTimeAgo(item.sent_at)}</Text>
         </View>
       </TouchableOpacity>
-    </Swipeable>
+    </DismissibleRow>
   );
 }
 
@@ -430,15 +361,6 @@ const styles = StyleSheet.create({
   },
   listContentEmpty: {
     flexGrow: 1,
-  },
-  // ── Swipe-to-dismiss action (red pill on the right of the card) ──
-  dismissAction: {
-    backgroundColor: Colors.status.negative,
-    borderRadius: Radius.l,
-    width: 72,
-    marginLeft: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   card: {
     borderRadius: Radius.l,
