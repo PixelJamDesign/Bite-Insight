@@ -20,13 +20,13 @@ import {
   FlatList,
   TouchableOpacity,
   RefreshControl,
-  Alert,
   Animated,
   StyleSheet as RNStyleSheet,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Swipeable } from 'react-native-gesture-handler';
 import Svg, { Path } from 'react-native-svg';
 import { Colors, Spacing, Radius, Shadows } from '@/constants/theme';
 import { useNotifications, type InboxNotification } from '@/lib/notificationsContext';
@@ -89,41 +89,60 @@ function MarkAsReadIcon({ size = 16, color = Colors.secondary }: { size?: number
 function NotificationCard({
   item,
   onTap,
-  onLongPress,
+  onDismiss,
 }: {
   item: InboxNotification;
   onTap: () => void;
-  onLongPress: () => void;
+  onDismiss: () => void;
 }) {
   const Icon = TYPE_ICON[item.type] ?? DEFAULT_ICON;
   const isUnread = !item.read_at;
   const isFresh =
     isUnread && Date.now() - new Date(item.sent_at).getTime() < 24 * 60 * 60 * 1000;
 
-  return (
+  // Reveal a red dismiss button on swipe-left. Tap it to confirm.
+  // Matches the swipe pattern in (tabs)/history.tsx so the gesture
+  // feels consistent across the app.
+  const renderRightActions = () => (
     <TouchableOpacity
-      style={[styles.card, isUnread ? styles.cardUnread : styles.cardRead]}
-      activeOpacity={0.7}
-      onPress={onTap}
-      onLongPress={onLongPress}
-      delayLongPress={400}
+      style={styles.dismissAction}
+      onPress={onDismiss}
+      activeOpacity={0.85}
+      accessibilityRole="button"
+      accessibilityLabel="Dismiss notification"
     >
-      <View style={styles.cardContent}>
-        <View style={styles.iconCircle}>
-          <Icon width={24} height={24} />
-        </View>
-        <Text style={styles.cardTitle}>{item.title}</Text>
-        <Text style={styles.cardBody}>{item.body}</Text>
-      </View>
-      <View style={styles.timestampWrap}>
-        {isFresh && (
-          <View style={styles.newPill}>
-            <Text style={styles.newPillText}>New</Text>
-          </View>
-        )}
-        <Text style={styles.timestampText}>{formatTimeAgo(item.sent_at)}</Text>
-      </View>
+      <Ionicons name="trash-outline" size={22} color="#fff" />
     </TouchableOpacity>
+  );
+
+  return (
+    <Swipeable
+      renderRightActions={renderRightActions}
+      overshootRight={false}
+      rightThreshold={40}
+    >
+      <TouchableOpacity
+        style={[styles.card, isUnread ? styles.cardUnread : styles.cardRead]}
+        activeOpacity={0.7}
+        onPress={onTap}
+      >
+        <View style={styles.cardContent}>
+          <View style={styles.iconCircle}>
+            <Icon width={24} height={24} />
+          </View>
+          <Text style={styles.cardTitle}>{item.title}</Text>
+          <Text style={styles.cardBody}>{item.body}</Text>
+        </View>
+        <View style={styles.timestampWrap}>
+          {isFresh && (
+            <View style={styles.newPill}>
+              <Text style={styles.newPillText}>New</Text>
+            </View>
+          )}
+          <Text style={styles.timestampText}>{formatTimeAgo(item.sent_at)}</Text>
+        </View>
+      </TouchableOpacity>
+    </Swipeable>
   );
 }
 
@@ -153,25 +172,15 @@ export function NotificationsOverlay() {
     [markRead, performAction],
   );
 
-  const handleLongPress = useCallback(
-    (item: InboxNotification) => {
-      Alert.alert('Dismiss notification?', item.title, [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Dismiss', style: 'destructive', onPress: () => dismiss(item.id) },
-      ]);
-    },
-    [dismiss],
-  );
-
   const renderItem = useCallback(
     ({ item }: { item: InboxNotification }) => (
       <NotificationCard
         item={item}
         onTap={() => handleTap(item)}
-        onLongPress={() => handleLongPress(item)}
+        onDismiss={() => dismiss(item.id)}
       />
     ),
-    [handleTap, handleLongPress],
+    [handleTap, dismiss],
   );
 
   const ListHeader = useMemo(
@@ -369,6 +378,15 @@ const styles = StyleSheet.create({
   },
   listContentEmpty: {
     flexGrow: 1,
+  },
+  // ── Swipe-to-dismiss action (red pill on the right of the card) ──
+  dismissAction: {
+    backgroundColor: Colors.status.negative,
+    borderRadius: Radius.l,
+    width: 72,
+    marginLeft: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   card: {
     borderRadius: Radius.l,
