@@ -4,6 +4,60 @@ Version history from initial launch (v1.0.0) to current.
 
 ---
 
+## v1.7.0 — Notification inbox + trial welcome push + Android push setup
+
+_Released May 2026._
+
+### In-app notification inbox
+
+- New bell icon on the dashboard with a live unread badge
+- Opens an overlay that mirrors the side-menu transition (220 ms fade-in, 180 ms fade-out) — logo stays in the same position so the screen doesn't shift
+- Lists every push the app has sent, newest first. Two-tone cards: solid white for unread, half-transparent for read
+- "New" pill on unread notifications under 24 hours old
+- Mark-all-read action at the top
+- Fade gradient at the header so cards scroll under it and blur into the background
+- Swipe-left on a row to dismiss. Short swipe reveals a red trash button, long swipe (past 60 % of screen width) auto-dismisses without the tap. Same gesture on the scan history tab, extracted into a shared `DismissibleRow` component
+- Trash icon fades in with swipe progress and back out on release
+- Realtime subscription keeps the unread count and list in sync across devices
+
+### Smart routing on tap
+
+- Type-based action registry — each notification type knows where it should land
+- Trial welcome → upgrade-success screen
+- Day-6 reminder → opens the existing reminder sheet (was dead-ending before)
+- First scan → opens the actual scan-result for the user's first scan (reads scan_id from the data field)
+- Inactivity / scanner-driving notifications → scanner tab
+- Pattern established for future entity-pointing pushes (recipes, family members, ingredients)
+
+### Day-0 trial welcome push
+
+- Fires inside the existing RevenueCat webhook on `INITIAL_PURCHASE` + `period_type=TRIAL`
+- Idempotent via `trial_welcome_sent_at` column
+- Pairs with the existing Day-6 reminder — full trial lifecycle now has Day-0 + Day-6 covered. Day-3 midway + conversion confirmation are queued for v1.7.1
+- New `notifications` table logs every push so users see them in the inbox even when push permission is off
+- Shared `sendPushAndLog()` helper extracted for any future Edge Function to use
+
+### Android push notifications setup
+
+- FCM (Firebase Cloud Messaging) configured for the `bite-insight` Firebase project
+- `google-services.json` committed; FCM v1 service account uploaded to EAS
+- Build wiring done — actual Android release ships when the EAS Android build runs
+- Push send code is platform-agnostic, so once an Android user has a token, every existing push flow works without code changes
+
+### Copy + polish
+
+- Scrubbed AI tells from user-facing strings — em-dashes, en-dashes, tricolons, "easily / seamlessly" brochure verbs, "have the ability to" constructions
+- UpsellPanel feature cards rewritten in a more human voice
+- Inbox empty state rewritten
+
+### Other fixes
+
+- App icon badge clears on app launch and on every foreground transition (was sticking until the iOS notification was explicitly dismissed)
+- RevenueCat customer profile now shows the user's name and email via subscriber attributes
+- Search results show the "No image" placeholder when an OFF image URL exists but fails to load
+
+---
+
 ## v1.6.3 — PostHog session replay
 
 _Released May 21 2026._
