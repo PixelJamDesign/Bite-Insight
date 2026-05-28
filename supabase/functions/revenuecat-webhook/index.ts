@@ -16,7 +16,7 @@
 //   Events: INITIAL_PURCHASE, RENEWAL, CANCELLATION, EXPIRATION, BILLING_ISSUE
 
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { sendPush } from '../_shared/sendPush.ts';
+import { sendPushAndLog } from '../_shared/sendPushAndLog.ts';
 
 const ACTIVE_EVENTS = new Set([
   'INITIAL_PURCHASE',
@@ -107,20 +107,26 @@ Deno.serve(async (req) => {
     // trial_welcome_sent_at — if RC re-delivers the same event we
     // skip the second send (the column was reset above, so this only
     // re-fires if we haven't yet stamped it).
+    //
+    // sendPushAndLog handles three things in one call:
+    //   1. Insert a row to public.notifications (visible in the inbox)
+    //   2. Look up the user's push token
+    //   3. Fire the actual push if a token exists
+    // Even users without a token get the inbox row, so the welcome
+    // copy is still reachable when they open the app.
     if (eventType === 'INITIAL_PURCHASE' && isTrialPeriod) {
       const { data: user } = await supabase
         .from('profiles')
-        .select('expo_push_token, full_name, trial_welcome_sent_at')
+        .select('full_name, trial_welcome_sent_at')
         .eq('id', userId)
         .single();
 
-      if (user?.expo_push_token && !user.trial_welcome_sent_at) {
-        const firstName = user.full_name?.split(' ')[0];
+      if (!user?.trial_welcome_sent_at) {
+        const firstName = user?.full_name?.split(' ')[0];
         const title = firstName
           ? `Welcome to Bite Insight+, ${firstName}`
           : 'Welcome to Bite Insight+';
-        const result = await sendPush({
-          to: user.expo_push_token,
+        const result = await sendPushAndLog(supabase, userId, {
           title,
           body: "Your 7-day trial is live. Tap to see what's now unlocked.",
           sound: 'default',
@@ -132,22 +138,24 @@ Deno.serve(async (req) => {
           },
         });
 
-        if (result.sent > 0) {
+        // Stamp as sent if EITHER the push went through OR we at least
+        // logged it to the inbox. Either way the user has received this
+        // welcome and we don't want to send a second one.
+        if (result.logged || result.sent > 0) {
           await supabase
             .from('profiles')
             .update({ trial_welcome_sent_at: new Date().toISOString() })
             .eq('id', userId);
-          console.log(`[revenuecat-webhook] Day-0 welcome push sent to ${userId}`);
+          console.log(
+            `[revenuecat-webhook] Day-0 welcome processed for ${userId}`,
+            `(push sent: ${result.sent}, logged: ${result.logged})`,
+          );
         } else {
           console.warn(
-            `[revenuecat-webhook] Day-0 welcome push failed for ${userId}:`,
+            `[revenuecat-webhook] Day-0 welcome failed entirely for ${userId}:`,
             result.errors,
           );
         }
-      } else if (!user?.expo_push_token) {
-        console.log(
-          `[revenuecat-webhook] No push token yet for ${userId} — skipping welcome push (user hasn't granted notification permission)`,
-        );
       }
     }
   } else if (INACTIVE_EVENTS.has(eventType)) {

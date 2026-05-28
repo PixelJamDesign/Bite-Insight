@@ -18,6 +18,7 @@ import { TransitionProvider, useTransition } from '@/lib/transitionContext';
 import { UpsellSheetProvider } from '@/lib/upsellSheetContext';
 import { MyPlanSheetProvider } from '@/lib/myPlanSheetContext';
 import { SubscriptionProvider } from '@/lib/subscriptionContext';
+import { NotificationsProvider } from '@/lib/notificationsContext';
 import { ActiveFamilyProvider } from '@/lib/activeFamilyContext';
 import { RegionProvider } from '@/lib/regionContext';
 import { MenuProvider } from '@/lib/menuContext';
@@ -528,6 +529,7 @@ export default function RootLayout() {
       <SessionProvider>
         <JourneyProvider>
           <SubscriptionProvider>
+            <NotificationsProvider>
             <ActiveFamilyProvider>
               <RegionProvider>
                 <UpsellSheetProvider>
@@ -551,6 +553,7 @@ export default function RootLayout() {
                 </UpsellSheetProvider>
               </RegionProvider>
             </ActiveFamilyProvider>
+            </NotificationsProvider>
           </SubscriptionProvider>
         </JourneyProvider>
       </SessionProvider>

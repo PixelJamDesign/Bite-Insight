@@ -36,6 +36,7 @@ import { useSubscription } from '@/lib/subscriptionContext';
 import { UpsellPanel } from '@/components/UpsellPanel';
 import { PlusBadge } from '@/components/PlusBadge';
 import { CameraIcon } from '@/components/MenuIcons';
+import { NotificationBell } from '@/components/NotificationBell';
 import { FlagReasonSheet } from '@/components/FlagReasonSheet';
 import { useAvatarPicker } from '@/lib/useAvatarPicker';
 import { uploadAvatar } from '@/lib/supabase';
@@ -639,13 +640,16 @@ export default function HomeDashboard() {
         <TouchableOpacity onPress={() => router.push('/(tabs)/dashboard' as any)} activeOpacity={0.7} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
           <Logo width={141} height={36} />
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.menuBtn}
-          onPress={menuOpen ? closeMenu : openMenu}
-          activeOpacity={0.8}
-        >
-          <Ionicons name={menuOpen ? 'close' : 'menu-outline'} size={24} color={Colors.primary} />
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <NotificationBell />
+          <TouchableOpacity
+            style={styles.menuBtn}
+            onPress={menuOpen ? closeMenu : openMenu}
+            activeOpacity={0.8}
+          >
+            <Ionicons name={menuOpen ? 'close' : 'menu-outline'} size={24} color={Colors.primary} />
+          </TouchableOpacity>
+        </View>
       </View>
       {/* ── Flag Reason Sheet ── */}
       <FlagReasonSheet
@@ -704,6 +708,11 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 15,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   menuBtn: {
     width: 48,
