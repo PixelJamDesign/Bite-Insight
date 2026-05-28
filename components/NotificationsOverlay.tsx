@@ -1,21 +1,16 @@
 /**
- * /notifications — the in-app inbox.
+ * NotificationsOverlay — the in-app inbox, rendered as an opacity-faded
+ * overlay over the current screen (NOT a navigation route).
  *
- * Visual reference: Figma 5363:23905. Layout:
- *   - Header: Bite Insight logo (left) + close button (right) on a
- *     fade-to-page gradient so cards scroll under it
- *   - "Notifications" H3 title
- *   - Mixed-weight count: "You have N unread notifications"
- *   - "Mark as read" CTA (only when there's anything unread)
- *   - List of cards. Each card:
- *       - 42 px tinted-teal circle with a 24 px topic icon
- *       - Title (Heading 5)
- *       - Body (Small Paragraph)
- *       - Absolute top-right: optional "New" pill + relative
- *         timestamp like "33m ago"
+ * Mirrors MenuOverlay's transition pattern exactly:
+ *   - Mounted in (tabs)/_layout.tsx so the tab bar stays put
+ *   - Opacity-driven 220ms fade-in / 180ms fade-out via Animated.Value
+ *   - Header sits absolute at the same top coords as the dashboard
+ *     header, so the Bite Insight logo doesn't shift when the overlay
+ *     opens or closes — it stays exactly where the user just tapped
+ *     the bell next to.
  *
- * Tap → mark read → route to deep link. Long-press → confirm
- * dismiss → soft-delete via dismissed_at.
+ * Visual reference: Figma 5363:23905.
  */
 import { useCallback, useMemo, useState } from 'react';
 import {
@@ -26,23 +21,23 @@ import {
   TouchableOpacity,
   RefreshControl,
   Alert,
+  Animated,
+  StyleSheet as RNStyleSheet,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
 import { Colors, Spacing, Radius, Shadows } from '@/constants/theme';
 import { useNotifications, type InboxNotification } from '@/lib/notificationsContext';
+import { useNotificationsOverlay } from '@/lib/notificationsOverlayContext';
 import Logo from '../assets/images/logo.svg';
 import UpdateBulbIcon from '../assets/icons/update_bulb.svg';
 import UpdateBalloonIcon from '../assets/icons/update_balloon.svg';
 import UpdateScannerIcon from '../assets/icons/update_scanner.svg';
 import UpdateUserIcon from '../assets/icons/update_user.svg';
 
-// ── Per-type metadata ────────────────────────────────────────────────────────
-// Maps notification.type → icon component. Adding a new push category
-// is one line here. Falls back to bulb for anything unrecognised.
+// ── Per-type icon mapping ────────────────────────────────────────────────────
 type IconComponent = React.ComponentType<{ width?: number; height?: number }>;
 
 const TYPE_ICON: Record<string, IconComponent> = {
@@ -54,7 +49,6 @@ const TYPE_ICON: Record<string, IconComponent> = {
   review_request:     UpdateUserIcon,
   first_scan:         UpdateScannerIcon,
 };
-
 const DEFAULT_ICON: IconComponent = UpdateBulbIcon;
 
 // ── Relative time formatter ──────────────────────────────────────────────────
@@ -75,8 +69,7 @@ function formatTimeAgo(iso: string): string {
   return `${months}mo ago`;
 }
 
-// ── "Mark as read" inbox icon (small SVG used in the top-of-screen
-//     mark-all-read button) ─────────────────────────────────────────────────
+// ── Inbox icon for the "Mark as read" CTA ────────────────────────────────────
 function MarkAsReadIcon({ size = 16, color = Colors.secondary }: { size?: number; color?: string }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 16 16" fill="none">
@@ -91,7 +84,7 @@ function MarkAsReadIcon({ size = 16, color = Colors.secondary }: { size?: number
   );
 }
 
-// ── A single row card ────────────────────────────────────────────────────────
+// ── One card ─────────────────────────────────────────────────────────────────
 function NotificationCard({
   item,
   onTap,
@@ -103,9 +96,6 @@ function NotificationCard({
 }) {
   const Icon = TYPE_ICON[item.type] ?? DEFAULT_ICON;
   const isUnread = !item.read_at;
-  // "New" pill fires on unread notifications less than 24 hours old —
-  // matches the Figma reference where only the freshest unread row
-  // wears the pill.
   const isFresh =
     isUnread && Date.now() - new Date(item.sent_at).getTime() < 24 * 60 * 60 * 1000;
 
@@ -136,9 +126,10 @@ function NotificationCard({
   );
 }
 
-// ── Screen ───────────────────────────────────────────────────────────────────
-export default function NotificationsScreen() {
+// ── Overlay ──────────────────────────────────────────────────────────────────
+export function NotificationsOverlay() {
   const insets = useSafeAreaInsets();
+  const { visible, anim, hide } = useNotificationsOverlay();
   const { notifications, loading, unreadCount, refresh, markRead, markAllRead, dismiss } =
     useNotifications();
   const [refreshing, setRefreshing] = useState(false);
@@ -151,13 +142,16 @@ export default function NotificationsScreen() {
 
   const handleTap = useCallback(
     (item: InboxNotification) => {
-      if (!item.read_at) markRead(item.id); // fire-and-forget
+      if (!item.read_at) markRead(item.id);
+      hide(); // close the overlay before routing so the deep-linked
+              // screen lands cleanly underneath
       if (item.deep_link) {
         const path = item.deep_link.replace(/^biteinsight:\/\//, '/');
-        router.push(path as any);
+        // tiny delay so close animation can start before route swap
+        setTimeout(() => router.push(path as any), 60);
       }
     },
-    [markRead],
+    [markRead, hide],
   );
 
   const handleLongPress = useCallback(
@@ -181,19 +175,14 @@ export default function NotificationsScreen() {
     [handleTap, handleLongPress],
   );
 
-  // ── List header — title + count + mark-all-read ───────────────────────────
   const ListHeader = useMemo(
     () => (
       <View style={styles.titleBlock}>
         <Text style={styles.title}>Notifications</Text>
         <View style={styles.countRow}>
           <Text style={styles.countTextLight}>You have </Text>
-          <Text style={styles.countTextBold}>
-            {unreadCount} unread
-          </Text>
-          <Text style={styles.countTextLight}>
-            {' '}notifications
-          </Text>
+          <Text style={styles.countTextBold}>{unreadCount} unread</Text>
+          <Text style={styles.countTextLight}> notifications</Text>
         </View>
         {unreadCount > 0 && (
           <TouchableOpacity
@@ -211,9 +200,20 @@ export default function NotificationsScreen() {
     [unreadCount, markAllRead],
   );
 
+  // Skip render entirely while hidden — saves the FlatList from doing
+  // any work in the background.
+  if (!visible) return null;
+
   return (
-    <View style={styles.screen}>
-      {/* List behind the header — cards scroll under the fade gradient. */}
+    <Animated.View
+      style={[RNStyleSheet.absoluteFill, styles.overlay, { opacity: anim }]}
+      pointerEvents="box-none"
+    >
+      {/* Solid page background — the dashboard underneath is hidden
+          while the overlay is open. */}
+      <View style={styles.background} pointerEvents="auto" />
+
+      {/* List behind the header */}
       <FlatList
         data={notifications}
         renderItem={renderItem}
@@ -222,7 +222,9 @@ export default function NotificationsScreen() {
         contentContainerStyle={[
           styles.listContent,
           {
-            paddingTop: insets.top + 90,
+            // Match the dashboard header padding so the title block sits
+            // exactly where Figma puts it — directly under the logo.
+            paddingTop: insets.top + 24 + 48 + Spacing.s,
             paddingBottom: insets.bottom + Spacing.xl,
           },
           notifications.length === 0 && styles.listContentEmpty,
@@ -245,55 +247,47 @@ export default function NotificationsScreen() {
         }
       />
 
-      {/* Floating header — logo + close button. Sits absolutely over
-          the list with a fade-to-page gradient so cards scroll under it. */}
-      <LinearGradient
-        colors={[Colors.background, 'rgba(226,241,238,0)']}
-        locations={[0.82, 1]}
+      {/* Header — logo on the LEFT (same coords as the dashboard's
+          logo so it doesn't shift), close button on the RIGHT (same
+          coords as the dashboard's menu hamburger so the bell visually
+          becomes the close button without moving). */}
+      <View
+        style={[styles.header, { paddingTop: insets.top + 24 }]}
         pointerEvents="box-none"
-        style={[styles.header, { paddingTop: insets.top + Spacing.m }]}
       >
-        <View style={styles.headerInner}>
-          <Logo width={121} height={30} />
-          <TouchableOpacity
-            style={styles.closeBtn}
-            activeOpacity={0.7}
-            onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/dashboard' as any))}
-            accessibilityRole="button"
-            accessibilityLabel="Close"
-          >
-            <Ionicons name="close" size={24} color={Colors.primary} />
-          </TouchableOpacity>
-        </View>
-      </LinearGradient>
-    </View>
+        <Logo width={141} height={36} />
+        <TouchableOpacity style={styles.closeBtn} onPress={hide} activeOpacity={0.8}>
+          <Ionicons name="close" size={24} color={Colors.primary} />
+        </TouchableOpacity>
+      </View>
+    </Animated.View>
   );
 }
 
 // ── Styles ───────────────────────────────────────────────────────────────────
-const TEAL_ROSE = '#e2f1ee'; // var(--teal/spring-water) — icon-circle bg
+const TEAL_ROSE = '#e2f1ee';
 const NEW_PILL_BG = '#b8dfd6';
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
+  overlay: {
+    zIndex: 90, // below the menu's 100 so menu wins ties; above content
+  },
+  background: {
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: Colors.background,
   },
-  // ── Header ──
+  // ── Header (matches dashboard header coords exactly) ──
   header: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    paddingBottom: Spacing.s,
-    paddingHorizontal: Spacing.m,
-    zIndex: 10,
-  },
-  headerInner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    height: 48,
+    paddingHorizontal: 24,
+    paddingBottom: 16,
+    zIndex: 10,
   },
   closeBtn: {
     width: 48,
@@ -301,7 +295,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface.tertiary,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Colors.stroke.primary, // white
+    borderColor: Colors.stroke.primary,
     alignItems: 'center',
     justifyContent: 'center',
     ...Shadows.level3,
@@ -350,30 +344,29 @@ const styles = StyleSheet.create({
     color: Colors.secondary,
     letterSpacing: -0.14,
   },
-  // ── List ──
+  // ── List + cards ──
   listContent: {
     paddingHorizontal: Spacing.m,
   },
   listContentEmpty: {
     flexGrow: 1,
   },
-  // ── Card ──
   card: {
     borderRadius: Radius.l,
     borderWidth: 1,
-    borderColor: Colors.stroke.primary, // white
+    borderColor: Colors.stroke.primary,
     padding: Spacing.s,
     position: 'relative',
   },
   cardUnread: {
-    backgroundColor: Colors.surface.secondary, // solid white
+    backgroundColor: Colors.surface.secondary,
   },
   cardRead: {
     backgroundColor: 'rgba(255,255,255,0.5)',
   },
   cardContent: {
     gap: 10,
-    paddingRight: 72, // reserve space for the absolute timestamp/pill
+    paddingRight: 72,
   },
   iconCircle: {
     width: 42,

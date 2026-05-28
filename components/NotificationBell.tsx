@@ -12,19 +12,21 @@
  * Lives next to the menu hamburger on the dashboard. Tap → /notifications.
  */
 import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
-import { router } from 'expo-router';
 import { Colors, Shadows } from '@/constants/theme';
 import { MenuNotificationsIcon } from '@/components/MenuIcons';
 import { useNotifications } from '@/lib/notificationsContext';
+import { useNotificationsOverlay } from '@/lib/notificationsOverlayContext';
 
 interface NotificationBellProps {
-  /** Override the default route (defaults to /notifications). */
+  /** Override the default open behaviour (defaults to showing the
+   *  notifications overlay via NotificationsOverlayProvider). */
   onPress?: () => void;
 }
 
 export function NotificationBell({ onPress }: NotificationBellProps) {
   const { unreadCount } = useNotifications();
-  const handlePress = onPress ?? (() => router.push('/notifications' as any));
+  const { show } = useNotificationsOverlay();
+  const handlePress = onPress ?? show;
   const displayCount = unreadCount > 9 ? '9+' : String(unreadCount);
 
   return (

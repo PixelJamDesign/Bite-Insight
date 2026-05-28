@@ -19,6 +19,7 @@ import { UpsellSheetProvider } from '@/lib/upsellSheetContext';
 import { MyPlanSheetProvider } from '@/lib/myPlanSheetContext';
 import { SubscriptionProvider } from '@/lib/subscriptionContext';
 import { NotificationsProvider } from '@/lib/notificationsContext';
+import { NotificationsOverlayProvider } from '@/lib/notificationsOverlayContext';
 import { ActiveFamilyProvider } from '@/lib/activeFamilyContext';
 import { RegionProvider } from '@/lib/regionContext';
 import { MenuProvider } from '@/lib/menuContext';
@@ -530,6 +531,7 @@ export default function RootLayout() {
         <JourneyProvider>
           <SubscriptionProvider>
             <NotificationsProvider>
+            <NotificationsOverlayProvider>
             <ActiveFamilyProvider>
               <RegionProvider>
                 <UpsellSheetProvider>
@@ -553,6 +555,7 @@ export default function RootLayout() {
                 </UpsellSheetProvider>
               </RegionProvider>
             </ActiveFamilyProvider>
+            </NotificationsOverlayProvider>
             </NotificationsProvider>
           </SubscriptionProvider>
         </JourneyProvider>

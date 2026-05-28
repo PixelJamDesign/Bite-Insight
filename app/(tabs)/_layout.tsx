@@ -14,6 +14,7 @@ import { useCachedAvatar } from '@/lib/useCachedAvatar';
 import { TabBarSlideProvider, useTabBarSlide } from '@/lib/tabBarContext';
 import { useMenu } from '@/lib/menuContext';
 import { MenuModal } from '@/components/MenuModal';
+import { NotificationsOverlay } from '@/components/NotificationsOverlay';
 import Logo from '../../assets/images/logo.svg';
 
 function getInitials(name: string | null | undefined): string {
@@ -337,6 +338,7 @@ export default function TabLayout() {
             <Tabs.Screen name="ingredient-preferences" options={{ href: null }} />
           </Tabs>
           <MenuOverlay />
+          <NotificationsOverlay />
         </View>
     </TabBarSlideProvider>
   );
