@@ -16,6 +16,7 @@
 //   Events: INITIAL_PURCHASE, RENEWAL, CANCELLATION, EXPIRATION, BILLING_ISSUE
 
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { sendPush } from '../_shared/sendPush.ts';
 
 const ACTIVE_EVENTS = new Set([
   'INITIAL_PURCHASE',
@@ -92,12 +93,63 @@ Deno.serve(async (req) => {
       if (body.event?.expiration_at_ms) {
         update.trial_ends_at = new Date(body.event.expiration_at_ms).toISOString();
       }
-      // Clear any stale reminder flag from a prior trial cycle so
-      // the Day-6 push fires for this one.
+      // Clear any stale reminder flags from a prior trial cycle so
+      // pushes fire for this one. Day-0 welcome and Day-6 reminder
+      // both use this pattern.
       update.trial_reminder_sent_at = null;
+      update.trial_welcome_sent_at = null;
     }
 
     await supabase.from('profiles').update(update).eq('id', userId);
+
+    // ── Day-0 trial welcome push ────────────────────────────────────────────
+    // Fires immediately when a fresh trial is detected. Idempotent via
+    // trial_welcome_sent_at — if RC re-delivers the same event we
+    // skip the second send (the column was reset above, so this only
+    // re-fires if we haven't yet stamped it).
+    if (eventType === 'INITIAL_PURCHASE' && isTrialPeriod) {
+      const { data: user } = await supabase
+        .from('profiles')
+        .select('expo_push_token, full_name, trial_welcome_sent_at')
+        .eq('id', userId)
+        .single();
+
+      if (user?.expo_push_token && !user.trial_welcome_sent_at) {
+        const firstName = user.full_name?.split(' ')[0];
+        const title = firstName
+          ? `Welcome to Bite Insight+, ${firstName}`
+          : 'Welcome to Bite Insight+';
+        const result = await sendPush({
+          to: user.expo_push_token,
+          title,
+          body: "Your 7-day trial is live. Tap to see what's now unlocked.",
+          sound: 'default',
+          priority: 'high',
+          badge: 1,
+          data: {
+            type: 'trial_welcome',
+            deepLink: 'biteinsight://upgrade-success',
+          },
+        });
+
+        if (result.sent > 0) {
+          await supabase
+            .from('profiles')
+            .update({ trial_welcome_sent_at: new Date().toISOString() })
+            .eq('id', userId);
+          console.log(`[revenuecat-webhook] Day-0 welcome push sent to ${userId}`);
+        } else {
+          console.warn(
+            `[revenuecat-webhook] Day-0 welcome push failed for ${userId}:`,
+            result.errors,
+          );
+        }
+      } else if (!user?.expo_push_token) {
+        console.log(
+          `[revenuecat-webhook] No push token yet for ${userId} — skipping welcome push (user hasn't granted notification permission)`,
+        );
+      }
+    }
   } else if (INACTIVE_EVENTS.has(eventType)) {
     // Never downgrade VIP users — they have lifetime access regardless of subscription state
     const { data: profile } = await supabase.from('profiles').select('is_vip').eq('id', userId).single();
