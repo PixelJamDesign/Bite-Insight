@@ -25,12 +25,12 @@ import {
   StyleSheet as RNStyleSheet,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Path } from 'react-native-svg';
 import { Colors, Spacing, Radius, Shadows } from '@/constants/theme';
 import { useNotifications, type InboxNotification } from '@/lib/notificationsContext';
 import { useNotificationsOverlay } from '@/lib/notificationsOverlayContext';
+import { useNotificationAction } from '@/lib/useNotificationAction';
 import Logo from '../assets/images/logo.svg';
 import UpdateBulbIcon from '../assets/icons/update_bulb.svg';
 import UpdateBalloonIcon from '../assets/icons/update_balloon.svg';
@@ -132,6 +132,7 @@ export function NotificationsOverlay() {
   const { visible, anim, hide } = useNotificationsOverlay();
   const { notifications, loading, unreadCount, refresh, markRead, markAllRead, dismiss } =
     useNotifications();
+  const performAction = useNotificationAction();
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = useCallback(async () => {
@@ -143,15 +144,12 @@ export function NotificationsOverlay() {
   const handleTap = useCallback(
     (item: InboxNotification) => {
       if (!item.read_at) markRead(item.id);
-      hide(); // close the overlay before routing so the deep-linked
-              // screen lands cleanly underneath
-      if (item.deep_link) {
-        const path = item.deep_link.replace(/^biteinsight:\/\//, '/');
-        // tiny delay so close animation can start before route swap
-        setTimeout(() => router.push(path as any), 60);
-      }
+      // Hand off to the type-based action registry. It knows whether to
+      // route, open a sheet, trigger a system action, or just close —
+      // and it handles closing the overlay first.
+      performAction(item);
     },
-    [markRead, hide],
+    [markRead, performAction],
   );
 
   const handleLongPress = useCallback(
