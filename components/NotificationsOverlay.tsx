@@ -237,10 +237,9 @@ export function NotificationsOverlay() {
           !loading ? (
             <View style={styles.empty}>
               <UpdateBulbIcon width={64} height={64} />
-              <Text style={styles.emptyTitle}>No notifications yet</Text>
+              <Text style={styles.emptyTitle}>Nothing here yet</Text>
               <Text style={styles.emptyBody}>
-                When the app has something for you — a trial update, a reminder, a tip — it'll
-                show up here.
+                When the app has something for you, it'll show up here.
               </Text>
             </View>
           ) : null

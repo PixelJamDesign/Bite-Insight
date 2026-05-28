@@ -50,22 +50,22 @@ const CARDS: CardData[] = [
   {
     icon: ICON_FAMILY,
     title: 'Create and manage\nfamily profiles',
-    body: "Easily manage your family's health, allergies, and dietary needs with individual member profiles.",
+    body: "Each person you add has their own preferences, allergies and conditions.",
   },
   {
     icon: ICON_FLAG,
     title: 'Flag ingredients you\nwant to avoid',
-    body: 'Have the ability to flag ingredients you want to avoid.',
+    body: "Tell us what to watch for and we'll flag it on every scan.",
   },
   {
     icon: ICON_RECIPES,
     title: 'Create and share recipes with other Bite Insight+ members.',
-    body: 'Access to the Bite Insight+ recipe community where you can share and save ideas for you next meal.',
+    body: 'Swap meal ideas in the Bite Insight+ recipe community.',
   },
   {
     icon: ICON_BARCODE,
-    title: 'Barcode scanning for Global products',
-    body: 'Access to over 4.2 millions products — Powered by a global food database.',
+    title: 'Barcode scanning for global products',
+    body: 'Scan over 4.2 million products from anywhere in the world.',
   },
 ];
 

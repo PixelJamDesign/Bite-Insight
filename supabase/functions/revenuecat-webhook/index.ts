@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
           : 'Welcome to Bite Insight+';
         const result = await sendPushAndLog(supabase, userId, {
           title,
-          body: "Your 7-day trial is live. Tap to see what's now unlocked.",
+          body: 'Your 7-day trial is on. Take a look around.',
           sound: 'default',
           priority: 'high',
           badge: 1,
