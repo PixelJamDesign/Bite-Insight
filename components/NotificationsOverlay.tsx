@@ -26,6 +26,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
 import { Colors, Spacing, Radius, Shadows } from '@/constants/theme';
 import { useNotifications, type InboxNotification } from '@/lib/notificationsContext';
@@ -244,6 +245,17 @@ export function NotificationsOverlay() {
         }
       />
 
+      {/* Fade gradient — solid background at the top fading to
+          transparent further down. Lets the cards scroll underneath
+          the header and blur out as they hit it, matching the
+          dashboard pattern. Sits BELOW the header content layer. */}
+      <LinearGradient
+        colors={[Colors.background, Colors.background, 'rgba(226,241,238,0)']}
+        locations={[0, 0.7, 1]}
+        style={[styles.headerFade, { height: insets.top + 104 }]}
+        pointerEvents="none"
+      />
+
       {/* Header — logo on the LEFT (same coords as the dashboard's
           logo so it doesn't shift), close button on the RIGHT (same
           coords as the dashboard's menu hamburger so the bell visually
@@ -273,6 +285,15 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: Colors.background,
   },
+  // ── Header fade — solid bg fading to transparent so list scrolls
+  //    underneath and blurs out as it meets the header ──
+  headerFade: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 5,
+  },
   // ── Header (matches dashboard header coords exactly) ──
   header: {
     position: 'absolute',
@@ -298,8 +319,9 @@ const styles = StyleSheet.create({
     ...Shadows.level3,
   },
   // ── Title block ──
+  // No horizontal padding here — listContent already applies 24 px,
+  // so the title aligns flush with the header logo and the cards.
   titleBlock: {
-    paddingHorizontal: Spacing.m,
     marginBottom: Spacing.s,
     gap: Spacing.xs,
   },
