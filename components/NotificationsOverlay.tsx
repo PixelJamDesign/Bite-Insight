@@ -12,7 +12,7 @@
  *
  * Visual reference: Figma 5363:23905.
  */
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -22,6 +22,7 @@ import {
   RefreshControl,
   Animated,
   StyleSheet as RNStyleSheet,
+  Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -86,6 +87,14 @@ function MarkAsReadIcon({ size = 16, color = Colors.secondary }: { size?: number
 }
 
 // ── One card ─────────────────────────────────────────────────────────────────
+// Swipe behaviour matches iOS Mail:
+//   - Short swipe (past the 40 px threshold) → red trash button reveals,
+//     tap to confirm dismiss
+//   - Long swipe (past 60 % of screen width) → auto-dismisses without
+//     needing the tap, row animates away in one fluid motion
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const LONG_SWIPE_THRESHOLD = SCREEN_WIDTH * 0.6;
+
 function NotificationCard({
   item,
   onTap,
@@ -100,24 +109,67 @@ function NotificationCard({
   const isFresh =
     isUnread && Date.now() - new Date(item.sent_at).getTime() < 24 * 60 * 60 * 1000;
 
-  // Reveal a red dismiss button on swipe-left. Tap it to confirm.
-  // Matches the swipe pattern in (tabs)/history.tsx so the gesture
-  // feels consistent across the app.
-  const renderRightActions = () => (
-    <TouchableOpacity
-      style={styles.dismissAction}
-      onPress={onDismiss}
-      activeOpacity={0.85}
-      accessibilityRole="button"
-      accessibilityLabel="Dismiss notification"
-    >
-      <Ionicons name="trash-outline" size={22} color="#fff" />
-    </TouchableOpacity>
+  const swipeableRef = useRef<Swipeable>(null);
+  // Guards against multiple fires on a single swipe (the dragX listener
+  // is high-frequency; we only want the first crossing to trigger).
+  const triggeredRef = useRef(false);
+  // Tracks the (dragX, listenerId) pair we've subscribed to so we can
+  // unbind cleanly when react-native-gesture-handler hands us a new
+  // AnimatedValue (happens on each fresh swipe gesture).
+  const listenerRef = useRef<{
+    dragX: Animated.AnimatedInterpolation<number>;
+    id: string;
+  } | null>(null);
+
+  const renderRightActions = useCallback(
+    (
+      _progress: Animated.AnimatedInterpolation<number>,
+      dragX: Animated.AnimatedInterpolation<number>,
+    ) => {
+      // Re-bind the listener if Swipeable gave us a new AnimatedValue.
+      if (!listenerRef.current || listenerRef.current.dragX !== dragX) {
+        if (listenerRef.current) {
+          (listenerRef.current.dragX as Animated.Value).removeListener(listenerRef.current.id);
+        }
+        const id = (dragX as Animated.Value).addListener(({ value }) => {
+          // dragX is negative when swiping left (toward the action)
+          if (!triggeredRef.current && value < -LONG_SWIPE_THRESHOLD) {
+            triggeredRef.current = true;
+            // Close visually first so the row animates off, then call
+            // onDismiss — the soft-delete removes the item from state.
+            swipeableRef.current?.close();
+            onDismiss();
+          }
+        });
+        listenerRef.current = { dragX, id };
+      }
+
+      return (
+        <TouchableOpacity
+          style={styles.dismissAction}
+          onPress={onDismiss}
+          activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel="Dismiss notification"
+        >
+          <Ionicons name="trash-outline" size={22} color="#fff" />
+        </TouchableOpacity>
+      );
+    },
+    [onDismiss],
   );
+
+  // Reset the trigger guard whenever the swipe collapses back to closed
+  // — that's the cleanest moment to allow the next swipe to fire.
+  const handleSwipeableClose = useCallback(() => {
+    triggeredRef.current = false;
+  }, []);
 
   return (
     <Swipeable
+      ref={swipeableRef}
       renderRightActions={renderRightActions}
+      onSwipeableClose={handleSwipeableClose}
       overshootRight={false}
       rightThreshold={40}
     >
