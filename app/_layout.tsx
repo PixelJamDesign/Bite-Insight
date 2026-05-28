@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Redirect, Stack, useRootNavigationState, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
-import { Animated, Linking, View, Text, Platform } from 'react-native';
+import { Animated, AppState, Linking, View, Text, Platform } from 'react-native';
 import { Session } from '@supabase/supabase-js';
 import { shouldShowWhatsNew } from './whats-new';
 import {
@@ -368,6 +368,7 @@ function RootLayoutInner() {
       <TrialDay6ReminderSheet />
       <PushTokenGate />
       <TrialReminderPushGate />
+      <BadgeClearGate />
       <PostHogIdentifyGate />
       <DebugMenu />
     </>
@@ -429,6 +430,39 @@ function TrialReminderPushGate() {
       receivedSub.remove();
     };
   }, [showTrialDay6Reminder]);
+
+  return null;
+}
+
+/**
+ * BadgeClearGate — wipes the app icon badge to 0 on cold launch and
+ * every time the app returns to the foreground.
+ *
+ * Without this, a push that set badge=1 leaves a red dot on the icon
+ * until the user explicitly clears the underlying notification — which
+ * is awkward when the user already opened the app, saw the content,
+ * and intuitively expects "I dealt with it, the dot should go."
+ *
+ * The proper future behaviour (decrement per unread item) lands when
+ * we ship the in-app notification inbox. Until then, clear-on-open
+ * gives users a sensible UX and stops badge state from drifting.
+ */
+function BadgeClearGate() {
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+
+    // Wipe immediately on mount (cold launch / re-mount after auth)
+    Notifications.setBadgeCountAsync(0).catch(() => {});
+
+    // Wipe again whenever the app comes back to foreground
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        Notifications.setBadgeCountAsync(0).catch(() => {});
+      }
+    });
+
+    return () => sub.remove();
+  }, []);
 
   return null;
 }
