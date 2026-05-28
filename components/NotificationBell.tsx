@@ -13,8 +13,8 @@
  */
 import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
-import Svg, { Path } from 'react-native-svg';
 import { Colors, Shadows } from '@/constants/theme';
+import { MenuNotificationsIcon } from '@/components/MenuIcons';
 import { useNotifications } from '@/lib/notificationsContext';
 
 interface NotificationBellProps {
@@ -39,17 +39,12 @@ export function NotificationBell({ onPress }: NotificationBellProps) {
           : 'Notifications'
       }
     >
-      {/* Bell icon — 24×24 centered. Generic outline bell that matches
-          the visual weight of the menu hamburger. */}
-      <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-        <Path
-          d="M12 2.5C8.41 2.5 5.5 5.41 5.5 9v4.17l-1.5 2.08V17h16v-1.75l-1.5-2.08V9c0-3.59-2.91-6.5-6.5-6.5zm0 18.5a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2z"
-          fill={Colors.primary}
-        />
-      </Svg>
+      {/* Bell icon — uses the canonical MenuNotificationsIcon from the
+          design system so the stroke weight matches the menu hamburger. */}
+      <MenuNotificationsIcon color={Colors.primary} size={22} />
       {unreadCount > 0 && (
         <View style={styles.badge}>
-          <Text style={styles.badgeText} numberOfLines={1}>
+          <Text style={styles.badgeText} numberOfLines={1} allowFontScaling={false}>
             {displayCount}
           </Text>
         </View>
@@ -72,23 +67,26 @@ const styles = StyleSheet.create({
   },
   badge: {
     position: 'absolute',
-    top: 6,
-    left: 25,
-    width: 16,
+    // Sat inside the top-right of the 48px button, overlapping the
+    // top-right of the bell. Coordinates match Figma 2878:7341.
+    top: 4,
+    right: 4,
+    minWidth: 16,
     height: 16,
     borderRadius: 8,
     backgroundColor: Colors.status.negative,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 1,
-    paddingVertical: 4,
+    paddingHorizontal: 4,
   },
   badgeText: {
     fontSize: 10,
-    lineHeight: 12,
+    lineHeight: 10,
     color: '#fff',
     fontFamily: 'Figtree_700Bold',
     textAlign: 'center',
     letterSpacing: -0.2,
+    // Drop default extra padding iOS adds around small text.
+    includeFontPadding: false,
   },
 });
