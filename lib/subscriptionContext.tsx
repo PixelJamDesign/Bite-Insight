@@ -265,12 +265,29 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     // ── Fetch current subscription status from Supabase ─────────────────────
     supabase
       .from('profiles')
-      .select('is_plus, is_vip')
+      .select('is_plus, is_vip, full_name')
       .eq('id', userId)
       .single()
       .then(({ data }) => {
         setIsVip(data?.is_vip ?? false);
         setIsPlus(data?.is_plus ?? data?.is_vip ?? false);
+
+        // Push the user's display name + email to RevenueCat as
+        // subscriber attributes. The reserved keys $displayName and
+        // $email replace the raw UUID on the RC customer profile page,
+        // so support / refund / debugging flows show "Lorraine McCartney
+        // (lorraine@example.com)" instead of "b470afd2-e03f-…". RC docs:
+        // https://docs.revenuecat.com/docs/subscriber-attributes
+        if (rcConfigured.current && Purchases) {
+          const attrs: Record<string, string> = {};
+          if (data?.full_name) attrs.$displayName = data.full_name;
+          if (session.user.email) attrs.$email = session.user.email;
+          if (Object.keys(attrs).length > 0) {
+            Purchases.setAttributes(attrs).catch((e: unknown) => {
+              console.warn('[RC] setAttributes failed:', e);
+            });
+          }
+        }
       });
 
     // ── Real-time listener — fires when stripe-webhook / revenuecat-webhook
