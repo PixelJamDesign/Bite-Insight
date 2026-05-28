@@ -69,10 +69,35 @@ export function useNotificationAction() {
 
         // ── Engagement ──────────────────────────────────────────────────
         case 'inactivity_5d':
-        case 'first_scan':
-          // 'Found anything new this week?' / 'Nice first scan' both
-          // exist to get the user scanning again.
+          // 'Found anything new this week?' — nudges the user to scan
+          // something new, so dropping them at the scanner is the
+          // right destination.
           return route('/(tabs)/scanner');
+
+        case 'first_scan': {
+          // The notification body refers to "the result" of the user's
+          // first scan, so we should route to THAT specific scan-result
+          // screen — not the scanner. We expect the push payload to
+          // include scan_id in its data field:
+          //   data: { type: 'first_scan', scan_id: '<uuid>' }
+          // If for any reason scan_id is missing (older notification,
+          // bad data), fall back to the history tab so the user can
+          // still find their scan instead of getting an empty screen.
+          const scanId = (item.data as { scan_id?: string } | null)?.scan_id;
+          if (scanId) {
+            hideOverlay();
+            setTimeout(
+              () =>
+                router.push({
+                  pathname: '/scan-result',
+                  params: { scanId },
+                } as never),
+              CLOSE_DELAY_MS,
+            );
+            return;
+          }
+          return route('/(tabs)/history');
+        }
 
         case 'review_request':
           // No native review prompt wired yet (would need
