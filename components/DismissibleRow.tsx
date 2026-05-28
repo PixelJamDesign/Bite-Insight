@@ -33,8 +33,17 @@ interface DismissibleRowProps {
    *  once per swipe. */
   onDismiss: () => void;
   /** Custom right-action UI. Defaults to a 72×fullHeight red trash
-   *  button that matches the inbox + history visual treatment. */
-  renderRightAction?: (onPress: () => void) => ReactElement;
+   *  button that matches the inbox + history visual treatment.
+   *
+   *  Receives the swipe progress (0→1 from no-swipe to rightThreshold)
+   *  and the live drag distance so custom actions can fade / scale /
+   *  swap content based on swipe proximity — same way the default
+   *  action fades the icon in as the user pulls left. */
+  renderRightAction?: (
+    onPress: () => void,
+    progress: Animated.AnimatedInterpolation<number>,
+    dragX: Animated.AnimatedInterpolation<number>,
+  ) => ReactElement;
   /** Long-swipe auto-dismiss threshold as a fraction of screen width.
    *  Defaults to 0.6 — far enough to feel deliberate, close enough to
    *  reach with a confident swipe. */
@@ -65,7 +74,7 @@ export function DismissibleRow({
 
   const buildRenderRightActions = useCallback(
     (
-      _progress: Animated.AnimatedInterpolation<number>,
+      progress: Animated.AnimatedInterpolation<number>,
       dragX: Animated.AnimatedInterpolation<number>,
     ) => {
       // Re-bind if Swipeable handed us a new AnimatedValue (new gesture).
@@ -84,7 +93,17 @@ export function DismissibleRow({
         listenerRef.current = { dragX, id };
       }
 
-      if (renderRightAction) return renderRightAction(onDismiss);
+      if (renderRightAction) return renderRightAction(onDismiss, progress, dragX);
+
+      // Bind the icon's opacity to swipe progress. Progress is 0 at
+      // no-swipe and 1 at rightThreshold (40 px). The icon fades in as
+      // the user pulls left, and fades back out if they release before
+      // hitting the threshold or swipe the row closed.
+      const iconOpacity = progress.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, 1],
+        extrapolate: 'clamp',
+      });
 
       return (
         <TouchableOpacity
@@ -94,7 +113,9 @@ export function DismissibleRow({
           accessibilityRole="button"
           accessibilityLabel={accessibilityLabel}
         >
-          <Ionicons name="trash-outline" size={22} color="#fff" />
+          <Animated.View style={{ opacity: iconOpacity }}>
+            <Ionicons name="trash-outline" size={22} color="#fff" />
+          </Animated.View>
         </TouchableOpacity>
       );
     },
