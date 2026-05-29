@@ -25,7 +25,8 @@ _Released May 2026._
 - Type-based action registry — each notification type knows where it should land
 - Trial welcome → upgrade-success screen
 - Day-6 reminder → opens the existing reminder sheet (was dead-ending before)
-- First scan → opens the actual scan-result for the user's first scan (reads scan_id from the data field)
+- First scan → opens the actual scan-result for the user's first scan. Fetches the scan row from Supabase first so the screen has the product name, brand, image, barcode and nutri-score it needs to render (passing scanId alone was leaving the screen blank)
+- Review request → triggers the native in-app review prompt via `expo-store-review` (SKStoreReviewController on iOS, Play In-App Review on Android). Falls through silently when the OS rate-limit blocks the prompt
 - Inactivity / scanner-driving notifications → scanner tab
 - Pattern established for future entity-pointing pushes (recipes, family members, ingredients)
 

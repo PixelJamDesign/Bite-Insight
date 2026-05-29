@@ -19,6 +19,8 @@
  */
 import { useCallback } from 'react';
 import { router } from 'expo-router';
+import * as StoreReview from 'expo-store-review';
+import { supabase } from './supabase';
 import { useNotificationsOverlay } from './notificationsOverlayContext';
 import { useTrialDay6Reminder } from './trialDay6ReminderContext';
 import { useUpsellSheet } from './upsellSheetContext';
@@ -76,36 +78,66 @@ export function useNotificationAction() {
 
         case 'first_scan': {
           // The notification body refers to "the result" of the user's
-          // first scan, so we should route to THAT specific scan-result
-          // screen — not the scanner. We expect the push payload to
-          // include scan_id in its data field:
+          // first scan, so we route to THAT specific scan-result
+          // screen. The push payload carries scan_id in its data field:
           //   data: { type: 'first_scan', scan_id: '<uuid>' }
-          // If for any reason scan_id is missing (older notification,
-          // bad data), fall back to the history tab so the user can
-          // still find their scan instead of getting an empty screen.
+          // scan-result needs more than just scanId though — it reads
+          // productName, brand, imageUrl, barcode, nutriscoreGrade from
+          // route params. So fetch the row first, then push with all
+          // the bits the screen expects.
+          // If scan_id is missing or the row can't be found, fall back
+          // to the history tab so the user lands somewhere useful.
           const scanId = (item.data as { scan_id?: string } | null)?.scan_id;
-          if (scanId) {
-            hideOverlay();
-            setTimeout(
-              () =>
-                router.push({
-                  pathname: '/scan-result',
-                  params: { scanId },
-                } as never),
-              CLOSE_DELAY_MS,
-            );
-            return;
+          if (!scanId) {
+            return route('/(tabs)/history');
           }
-          return route('/(tabs)/history');
+          hideOverlay();
+          (async () => {
+            const { data: scan } = await supabase
+              .from('scans')
+              .select(
+                'id, product_name, brand, image_url, barcode, nutriscore_grade',
+              )
+              .eq('id', scanId)
+              .single();
+            setTimeout(() => {
+              if (!scan) {
+                router.push('/(tabs)/history' as never);
+                return;
+              }
+              router.push({
+                pathname: '/scan-result',
+                params: {
+                  scanId: scan.id,
+                  productName: scan.product_name ?? '',
+                  brand: scan.brand ?? '',
+                  imageUrl: scan.image_url ?? '',
+                  barcode: scan.barcode ?? '',
+                  nutriscoreGrade: scan.nutriscore_grade ?? '',
+                },
+              } as never);
+            }, CLOSE_DELAY_MS);
+          })();
+          return;
         }
 
         case 'review_request':
-          // No native review prompt wired yet (would need
-          // expo-store-review). For now just close — when we add the
-          // prompt, swap close() for the StoreReview.requestReview()
-          // call.
-          // TODO(v1.7.1): integrate expo-store-review
-          return close();
+          // Trigger the native in-app review prompt (SKStoreReviewController
+          // on iOS / Play In-App Review on Android) via expo-store-review.
+          // hasAction() returns false when the OS has already shown the
+          // prompt too many times this year, or on simulators — in that
+          // case we just close the overlay quietly.
+          hideOverlay();
+          setTimeout(async () => {
+            try {
+              if (await StoreReview.hasAction()) {
+                await StoreReview.requestReview();
+              }
+            } catch (e) {
+              console.warn('[notifications] requestReview failed:', e);
+            }
+          }, CLOSE_DELAY_MS);
+          return;
 
         // ── Manual / promotional pushes ─────────────────────────────────
         case 'upgrade_prompt':
