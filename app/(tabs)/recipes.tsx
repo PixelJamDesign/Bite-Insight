@@ -18,6 +18,7 @@ import {
   Image,
   ActivityIndicator,
   useWindowDimensions,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -134,7 +135,13 @@ export default function RecipesScreen() {
   // Floating tab bar pill is 60px tall with 32px of gradient padding above
   // and (insets.bottom + 8) below. The CTA sits just above that, with a
   // small gap. Content scroll areas pad out far enough to clear everything.
-  const tabBarClearance = 32 + 60 + 8 + insets.bottom;
+  //
+  // Android note: ScreenLayout already pads its wrapper by insets.bottom on
+  // Android (to clear the gesture nav bar), so adding insets.bottom here
+  // again would double-count and push the FAB / footer roughly one gesture-
+  // bar's-worth too high. Only add insets.bottom on iOS.
+  const tabBarInsetBottom = Platform.OS === 'android' ? 0 : insets.bottom;
+  const tabBarClearance = 32 + 60 + 8 + tabBarInsetBottom;
   const footerCtaHeight = 52; // button height incl. padding
   const contentBottomPadding = tabBarClearance + footerCtaHeight + 24;
 
