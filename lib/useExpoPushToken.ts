@@ -33,8 +33,17 @@ import { useAuth } from '@/lib/auth';
 // per JS runtime (the prompt is annoying enough as it is).
 let permissionRequested = false;
 
+// One-line tag used by every diagnostic log so `adb logcat | grep PUSHDIAG`
+// catches the full trace from a single sign-in flow. iOS shows the same
+// tag in Xcode console / Console.app.
+const TAG = '[PUSHDIAG]';
+
 async function getPushToken(): Promise<string | null> {
-  if (!Device.isDevice) return null; // Simulators can't get real tokens
+  console.log(`${TAG} getPushToken: enter; platform=${Platform.OS}, isDevice=${Device.isDevice}`);
+  if (!Device.isDevice) {
+    console.log(`${TAG} bail: !Device.isDevice (simulator)`);
+    return null;
+  }
 
   // Cast to any — expo-notifications imports its PermissionResponse
   // type from expo-modules-core which isn't resolvable from the root
@@ -42,8 +51,12 @@ async function getPushToken(): Promise<string | null> {
   // canAskAgain) exist; tsc just can't see them.
   const current = (await Notifications.getPermissionsAsync()) as any;
   let granted: boolean = current.granted;
+  console.log(
+    `${TAG} getPermissionsAsync: granted=${granted}, canAskAgain=${current.canAskAgain}, status=${current.status}`,
+  );
 
   if (!granted && current.canAskAgain && !permissionRequested) {
+    console.log(`${TAG} requestPermissionsAsync: prompting`);
     permissionRequested = true;
     const request = (await Notifications.requestPermissionsAsync({
       ios: {
@@ -53,9 +66,13 @@ async function getPushToken(): Promise<string | null> {
       },
     })) as any;
     granted = request.granted;
+    console.log(`${TAG} requestPermissionsAsync: granted=${granted}, status=${request.status}`);
   }
 
-  if (!granted) return null;
+  if (!granted) {
+    console.log(`${TAG} bail: permission not granted after request`);
+    return null;
+  }
 
   // Expo's projectId is needed for the new push token API.
   // Falls back to Constants.expoConfig.extra.eas.projectId set in
@@ -63,16 +80,19 @@ async function getPushToken(): Promise<string | null> {
   const projectId =
     Constants.expoConfig?.extra?.eas?.projectId ??
     (Constants.expoConfig?.extra as any)?.eas?.projectId;
+  console.log(`${TAG} projectId resolved: ${projectId ? `${String(projectId).slice(0, 8)}…` : 'MISSING'}`);
   if (!projectId) {
-    console.warn('[useExpoPushToken] No EAS projectId — cannot fetch token');
+    console.warn(`${TAG} bail: No EAS projectId`);
     return null;
   }
 
   try {
+    console.log(`${TAG} getExpoPushTokenAsync: calling`);
     const token = await Notifications.getExpoPushTokenAsync({ projectId });
+    console.log(`${TAG} getExpoPushTokenAsync: OK, token=${token.data.slice(0, 25)}…`);
     return token.data;
-  } catch (err) {
-    console.warn('[useExpoPushToken] getExpoPushTokenAsync failed:', err);
+  } catch (err: any) {
+    console.warn(`${TAG} getExpoPushTokenAsync threw: ${err?.message ?? String(err)}`);
     return null;
   }
 }
@@ -82,24 +102,39 @@ export function useExpoPushToken() {
   const writtenForUserRef = useRef<string | null>(null);
 
   useEffect(() => {
+    console.log(
+      `${TAG} effect tick: platform=${Platform.OS}, userId=${session?.user?.id ?? 'null'}, writtenFor=${writtenForUserRef.current ?? 'null'}`,
+    );
     if (Platform.OS === 'web') return;
     const userId = session?.user?.id;
-    if (!userId) return;
+    if (!userId) {
+      console.log(`${TAG} bail: no userId yet`);
+      return;
+    }
     // Avoid re-fetching the same token for the same user within a session.
-    if (writtenForUserRef.current === userId) return;
+    if (writtenForUserRef.current === userId) {
+      console.log(`${TAG} bail: already written for this userId this session`);
+      return;
+    }
 
     (async () => {
       const token = await getPushToken();
-      if (!token) return;
+      if (!token) {
+        console.log(`${TAG} no token returned; nothing to write`);
+        return;
+      }
       writtenForUserRef.current = userId;
 
-      const { error } = await supabase
+      console.log(`${TAG} writing to profiles for userId=${userId.slice(0, 8)}…`);
+      const { error, status, statusText } = await supabase
         .from('profiles')
         .update({ expo_push_token: token })
         .eq('id', userId);
 
       if (error) {
-        console.warn('[useExpoPushToken] write failed:', error.message);
+        console.warn(`${TAG} write failed: ${error.message} (status=${status})`);
+      } else {
+        console.log(`${TAG} write OK (status=${status} ${statusText ?? ''})`);
       }
     })();
   }, [session?.user?.id]);
