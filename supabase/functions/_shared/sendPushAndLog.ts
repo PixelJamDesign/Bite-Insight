@@ -66,14 +66,31 @@ export async function sendPushAndLog(
     console.warn('[sendPushAndLog] notifications insert failed:', logError.message);
   }
 
-  // 2. Look up the user's push token. No token = no push, just log.
-  const { data: profile } = await supabase
-    .from('profiles')
+  // 2. Look up every device token for this user from push_tokens.
+  //    Falls back to the legacy profiles.expo_push_token column if no
+  //    rows exist yet (e.g. backfill hadn't caught a brand-new sign-up).
+  //    No tokens = no push, just log.
+  const { data: tokenRows } = await supabase
+    .from('push_tokens')
     .select('expo_push_token')
-    .eq('id', userId)
-    .single();
+    .eq('user_id', userId);
 
-  if (!profile?.expo_push_token) {
+  let tokens: string[] = Array.isArray(tokenRows)
+    ? tokenRows
+        .map((r: { expo_push_token: string | null }) => r.expo_push_token)
+        .filter((t: string | null): t is string => !!t)
+    : [];
+
+  if (tokens.length === 0) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('expo_push_token')
+      .eq('id', userId)
+      .single();
+    if (profile?.expo_push_token) tokens = [profile.expo_push_token];
+  }
+
+  if (tokens.length === 0) {
     return {
       sent: 0,
       failed: 0,
@@ -83,6 +100,8 @@ export async function sendPushAndLog(
     };
   }
 
-  const result = await sendPush({ ...payload, to: profile.expo_push_token });
+  // sendPush already handles `to` as string | string[] and chunks at
+  // 100, so passing every device for this user in one call is fine.
+  const result = await sendPush({ ...payload, to: tokens });
   return { ...result, logged };
 }

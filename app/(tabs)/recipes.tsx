@@ -568,7 +568,11 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
   },
   tab: {
-    height: 30,
+    // 30 was too tight — the PlusBadge on Community recipes overflowed
+    // the pill (badge is ~22px tall, content area was only ~18px after
+    // padding + border). 36 fits the badge comfortably and the "My
+    // recipes" tab still looks balanced without one.
+    height: 36,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

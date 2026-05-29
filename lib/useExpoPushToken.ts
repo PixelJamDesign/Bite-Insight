@@ -1,10 +1,15 @@
 /**
  * useExpoPushToken — captures the device's Expo push token after
- * permission is granted and persists it to profiles.expo_push_token.
+ * permission is granted and persists it to push_tokens.
  *
- * The token is what the server-side send-trial-reminders edge
- * function POSTs to https://exp.host/--/api/v2/push/send. Without
- * it, no push can reach the device.
+ * Multi-device support: each device upserts its own row in push_tokens
+ * keyed on the token string (unique). So one user can have an iPhone,
+ * an iPad, and an Android phone all signed in and all reachable. The
+ * server-side push code fans out to every row for the target user.
+ *
+ * If the same device later signs in as a different user, the upsert
+ * transfers ownership of that row to the new user (the token itself
+ * is bound to the device, not the account).
  *
  * Token capture is fire-once-per-session — the same token usually
  * doesn't change across launches, but Expo can occasionally rotate
@@ -14,7 +19,7 @@
  * Permission flow:
  *   1. Check current status (Notifications.getPermissionsAsync).
  *   2. If undetermined, prompt.
- *   3. If granted, fetch the token and write to profiles.
+ *   3. If granted, fetch the token and write to push_tokens.
  *   4. If denied, do nothing — we silently lose this user from the
  *      Day-6 push audience. Apple's own system reminder still fires
  *      so they aren't completely uninformed.
@@ -33,17 +38,8 @@ import { useAuth } from '@/lib/auth';
 // per JS runtime (the prompt is annoying enough as it is).
 let permissionRequested = false;
 
-// One-line tag used by every diagnostic log so `adb logcat | grep PUSHDIAG`
-// catches the full trace from a single sign-in flow. iOS shows the same
-// tag in Xcode console / Console.app.
-const TAG = '[PUSHDIAG]';
-
 async function getPushToken(): Promise<string | null> {
-  console.log(`${TAG} getPushToken: enter; platform=${Platform.OS}, isDevice=${Device.isDevice}`);
-  if (!Device.isDevice) {
-    console.log(`${TAG} bail: !Device.isDevice (simulator)`);
-    return null;
-  }
+  if (!Device.isDevice) return null; // Simulators can't get real tokens
 
   // Cast to any — expo-notifications imports its PermissionResponse
   // type from expo-modules-core which isn't resolvable from the root
@@ -51,12 +47,8 @@ async function getPushToken(): Promise<string | null> {
   // canAskAgain) exist; tsc just can't see them.
   const current = (await Notifications.getPermissionsAsync()) as any;
   let granted: boolean = current.granted;
-  console.log(
-    `${TAG} getPermissionsAsync: granted=${granted}, canAskAgain=${current.canAskAgain}, status=${current.status}`,
-  );
 
   if (!granted && current.canAskAgain && !permissionRequested) {
-    console.log(`${TAG} requestPermissionsAsync: prompting`);
     permissionRequested = true;
     const request = (await Notifications.requestPermissionsAsync({
       ios: {
@@ -66,13 +58,9 @@ async function getPushToken(): Promise<string | null> {
       },
     })) as any;
     granted = request.granted;
-    console.log(`${TAG} requestPermissionsAsync: granted=${granted}, status=${request.status}`);
   }
 
-  if (!granted) {
-    console.log(`${TAG} bail: permission not granted after request`);
-    return null;
-  }
+  if (!granted) return null;
 
   // Expo's projectId is needed for the new push token API.
   // Falls back to Constants.expoConfig.extra.eas.projectId set in
@@ -80,19 +68,16 @@ async function getPushToken(): Promise<string | null> {
   const projectId =
     Constants.expoConfig?.extra?.eas?.projectId ??
     (Constants.expoConfig?.extra as any)?.eas?.projectId;
-  console.log(`${TAG} projectId resolved: ${projectId ? `${String(projectId).slice(0, 8)}…` : 'MISSING'}`);
   if (!projectId) {
-    console.warn(`${TAG} bail: No EAS projectId`);
+    console.warn('[useExpoPushToken] No EAS projectId — cannot fetch token');
     return null;
   }
 
   try {
-    console.log(`${TAG} getExpoPushTokenAsync: calling`);
     const token = await Notifications.getExpoPushTokenAsync({ projectId });
-    console.log(`${TAG} getExpoPushTokenAsync: OK, token=${token.data.slice(0, 25)}…`);
     return token.data;
-  } catch (err: any) {
-    console.warn(`${TAG} getExpoPushTokenAsync threw: ${err?.message ?? String(err)}`);
+  } catch (err) {
+    console.warn('[useExpoPushToken] getExpoPushTokenAsync failed:', err);
     return null;
   }
 }
@@ -102,39 +87,40 @@ export function useExpoPushToken() {
   const writtenForUserRef = useRef<string | null>(null);
 
   useEffect(() => {
-    console.log(
-      `${TAG} effect tick: platform=${Platform.OS}, userId=${session?.user?.id ?? 'null'}, writtenFor=${writtenForUserRef.current ?? 'null'}`,
-    );
     if (Platform.OS === 'web') return;
     const userId = session?.user?.id;
     if (!userId) {
-      console.log(`${TAG} bail: no userId yet`);
+      // If the user signs out, clear the guard so the next sign-in
+      // (possibly as a different user on the same device) re-runs the
+      // upsert and transfers ownership of this device's token.
+      writtenForUserRef.current = null;
       return;
     }
-    // Avoid re-fetching the same token for the same user within a session.
-    if (writtenForUserRef.current === userId) {
-      console.log(`${TAG} bail: already written for this userId this session`);
-      return;
-    }
+    // Avoid re-running for the same user within a single JS session.
+    if (writtenForUserRef.current === userId) return;
 
     (async () => {
       const token = await getPushToken();
-      if (!token) {
-        console.log(`${TAG} no token returned; nothing to write`);
-        return;
-      }
+      if (!token) return;
       writtenForUserRef.current = userId;
 
-      console.log(`${TAG} writing to profiles for userId=${userId.slice(0, 8)}…`);
-      const { error, status, statusText } = await supabase
-        .from('profiles')
-        .update({ expo_push_token: token })
-        .eq('id', userId);
+      // Upsert keyed on the token string (unique in push_tokens). Same
+      // device + same user → harmless refresh of last_seen_at. Same
+      // device + new user → transfers ownership. New device → new row.
+      const { error } = await supabase
+        .from('push_tokens')
+        .upsert(
+          {
+            user_id: userId,
+            expo_push_token: token,
+            platform: Platform.OS, // 'ios' | 'android' (web is short-circuited above)
+            last_seen_at: new Date().toISOString(),
+          },
+          { onConflict: 'expo_push_token' },
+        );
 
       if (error) {
-        console.warn(`${TAG} write failed: ${error.message} (status=${status})`);
-      } else {
-        console.log(`${TAG} write OK (status=${status} ${statusText ?? ''})`);
+        console.warn('[useExpoPushToken] upsert failed:', error.message);
       }
     })();
   }, [session?.user?.id]);

@@ -4,7 +4,7 @@ Version history from initial launch (v1.0.0) to current.
 
 ---
 
-## v1.7.0 — Notification inbox + trial welcome push + Android push setup
+## v1.7.0 — Notification inbox + trial welcome push + multi-device push + Android push setup
 
 _Released May 2026._
 
@@ -44,6 +44,18 @@ _Released May 2026._
 - `google-services.json` committed; FCM v1 service account uploaded to EAS
 - Build wiring done — actual Android release ships when the EAS Android build runs
 - Push send code is platform-agnostic, so once an Android user has a token, every existing push flow works without code changes
+
+### Multi-device push tokens
+
+- New `push_tokens` table — one row per device, keyed on the Expo token string. So one user can have an iPhone, an iPad, and an Android phone all signed in and all reachable
+- Server-side push code fans out: for each target user it pulls every token in `push_tokens` and sends the same payload to all of them in one Expo API call
+- Backfilled from the existing `profiles.expo_push_token` column on rollout so no currently-registered device dropped off the audience
+- Postgres trigger mirrors any write to the legacy `profiles.expo_push_token` column into `push_tokens`, so older clients still on the single-column code path keep working until they update
+- Sign-out now clears the in-memory "already-registered" guard so signing back in (possibly as a different user on the same device) re-runs the upsert and transfers ownership of that device's token
+
+### Recipes tab polish
+
+- Plus badge no longer overflows the filter pill on the Community recipes tab. Pill height bumped from 30 to 36 so the (correctly-sized) badge sits comfortably inside
 
 ### Copy + polish
 
