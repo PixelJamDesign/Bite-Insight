@@ -39,7 +39,10 @@ export function PlusBadge({ size = 'default' }: PlusBadgeProps) {
 const styles = StyleSheet.create({
   badge: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    // Centre the text and icon vertically so the glyph baseline doesn't
+    // sit at the top of the badge box (which clipped the 'p' descender
+    // when paired with the tight lineHeight below).
+    alignItems: 'center',
     backgroundColor: Colors.surface.contrast,
     borderRadius: 4,
     paddingHorizontal: 6,
@@ -55,12 +58,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
-    lineHeight: 18,
+    // lineHeight was 18 — too tight for a bold 16px font, the 'p'
+    // descender got clipped. 20 gives the glyph room without bloating
+    // the badge visually.
+    lineHeight: 20,
     letterSpacing: -0.32,
+    // Android adds extra vertical padding around Text by default based
+    // on the font's ascent/descent metrics. Off matches iOS and stops
+    // the badge looking taller / clipped on Android.
+    includeFontPadding: false,
   },
   textSmall: {
     fontSize: 12,
-    lineHeight: 14,
+    lineHeight: 16,
     letterSpacing: -0.24,
   },
   icon: {
