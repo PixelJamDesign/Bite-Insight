@@ -222,12 +222,20 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
             setIsPlus(true);
 
             // Trial detection — RevenueCat reports periodType='trial'
-            // while the user is in their intro-offer period. We capture
-            // trial_started_at / trial_ends_at so the Day-6 reminder
-            // cron has accurate boundaries. Once periodType flips to
+            // or 'intro' while the user is in their intro-offer period.
+            // Both string values are valid trial markers:
+            //   - 'trial'  — Apple App Store free trial
+            //   - 'intro'  — Google Play free-trial intro offer (and
+            //                Apple "pay as you go / pay up front" intros)
+            // Previously we only matched 'trial', which silently
+            // skipped Play Store trial users — they got is_plus=true
+            // but trial_started_at / trial_ends_at stayed null.
+            // We capture trial boundaries so the Day-6 reminder cron
+            // has accurate timestamps. Once periodType flips to
             // 'normal' (post-trial paid) we leave the timestamps alone
             // — they're a historical record.
-            const isTrial = (plusEnt as any).periodType === 'trial';
+            const periodType = (plusEnt as any).periodType;
+            const isTrial = periodType === 'trial' || periodType === 'intro';
             const update: Record<string, any> = { is_plus: true };
             if (isTrial) {
               const trialEndsAt = (plusEnt as any).expirationDate;
