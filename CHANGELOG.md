@@ -4,6 +4,29 @@ Version history from initial launch (v1.0.0) to current.
 
 ---
 
+## v1.7.1 — PostHog wiring + verify-email reminder
+
+_Released May 2026._
+
+### Analytics flowing again
+
+- Fixed the production analytics blackout — `EXPO_PUBLIC_POSTHOG_API_KEY` was set in local `.env` for dev, but EAS doesn't read local env files at build time, so every shipped binary was logging "analytics disabled" on startup. Baked the key (and the EU host) into all three EAS build profiles' `env` blocks, so every future production / preview / dev-client build picks it up automatically
+- Effect: screen views, identify calls, app-lifecycle events and session replays now flow on the next build. Custom event capture for funnel-critical actions (scans, paywall, trial conversion, notification taps) is queued as the next analytics workstream
+
+### Verify-email reminder
+
+- New `send-verify-reminders` edge function that re-sends Supabase's "Confirm signup" email to users who signed up more than 48 hours ago but still haven't tapped the verification link
+- Single send per user, ever — tracked via a new `profiles.verify_reminder_sent_at` column so the cron never double-nudges
+- Built-in safety filters: skips blocklisted accounts (test addresses, the Apple reviewer login), skips obvious typo'd emails (`.comb` / `.con` / `.cmo` TLDs), respects a configurable age window (default 48h to 60 days)
+- Dry-run mode (`?dry_run=true`) returns the recipient plan without sending, so the operator can sanity-check before pulling the trigger
+- Addresses the "verification fell in spam" case without changing the auth flow — current "verify before sign-in" requirement stays unchanged
+
+### Backend tidy-up
+
+- Notifications schema documented; `push_tokens` table introduced in v1.7.0 is now the canonical multi-device token store. Server-side push fans out to every device for the target user
+
+---
+
 ## v1.7.0 — Notification inbox + trial welcome push + multi-device push + Android push setup
 
 _Released May 2026._
