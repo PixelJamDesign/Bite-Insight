@@ -136,11 +136,10 @@ export default function FamilyMembersScreen() {
 
   const loadProfiles = useCallback(async () => {
     if (!session?.user?.id) return;
-    const { data } = await supabase
-      .from('family_profiles')
-      .select('*')
-      .eq('user_id', session.user.id)
-      .order('sort_order', { ascending: true });
+    // get_family_members() overlays linked members' live account data
+    // (avatar, conditions, allergies, diet, ingredient prefs) over the
+    // static managed columns, and is already ordered by sort_order.
+    const { data } = await supabase.rpc('get_family_members');
     if (data) setProfiles(data as FamilyProfile[]);
     setLoading(false);
   }, [session?.user?.id]);
@@ -296,7 +295,18 @@ export default function FamilyMembersScreen() {
       <TouchableOpacity
         key={profile.id}
         style={styles.row}
-        onPress={() => router.push({ pathname: '/add-family-member', params: { id: profile.id } })}
+        onPress={() => {
+          // Linked members own their own account — their profile is read-only
+          // here and kept in sync from their side. Don't open the editor.
+          if (profile.linked_user_id) {
+            Alert.alert(
+              `${profile.name} manages their own profile`,
+              `${profile.name} linked their own account, so their preferences and photo stay in sync from there. Only ${profile.name} can change them.`,
+            );
+            return;
+          }
+          router.push({ pathname: '/add-family-member', params: { id: profile.id } });
+        }}
         activeOpacity={0.75}
       >
         {/* Avatar */}

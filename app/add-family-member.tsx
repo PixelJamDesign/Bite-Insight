@@ -359,6 +359,17 @@ export default function AddFamilyMemberScreen() {
       .then(({ data, error }) => {
         if (error) console.error('Family profile load error:', error.message);
         if (data) {
+          // Linked members own their own account — editing is read-only on
+          // this side. Bounce back with an explanation (defense in depth;
+          // the family list already blocks the tap for linked members).
+          if ((data as any).linked_user_id) {
+            Alert.alert(
+              `${data.name ?? 'This member'} manages their own profile`,
+              `They linked their own account, so their preferences and photo stay in sync from there. Only they can change them.`,
+            );
+            router.back();
+            return;
+          }
           setFullName(data.name ?? '');
           setRelationship(data.relationship ?? '');
           setExistingAvatar(getAvatarUrl(data.avatar_url));

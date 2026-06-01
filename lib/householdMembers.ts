@@ -19,11 +19,11 @@ export interface Household {
 export async function fetchHousehold(userId: string): Promise<Household | null> {
   const [profileRes, familyRes] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', userId).single(),
-    supabase
-      .from('family_profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: true }),
+    // get_family_members() returns the caller's family rows with LINKED
+    // members' health/preference fields overlaid live from their own
+    // account (a member who linked their real account is mirrored, not
+    // shown as the empty managed columns). Scoped to auth.uid() server-side.
+    supabase.rpc('get_family_members'),
   ]);
 
   if (profileRes.error || !profileRes.data) {
