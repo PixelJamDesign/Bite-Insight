@@ -252,11 +252,30 @@ export function NotificationsOverlay() {
         const { data, error } = await supabase.functions.invoke('accept-family-invite', {
           body: { token, action },
         });
-        const errMsg = error?.message || (data as { error?: string } | null)?.error;
-        if (errMsg) {
-          showToast({ message: errMsg, variant: 'error' });
+
+        if (error) {
+          // supabase-js wraps non-2xx responses in a FunctionsHttpError whose
+          // .message is generic ("...non-2xx status code"). The real, human
+          // message is in the response body on .context — dig it out.
+          let msg = 'Something went wrong. Try again.';
+          try {
+            const ctx = (error as { context?: Response }).context;
+            const body = ctx ? await ctx.json() : null;
+            if (body?.error) msg = body.error as string;
+          } catch {
+            /* fall back to the generic message */
+          }
+          showToast({ message: msg, variant: 'error' });
           return;
         }
+
+        // Some functions also return { error } in a 200 body — handle that too.
+        const bodyErr = (data as { error?: string } | null)?.error;
+        if (bodyErr) {
+          showToast({ message: bodyErr, variant: 'error' });
+          return;
+        }
+
         if (action === 'accept') {
           showToast({ message: "You're in. Your profile is now shared.", variant: 'success' });
         }
