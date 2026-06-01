@@ -41,7 +41,7 @@ const SUBJECT = 'Finish setting up your Bite Insight profile';
 // The email *content* still links to biteinsight.co.uk for assets —
 // that's fine, only the sending domain has to be verified.
 const DEFAULT_FROM = 'Bite Insight <hello@auth.biteinsight.app>';
-const DEFAULT_ACTION_URL = 'https://biteinsight.co.uk/continue';
+const DEFAULT_ACTION_URL = 'https://biteinsight.co.uk/continue.html';
 const RESEND_URL = 'https://api.resend.com/emails';
 
 interface ProfileRow {
@@ -54,7 +54,11 @@ interface ProfileRow {
 function firstNameFrom(p: ProfileRow): string {
   const raw = (p.display_name || p.full_name || '').trim();
   const first = raw.split(/\s+/)[0];
-  return first && first.length > 0 ? first : 'there';
+  if (!first || first.length === 0) return 'there';
+  // Capitalise the first letter so a lowercase-stored name ("sophie")
+  // doesn't render as "Hey sophie,". Leaves the rest of the name as-is
+  // (preserves McX / O'X casing).
+  return first.charAt(0).toUpperCase() + first.slice(1);
 }
 
 Deno.serve(async (req) => {
@@ -171,6 +175,15 @@ Deno.serve(async (req) => {
     }
     if (!confirmed) {
       skipped.push({ id: p.id, email, reason: 'unverified — gets verify reminder instead' });
+      continue;
+    }
+    // Don't nudge anyone within 24h of signup — they may still be
+    // actively onboarding. Matters for the recurring daily cron; the
+    // initial batch of stuck users are all well past this.
+    const createdAt = u.user?.created_at;
+    const ageMs = createdAt ? Date.now() - new Date(createdAt).getTime() : Infinity;
+    if (ageMs < 24 * 3600 * 1000) {
+      skipped.push({ id: p.id, email, reason: 'signed up < 24h ago — too soon' });
       continue;
     }
     candidates.push({
