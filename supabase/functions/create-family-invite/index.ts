@@ -29,6 +29,23 @@ function newToken(): string {
   return (crypto.randomUUID() + crypto.randomUUID()).replace(/-/g, '');
 }
 
+// Find an existing auth user by email (paginates admin.listUsers — fine
+// for invite frequency / our user count). Returns { id } or null.
+async function findUserByEmail(
+  svc: ReturnType<typeof createClient>,
+  email: string,
+): Promise<{ id: string } | null> {
+  const target = email.toLowerCase();
+  for (let page = 1; page <= 50; page++) {
+    const { data, error } = await svc.auth.admin.listUsers({ page, perPage: 200 });
+    if (error) return null;
+    const hit = data.users.find((u) => (u.email ?? '').toLowerCase() === target);
+    if (hit) return { id: hit.id };
+    if (data.users.length < 200) break;
+  }
+  return null;
+}
+
 // Provisional invite email — swap for the final design later.
 function inviteEmailHtml(opts: { inviterName: string; memberName: string; link: string }): string {
   return `<!DOCTYPE html><html><body style="margin:0;background:#e2f1ee;font-family:Figtree,Arial,sans-serif;">
@@ -94,12 +111,44 @@ Deno.serve(async (req) => {
   });
   if (insErr) return jsonRes({ error: `Could not create invite: ${insErr.message}` }, 500);
 
+  // Owner's display name + avatar for the invite copy / card.
+  const { data: ownerProfile } = await svc
+    .from('profiles')
+    .select('full_name, avatar_url')
+    .eq('id', owner.id)
+    .maybeSingle();
+  const inviterName =
+    ownerProfile?.full_name?.split(' ')[0] ||
+    (owner.user_metadata?.full_name as string | undefined)?.split(' ')[0] ||
+    'A Bite Insight user';
+
   let emailed = false;
+  let notified = false;
+
   if (method === 'email') {
+    // 1. If the email belongs to an existing account, drop the invite
+    //    straight into their in-app inbox (the family-invite card).
+    const targetUser = await findUserByEmail(svc, email!);
+    if (targetUser) {
+      await svc.from('notifications').insert({
+        user_id: targetUser.id,
+        type: 'family_invite',
+        title: `${inviterName} wants to add you to their family!`,
+        body: `Would you like to link your account to ${inviterName}'s family? You still own your account. You're just letting ${inviterName} see your preferences.`,
+        data: {
+          type: 'family_invite',
+          token,
+          family_profile_id: familyProfileId,
+          inviter_name: inviterName,
+          inviter_avatar_url: ownerProfile?.avatar_url ?? null,
+        },
+      });
+      notified = true;
+    }
+
+    // 2. Also send the email (covers them even if push/app is closed).
     const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
     if (RESEND_API_KEY) {
-      const inviterName =
-        (owner.user_metadata?.full_name as string | undefined)?.split(' ')[0] || 'A Bite Insight user';
       const res = await fetch(RESEND_URL, {
         method: 'POST',
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'content-type': 'application/json' },
@@ -114,5 +163,5 @@ Deno.serve(async (req) => {
     }
   }
 
-  return jsonRes({ token, link, emailed });
+  return jsonRes({ token, link, emailed, notified });
 });

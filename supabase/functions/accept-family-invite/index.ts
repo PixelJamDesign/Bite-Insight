@@ -27,13 +27,14 @@ Deno.serve(async (req) => {
   if (!match) return jsonRes({ error: 'Not signed in' }, 401);
   const jwt = match[1].trim();
 
-  let body: { token?: string };
+  let body: { token?: string; action?: string };
   try {
     body = await req.json();
   } catch {
     return jsonRes({ error: 'Invalid JSON' }, 400);
   }
   const token = body.token?.trim();
+  const action = body.action === 'decline' ? 'decline' : 'accept';
   if (!token) return jsonRes({ error: 'Missing token' }, 400);
 
   const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -78,6 +79,27 @@ Deno.serve(async (req) => {
       { error: 'This invite was sent to a different email address.' },
       403,
     );
+  }
+
+  // ── Decline ────────────────────────────────────────────────────────────────
+  // Member said "No, thank you". Revoke the invite and let the owner know.
+  // No link is created.
+  if (action === 'decline') {
+    await svc
+      .from('family_invites')
+      .update({ status: 'revoked' })
+      .eq('id', invite.id);
+
+    const declinerName =
+      (accepter.user_metadata?.full_name as string | undefined)?.split(' ')[0] || 'They';
+    await svc.from('notifications').insert({
+      user_id: invite.inviter_user_id,
+      type: 'family_link_declined',
+      title: 'Invite declined',
+      body: `${declinerName} declined your family invite.`,
+      data: { type: 'family_link_declined', family_profile_id: invite.family_profile_id },
+    });
+    return jsonRes({ status: 'declined' });
   }
 
   // 3. The family row must not already be linked.

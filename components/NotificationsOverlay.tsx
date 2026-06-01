@@ -16,11 +16,13 @@ import { useCallback, useMemo, useState } from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   FlatList,
   TouchableOpacity,
   RefreshControl,
   Animated,
+  ActivityIndicator,
   StyleSheet as RNStyleSheet,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -29,6 +31,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { DismissibleRow } from '@/components/DismissibleRow';
 import Svg, { Path } from 'react-native-svg';
 import { Colors, Spacing, Radius, Shadows } from '@/constants/theme';
+import { supabase } from '@/lib/supabase';
+import { useToast } from '@/lib/toastContext';
 import { useNotifications, type InboxNotification } from '@/lib/notificationsContext';
 import { useNotificationsOverlay } from '@/lib/notificationsOverlayContext';
 import { useNotificationAction } from '@/lib/useNotificationAction';
@@ -129,6 +133,99 @@ function NotificationCard({
   );
 }
 
+// ── Family invite card (Figma 5403:24287) ───────────────────────────────────
+// A richer card variant: the inviter's avatar with a "+" badge, the consent
+// copy, and two action buttons. Rendered for notifications of type
+// 'family_invite'; the data field carries { token, inviter_name,
+// inviter_avatar_url, family_profile_id }.
+function initialsFrom(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+}
+
+function FamilyInviteCard({
+  item,
+  onAccept,
+  onDecline,
+  busy,
+}: {
+  item: InboxNotification;
+  onAccept: () => void;
+  onDecline: () => void;
+  busy: boolean;
+}) {
+  const data = (item.data ?? {}) as {
+    inviter_name?: string;
+    inviter_avatar_url?: string | null;
+  };
+  const inviterName = data.inviter_name ?? 'Someone';
+  const avatarUrl = data.inviter_avatar_url ?? undefined;
+  const isFresh =
+    !item.read_at && Date.now() - new Date(item.sent_at).getTime() < 24 * 60 * 60 * 1000;
+
+  return (
+    <View style={[styles.card, styles.cardUnread]}>
+      <View style={styles.familyContent}>
+        {/* Avatar + "+" badge */}
+        <View style={styles.avatarWrap}>
+          <View style={styles.avatarCircle}>
+            {avatarUrl ? (
+              <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+            ) : (
+              <Text style={styles.avatarInitials}>{initialsFrom(inviterName)}</Text>
+            )}
+          </View>
+          <View style={styles.avatarBadge}>
+            <Ionicons name="add" size={16} color="#fff" />
+          </View>
+        </View>
+
+        {/* Text + actions (8px gap between the two, per Figma) */}
+        <View style={styles.familyLower}>
+          <View style={styles.familyText}>
+            <Text style={styles.cardTitle}>{item.title}</Text>
+            <Text style={styles.familyBody}>{item.body}</Text>
+          </View>
+
+          <View style={styles.familyButtons}>
+            <TouchableOpacity
+              style={[styles.familyBtn, styles.familyBtnYes]}
+              activeOpacity={0.85}
+              onPress={onAccept}
+              disabled={busy}
+            >
+              {busy ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.familyBtnText}>Yes, Join Family</Text>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.familyBtn, styles.familyBtnNo]}
+              activeOpacity={0.85}
+              onPress={onDecline}
+              disabled={busy}
+            >
+              <Text style={styles.familyBtnText}>No, Thank You</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.timestampWrap}>
+        {isFresh && (
+          <View style={styles.newPill}>
+            <Text style={styles.newPillText}>New</Text>
+          </View>
+        )}
+        <Text style={styles.timestampText}>{formatTimeAgo(item.sent_at)}</Text>
+      </View>
+    </View>
+  );
+}
+
 // ── Overlay ──────────────────────────────────────────────────────────────────
 export function NotificationsOverlay() {
   const insets = useSafeAreaInsets();
@@ -136,7 +233,42 @@ export function NotificationsOverlay() {
   const { notifications, loading, unreadCount, refresh, markRead, markAllRead, dismiss } =
     useNotifications();
   const performAction = useNotificationAction();
+  const { showToast } = useToast();
   const [refreshing, setRefreshing] = useState(false);
+  const [respondingId, setRespondingId] = useState<string | null>(null);
+
+  // Accept / decline a family invite card. Calls the edge function with the
+  // current user's auth (functions.invoke attaches it), then removes the
+  // card from the inbox.
+  const respondToInvite = useCallback(
+    async (item: InboxNotification, action: 'accept' | 'decline') => {
+      const token = (item.data as { token?: string } | null)?.token;
+      if (!token) {
+        showToast({ message: 'This invite is no longer valid.', variant: 'error' });
+        return;
+      }
+      setRespondingId(item.id);
+      try {
+        const { data, error } = await supabase.functions.invoke('accept-family-invite', {
+          body: { token, action },
+        });
+        const errMsg = error?.message || (data as { error?: string } | null)?.error;
+        if (errMsg) {
+          showToast({ message: errMsg, variant: 'error' });
+          return;
+        }
+        if (action === 'accept') {
+          showToast({ message: "You're in. Your profile is now shared.", variant: 'success' });
+        }
+        await dismiss(item.id);
+      } catch {
+        showToast({ message: 'Something went wrong. Try again.', variant: 'error' });
+      } finally {
+        setRespondingId(null);
+      }
+    },
+    [dismiss, showToast],
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -156,14 +288,26 @@ export function NotificationsOverlay() {
   );
 
   const renderItem = useCallback(
-    ({ item }: { item: InboxNotification }) => (
-      <NotificationCard
-        item={item}
-        onTap={() => handleTap(item)}
-        onDismiss={() => dismiss(item.id)}
-      />
-    ),
-    [handleTap, dismiss],
+    ({ item }: { item: InboxNotification }) => {
+      if (item.type === 'family_invite') {
+        return (
+          <FamilyInviteCard
+            item={item}
+            busy={respondingId === item.id}
+            onAccept={() => respondToInvite(item, 'accept')}
+            onDecline={() => respondToInvite(item, 'decline')}
+          />
+        );
+      }
+      return (
+        <NotificationCard
+          item={item}
+          onTap={() => handleTap(item)}
+          onDismiss={() => dismiss(item.id)}
+        />
+      );
+    },
+    [handleTap, dismiss, respondToInvite, respondingId],
   );
 
   const ListHeader = useMemo(
@@ -398,6 +542,94 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     fontFamily: 'Figtree_300Light',
     color: Colors.secondary,
+    letterSpacing: -0.14,
+  },
+  // ── Family invite card (Figma 5403:24287) ──
+  familyContent: {
+    gap: 10,
+    alignItems: 'flex-start',
+  },
+  avatarWrap: {
+    width: 90,
+    height: 90,
+    position: 'relative',
+  },
+  avatarCircle: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: Colors.accent, // #3b9586 green-apple
+    borderWidth: 3,
+    borderColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+  },
+  avatarInitials: {
+    fontSize: 22.5,
+    lineHeight: 27,
+    fontFamily: 'Figtree_700Bold',
+    color: '#fff',
+    letterSpacing: -0.45,
+    textAlign: 'center',
+  },
+  avatarBadge: {
+    position: 'absolute',
+    right: -3,
+    bottom: -3,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: Colors.secondary, // #00776f
+    borderWidth: 2.25,
+    borderColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadows.level3,
+  },
+  familyLower: {
+    gap: Spacing.xs, // 8
+    width: '100%',
+  },
+  familyText: {
+    gap: Spacing.xxs, // 4
+    width: '100%',
+  },
+  familyBody: {
+    fontSize: 14,
+    lineHeight: 21,
+    fontFamily: 'Figtree_300Light',
+    color: Colors.secondary,
+    letterSpacing: -0.14,
+  },
+  familyButtons: {
+    flexDirection: 'row',
+    gap: Spacing.xxs, // 4
+    width: '100%',
+  },
+  familyBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: Spacing.m, // 24
+    borderRadius: Radius.m, // 8
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  familyBtnYes: {
+    backgroundColor: Colors.secondary, // #00776f
+  },
+  familyBtnNo: {
+    backgroundColor: Colors.status.negative, // #ff3f42
+  },
+  familyBtnText: {
+    fontSize: 14,
+    lineHeight: 21,
+    fontFamily: 'Figtree_700Bold',
+    color: '#fff',
     letterSpacing: -0.14,
   },
   timestampWrap: {
