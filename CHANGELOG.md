@@ -4,6 +4,28 @@ Version history from initial launch (v1.0.0) to current.
 
 ---
 
+## v1.8.0 — Family account linking
+
+_Released June 2026._
+
+### Link a family member's own account
+
+- A Plus family owner can now invite a family member who has their own Bite Insight account to **link** into their family — instead of only managing a static profile for them
+- When adding a member, a first step asks whether they already have an account. If they do, you enter a name + email (or share a link) and send an invite; if not, you set up a managed profile as before
+- **Invite by email** (email-bound — only that account can accept) or **copy a share link** for WhatsApp / Messages (opens the app to connect)
+- The invited person gets an in-app notification card (and an email) to accept or decline
+- Once linked, their **real preferences, photo, allergies, conditions and ingredient choices sync live** into your family view — and update automatically when they change them on their side
+- Linked members are **read-only** for the owner — only the member edits their own account
+- Tapping a linked member opens a detail card with a **Remove from family** action (removes them from your list; their account is untouched)
+- A **Pending Invitations** section shows members you've invited but who haven't accepted yet, with the invite status
+
+### Behind the scenes
+
+- New `family_invites` table, three edge functions (create / accept / unlink), a live-read RPC, deep-link route and share-link landing page
+- Linking is guarded so only the trusted accept flow can join two accounts
+
+---
+
 ## v1.7.1 — PostHog wiring + verify-email reminder
 
 _Released May 2026._

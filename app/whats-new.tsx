@@ -98,16 +98,30 @@ interface CardData {
   icon: CardIcon;
 }
 
-// v1.6.1 — only the regions expansion is featured. The free trial gets
-// discovered via its own dedicated sheet (TrialUpsellSheet) on the
-// dashboard; the new health conditions surface in profile settings;
-// the sharper ingredient flagging is invisible to users by design.
-// Adding more cards here would dilute the announcement.
-// v1.6.2 ships silently — the matcher rewrite (taxonomy-driven flagging)
-// is a quality fix users shouldn't need to be told about. shouldShowWhatsNew
-// returns false when CARDS is empty AND silently marks the current version
-// as seen so the gate doesn't keep firing on cold launches.
-const CARDS: CardData[] = [];
+// v1.8.0 — family account linking is the headline. Everything else this
+// release (lifecycle emails, notification plumbing, multi-device push) is
+// behind-the-scenes and doesn't warrant a card. One strong announcement
+// beats a diluted list.
+const CARDS: CardData[] = [
+  {
+    badge: 'New',
+    title: 'Invite your family to link up',
+    plus: true,
+    icon: FamilyInsightsIcon,
+    description:
+      "Got a family member with their own Bite Insight account? Invite them to join your family and their preferences show up right in your family view.",
+    subsections: [
+      {
+        heading: 'How it works',
+        bullets: [
+          { title: 'Send an invite', sub: 'By email, or share a link on WhatsApp or Messages' },
+          { title: 'They tap to join', sub: 'One tap and their account is linked to your family' },
+          { title: 'Their details stay current', sub: "You always see their up-to-date preferences and photo" },
+        ],
+      },
+    ],
+  },
+];
 
 // ── Screen ──────────────────────────────────────────────────────────────────
 
