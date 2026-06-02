@@ -176,16 +176,6 @@ export default function WhatsNewScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      {/* Skip button */}
-      <TouchableOpacity
-        style={styles.skipBtn}
-        onPress={dismiss}
-        activeOpacity={0.7}
-        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-      >
-        <Text style={styles.skipText}>{tc('buttons.skip')}</Text>
-      </TouchableOpacity>
-
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
@@ -292,20 +282,6 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: Colors.background,
-  },
-  skipBtn: {
-    position: 'absolute',
-    top: 16,
-    right: Spacing.m,
-    zIndex: 10,
-  },
-  skipText: {
-    fontSize: 16,
-    lineHeight: 20,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    letterSpacing: 0,
-    color: Colors.secondary,
   },
   scroll: {
     flex: 1,
