@@ -98,28 +98,45 @@ interface CardData {
   icon: CardIcon;
 }
 
-// v1.8.0 — family account linking is the headline. Everything else this
-// release (lifecycle emails, notification plumbing, multi-device push) is
-// behind-the-scenes and doesn't warrant a card. One strong announcement
-// beats a diluted list.
+// Bell icon for the Notifications card (the whats-new SVG set has no bell).
+function BellIcon({ width = 28, height = 28 }: { width?: number; height?: number }) {
+  return (
+    <Svg width={width} height={height} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"
+        stroke={Colors.primary}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M13.73 21a2 2 0 0 1-3.46 0"
+        stroke={Colors.primary}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+// v1.8.0 — two new features worth surfacing: family account linking (Plus)
+// and the notification inbox.
 const CARDS: CardData[] = [
   {
-    badge: 'New',
-    title: 'Invite your family to link up',
+    badge: 'New Feature',
+    title: 'Invite & Link Family Accounts',
     plus: true,
     icon: FamilyInsightsIcon,
     description:
-      "Got a family member with their own Bite Insight account? Invite them to join your family and their preferences show up right in your family view.",
-    subsections: [
-      {
-        heading: 'How it works',
-        bullets: [
-          { title: 'Send an invite', sub: 'By email, or share a link on WhatsApp or Messages' },
-          { title: 'They tap to join', sub: 'One tap and their account is linked to your family' },
-          { title: 'Their details stay current', sub: "You always see their up-to-date preferences and photo" },
-        ],
-      },
-    ],
+      'Bite Insight+ members can now invite family members to link their own accounts, giving your household clearer, more personalised insights when scanning food.',
+  },
+  {
+    badge: 'New Feature',
+    title: 'Notifications',
+    icon: BellIcon,
+    description:
+      'Stay in the loop with helpful Bite Insight notifications, including important updates, account activity, and reminders that support your food choices.',
   },
 ];
 
@@ -198,10 +215,10 @@ export default function WhatsNewScreen() {
                   <IconComponent width={28} height={28} />
                 </View>
                 <View style={styles.cardHeaderTags}>
+                  {card.plus && <PlusBadge size="small" />}
                   <View style={styles.badge}>
                     <Text style={styles.badgeText}>{card.badge}</Text>
                   </View>
-                  {card.plus && <PlusBadge size="small" />}
                 </View>
               </View>
 
