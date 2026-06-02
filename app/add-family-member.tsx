@@ -42,6 +42,7 @@ import { SuggestionSheet, type SuggestionCategory } from '@/components/Suggestio
 import { LottieLoader } from '@/components/LottieLoader';
 import { FamilyIngredientPreferencesPanel } from '@/components/FamilyIngredientPreferencesPanel';
 import { FlagReasonSheet } from '@/components/FlagReasonSheet';
+import { InviteFamilyMemberSheet } from '@/components/InviteFamilyMemberSheet';
 import type { Ingredient } from '@/lib/types';
 import { CONDITION_INFO } from '@/constants/conditionInfo';
 import Logo from '../assets/images/logo.svg';
@@ -127,7 +128,7 @@ function conditionMapKey(conditionKey: string): string {
 }
 
 // ── Step types ────────────────────────────────────────────────────────────────
-type StepKey = 'about' | 'health' | 'nutrients' | 'allergies' | 'dietary' | 'ingredients';
+type StepKey = 'account' | 'about' | 'health' | 'nutrients' | 'allergies' | 'dietary' | 'ingredients';
 
 // Ingredient category labels shown as horizontal-scroll tabs on the
 // ingredients step. Matches Figma node 4819-24905.
@@ -248,6 +249,11 @@ export default function AddFamilyMemberScreen() {
   const [step, setStep] = useState(1);
   const [fetched, setFetched] = useState(!isEditing);
 
+  // Step 0 (add only) — does this family member already have an account?
+  // null = unanswered. true → invite-to-link path; false → managed profile.
+  const [hasAccount, setHasAccount] = useState<boolean | null>(null);
+  const [inviteFor, setInviteFor] = useState<{ id: string; name: string } | null>(null);
+
   // Step 1 – About them
   const [fullName, setFullName]     = useState('');
   const [relationship, setRelationship] = useState('');
@@ -288,21 +294,44 @@ export default function AddFamilyMemberScreen() {
 
   const showNutrientStep = healthConditions.length > 0;
 
-  const stepSequence: StepKey[] = useMemo(() => [
-    'about',
-    'health',
-    ...(showNutrientStep ? ['nutrients' as StepKey] : []),
-    'allergies',
-    'dietary',
-    'ingredients',
-  ], [showNutrientStep]);
+  const stepSequence: StepKey[] = useMemo(() => {
+    // Editing an existing member keeps the original health-data wizard.
+    if (isEditing) {
+      return [
+        'about',
+        'health',
+        ...(showNutrientStep ? ['nutrients' as StepKey] : []),
+        'allergies',
+        'dietary',
+        'ingredients',
+      ];
+    }
+    // Adding: first ask whether they already have a Bite Insight account.
+    // If they do, we only need a name + relationship, then send them an
+    // invite — their health data syncs from their own account, so the
+    // health-entry steps are skipped.
+    if (hasAccount === true) {
+      return ['account', 'about'];
+    }
+    return [
+      'account',
+      'about',
+      'health',
+      ...(showNutrientStep ? ['nutrients' as StepKey] : []),
+      'allergies',
+      'dietary',
+      'ingredients',
+    ];
+  }, [isEditing, hasAccount, showNutrientStep]);
 
   const totalSteps = stepSequence.length;
   const currentStepKey = stepSequence[step - 1] ?? 'about';
   const isLastStep = step === totalSteps;
   const nextStepKey = step < totalSteps ? stepSequence[step] : null;
   const nextLabel = nextStepKey ? to(`step.${nextStepKey}`) : null;
-  const stepTitle = to(`step.${currentStepKey}`);
+  const stepTitle = currentStepKey === 'account'
+    ? 'Add a family member'
+    : to(`step.${currentStepKey}`);
 
   const uniqueNutrients = useMemo(
     () => buildUniqueNutrients(healthConditions),
@@ -583,11 +612,48 @@ export default function AddFamilyMemberScreen() {
 
   // ── Navigation ────────────────────────────────────────────────────────────
   function handleNext() {
+    if (currentStepKey === 'account' && hasAccount === null) {
+      Alert.alert('One quick thing', 'Let us know if they already have a Bite Insight account.');
+      return;
+    }
     if (currentStepKey === 'about' && !fullName.trim()) {
       Alert.alert(tp('familyMember.alert.nameRequiredTitle'), tp('familyMember.alert.nameRequiredMessage'));
       return;
     }
     animateExit('forward', () => setStep(s => Math.min(s + 1, totalSteps)));
+  }
+
+  // Invite-to-link path: create a minimal managed row (name + relationship)
+  // then open the invite sheet so the owner can send the link/email. The
+  // member's health data syncs from their own account once they accept.
+  async function handleCreateAndInvite() {
+    if (!session?.user?.id) return;
+    if (!fullName.trim()) {
+      Alert.alert(tp('familyMember.alert.nameRequiredTitle'), tp('familyMember.alert.nameRequiredMessage'));
+      return;
+    }
+    setSaving(true);
+    let avatarUrl: string | null = null;
+    if (avatarUri) {
+      const uploaded = await uploadAvatar(session.user.id, avatarUri, true);
+      if (uploaded) avatarUrl = uploaded;
+    }
+    const { data, error } = await supabase
+      .from('family_profiles')
+      .insert({
+        user_id: session.user.id,
+        name: fullName.trim(),
+        relationship: relationship || null,
+        avatar_url: avatarUrl,
+      })
+      .select('id, name')
+      .single();
+    setSaving(false);
+    if (error || !data) {
+      Alert.alert('Something went wrong', error?.message ?? 'Could not create the member.');
+      return;
+    }
+    setInviteFor({ id: data.id, name: data.name });
   }
 
   function handleBack() {
@@ -975,6 +1041,49 @@ export default function AddFamilyMemberScreen() {
           showsVerticalScrollIndicator={false}
         >
           <Animated.View style={{ opacity: contentOpacity, transform: [{ translateX: contentTranslateX }] }}>
+          {/* ── Step: Do they already have an account? (add only) ── */}
+          {currentStepKey === 'account' && (
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                <Text style={styles.cardTitle}>Do they already have a Bite Insight account?</Text>
+                <Text style={styles.cardSubtitle}>
+                  If they do, we'll invite them to link it so their preferences and photo stay in
+                  sync. If not, you'll set up their profile here.
+                </Text>
+              </View>
+              <View style={styles.accountChoices}>
+                <TouchableOpacity
+                  style={[styles.accountChoice, hasAccount === true && styles.accountChoiceActive]}
+                  activeOpacity={0.85}
+                  onPress={() => setHasAccount(true)}
+                >
+                  <Ionicons
+                    name="person-circle-outline"
+                    size={26}
+                    color={hasAccount === true ? '#fff' : Colors.secondary}
+                  />
+                  <Text style={[styles.accountChoiceText, hasAccount === true && styles.accountChoiceTextActive]}>
+                    Yes, they do
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.accountChoice, hasAccount === false && styles.accountChoiceActive]}
+                  activeOpacity={0.85}
+                  onPress={() => setHasAccount(false)}
+                >
+                  <Ionicons
+                    name="person-add-outline"
+                    size={26}
+                    color={hasAccount === false ? '#fff' : Colors.secondary}
+                  />
+                  <Text style={[styles.accountChoiceText, hasAccount === false && styles.accountChoiceTextActive]}>
+                    No, not yet
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
           {/* ── Step: About them ── */}
           {currentStepKey === 'about' && (
             <>
@@ -1151,10 +1260,14 @@ export default function AddFamilyMemberScreen() {
             <FooterButtonRow
               secondaryLabel={step === 1 ? tc('buttons.cancel') : tc('buttons.back')}
               primaryLabel={isLastStep
-                ? (isEditing ? tp('editProfile.saveChanges') : tc('buttons.finish'))
+                ? (!isEditing && hasAccount === true
+                    ? 'Continue to invite'
+                    : (isEditing ? tp('editProfile.saveChanges') : tc('buttons.finish')))
                 : to('progress.next', { label: nextLabel })}
               onSecondaryPress={handleBack}
-              onPrimaryPress={isLastStep ? handleSave : handleNext}
+              onPrimaryPress={isLastStep
+                ? (!isEditing && hasAccount === true ? handleCreateAndInvite : handleSave)
+                : handleNext}
               primaryLoading={saving}
               primaryDisabled={saving}
             />
@@ -1215,6 +1328,17 @@ export default function AddFamilyMemberScreen() {
       allergies={allergies}
       dietaryPreferences={dietaryPrefs}
     />
+
+    {/* Invite-to-link path: opens after the member row is created so the
+        owner can send the email/link. Closing returns to the family list. */}
+    <InviteFamilyMemberSheet
+      visible={!!inviteFor}
+      member={inviteFor}
+      onClose={() => {
+        setInviteFor(null);
+        router.back();
+      }}
+    />
     </>
   );
 }
@@ -1254,6 +1378,36 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     letterSpacing: -0.48,
     lineHeight: 30,
+  },
+
+  accountChoices: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 8,
+  },
+  accountChoice: {
+    flex: 1,
+    backgroundColor: Colors.surface.tertiary,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#aad4cd',
+    paddingVertical: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  accountChoiceActive: {
+    backgroundColor: Colors.secondary,
+    borderColor: Colors.secondary,
+  },
+  accountChoiceText: {
+    fontSize: 15,
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.3,
+  },
+  accountChoiceTextActive: {
+    color: '#fff',
   },
 
   progressRow: {
