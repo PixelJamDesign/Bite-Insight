@@ -34,6 +34,7 @@ import { Colors } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/lib/toastContext';
 import { familyInviteShareMessage } from '@/lib/familyInviteShare';
+import { TextField } from '@/components/TextField';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
@@ -182,10 +183,9 @@ export function InviteFamilyMemberSheet({
               </>
             ) : (
               <>
-                <TextInput
-                  style={styles.input}
+                <TextField
+                  icon="mail-outline"
                   placeholder="their@email.com"
-                  placeholderTextColor={Colors.secondary}
                   value={email}
                   onChangeText={setEmail}
                   autoCapitalize="none"
