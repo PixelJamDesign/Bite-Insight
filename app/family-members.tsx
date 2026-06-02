@@ -24,6 +24,7 @@ import { ScreenLayout } from '@/components/ScreenLayout';
 import { ActionSearchIcon, ActionPenIcon } from '@/components/MenuIcons';
 import { CachedAvatar } from '@/components/CachedAvatar';
 import { InviteFamilyMemberSheet } from '@/components/InviteFamilyMemberSheet';
+import { LinkedMemberOverlay } from '@/components/LinkedMemberOverlay';
 import { LottieLoader } from '@/components/LottieLoader';
 import type { FamilyProfile } from '@/lib/types';
 import { useTranslation } from 'react-i18next';
@@ -127,6 +128,7 @@ export default function FamilyMembersScreen() {
   const [loading, setLoading] = useState(true);
   const [inviteVisible, setInviteVisible] = useState(false);
   const [inviteMember, setInviteMember] = useState<{ id: string; name: string } | null>(null);
+  const [linkedMember, setLinkedMember] = useState<FamilyProfile | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [searchActive, setSearchActive] = useState(false);
@@ -299,13 +301,10 @@ export default function FamilyMembersScreen() {
         key={profile.id}
         style={styles.row}
         onPress={() => {
-          // Linked members own their own account — their profile is read-only
-          // here and kept in sync from their side. Don't open the editor.
+          // Linked members own their own account — open the read-only detail
+          // overlay (with the Remove-from-family action) instead of the editor.
           if (profile.linked_user_id) {
-            Alert.alert(
-              `${profile.name} manages their own profile`,
-              `${profile.name} linked their own account, so their preferences and photo stay in sync from there. Only ${profile.name} can change them.`,
-            );
+            setLinkedMember(profile);
             return;
           }
           router.push({ pathname: '/add-family-member', params: { id: profile.id } });
@@ -479,6 +478,19 @@ export default function FamilyMembersScreen() {
           setInviteVisible(false);
           loadProfiles();
         }}
+      />
+
+      <LinkedMemberOverlay
+        visible={!!linkedMember}
+        member={linkedMember}
+        relationshipLabel={
+          linkedMember?.relationship
+            ? tpo(`relationships.${linkedMember.relationship}`, { defaultValue: linkedMember.relationship })
+            : undefined
+        }
+        tags={linkedMember ? getAllTags(linkedMember, tpo) : []}
+        onClose={() => setLinkedMember(null)}
+        onRemoved={loadProfiles}
       />
     </Animated.View>
   );
