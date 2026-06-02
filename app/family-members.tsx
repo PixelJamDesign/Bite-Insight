@@ -341,14 +341,9 @@ export default function FamilyMembersScreen() {
           )}
         </View>
 
-        {/* Right side: linked badge, or invite button + chevron */}
-        {profile.linked_user_id ? (
-          <View style={styles.linkedBadge}>
-            <Ionicons name="link" size={12} color={Colors.secondary} />
-            <Text style={styles.linkedBadgeText}>Linked</Text>
-          </View>
-        ) : (
-          <View style={styles.rowRight}>
+        {/* Right side: invite button (managed members only) + chevron */}
+        <View style={styles.rowRight}>
+          {!profile.linked_user_id && (
             <TouchableOpacity
               style={styles.inviteBtn}
               onPress={() => {
@@ -360,9 +355,9 @@ export default function FamilyMembersScreen() {
             >
               <Ionicons name="person-add-outline" size={18} color={Colors.secondary} />
             </TouchableOpacity>
-            <Ionicons name="chevron-forward" size={16} color={`${Colors.primary}40`} />
-          </View>
-        )}
+          )}
+          <Ionicons name="chevron-forward" size={16} color={`${Colors.primary}40`} />
+        </View>
       </TouchableOpacity>
     );
   }
@@ -603,21 +598,6 @@ const styles = StyleSheet.create({
     borderColor: '#aad4cd',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  linkedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#b8dfd6',
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    height: 24,
-  },
-  linkedBadgeText: {
-    fontSize: 12,
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.secondary,
-    letterSpacing: -0.12,
   },
 
   // Checkbox (edit mode)
