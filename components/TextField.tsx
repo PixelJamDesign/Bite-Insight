@@ -54,6 +54,9 @@ export interface TextFieldProps extends Omit<TextInputProps, 'style'> {
   onSupportingPress?: () => void;
   /** Password-criteria checklist rendered under the field. */
   rules?: PasswordRule[];
+  /** Password field — renders an eye toggle (instead of the clear ✕) and
+   *  masks the value by default. */
+  secureToggle?: boolean;
 }
 
 export function TextField({
@@ -68,12 +71,14 @@ export function TextField({
   supportingText,
   onSupportingPress,
   rules,
+  secureToggle,
   ...inputProps
 }: TextFieldProps) {
   const [focused, setFocused] = useState(false);
+  const [revealed, setRevealed] = useState(false);
   const hasError = !!error;
   const showRequired = required && value.length === 0;
-  const showClear = clearable && value.length > 0;
+  const showClear = !secureToggle && clearable && value.length > 0;
 
   const boxStyle = [
     styles.box,
@@ -92,6 +97,8 @@ export function TextField({
           value={value}
           onChangeText={onChangeText}
           placeholderTextColor={`${Colors.primary}80`}
+          {...inputProps}
+          secureTextEntry={secureToggle ? !revealed : inputProps.secureTextEntry}
           onFocus={(e) => {
             setFocused(true);
             inputProps.onFocus?.(e);
@@ -100,7 +107,6 @@ export function TextField({
             setFocused(false);
             inputProps.onBlur?.(e);
           }}
-          {...inputProps}
         />
 
         {showRequired && <Text style={styles.required}>Required</Text>}
@@ -111,6 +117,15 @@ export function TextField({
             accessibilityLabel="Clear"
           >
             <Ionicons name="close" size={22} color={Colors.primary} />
+          </TouchableOpacity>
+        )}
+        {secureToggle && (
+          <TouchableOpacity
+            onPress={() => setRevealed((r) => !r)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityLabel={revealed ? 'Hide password' : 'Show password'}
+          >
+            <Ionicons name={revealed ? 'eye-off-outline' : 'eye-outline'} size={22} color={Colors.primary} />
           </TouchableOpacity>
         )}
       </View>

@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/theme';
+import { TextField } from '@/components/TextField';
 import LogoFull from '../assets/images/logo-full.svg';
 
 const PLACEHOLDER = `${Colors.primary}80`;
@@ -22,10 +23,7 @@ const PLACEHOLDER = `${Colors.primary}80`;
 export default function ResetPasswordScreen() {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
-  const [confirmFocused, setConfirmFocused] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [done, setDone] = useState(false);
@@ -120,68 +118,32 @@ export default function ResetPasswordScreen() {
               </View>
             ) : (
               <View style={styles.fields}>
-                {/* New password */}
-                <View style={[styles.inputWrapper, passwordFocused && styles.inputFocused]}>
-                  <View style={styles.inputIcon}>
-                    <Ionicons name="lock-closed-outline" size={22} color={Colors.primary} />
-                  </View>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="New password"
-                    placeholderTextColor={PLACEHOLDER}
-                    secureTextEntry={!showPassword}
-                    value={password}
-                    onChangeText={(v) => { setPassword(v); setErrorMsg(''); }}
-                    onFocus={() => setPasswordFocused(true)}
-                    onBlur={() => setPasswordFocused(false)}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                  />
-                  <TouchableOpacity onPress={() => setShowPassword((v) => !v)} activeOpacity={0.7}>
-                    <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={22} color={Colors.primary} />
-                  </TouchableOpacity>
-                </View>
+                <TextField
+                  placeholder="New password"
+                  icon="lock-closed-outline"
+                  secureToggle
+                  value={password}
+                  onChangeText={(v) => { setPassword(v); setErrorMsg(''); }}
+                  onFocus={() => setPasswordFocused(true)}
+                  onBlur={() => setPasswordFocused(false)}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  rules={
+                    passwordFocused
+                      ? rules.map((r) => ({ prefix: 'At least ', bold: r.bold, met: r.met }))
+                      : undefined
+                  }
+                />
 
-                {/* Password rules */}
-                {passwordFocused && (
-                  <View style={styles.pwRules}>
-                    <Text style={styles.pwRulesTitle}>Password must contain:</Text>
-                    {rules.map((r) => (
-                      <View key={r.bold} style={styles.pwRuleRow}>
-                        <Ionicons
-                          name={r.met ? 'checkmark' : 'close'}
-                          size={18}
-                          color={r.met ? Colors.status.positive : Colors.status.negative}
-                        />
-                        <Text style={[styles.pwRuleText, { color: r.met ? Colors.status.positive : Colors.status.negative }]}>
-                          At least <Text style={styles.pwRuleBold}>{r.bold}</Text>
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
-                )}
-
-                {/* Confirm password */}
-                <View style={[styles.inputWrapper, confirmFocused && styles.inputFocused]}>
-                  <View style={styles.inputIcon}>
-                    <Ionicons name="lock-closed-outline" size={22} color={Colors.primary} />
-                  </View>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Confirm password"
-                    placeholderTextColor={PLACEHOLDER}
-                    secureTextEntry={!showConfirm}
-                    value={confirm}
-                    onChangeText={(v) => { setConfirm(v); setErrorMsg(''); }}
-                    onFocus={() => setConfirmFocused(true)}
-                    onBlur={() => setConfirmFocused(false)}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                  />
-                  <TouchableOpacity onPress={() => setShowConfirm((v) => !v)} activeOpacity={0.7}>
-                    <Ionicons name={showConfirm ? 'eye-off-outline' : 'eye-outline'} size={22} color={Colors.primary} />
-                  </TouchableOpacity>
-                </View>
+                <TextField
+                  placeholder="Confirm password"
+                  icon="lock-closed-outline"
+                  secureToggle
+                  value={confirm}
+                  onChangeText={(v) => { setConfirm(v); setErrorMsg(''); }}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
               </View>
             )}
 
