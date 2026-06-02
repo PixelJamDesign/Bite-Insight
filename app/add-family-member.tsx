@@ -650,23 +650,24 @@ export default function AddFamilyMemberScreen() {
     return { id: data.id };
   }
 
-  // "Yes": first tap reveals the name + email fields; once both are filled,
-  // tapping it again sends the email invite.
-  async function handleAccountYes() {
-    if (hasAccount !== true) {
-      setHasAccount(true);
-      return;
-    }
+  // Valid when the invite form (name + email) is complete — drives the
+  // footer "Send invitation" button's enabled state.
+  const accountFormValid =
+    inviteName.trim().length > 0 &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(accountEmail.trim());
+
+  // "Yes": reveal the name + email fields. The actual send is the footer
+  // "Send invitation" button (handleSendInvitation), so this just unlocks
+  // the form — no double-tap-to-send.
+  function handleAccountYes() {
+    if (hasAccount !== true) setHasAccount(true);
+  }
+
+  // Footer "Send invitation": create the member and send the email invite.
+  async function handleSendInvitation() {
     const name = inviteName.trim();
     const email = accountEmail.trim();
-    if (!name) {
-      Alert.alert('Add a name', 'Enter a name so you can keep track of who you invited.');
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      Alert.alert('Add their email', 'Enter their email, or use the copy-link option instead.');
-      return;
-    }
+    if (!accountFormValid) return;
     setSaving(true);
     const member = await createInviteMember(name);
     if (!member) { setSaving(false); return; }
@@ -1191,11 +1192,7 @@ export default function AddFamilyMemberScreen() {
                   onPress={handleAccountYes}
                   disabled={saving}
                 >
-                  {saving ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <Text style={styles.accountBtnText}>Yes</Text>
-                  )}
+                  <Text style={styles.accountBtnText}>Yes</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.accountBtn, hasAccount === true ? styles.accountBtnDisabled : styles.accountBtnNo]}
@@ -1209,9 +1206,11 @@ export default function AddFamilyMemberScreen() {
                 </TouchableOpacity>
               </View>
 
-              <TouchableOpacity style={styles.accountCancel} onPress={safeBack} activeOpacity={0.7}>
-                <Text style={styles.accountCancelText}>Cancel</Text>
-              </TouchableOpacity>
+              {hasAccount !== true && (
+                <TouchableOpacity style={styles.accountCancel} onPress={safeBack} activeOpacity={0.7}>
+                  <Text style={styles.accountCancelText}>Cancel</Text>
+                </TouchableOpacity>
+              )}
             </View>
           )}
 
@@ -1380,8 +1379,12 @@ export default function AddFamilyMemberScreen() {
           </Animated.View>
         </ScrollView>
 
-        {/* ── Footer ── (hidden on the account step — its own buttons drive) */}
-        {currentStepKey !== 'account' && (
+        {/* ── Footer ──
+            - account step, before "Yes": hidden (the in-card Yes/No drive it)
+            - account step, after "Yes": Cancel + "Send invitation" (enabled
+              once name + email are filled)
+            - all other steps: the normal wizard footer */}
+        {(currentStepKey !== 'account' || hasAccount === true) && (
           <View style={styles.footer}>
             <LinearGradient
               colors={['rgba(226,241,238,0)', Colors.background]}
@@ -1389,16 +1392,27 @@ export default function AddFamilyMemberScreen() {
               pointerEvents="none"
             />
             <View style={[styles.footerButtons, { paddingBottom: insets.bottom + 12 }]}>
-              <FooterButtonRow
-                secondaryLabel={step === 1 ? tc('buttons.cancel') : tc('buttons.back')}
-                primaryLabel={isLastStep
-                  ? (isEditing ? tp('editProfile.saveChanges') : tc('buttons.finish'))
-                  : to('progress.next', { label: nextLabel })}
-                onSecondaryPress={handleBack}
-                onPrimaryPress={isLastStep ? handleSave : handleNext}
-                primaryLoading={saving}
-                primaryDisabled={saving}
-              />
+              {currentStepKey === 'account' ? (
+                <FooterButtonRow
+                  secondaryLabel={tc('buttons.cancel')}
+                  primaryLabel="Send invitation"
+                  onSecondaryPress={() => safeBack()}
+                  onPrimaryPress={handleSendInvitation}
+                  primaryLoading={saving}
+                  primaryDisabled={saving || !accountFormValid}
+                />
+              ) : (
+                <FooterButtonRow
+                  secondaryLabel={step === 1 ? tc('buttons.cancel') : tc('buttons.back')}
+                  primaryLabel={isLastStep
+                    ? (isEditing ? tp('editProfile.saveChanges') : tc('buttons.finish'))
+                    : to('progress.next', { label: nextLabel })}
+                  onSecondaryPress={handleBack}
+                  onPrimaryPress={isLastStep ? handleSave : handleNext}
+                  primaryLoading={saving}
+                  primaryDisabled={saving}
+                />
+              )}
             </View>
           </View>
         )}
