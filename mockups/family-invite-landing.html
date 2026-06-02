@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Join a family on Bite Insight</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;700&family=Google+Sans:wght@400;700&display=swap" rel="stylesheet">
+  <!-- Reuse the live site's stylesheet so it matches biteinsight.co.uk. -->
+  <link rel="stylesheet" href="https://biteinsight.co.uk/css/styles.css">
+  <style>
+    body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+    .wrap{max-width:460px;width:100%;text-align:center;}
+    .logo{width:184px;height:auto;margin:0 auto 28px;display:block;}
+    .wrap .hero-cta-panel{align-items:center;text-align:center;gap:24px;}
+    .wrap .hero-cta-text{font-size:20px;line-height:30px;letter-spacing:-0.4px;}
+    .wrap .hero-cta-buttons{justify-content:center;width:100%;}
+    .wrap .hero-cta-buttons .btn{width:100%;}
+    .store-row{width:100%;}
+    .store-label{font-family:var(--font);font-weight:300;font-size:13px;color:var(--secondary);margin-bottom:12px;}
+    .store-badges{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+    .store-badges img{height:40px;width:auto;display:block;}
+    .hint{font-family:var(--font);font-weight:300;font-size:12px;color:#7fa8a1;margin-top:20px;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <img class="logo" src="https://biteinsight.co.uk/images/logo-full.svg" alt="Bite Insight">
+
+    <div class="hero-cta-panel">
+      <div class="hero-cta-text">
+        <span class="font-light">You've been invited to join a family on Bite Insight. Open the app to </span><span class="font-bold-italic">connect</span><span class="font-light">.</span>
+      </div>
+
+      <div class="hero-cta-buttons">
+        <a class="btn btn-gradient btn-lg" id="openBtn" href="#">Open Bite Insight</a>
+      </div>
+
+      <div class="store-row">
+        <div class="store-label">Don't have the app yet?</div>
+        <div class="store-badges">
+          <a href="https://apps.apple.com/app/id6760033160">
+            <img src="https://biteinsight.co.uk/images/app-store-badge.svg" alt="Download on the App Store">
+          </a>
+          <a href="https://play.google.com/store/apps/details?id=com.biteinsightapp.gcahill">
+            <img src="https://biteinsight.co.uk/images/google-play-badge.svg" alt="Get it on Google Play">
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <p class="hint">After installing, open this link again to connect your account.</p>
+  </div>
+
+  <script>
+    // Pull the token from this page's URL and forward it into the app via
+    // the custom scheme. The in-app deep-link handler routes to the accept
+    // screen with the token.
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var token = params.get('token') || '';
+      var appUrl = 'biteinsight://family-invite?token=' + encodeURIComponent(token);
+      var btn = document.getElementById('openBtn');
+      btn.setAttribute('href', appUrl);
+      function openApp() { window.location.href = appUrl; }
+      if (token) setTimeout(openApp, 600);
+      btn.addEventListener('click', function (e) { e.preventDefault(); openApp(); });
+    })();
+  </script>
+</body>
+</html>

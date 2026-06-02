@@ -229,6 +229,22 @@ function RootLayoutInner() {
   //            or:  biteinsight://verify#access_token=...&type=signup
   useEffect(() => {
     async function handleUrl(url: string) {
+      // Family invite links:
+      //   biteinsight://family-invite?token=...
+      //   https://biteinsight.co.uk/family-invite.html?token=... (via the
+      //   landing page, which forwards to the scheme)
+      // Routes to the in-app accept screen. Requires a signed-in user;
+      // AuthGuard bounces them to sign-in first if needed (v1: they then
+      // re-open the link). The token rides in the route params.
+      if (url.includes('family-invite')) {
+        const query = url.split('?')[1];
+        const token = query ? new URLSearchParams(query).get('token') : null;
+        if (token) {
+          router.push({ pathname: '/family-invite', params: { token } } as never);
+        }
+        return;
+      }
+
       const fragment = url.split('#')[1];
       if (!fragment) return;
       const params = new URLSearchParams(fragment);

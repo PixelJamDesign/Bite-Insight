@@ -23,6 +23,7 @@ import { usePageTransition } from '@/lib/usePageTransition';
 import { ScreenLayout } from '@/components/ScreenLayout';
 import { ActionSearchIcon, ActionPenIcon } from '@/components/MenuIcons';
 import { CachedAvatar } from '@/components/CachedAvatar';
+import { InviteFamilyMemberSheet } from '@/components/InviteFamilyMemberSheet';
 import { LottieLoader } from '@/components/LottieLoader';
 import type { FamilyProfile } from '@/lib/types';
 import { useTranslation } from 'react-i18next';
@@ -124,6 +125,8 @@ export default function FamilyMembersScreen() {
 
   const [profiles, setProfiles] = useState<FamilyProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [inviteVisible, setInviteVisible] = useState(false);
+  const [inviteMember, setInviteMember] = useState<{ id: string; name: string } | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [searchActive, setSearchActive] = useState(false);
@@ -338,10 +341,28 @@ export default function FamilyMembersScreen() {
           )}
         </View>
 
-        {/* Chevron */}
-        <View style={styles.chevronWrap}>
-          <Ionicons name="chevron-forward" size={16} color={`${Colors.primary}40`} />
-        </View>
+        {/* Right side: linked badge, or invite button + chevron */}
+        {profile.linked_user_id ? (
+          <View style={styles.linkedBadge}>
+            <Ionicons name="link" size={12} color={Colors.secondary} />
+            <Text style={styles.linkedBadgeText}>Linked</Text>
+          </View>
+        ) : (
+          <View style={styles.rowRight}>
+            <TouchableOpacity
+              style={styles.inviteBtn}
+              onPress={() => {
+                setInviteMember({ id: profile.id, name: profile.name });
+                setInviteVisible(true);
+              }}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="person-add-outline" size={18} color={Colors.secondary} />
+            </TouchableOpacity>
+            <Ionicons name="chevron-forward" size={16} color={`${Colors.primary}40`} />
+          </View>
+        )}
       </TouchableOpacity>
     );
   }
@@ -455,6 +476,15 @@ export default function FamilyMembersScreen() {
           </View>
         )}
       </ScreenLayout>
+
+      <InviteFamilyMemberSheet
+        visible={inviteVisible}
+        member={inviteMember}
+        onClose={() => {
+          setInviteVisible(false);
+          loadProfiles();
+        }}
+      />
     </Animated.View>
   );
 }
@@ -563,6 +593,32 @@ const styles = StyleSheet.create({
     color: Colors.primary, letterSpacing: -0.26, lineHeight: 16,
   },
   chevronWrap: { width: 20, height: 20, alignItems: 'center', justifyContent: 'center' },
+  rowRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  inviteBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.surface.tertiary,
+    borderWidth: 1,
+    borderColor: '#aad4cd',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  linkedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#b8dfd6',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    height: 24,
+  },
+  linkedBadgeText: {
+    fontSize: 12,
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.secondary,
+    letterSpacing: -0.12,
+  },
 
   // Checkbox (edit mode)
   checkbox: {
