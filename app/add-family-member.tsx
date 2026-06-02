@@ -1175,9 +1175,11 @@ export default function AddFamilyMemberScreen() {
                     activeOpacity={0.7}
                     disabled={saving}
                   >
-                    <Text style={styles.copyLinkMuted}>Don't have their email? </Text>
-                    <Ionicons name="link" size={15} color={Colors.secondary} />
-                    <Text style={styles.copyLinkText}> Copy invitation link</Text>
+                    <Text style={styles.copyLinkMuted}>Don't have their email?</Text>
+                    <View style={styles.copyLinkCta}>
+                      <Ionicons name="link" size={15} color={Colors.secondary} />
+                      <Text style={styles.copyLinkText}>Copy invitation link</Text>
+                    </View>
                   </TouchableOpacity>
                 </View>
               )}
@@ -1515,8 +1517,14 @@ const styles = StyleSheet.create({
   copyLinkRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
     paddingVertical: 4,
-    flexWrap: 'wrap',
+  },
+  copyLinkCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   copyLinkMuted: {
     fontSize: 13,
