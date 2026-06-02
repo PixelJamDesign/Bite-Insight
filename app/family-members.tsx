@@ -25,6 +25,7 @@ import { ActionSearchIcon, ActionPenIcon } from '@/components/MenuIcons';
 import { CachedAvatar } from '@/components/CachedAvatar';
 import { InviteFamilyMemberSheet } from '@/components/InviteFamilyMemberSheet';
 import { LinkedMemberOverlay } from '@/components/LinkedMemberOverlay';
+import { TextField } from '@/components/TextField';
 import { LottieLoader } from '@/components/LottieLoader';
 import type { FamilyProfile } from '@/lib/types';
 import { useTranslation } from 'react-i18next';
@@ -288,25 +289,16 @@ export default function FamilyMembersScreen() {
 
       {searchActive && (
         <View style={styles.searchSection}>
-          <View style={styles.searchBar}>
-            <ActionSearchIcon size={24} color={Colors.secondary} />
-            <TextInput
-              ref={searchInputRef}
-              style={styles.searchInput}
-              placeholder="Search family members..."
-              placeholderTextColor={Colors.secondary}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              autoCorrect={false}
-              autoCapitalize="none"
-              returnKeyType="search"
-            />
-            {searchQuery !== '' && (
-              <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-                <Ionicons name="close-circle" size={16} color={Colors.secondary} />
-              </TouchableOpacity>
-            )}
-          </View>
+          <TextField
+            ref={searchInputRef}
+            iconNode={<ActionSearchIcon size={24} color={Colors.secondary} />}
+            placeholder="Search family members..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            autoCorrect={false}
+            autoCapitalize="none"
+            returnKeyType="search"
+          />
         </View>
       )}
     </View>
