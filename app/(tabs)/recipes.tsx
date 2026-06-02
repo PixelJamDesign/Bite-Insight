@@ -16,7 +16,6 @@ import {
   TouchableOpacity,
   FlatList,
   Image,
-  ActivityIndicator,
   useWindowDimensions,
   Platform,
 } from 'react-native';
@@ -26,6 +25,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Colors, Spacing, Radius, Shadows, Typography } from '@/constants/theme';
 import { ScreenLayout } from '@/components/ScreenLayout';
+import { LottieLoader } from '@/components/LottieLoader';
 import { PlusBadge } from '@/components/PlusBadge';
 import { useRecipes, usePublicRecipes } from '@/lib/useRecipes';
 import { useSubscription } from '@/lib/subscriptionContext';
@@ -197,14 +197,14 @@ export default function RecipesScreen() {
         {/* Main area */}
         {loading && isEmpty ? (
           <View style={styles.loadingWrap}>
-            <ActivityIndicator color={Colors.secondary} />
+            <LottieLoader type="loading" fullScreen={false} />
           </View>
         ) : activeTab === 'community' ? (
           !isPlus ? (
             <CommunityLocked bottomSpace={tabBarClearance} onUpgrade={showUpsell} />
           ) : community.loading && community.recipes.length === 0 ? (
             <View style={styles.loadingWrap}>
-              <ActivityIndicator color={Colors.secondary} />
+              <LottieLoader type="loading" fullScreen={false} />
             </View>
           ) : community.recipes.length === 0 ? (
             <CommunityEmpty bottomSpace={tabBarClearance} />

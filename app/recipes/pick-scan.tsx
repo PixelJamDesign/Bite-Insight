@@ -29,6 +29,7 @@ import { useDraftRecipe } from '@/lib/draftRecipeContext';
 import { snapshotFromScanAsync } from '@/lib/recipes';
 import { Colors, Spacing, Radius, Typography } from '@/constants/theme';
 import { MenuArrowLeftIcon } from '@/components/MenuIcons';
+import { LottieLoader } from '@/components/LottieLoader';
 import { safeBack } from '@/lib/safeBack';
 import type { Scan } from '@/lib/types';
 
@@ -98,7 +99,7 @@ export default function PickScanScreen() {
 
       {loading ? (
         <View style={styles.loadingWrap}>
-          <ActivityIndicator color={Colors.secondary} />
+          <LottieLoader type="loading" fullScreen={false} />
         </View>
       ) : scans.length === 0 ? (
         <View style={styles.emptyWrap}>

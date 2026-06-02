@@ -24,6 +24,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { ActionSearchIcon } from '@/components/MenuIcons';
 import { TextField } from '@/components/TextField';
+import { LottieLoader } from '@/components/LottieLoader';
 import { router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
@@ -244,7 +245,7 @@ export function AddToRecipeSheet({ visible, onClose, snapshot, barcode }: Props)
 
           {loading ? (
             <View style={styles.loadingWrap}>
-              <ActivityIndicator color={Colors.secondary} />
+              <LottieLoader type="loading" fullScreen={false} />
             </View>
           ) : (
             <FlatList

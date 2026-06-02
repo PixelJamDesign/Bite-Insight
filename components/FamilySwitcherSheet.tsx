@@ -9,7 +9,6 @@ import {
   Animated,
   Easing,
   Dimensions,
-  ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,6 +18,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { useActiveFamily } from '@/lib/activeFamilyContext';
 import { CachedAvatar } from '@/components/CachedAvatar';
+import { LottieLoader } from '@/components/LottieLoader';
 import type { FamilyProfile, UserProfile } from '@/lib/types';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
@@ -224,7 +224,7 @@ export function FamilySwitcherSheet({
 
         {loading ? (
           <View style={styles.loadingWrap}>
-            <ActivityIndicator size="small" color={Colors.primary} />
+            <LottieLoader type="loading" fullScreen={false} />
           </View>
         ) : (
           <ScrollView

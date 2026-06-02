@@ -41,6 +41,7 @@ import { uploadRecipeCover } from '@/lib/supabase';
 import { formatQuantity } from '@/constants/quantityUnits';
 import { Colors, Spacing, Radius, Shadows } from '@/constants/theme';
 import { TextField } from '@/components/TextField';
+import { LottieLoader } from '@/components/LottieLoader';
 import {
   NUTRISCORE_COLORS,
   NUTRISCORE_VERDICT,
@@ -448,7 +449,7 @@ export default function RecipeBuilderScreen() {
     return (
       <View style={styles.safe}>
         <View style={styles.loadingWrap}>
-          <ActivityIndicator color={Colors.secondary} />
+          <LottieLoader type="loading" fullScreen={false} />
         </View>
       </View>
     );

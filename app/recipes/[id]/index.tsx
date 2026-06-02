@@ -23,7 +23,6 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
-  ActivityIndicator,
   Alert,
   Share,
 } from 'react-native';
@@ -60,6 +59,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import { deriveDietaryTags } from '@/lib/dietaryTags';
 import { DietaryTagsRow } from '@/components/DietaryTagsRow';
+import { LottieLoader } from '@/components/LottieLoader';
 import ArrowLeftIcon from '@/assets/icons/recipe-header/arrow-left.svg';
 import LikeThumbIcon from '@/assets/icons/recipe-header/like-thumb.svg';
 import type {
@@ -186,7 +186,7 @@ export default function RecipeDetailScreen() {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.loadingWrap}>
-          <ActivityIndicator color={Colors.secondary} />
+          <LottieLoader type="loading" fullScreen={false} />
         </View>
       </SafeAreaView>
     );
