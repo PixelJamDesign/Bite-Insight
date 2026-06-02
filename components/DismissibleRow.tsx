@@ -105,18 +105,21 @@ export function DismissibleRow({
         extrapolate: 'clamp',
       });
 
+      // Fade the whole action (red background + bin icon) with swipe
+      // progress, so the red plate fades in/out at the same rate as the
+      // icon rather than sitting solid the moment the row moves.
       return (
-        <TouchableOpacity
-          style={styles.defaultAction}
-          onPress={onDismiss}
-          activeOpacity={0.85}
-          accessibilityRole="button"
-          accessibilityLabel={accessibilityLabel}
-        >
-          <Animated.View style={{ opacity: iconOpacity }}>
+        <Animated.View style={{ opacity: iconOpacity }}>
+          <TouchableOpacity
+            style={styles.defaultAction}
+            onPress={onDismiss}
+            activeOpacity={0.85}
+            accessibilityRole="button"
+            accessibilityLabel={accessibilityLabel}
+          >
             <Ionicons name="trash-outline" size={22} color="#fff" />
-          </Animated.View>
-        </TouchableOpacity>
+          </TouchableOpacity>
+        </Animated.View>
       );
     },
     [onDismiss, longSwipePx, renderRightAction, accessibilityLabel],

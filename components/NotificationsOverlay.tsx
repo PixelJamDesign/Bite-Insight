@@ -542,7 +542,6 @@ const styles = StyleSheet.create({
   },
   cardContent: {
     gap: 10,
-    paddingRight: 72,
   },
   iconCircle: {
     width: 42,
