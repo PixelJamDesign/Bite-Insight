@@ -16,6 +16,7 @@ import {
   LayoutAnimation,
   Modal,
   Pressable,
+  Share,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { safeBack } from '@/lib/safeBack';
@@ -42,7 +43,6 @@ import { SuggestionSheet, type SuggestionCategory } from '@/components/Suggestio
 import { LottieLoader } from '@/components/LottieLoader';
 import { FamilyIngredientPreferencesPanel } from '@/components/FamilyIngredientPreferencesPanel';
 import { FlagReasonSheet } from '@/components/FlagReasonSheet';
-import { InviteFamilyMemberSheet } from '@/components/InviteFamilyMemberSheet';
 import type { Ingredient } from '@/lib/types';
 import { CONDITION_INFO } from '@/constants/conditionInfo';
 import Logo from '../assets/images/logo.svg';
@@ -252,7 +252,7 @@ export default function AddFamilyMemberScreen() {
   // Step 0 (add only) — does this family member already have an account?
   // null = unanswered. true → invite-to-link path; false → managed profile.
   const [hasAccount, setHasAccount] = useState<boolean | null>(null);
-  const [inviteFor, setInviteFor] = useState<{ id: string; name: string } | null>(null);
+  const [accountEmail, setAccountEmail] = useState('');
 
   // Step 1 – About them
   const [fullName, setFullName]     = useState('');
@@ -311,7 +311,9 @@ export default function AddFamilyMemberScreen() {
     // invite — their health data syncs from their own account, so the
     // health-entry steps are skipped.
     if (hasAccount === true) {
-      return ['account', 'about'];
+      // The account step is self-contained for the invite path (email or
+      // copy-link); the member's name comes from their linked account.
+      return ['account'];
     }
     return [
       'account',
@@ -625,37 +627,82 @@ export default function AddFamilyMemberScreen() {
     animateExit('forward', () => setStep(s => Math.min(s + 1, totalSteps)));
   }
 
-  // Invite-to-link path: create a minimal managed row (name + relationship)
-  // then open the invite sheet so the owner can send the link/email. The
-  // member's health data syncs from their own account once they accept.
-  async function handleCreateAndInvite() {
-    if (!session?.user?.id) return;
-    if (!fullName.trim()) {
-      Alert.alert(tp('familyMember.alert.nameRequiredTitle'), tp('familyMember.alert.nameRequiredMessage'));
+  // ── Invite-to-link path (account step) ──────────────────────────────────
+  // The member's real name/photo/preferences come from their own account
+  // once they link, so we create a lightweight placeholder row and let
+  // live-read overlay their account data. Placeholder name is the email's
+  // local part (or "New member" for a link invite).
+  async function createInviteMember(email?: string): Promise<{ id: string } | null> {
+    if (!session?.user?.id) return null;
+    const local = email ? email.split('@')[0] : '';
+    const placeholder = local ? local.charAt(0).toUpperCase() + local.slice(1) : 'New member';
+    const { data, error } = await supabase
+      .from('family_profiles')
+      .insert({ user_id: session.user.id, name: placeholder })
+      .select('id')
+      .single();
+    if (error || !data) {
+      Alert.alert('Something went wrong', error?.message ?? 'Could not create the member.');
+      return null;
+    }
+    return { id: data.id };
+  }
+
+  // "Yes": first tap reveals the email field; once an email is entered,
+  // tapping it again sends the email invite.
+  async function handleAccountYes() {
+    if (hasAccount !== true) {
+      setHasAccount(true);
+      return;
+    }
+    const email = accountEmail.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      Alert.alert('Add their email', 'Enter their email, or use the copy-link option instead.');
       return;
     }
     setSaving(true);
-    let avatarUrl: string | null = null;
-    if (avatarUri) {
-      const uploaded = await uploadAvatar(session.user.id, avatarUri, true);
-      if (uploaded) avatarUrl = uploaded;
-    }
-    const { data, error } = await supabase
-      .from('family_profiles')
-      .insert({
-        user_id: session.user.id,
-        name: fullName.trim(),
-        relationship: relationship || null,
-        avatar_url: avatarUrl,
-      })
-      .select('id, name')
-      .single();
+    const member = await createInviteMember(email);
+    if (!member) { setSaving(false); return; }
+    const { error } = await supabase.functions.invoke('create-family-invite', {
+      body: { family_profile_id: member.id, method: 'email', email },
+    });
     setSaving(false);
-    if (error || !data) {
-      Alert.alert('Something went wrong', error?.message ?? 'Could not create the member.');
+    if (error) {
+      let msg = 'Could not send the invite. Try again.';
+      try { const b = await (error as { context?: Response }).context?.json(); if (b?.error) msg = b.error; } catch {}
+      Alert.alert('Invite not sent', msg);
       return;
     }
-    setInviteFor({ id: data.id, name: data.name });
+    Alert.alert('Invite sent', `We've emailed ${email}. They'll appear here once they accept.`);
+    safeBack();
+  }
+
+  // "No": create a managed profile instead — continue into the wizard.
+  function handleAccountNo() {
+    setHasAccount(false);
+    animateExit('forward', () => setStep((s) => Math.min(s + 1, totalSteps)));
+  }
+
+  // "Copy invitation link": create the member and share a unique link.
+  async function handleCopyLink() {
+    setSaving(true);
+    const member = await createInviteMember();
+    if (!member) { setSaving(false); return; }
+    const { data, error } = await supabase.functions.invoke('create-family-invite', {
+      body: { family_profile_id: member.id, method: 'link' },
+    });
+    setSaving(false);
+    const link = (data as { link?: string } | null)?.link;
+    if (error || !link) {
+      Alert.alert('Could not create link', 'Please try again.');
+      return;
+    }
+    try {
+      await Share.share({
+        message: `Join my family on Bite Insight so your preferences sync across. Tap to connect: ${link}`,
+      });
+    } catch { /* dismissed */ }
+    safeBack();
   }
 
   function handleBack() {
@@ -1049,40 +1096,76 @@ export default function AddFamilyMemberScreen() {
               <View style={styles.cardHeader}>
                 <Text style={styles.cardTitle}>Do they already have a Bite Insight account?</Text>
                 <Text style={styles.cardSubtitle}>
-                  If they do, we'll invite them to link it so their preferences and photo stay in
-                  sync. If not, you'll set up their profile here.
+                  If they do, we'll invite them to link it so their preferences stay in sync with
+                  you. If not then we can create a new profile.
                 </Text>
               </View>
-              <View style={styles.accountChoices}>
+
+              {/* Yes reveals an email field + copy-link option */}
+              {hasAccount === true && (
+                <View style={styles.accountReveal}>
+                  <View style={[styles.inputRow, focusedField === 'accountEmail' && styles.inputRowFocused]}>
+                    <Ionicons name="mail-outline" size={18} color={Colors.primary} />
+                    <TextInput
+                      style={styles.inputFieldInner}
+                      placeholder="their@email.com"
+                      placeholderTextColor={`${Colors.secondary}99`}
+                      value={accountEmail}
+                      onChangeText={setAccountEmail}
+                      autoCapitalize="none"
+                      keyboardType="email-address"
+                      autoCorrect={false}
+                      onFocus={() => setFocusedField('accountEmail')}
+                      onBlur={() => setFocusedField(null)}
+                    />
+                    {accountEmail.length > 0 && (
+                      <TouchableOpacity onPress={() => setAccountEmail('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                        <Ionicons name="close" size={18} color={Colors.secondary} />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.copyLinkRow}
+                    onPress={handleCopyLink}
+                    activeOpacity={0.7}
+                    disabled={saving}
+                  >
+                    <Text style={styles.copyLinkMuted}>Don't have their email? </Text>
+                    <Ionicons name="link" size={15} color={Colors.secondary} />
+                    <Text style={styles.copyLinkText}> Copy invitation link</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              <View style={styles.accountButtons}>
                 <TouchableOpacity
-                  style={[styles.accountChoice, hasAccount === true && styles.accountChoiceActive]}
+                  style={[styles.accountBtn, styles.accountBtnYes]}
                   activeOpacity={0.85}
-                  onPress={() => setHasAccount(true)}
+                  onPress={handleAccountYes}
+                  disabled={saving}
                 >
-                  <Ionicons
-                    name="person-circle-outline"
-                    size={26}
-                    color={hasAccount === true ? '#fff' : Colors.secondary}
-                  />
-                  <Text style={[styles.accountChoiceText, hasAccount === true && styles.accountChoiceTextActive]}>
-                    Yes, they do
-                  </Text>
+                  {saving ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.accountBtnText}>Yes</Text>
+                  )}
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.accountChoice, hasAccount === false && styles.accountChoiceActive]}
+                  style={[styles.accountBtn, hasAccount === true ? styles.accountBtnDisabled : styles.accountBtnNo]}
                   activeOpacity={0.85}
-                  onPress={() => setHasAccount(false)}
+                  onPress={handleAccountNo}
+                  disabled={hasAccount === true || saving}
                 >
-                  <Ionicons
-                    name="person-add-outline"
-                    size={26}
-                    color={hasAccount === false ? '#fff' : Colors.secondary}
-                  />
-                  <Text style={[styles.accountChoiceText, hasAccount === false && styles.accountChoiceTextActive]}>
-                    No, not yet
+                  <Text style={[styles.accountBtnText, hasAccount === true && styles.accountBtnTextDisabled]}>
+                    No
                   </Text>
                 </TouchableOpacity>
               </View>
+
+              <TouchableOpacity style={styles.accountCancel} onPress={safeBack} activeOpacity={0.7}>
+                <Text style={styles.accountCancelText}>Cancel</Text>
+              </TouchableOpacity>
             </View>
           )}
 
@@ -1251,30 +1334,28 @@ export default function AddFamilyMemberScreen() {
           </Animated.View>
         </ScrollView>
 
-        {/* ── Footer ── */}
-        <View style={styles.footer}>
-          <LinearGradient
-            colors={['rgba(226,241,238,0)', Colors.background]}
-            style={styles.footerFade}
-            pointerEvents="none"
-          />
-          <View style={[styles.footerButtons, { paddingBottom: insets.bottom + 12 }]}>
-            <FooterButtonRow
-              secondaryLabel={step === 1 ? tc('buttons.cancel') : tc('buttons.back')}
-              primaryLabel={isLastStep
-                ? (!isEditing && hasAccount === true
-                    ? 'Continue to invite'
-                    : (isEditing ? tp('editProfile.saveChanges') : tc('buttons.finish')))
-                : to('progress.next', { label: nextLabel })}
-              onSecondaryPress={handleBack}
-              onPrimaryPress={isLastStep
-                ? (!isEditing && hasAccount === true ? handleCreateAndInvite : handleSave)
-                : handleNext}
-              primaryLoading={saving}
-              primaryDisabled={saving}
+        {/* ── Footer ── (hidden on the account step — its own buttons drive) */}
+        {currentStepKey !== 'account' && (
+          <View style={styles.footer}>
+            <LinearGradient
+              colors={['rgba(226,241,238,0)', Colors.background]}
+              style={styles.footerFade}
+              pointerEvents="none"
             />
+            <View style={[styles.footerButtons, { paddingBottom: insets.bottom + 12 }]}>
+              <FooterButtonRow
+                secondaryLabel={step === 1 ? tc('buttons.cancel') : tc('buttons.back')}
+                primaryLabel={isLastStep
+                  ? (isEditing ? tp('editProfile.saveChanges') : tc('buttons.finish'))
+                  : to('progress.next', { label: nextLabel })}
+                onSecondaryPress={handleBack}
+                onPrimaryPress={isLastStep ? handleSave : handleNext}
+                primaryLoading={saving}
+                primaryDisabled={saving}
+              />
+            </View>
           </View>
-        </View>
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
     <ConditionInfoSheet conditionKey={infoKey} onClose={() => setInfoKey(null)} />
@@ -1331,16 +1412,6 @@ export default function AddFamilyMemberScreen() {
       dietaryPreferences={dietaryPrefs}
     />
 
-    {/* Invite-to-link path: opens after the member row is created so the
-        owner can send the email/link. Closing returns to the family list. */}
-    <InviteFamilyMemberSheet
-      visible={!!inviteFor}
-      member={inviteFor}
-      onClose={() => {
-        setInviteFor(null);
-        router.back();
-      }}
-    />
     </>
   );
 }
@@ -1382,34 +1453,53 @@ const styles = StyleSheet.create({
     lineHeight: 30,
   },
 
-  accountChoices: {
+  accountReveal: { gap: 8, marginTop: 8 },
+  copyLinkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 4,
+    flexWrap: 'wrap',
+  },
+  copyLinkMuted: {
+    fontSize: 13,
+    fontFamily: 'Figtree_300Light',
+    color: Colors.secondary,
+    letterSpacing: -0.13,
+  },
+  copyLinkText: {
+    fontSize: 13,
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.secondary,
+    letterSpacing: -0.13,
+  },
+  accountButtons: {
     flexDirection: 'row',
     gap: 12,
-    marginTop: 8,
+    marginTop: 16,
   },
-  accountChoice: {
+  accountBtn: {
     flex: 1,
-    backgroundColor: Colors.surface.tertiary,
+    paddingVertical: 16,
     borderRadius: 16,
-    borderWidth: 2,
-    borderColor: '#aad4cd',
-    paddingVertical: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
   },
-  accountChoiceActive: {
-    backgroundColor: Colors.secondary,
-    borderColor: Colors.secondary,
-  },
-  accountChoiceText: {
-    fontSize: 15,
+  accountBtnYes: { backgroundColor: Colors.accent },
+  accountBtnNo: { backgroundColor: Colors.accent },
+  accountBtnDisabled: { backgroundColor: '#b8dfd6' },
+  accountBtnText: {
+    fontSize: 16,
     fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
-    letterSpacing: -0.3,
-  },
-  accountChoiceTextActive: {
     color: '#fff',
+    letterSpacing: -0.32,
+  },
+  accountBtnTextDisabled: { color: '#ffffff' },
+  accountCancel: { alignSelf: 'center', paddingVertical: 12, marginTop: 4 },
+  accountCancelText: {
+    fontSize: 14,
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.secondary,
+    letterSpacing: -0.14,
   },
 
   progressRow: {
