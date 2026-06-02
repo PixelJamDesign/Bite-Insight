@@ -537,9 +537,11 @@ export default function AddFamilyMemberScreen() {
     ]).start(() => onComplete());
   }
 
-  // Step progress animation (5 dots max to support optional nutrient step)
+  // Step progress animation. Max steps = account + about + health +
+  // nutrients + allergies + dietary + ingredients = 7, so size the pop
+  // values to 7 (was 5, which crashed once the account step was added).
   const stepAnim    = useRef(new Animated.Value(1)).current;
-  const dotPops     = useRef([0, 1, 2, 3, 4].map(() => new Animated.Value(1))).current;
+  const dotPops     = useRef([0, 1, 2, 3, 4, 5, 6].map(() => new Animated.Value(1))).current;
   const prevStepRef = useRef(1);
 
   // Animate step tracker on step change
@@ -745,7 +747,7 @@ export default function AddFamilyMemberScreen() {
             const animHeight = stepAnim.interpolate({ inputRange: [s - 1, s, s + 1], outputRange: [10, 10, 20], extrapolate: 'clamp' });
             const animRadius = stepAnim.interpolate({ inputRange: [s - 1, s, s + 1], outputRange: [5,  5,  10], extrapolate: 'clamp' });
             return (
-              <Animated.View key={s} style={{ transform: [{ scale: dotPops[s - 1] }] }}>
+              <Animated.View key={s} style={{ transform: [{ scale: dotPops[s - 1] ?? 1 }] }}>
                 <Animated.View style={{ width: animWidth, height: animHeight, borderRadius: animRadius, backgroundColor: bgColor, alignItems: 'center', justifyContent: 'center' }}>
                   {isDone && <TickIcon size={10} color="#fff" />}
                 </Animated.View>
