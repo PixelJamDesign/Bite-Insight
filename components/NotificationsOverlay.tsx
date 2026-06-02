@@ -527,6 +527,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   card: {
+    width: '100%',
     borderRadius: Radius.l,
     borderWidth: 1,
     borderColor: Colors.stroke.primary,
