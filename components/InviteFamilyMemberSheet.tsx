@@ -33,7 +33,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/lib/toastContext';
-import { familyInviteShareMessage } from '@/lib/familyInviteShare';
+import { familyInviteShareContent } from '@/lib/familyInviteShare';
 import { TextField } from '@/components/TextField';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
@@ -103,7 +103,7 @@ export function InviteFamilyMemberSheet({
     if (!res?.link) return;
     onClose();
     try {
-      await Share.share({ message: familyInviteShareMessage(res.link) });
+      await Share.share(familyInviteShareContent(res.link));
     } catch {
       /* user dismissed the share sheet — invite still exists */
     }

@@ -43,7 +43,7 @@ import { SuggestionSheet, type SuggestionCategory } from '@/components/Suggestio
 import { LottieLoader } from '@/components/LottieLoader';
 import { FamilyIngredientPreferencesPanel } from '@/components/FamilyIngredientPreferencesPanel';
 import { FlagReasonSheet } from '@/components/FlagReasonSheet';
-import { familyInviteShareMessage } from '@/lib/familyInviteShare';
+import { familyInviteShareContent } from '@/lib/familyInviteShare';
 import { TextField } from '@/components/TextField';
 import type { Ingredient } from '@/lib/types';
 import { CONDITION_INFO } from '@/constants/conditionInfo';
@@ -718,7 +718,7 @@ export default function AddFamilyMemberScreen() {
       return;
     }
     try {
-      await Share.share({ message: familyInviteShareMessage(link) });
+      await Share.share(familyInviteShareContent(link));
     } catch { /* dismissed */ }
     safeBack();
   }
