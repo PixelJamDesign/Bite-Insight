@@ -13,7 +13,7 @@
  *
  * Migrate ad-hoc TextInputs to this over time.
  */
-import { useState, type ReactNode, type ComponentProps } from 'react';
+import { forwardRef, useState, type ReactNode, type ComponentProps } from 'react';
 import {
   View,
   Text,
@@ -59,7 +59,7 @@ export interface TextFieldProps extends Omit<TextInputProps, 'style'> {
   secureToggle?: boolean;
 }
 
-export function TextField({
+export const TextField = forwardRef<TextInput, TextFieldProps>(function TextField({
   label,
   value,
   onChangeText,
@@ -73,7 +73,7 @@ export function TextField({
   rules,
   secureToggle,
   ...inputProps
-}: TextFieldProps) {
+}: TextFieldProps, ref) {
   const [focused, setFocused] = useState(false);
   const [revealed, setRevealed] = useState(false);
   const hasError = !!error;
@@ -93,6 +93,7 @@ export function TextField({
         {iconNode ?? (icon ? <Ionicons name={icon} size={22} color={Colors.primary} /> : null)}
 
         <TextInput
+          ref={ref}
           style={styles.input}
           value={value}
           onChangeText={onChangeText}
@@ -165,7 +166,7 @@ export function TextField({
       ) : null}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   root: { gap: 8, width: '100%' },

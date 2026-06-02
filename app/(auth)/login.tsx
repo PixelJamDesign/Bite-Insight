@@ -21,6 +21,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { MenuFaceIdIcon } from '@/components/MenuIcons';
+import { TextField } from '@/components/TextField';
 import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/theme';
 import LogoFull from '../../assets/images/logo-full.svg';
@@ -338,105 +339,56 @@ export default function LoginScreen() {
         <View style={styles.fields}>
           {isSignUp && (
             <Animated.View style={{ opacity: nameOpacity, transform: [{ translateY: nameTranslateY }] }}>
-              <View style={[styles.inputWrapper, nameFocused && styles.inputFocused]}>
-                <View style={styles.inputIcon}>
-                  <Ionicons name="person-outline" size={22} color={Colors.primary} />
-                </View>
-                <TextInput
-                  style={styles.input}
-                  placeholder={tc('placeholder.fullName')}
-                  placeholderTextColor={PLACEHOLDER}
-                  autoCapitalize="words"
-                  value={fullName}
-                  onChangeText={(v) => { setFullName(v); clearError(); }}
-                  onFocus={() => setNameFocused(true)}
-                  onBlur={() => setNameFocused(false)}
-                />
-                {fullName.length > 0 && (
-                  <TouchableOpacity onPress={() => { setFullName(''); clearError(); }} hitSlop={8} activeOpacity={0.7}>
-                    <Ionicons name="close" size={20} color={Colors.primary} />
-                  </TouchableOpacity>
-                )}
-              </View>
+              <TextField
+                icon="person-outline"
+                placeholder={tc('placeholder.fullName')}
+                autoCapitalize="words"
+                value={fullName}
+                onChangeText={(v) => { setFullName(v); clearError(); }}
+              />
             </Animated.View>
           )}
 
-          <View style={[styles.inputWrapper, emailFocused && styles.inputFocused]}>
-            <View style={styles.inputIcon}>
-              <Ionicons name="mail-outline" size={22} color={Colors.primary} />
-            </View>
-            <TextInput
-              style={styles.input}
-              placeholder={tc('placeholder.emailAddress')}
-              placeholderTextColor={PLACEHOLDER}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              value={email}
-              onChangeText={(v) => { setEmail(v); clearError(); }}
-              onFocus={() => setEmailFocused(true)}
-              onBlur={isForgot ? () => setEmailFocused(false) : checkEmailOnBlur}
-              returnKeyType={isForgot ? 'go' : 'next'}
-              onSubmitEditing={() => {
-                if (isForgot) { handleForgotPassword(); }
-                else { passwordRef.current?.focus(); }
-              }}
-            />
-            {email.length > 0 && (
-              <TouchableOpacity onPress={() => { setEmail(''); clearError(); }} hitSlop={8} activeOpacity={0.7}>
-                <Ionicons name="close" size={20} color={Colors.primary} />
-              </TouchableOpacity>
-            )}
-          </View>
+          <TextField
+            icon="mail-outline"
+            placeholder={tc('placeholder.emailAddress')}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            value={email}
+            onChangeText={(v) => { setEmail(v); clearError(); }}
+            onBlur={isForgot ? undefined : checkEmailOnBlur}
+            returnKeyType={isForgot ? 'go' : 'next'}
+            onSubmitEditing={() => {
+              if (isForgot) { handleForgotPassword(); }
+              else { passwordRef.current?.focus(); }
+            }}
+          />
 
           {!isForgot && (
             <View style={styles.passwordBlock}>
-              <View style={[styles.inputWrapper, passwordFocused && styles.inputFocused]}>
-                <View style={styles.inputIcon}>
-                  <Ionicons name="lock-closed-outline" size={22} color={Colors.primary} />
-                </View>
-                <TextInput
-                  ref={passwordRef}
-                  style={styles.input}
-                  placeholder={tc('placeholder.password')}
-                  placeholderTextColor={PLACEHOLDER}
-                  secureTextEntry={!showPassword}
-                  value={password}
-                  onChangeText={(v) => { setPassword(v); clearError(); }}
-                  onFocus={() => setPasswordFocused(true)}
-                  onBlur={() => setPasswordFocused(false)}
-                  returnKeyType="go"
-                  onSubmitEditing={actionHandler}
-                />
-                <TouchableOpacity onPress={() => setShowPassword((v) => !v)} activeOpacity={0.7}>
-                  <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={22} color={Colors.primary} />
-                </TouchableOpacity>
-              </View>
-              {isSignUp && passwordFocused && (() => {
-                const rules = [
-                  { label: t('signup.passwordRulePrefix.atLeast'), bold: t('signup.passwordRule.oneLetter'), met: /[a-zA-Z]/.test(password) },
-                  { label: t('signup.passwordRulePrefix.atLeast'), bold: t('signup.passwordRule.oneCapital'), met: /[A-Z]/.test(password) },
-                  { label: t('signup.passwordRulePrefix.atLeast'), bold: t('signup.passwordRule.oneNumber'), met: /\d/.test(password) },
-                  { label: t('signup.passwordRulePrefix.beAtLeast'), bold: t('signup.passwordRule.minLength'), met: password.length >= 8 },
-                ];
-                return (
-                  <View style={styles.pwRules}>
-                    <Text style={styles.pwRulesTitle}>{t('signup.passwordRulesTitle')}</Text>
-                    {rules.map((r) => (
-                      <View key={r.bold} style={styles.pwRuleRow}>
-                        <Ionicons
-                          name={r.met ? 'checkmark' : 'close'}
-                          size={18}
-                          color={r.met ? Colors.status.positive : Colors.status.negative}
-                        />
-                        <Text style={[styles.pwRuleText, { color: r.met ? Colors.status.positive : Colors.status.negative }]}>
-                          {r.label}<Text style={styles.pwRuleBold}>{r.bold}</Text>
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
-                );
-              })()}
+              <TextField
+                ref={passwordRef}
+                icon="lock-closed-outline"
+                secureToggle
+                placeholder={tc('placeholder.password')}
+                value={password}
+                onChangeText={(v) => { setPassword(v); clearError(); }}
+                onFocus={() => setPasswordFocused(true)}
+                onBlur={() => setPasswordFocused(false)}
+                returnKeyType="go"
+                onSubmitEditing={actionHandler}
+                rules={
+                  isSignUp && passwordFocused
+                    ? [
+                        { prefix: t('signup.passwordRulePrefix.atLeast'), bold: t('signup.passwordRule.oneLetter'), met: /[a-zA-Z]/.test(password) },
+                        { prefix: t('signup.passwordRulePrefix.atLeast'), bold: t('signup.passwordRule.oneCapital'), met: /[A-Z]/.test(password) },
+                        { prefix: t('signup.passwordRulePrefix.atLeast'), bold: t('signup.passwordRule.oneNumber'), met: /\d/.test(password) },
+                        { prefix: t('signup.passwordRulePrefix.beAtLeast'), bold: t('signup.passwordRule.minLength'), met: password.length >= 8 },
+                      ]
+                    : undefined
+                }
+              />
               {mode === 'login' && (
                 <TouchableOpacity style={styles.forgotWrapper} activeOpacity={0.7} onPress={switchToForgot}>
                   <Text style={styles.forgotText}>{t('login.forgotPasswordLink')}</Text>

@@ -28,6 +28,7 @@ import { supabase, uploadAvatar } from '@/lib/supabase';
 import { Colors, Shadows } from '@/constants/theme';
 import { HEALTH_CONDITION_KEYS, ALLERGY_KEYS, DIETARY_PREFERENCE_KEYS } from '@/constants/profileOptions';
 import { CameraIcon, PersonalIcon, EmailIcon, BirthdayIcon, TickIcon, InfoIcon } from '@/components/MenuIcons';
+import { TextField } from '@/components/TextField';
 import { DoneAccessory } from '@/components/DoneAccessory';
 import { ConditionInfoSheet } from '@/components/ConditionInfoSheet';
 import { SuggestionSheet, type SuggestionCategory } from '@/components/SuggestionSheet';
@@ -513,38 +514,21 @@ export default function SignUpScreen() {
                 </View>
 
                 <View style={styles.fields}>
-                  <View
-                    ref={(ref) => { (nameRowRef as any).current = ref; }}
-                    style={[styles.inputRow, focusedField === 'name' && styles.inputRowFocused]}
-                  >
-                    <PersonalIcon size={20} color={Colors.primary} />
-                    <TextInput
-                      style={[styles.inputFieldInner, fullName ? styles.inputFieldBold : null]}
+                  <View ref={(ref) => { (nameRowRef as any).current = ref; }}>
+                    <TextField
+                      iconNode={<PersonalIcon size={20} color={Colors.primary} />}
                       placeholder={tc('placeholder.fullName')}
-                      placeholderTextColor={`${Colors.primary}50`}
-                      selectionColor={Colors.primary}
                       autoCapitalize="words"
                       value={fullName}
                       onChangeText={setFullName}
                       onFocus={() => { setFocusedField('name'); scrollInputToCenter(nameRowRef.current); }}
                       onBlur={() => setFocusedField(null)}
                     />
-                    {fullName ? (
-                      <TouchableOpacity onPress={() => setFullName('')} hitSlop={8}>
-                        <Ionicons name="close" size={18} color={`${Colors.primary}80`} />
-                      </TouchableOpacity>
-                    ) : null}
                   </View>
-                  <View
-                    ref={(ref) => { (emailRowRef as any).current = ref; }}
-                    style={[styles.inputRow, focusedField === 'email' && styles.inputRowFocused]}
-                  >
-                    <EmailIcon size={20} color={Colors.primary} />
-                    <TextInput
-                      style={[styles.inputFieldInner, email ? styles.inputFieldBold : null]}
+                  <View ref={(ref) => { (emailRowRef as any).current = ref; }}>
+                    <TextField
+                      iconNode={<EmailIcon size={20} color={Colors.primary} />}
                       placeholder={tc('placeholder.emailAddress')}
-                      placeholderTextColor={`${Colors.primary}50`}
-                      selectionColor={Colors.primary}
                       keyboardType="email-address"
                       autoCapitalize="none"
                       autoCorrect={false}
@@ -553,33 +537,17 @@ export default function SignUpScreen() {
                       onFocus={() => { setFocusedField('email'); scrollInputToCenter(emailRowRef.current); }}
                       onBlur={() => setFocusedField(null)}
                     />
-                    {email ? (
-                      <TouchableOpacity onPress={() => setEmail('')} hitSlop={8}>
-                        <Ionicons name="close" size={18} color={`${Colors.primary}80`} />
-                      </TouchableOpacity>
-                    ) : null}
                   </View>
-                  <View
-                    ref={(ref) => { (passwordRowRef as any).current = ref; }}
-                    style={[styles.inputRow, focusedField === 'password' && styles.inputRowFocused]}
-                  >
-                    <Ionicons name="lock-closed-outline" size={20} color={Colors.primary} />
-                    <TextInput
-                      style={[styles.inputFieldInner, password ? styles.inputFieldBold : null]}
+                  <View ref={(ref) => { (passwordRowRef as any).current = ref; }}>
+                    <TextField
+                      iconNode={<Ionicons name="lock-closed-outline" size={20} color={Colors.primary} />}
+                      secureToggle
                       placeholder={ta('signup.placeholder.password')}
-                      placeholderTextColor={`${Colors.primary}50`}
-                      selectionColor={Colors.primary}
-                      secureTextEntry
                       value={password}
                       onChangeText={setPassword}
                       onFocus={() => { setFocusedField('password'); scrollInputToCenter(passwordRowRef.current); }}
                       onBlur={() => setFocusedField(null)}
                     />
-                    {password ? (
-                      <TouchableOpacity onPress={() => setPassword('')} hitSlop={8}>
-                        <Ionicons name="close" size={18} color={`${Colors.primary}80`} />
-                      </TouchableOpacity>
-                    ) : null}
                   </View>
                   <TouchableOpacity
                     ref={(ref) => { (dobRowRef as any).current = ref; }}
