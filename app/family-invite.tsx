@@ -9,7 +9,7 @@
  * we call accept-family-invite, which validates the token and links this
  * account to the inviter's family member row.
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -17,12 +17,38 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Radius, Shadows } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/lib/toastContext';
+import { CachedAvatar } from '@/components/CachedAvatar';
+
+function initialsFrom(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+}
+
+interface InvitePreview {
+  inviter_name: string | null;
+  inviter_avatar_url: string | null;
+  valid: boolean;
+}
 
 export default function FamilyInviteScreen() {
   const insets = useSafeAreaInsets();
   const { showToast } = useToast();
   const { token } = useLocalSearchParams<{ token?: string }>();
   const [busy, setBusy] = useState<null | 'accept' | 'decline'>(null);
+  const [preview, setPreview] = useState<InvitePreview | null>(null);
+
+  // Personalise the screen with the inviter's name + photo.
+  useEffect(() => {
+    if (!token) return;
+    supabase.rpc('family_invite_preview', { p_token: token }).then(({ data }) => {
+      const row = Array.isArray(data) ? data[0] : null;
+      if (row) setPreview(row as InvitePreview);
+    });
+  }, [token]);
+
+  const inviterName = preview?.inviter_name?.split(' ')[0] ?? null;
 
   async function respond(action: 'accept' | 'decline') {
     if (!token) {
@@ -62,13 +88,26 @@ export default function FamilyInviteScreen() {
   return (
     <View style={[styles.root, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       <View style={styles.card}>
-        <View style={styles.iconCircle}>
-          <Ionicons name="people" size={40} color="#fff" />
+        <View style={styles.avatarWrap}>
+          {preview?.inviter_avatar_url || preview?.inviter_name ? (
+            <CachedAvatar
+              avatarUrl={preview.inviter_avatar_url ?? null}
+              initials={initialsFrom(preview.inviter_name ?? '?')}
+              size="100%"
+              initialsStyle={styles.avatarInitials}
+            />
+          ) : (
+            <Ionicons name="people" size={40} color="#fff" />
+          )}
         </View>
 
-        <Text style={styles.title}>Join a family on Bite Insight</Text>
+        <Text style={styles.title}>
+          {inviterName ? `${inviterName} wants to add you to their family` : 'Join a family on Bite Insight'}
+        </Text>
         <Text style={styles.body}>
-          Someone wants to add you to their family on Bite Insight. Tap below to join.
+          {inviterName
+            ? `Tap below to join ${inviterName}'s family on Bite Insight.`
+            : 'Someone wants to add you to their family on Bite Insight. Tap below to join.'}
         </Text>
 
         <TouchableOpacity
@@ -116,16 +155,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     ...Shadows.level4,
   },
-  iconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+  avatarWrap: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
     backgroundColor: Colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 3,
+    borderWidth: 4,
     borderColor: '#fff',
+    overflow: 'hidden',
     marginBottom: Spacing.m,
+    ...Shadows.level3,
+  },
+  avatarInitials: {
+    fontSize: 36,
+    fontFamily: 'Figtree_700Bold',
+    color: '#fff',
+    letterSpacing: -0.7,
   },
   title: {
     fontSize: 24,
