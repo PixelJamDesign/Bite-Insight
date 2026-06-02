@@ -47,6 +47,9 @@ export interface TextFieldProps extends Omit<TextInputProps, 'style'> {
   required?: boolean;
   /** Show a clear ✕ while the field has a value. */
   clearable?: boolean;
+  /** Custom clear handler — runs instead of onChangeText('') when the ✕ is
+   *  tapped (for search fields that also reset results, etc.). */
+  onClear?: () => void;
   /** Error message — turns the border red and shows the error box. */
   error?: string | null;
   /** Small link/help under the field (right-aligned). */
@@ -67,6 +70,7 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
   iconNode,
   required,
   clearable = true,
+  onClear,
   error,
   supportingText,
   onSupportingPress,
@@ -94,7 +98,7 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
 
         <TextInput
           ref={ref}
-          style={styles.input}
+          style={[styles.input, value.length === 0 && styles.inputEmpty]}
           value={value}
           onChangeText={onChangeText}
           placeholderTextColor={`${Colors.primary}80`}
@@ -113,7 +117,7 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
         {showRequired && <Text style={styles.required}>Required</Text>}
         {showClear && (
           <TouchableOpacity
-            onPress={() => onChangeText('')}
+            onPress={() => (onClear ? onClear() : onChangeText(''))}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             accessibilityLabel="Clear"
           >
@@ -188,9 +192,14 @@ const styles = StyleSheet.create({
     minHeight: 56,
     overflow: 'hidden',
   },
-  boxDefault: { borderWidth: 1, borderColor: '#aad4cd' },
-  boxFocused: { borderWidth: 3, borderColor: Colors.secondary },
-  boxError: { borderWidth: 2, borderColor: Colors.status.negative },
+  // The box footprint is pinned (width 100% + minHeight 56), so the outer size
+  // never changes. RN uses border-box sizing, so a thicker border would eat
+  // inward and shove the icon/text in. We cancel that by shrinking the
+  // horizontal padding by the same amount the border grows (border + padding
+  // = 17px on each side in every state), so the content never shifts.
+  boxDefault: { borderWidth: 1, borderColor: '#aad4cd', paddingHorizontal: 16 },
+  boxFocused: { borderWidth: 3, borderColor: Colors.secondary, paddingHorizontal: 14 },
+  boxError: { borderWidth: 2, borderColor: Colors.status.negative, paddingHorizontal: 15 },
   input: {
     flex: 1,
     fontSize: 16,
@@ -198,6 +207,12 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     letterSpacing: -0.32,
     paddingVertical: 0,
+  },
+  // Empty field → light font so the placeholder reads as a placeholder.
+  // Typed text uses the bold style above.
+  inputEmpty: {
+    fontFamily: 'Figtree_300Light',
+    fontWeight: '300',
   },
   required: {
     fontSize: 13,

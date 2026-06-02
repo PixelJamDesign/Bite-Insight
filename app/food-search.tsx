@@ -23,6 +23,7 @@ import { buildProductSnapshot } from '@/lib/recipes';
 import { useTranslation } from 'react-i18next';
 import { Colors, Shadows, Spacing, Radius } from '@/constants/theme';
 import { ActionSearchIcon, ActionChevronDownIcon, ActionCheckIcon, ActionClearIcon, MenuArrowLeftIcon, MenuChevronRightIcon } from '@/components/MenuIcons';
+import { TextField } from '@/components/TextField';
 import { Ionicons } from '@expo/vector-icons';
 import { useMenu } from '@/lib/menuContext';
 import Logo from '../assets/images/logo.svg';
@@ -897,39 +898,26 @@ export default function FoodSearchScreen() {
         </TouchableOpacity>
 
         {/* Search input (Figma node 2976-2368) */}
-        <View style={styles.searchInputContainer}>
-          <ActionSearchIcon color={Colors.secondary} size={24} />
-          <TextInput
-            ref={inputRef}
-            style={[
-              styles.searchInput,
-              query.length > 0 && styles.searchInputFilled,
-            ]}
-            placeholder={t('search.placeholder')}
-            placeholderTextColor="rgba(2,52,50,0.5)"
-            value={query}
-            onChangeText={setQuery}
-            autoFocus
-            autoCapitalize="none"
-            autoCorrect={false}
-            returnKeyType="search"
-            onSubmitEditing={() => {
-              const trimmed = query.trim();
-              if (trimmed.length >= 2) {
-                if (debounceRef.current) clearTimeout(debounceRef.current);
-                performSearch(trimmed, regionRef.current);
-                Keyboard.dismiss();
-              }
-            }}
-          />
-          {query.length > 0 && (
-            <TouchableOpacity onPress={clearSearch} activeOpacity={0.7} hitSlop={8}>
-              <View style={styles.clearBtn}>
-                <ActionClearIcon color={Colors.primary} size={14} />
-              </View>
-            </TouchableOpacity>
-          )}
-        </View>
+        <TextField
+          ref={inputRef}
+          iconNode={<ActionSearchIcon color={Colors.secondary} size={24} />}
+          placeholder={t('search.placeholder')}
+          value={query}
+          onChangeText={setQuery}
+          onClear={clearSearch}
+          autoFocus
+          autoCapitalize="none"
+          autoCorrect={false}
+          returnKeyType="search"
+          onSubmitEditing={() => {
+            const trimmed = query.trim();
+            if (trimmed.length >= 2) {
+              if (debounceRef.current) clearTimeout(debounceRef.current);
+              performSearch(trimmed, regionRef.current);
+              Keyboard.dismiss();
+            }
+          }}
+        />
       </View>
 
       {/* Results list */}

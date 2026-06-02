@@ -28,6 +28,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Radius, Shadows } from '@/constants/theme';
+import { TextField } from '@/components/TextField';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 
@@ -185,26 +186,17 @@ export function SuggestionSheet({ visible, onClose, category }: Props) {
                 Can't find what you're looking for? Let us know and we'll consider adding it.
               </Text>
 
-              <View style={styles.inputWrapper}>
-                <TextInput
-                  style={styles.input}
-                  placeholder={`e.g. "${category === 'health_condition' ? 'Fibromyalgia' : category === 'allergy' ? 'Nightshade Sensitivity' : 'Mediterranean Diet'}"`}
-                  placeholderTextColor="#9cb8b5"
-                  value={text}
-                  onChangeText={(v) => { setText(v); setError(null); }}
-                  autoFocus
-                  maxLength={100}
-                  returnKeyType="send"
-                  onSubmitEditing={handleSubmit}
-                />
-                {text.length > 0 && (
-                  <TouchableOpacity onPress={() => { setText(''); setError(null); }} hitSlop={8} activeOpacity={0.7} style={styles.clearBtn}>
-                    <Ionicons name="close" size={20} color={Colors.primary} />
-                  </TouchableOpacity>
-                )}
-              </View>
-
-              {error && <Text style={styles.error}>{error}</Text>}
+              <TextField
+                placeholder={`e.g. "${category === 'health_condition' ? 'Fibromyalgia' : category === 'allergy' ? 'Nightshade Sensitivity' : 'Mediterranean Diet'}"`}
+                value={text}
+                onChangeText={(v) => { setText(v); setError(null); }}
+                onClear={() => { setText(''); setError(null); }}
+                error={error}
+                autoFocus
+                maxLength={100}
+                returnKeyType="send"
+                onSubmitEditing={handleSubmit}
+              />
 
               <TouchableOpacity
                 style={[styles.submitBtn, (!text.trim() || saving) && styles.submitBtnDisabled]}

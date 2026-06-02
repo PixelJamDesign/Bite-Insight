@@ -25,6 +25,7 @@ import { useSubscription } from '@/lib/subscriptionContext';
 import { Colors, Shadows } from '@/constants/theme';
 import { ScreenLayout } from '@/components/ScreenLayout';
 import { MenuLikedIcon, MenuDislikedIcon, MenuFlaggedIcon, ActionSearchIcon, ActionClearIcon, ActionPenIcon } from '@/components/MenuIcons';
+import { TextField } from '@/components/TextField';
 import { IngredientDetailModal } from '@/components/IngredientDetailModal';
 import { FlagReasonSheet } from '@/components/FlagReasonSheet';
 import { LottieLoader } from '@/components/LottieLoader';
@@ -457,28 +458,16 @@ export default function IngredientPreferencesScreen() {
       {/* Search bar */}
       {searchActive && (
         <View style={styles.searchSection}>
-          <View style={styles.searchBar}>
-            <ActionSearchIcon size={24} color={Colors.secondary} />
-            <TextInput
-              ref={searchInputRef}
-              style={[
-                styles.searchInput,
-                searchQuery !== '' && styles.searchInputFilled,
-              ]}
-              placeholder={t('preferences.search.placeholder')}
-              placeholderTextColor="rgba(2,52,50,0.5)"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              autoCorrect={false}
-              autoCapitalize="none"
-              returnKeyType="search"
-            />
-            {searchQuery !== '' && (
-              <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-                <ActionClearIcon color={Colors.secondary} size={14} />
-              </TouchableOpacity>
-            )}
-          </View>
+          <TextField
+            ref={searchInputRef}
+            iconNode={<ActionSearchIcon size={24} color={Colors.secondary} />}
+            placeholder={t('preferences.search.placeholder')}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            autoCorrect={false}
+            autoCapitalize="none"
+            returnKeyType="search"
+          />
         </View>
       )}
 

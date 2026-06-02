@@ -37,6 +37,7 @@ import {
 import type { NutrientWatchlistEntry } from '@/lib/types';
 import { CameraIcon, PersonalIcon, EmailIcon, BirthdayIcon, TickIcon, InfoIcon } from '@/components/MenuIcons';
 import { AvatarViewer } from '@/components/AvatarViewer';
+import { TextField } from '@/components/TextField';
 import { useAvatarPicker } from '@/lib/useAvatarPicker';
 import { DobPicker } from '@/components/DobPicker';
 import { formatDob, toLocalDateString } from '@/lib/dateOfBirth';
@@ -608,24 +609,15 @@ export default function EditProfileScreen() {
           <Text style={styles.searchLinkText}>{tc('buttons.search')}</Text>
         </TouchableOpacity>
         {chipSearchActive && (
-          <View style={styles.chipSearchWrapper}>
-            <TextInput
-              ref={chipSearchRef}
-              style={styles.chipSearchInput}
-              placeholder={tc('placeholder.search')}
-              placeholderTextColor={`${Colors.primary}50`}
-              selectionColor={Colors.primary}
-              value={chipSearch}
-              onChangeText={setChipSearch}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            {chipSearch.length > 0 && (
-              <TouchableOpacity onPress={() => setChipSearch('')} hitSlop={8} activeOpacity={0.7}>
-                <Ionicons name="close" size={18} color={`${Colors.primary}80`} />
-              </TouchableOpacity>
-            )}
-          </View>
+          <TextField
+            ref={chipSearchRef}
+            iconNode={<Ionicons name="search-outline" size={20} color={Colors.secondary} />}
+            placeholder={tc('placeholder.search')}
+            value={chipSearch}
+            onChangeText={setChipSearch}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
         )}
       </View>
     );
@@ -919,35 +911,24 @@ export default function EditProfileScreen() {
                 </View>
 
                 <View style={styles.fields}>
-                  <View
-                    ref={(ref) => { (nameRowRef as any).current = ref; }}
-                    style={[styles.inputRow, focusedField === 'name' && styles.inputRowFocused]}
-                  >
-                    <PersonalIcon size={16} color={Colors.primary} />
-                    <TextInput
-                      style={[styles.inputFieldInner, fullName ? styles.inputFieldBold : null]}
+                  <View ref={(ref) => { (nameRowRef as any).current = ref; }}>
+                    <TextField
+                      iconNode={<PersonalIcon size={18} color={Colors.primary} />}
                       placeholder={tc('placeholder.fullName')}
-                      placeholderTextColor={`${Colors.secondary}`}
-                      selectionColor={Colors.primary}
                       autoCapitalize="words"
                       value={fullName}
                       onChangeText={setFullName}
                       onFocus={() => { setFocusedField('name'); scrollInputToCenter(nameRowRef.current); }}
                       onBlur={() => setFocusedField(null)}
                     />
-                    {fullName ? (
-                      <TouchableOpacity onPress={() => setFullName('')} hitSlop={8}>
-                        <Ionicons name="close" size={18} color={`${Colors.primary}80`} />
-                      </TouchableOpacity>
-                    ) : null}
                   </View>
-                  <View style={[styles.inputRow, styles.inputRowReadOnly]}>
-                    <EmailIcon size={20} color={`${Colors.primary}50`} />
-                    <TextInput
-                      style={[styles.inputFieldInner, styles.inputReadOnly]}
+                  <View style={styles.inputRowReadOnly}>
+                    <TextField
+                      iconNode={<EmailIcon size={20} color={`${Colors.primary}50`} />}
                       value={session?.user?.email ?? ''}
+                      onChangeText={() => {}}
                       editable={false}
-                      selectTextOnFocus={false}
+                      clearable={false}
                     />
                   </View>
                   <TouchableOpacity

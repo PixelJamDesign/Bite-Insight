@@ -254,7 +254,7 @@ export default function FamilyMembersScreen() {
         <View style={styles.actionBtnRow}>
           {editMode ? (
             <TouchableOpacity style={styles.actionBtn} onPress={exitEditMode} activeOpacity={0.7}>
-              <Ionicons name="close" size={16} color={Colors.secondary} />
+              <Ionicons name="close" size={20} color={Colors.secondary} />
               <Text style={styles.actionBtnText}>Cancel</Text>
             </TouchableOpacity>
           ) : searchActive ? (
@@ -264,11 +264,11 @@ export default function FamilyMembersScreen() {
                 onPress={() => { setEditMode(true); closeSearch(); }}
                 activeOpacity={0.7}
               >
-                <ActionPenIcon size={16} color={Colors.secondary} />
+                <ActionPenIcon size={20} color={Colors.secondary} />
                 <Text style={styles.actionBtnText}>Edit Family</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.actionBtn} onPress={closeSearch} activeOpacity={0.7}>
-                <Ionicons name="close" size={16} color={Colors.secondary} />
+                <Ionicons name="close" size={20} color={Colors.secondary} />
                 <Text style={styles.actionBtnText}>Close</Text>
               </TouchableOpacity>
             </>
@@ -579,7 +579,7 @@ const styles = StyleSheet.create({
     fontSize: 16, fontWeight: '700', fontFamily: 'Figtree_700Bold',
     color: Colors.secondary, lineHeight: 20,
   },
-  searchSection: { paddingBottom: 4 },
+  searchSection: { paddingHorizontal: 24, paddingBottom: 4 },
   searchBar: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     marginHorizontal: 24, backgroundColor: Colors.surface.secondary,

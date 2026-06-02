@@ -15,6 +15,8 @@ interface FooterButtonRowProps {
   onPrimaryPress: () => void;
   primaryLoading?: boolean;
   primaryDisabled?: boolean;
+  /** Opacity applied to the primary button while disabled (default 0.6). */
+  primaryDisabledOpacity?: number;
 }
 
 /**
@@ -28,6 +30,7 @@ export function FooterButtonRow({
   onPrimaryPress,
   primaryLoading = false,
   primaryDisabled = false,
+  primaryDisabledOpacity = 0.6,
 }: FooterButtonRowProps) {
   return (
     <View style={styles.row}>
@@ -35,7 +38,7 @@ export function FooterButtonRow({
         <Text style={styles.backText}>{secondaryLabel}</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        style={[styles.next, primaryDisabled && { opacity: 0.6 }]}
+        style={[styles.next, primaryDisabled && { opacity: primaryDisabledOpacity }]}
         onPress={onPrimaryPress}
         disabled={primaryDisabled || primaryLoading}
         activeOpacity={0.88}

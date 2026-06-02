@@ -23,6 +23,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { ActionSearchIcon } from '@/components/MenuIcons';
+import { TextField } from '@/components/TextField';
 import { router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
@@ -228,19 +229,15 @@ export function AddToRecipeSheet({ visible, onClose, snapshot, barcode }: Props)
             <View style={styles.existingHeader}>
               <Text style={styles.existingLabel}>Add to existing recipe</Text>
               {recipes.length > 5 && (
-                <View style={styles.searchBox}>
-                  <ActionSearchIcon color={Colors.secondary} size={18} />
-                  <TextInput
-                    style={[
-                      styles.searchInput,
-                      search.length > 0 && styles.searchInputFilled,
-                    ]}
-                    value={search}
-                    onChangeText={setSearch}
-                    placeholder="Search your recipes"
-                    placeholderTextColor="rgba(2,52,50,0.5)"
-                  />
-                </View>
+                <TextField
+                  iconNode={<ActionSearchIcon color={Colors.secondary} size={20} />}
+                  value={search}
+                  onChangeText={setSearch}
+                  placeholder="Search your recipes"
+                  autoCorrect={false}
+                  autoCapitalize="none"
+                  returnKeyType="search"
+                />
               )}
             </View>
           )}

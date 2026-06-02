@@ -37,7 +37,7 @@ import {
   normalizeHealthCondition, normalizeAllergy, normalizeDietaryPreference,
 } from '@/constants/profileOptions';
 import type { NutrientWatchlistEntry } from '@/lib/types';
-import { CameraIcon, PersonalIcon, TickIcon, InfoIcon } from '@/components/MenuIcons';
+import { CameraIcon, PersonalIcon, TickIcon, InfoIcon, ActionLinkIcon } from '@/components/MenuIcons';
 import { ConditionInfoSheet } from '@/components/ConditionInfoSheet';
 import { SuggestionSheet, type SuggestionCategory } from '@/components/SuggestionSheet';
 import { LottieLoader } from '@/components/LottieLoader';
@@ -661,7 +661,10 @@ export default function AddFamilyMemberScreen() {
   // "Send invitation" button (handleSendInvitation), so this just unlocks
   // the form — no double-tap-to-send.
   function handleAccountYes() {
-    if (hasAccount !== true) setHasAccount(true);
+    if (hasAccount !== true) {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      setHasAccount(true);
+    }
   }
 
   // Footer "Send invitation": create the member and send the email invite.
@@ -686,10 +689,12 @@ export default function AddFamilyMemberScreen() {
     safeBack();
   }
 
-  // "No": create a managed profile instead — continue into the wizard.
+  // "No": they'll get a managed profile. Don't advance yet — reveal the
+  // footer "Next" button so the choice and the move forward are separate taps.
   function handleAccountNo() {
+    if (hasAccount === false) return;
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setHasAccount(false);
-    animateExit('forward', () => setStep((s) => Math.min(s + 1, totalSteps)));
   }
 
   // "Copy invitation link": needs a name (to track the invite), then shares
@@ -1118,7 +1123,6 @@ export default function AddFamilyMemberScreen() {
               {hasAccount === true && (
                 <View style={styles.accountReveal}>
                   <TextField
-                    label="Name"
                     icon="person-outline"
                     required
                     placeholder="Their name"
@@ -1128,7 +1132,6 @@ export default function AddFamilyMemberScreen() {
                   />
 
                   <TextField
-                    label="Email"
                     icon="mail-outline"
                     required
                     placeholder="their@email.com"
@@ -1147,7 +1150,7 @@ export default function AddFamilyMemberScreen() {
                   >
                     <Text style={styles.copyLinkMuted}>Don't have their email?</Text>
                     <View style={styles.copyLinkCta}>
-                      <Ionicons name="link" size={15} color={Colors.secondary} />
+                      <ActionLinkIcon size={16} color={Colors.secondary} />
                       <Text style={styles.copyLinkText}>Copy invitation link</Text>
                     </View>
                   </TouchableOpacity>
@@ -1156,30 +1159,26 @@ export default function AddFamilyMemberScreen() {
 
               <View style={styles.accountButtons}>
                 <TouchableOpacity
-                  style={[styles.accountBtn, styles.accountBtnYes]}
+                  style={[styles.accountBtn, hasAccount === false ? styles.accountBtnUnselected : styles.accountBtnSelected]}
                   activeOpacity={0.85}
                   onPress={handleAccountYes}
                   disabled={saving}
                 >
-                  <Text style={styles.accountBtnText}>Yes</Text>
+                  <Text style={[styles.accountBtnText, hasAccount === false && styles.accountBtnTextUnselected]}>
+                    Yes
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.accountBtn, hasAccount === true ? styles.accountBtnDisabled : styles.accountBtnNo]}
+                  style={[styles.accountBtn, hasAccount === true ? styles.accountBtnUnselected : styles.accountBtnSelected]}
                   activeOpacity={0.85}
                   onPress={handleAccountNo}
-                  disabled={hasAccount === true || saving}
+                  disabled={saving}
                 >
-                  <Text style={[styles.accountBtnText, hasAccount === true && styles.accountBtnTextDisabled]}>
+                  <Text style={[styles.accountBtnText, hasAccount === true && styles.accountBtnTextUnselected]}>
                     No
                   </Text>
                 </TouchableOpacity>
               </View>
-
-              {hasAccount !== true && (
-                <TouchableOpacity style={styles.accountCancel} onPress={safeBack} activeOpacity={0.7}>
-                  <Text style={styles.accountCancelText}>Cancel</Text>
-                </TouchableOpacity>
-              )}
             </View>
           )}
 
@@ -1349,11 +1348,12 @@ export default function AddFamilyMemberScreen() {
         </ScrollView>
 
         {/* ── Footer ──
-            - account step, before "Yes": hidden (the in-card Yes/No drive it)
-            - account step, after "Yes": Cancel + "Send invitation" (enabled
-              once name + email are filled)
+            - account step, no choice yet: full-width Cancel
+            - account step, "Yes": Cancel + "Send invitation" (enabled once
+              name + email are filled)
+            - account step, "No": Cancel + Next (into the wizard)
             - all other steps: the normal wizard footer */}
-        {(currentStepKey !== 'account' || hasAccount === true) && (
+        {(
           <View style={styles.footer}>
             <LinearGradient
               colors={['rgba(226,241,238,0)', Colors.background]}
@@ -1362,14 +1362,34 @@ export default function AddFamilyMemberScreen() {
             />
             <View style={[styles.footerButtons, { paddingBottom: insets.bottom + 12 }]}>
               {currentStepKey === 'account' ? (
-                <FooterButtonRow
-                  secondaryLabel={tc('buttons.cancel')}
-                  primaryLabel="Send invitation"
-                  onSecondaryPress={() => safeBack()}
-                  onPrimaryPress={handleSendInvitation}
-                  primaryLoading={saving}
-                  primaryDisabled={saving || !accountFormValid}
-                />
+                hasAccount === null ? (
+                  <TouchableOpacity
+                    style={styles.footerCancelFull}
+                    onPress={() => safeBack()}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={styles.footerCancelFullText}>{tc('buttons.cancel')}</Text>
+                  </TouchableOpacity>
+                ) : hasAccount === true ? (
+                  <FooterButtonRow
+                    secondaryLabel={tc('buttons.cancel')}
+                    primaryLabel="Send invitation"
+                    onSecondaryPress={() => safeBack()}
+                    onPrimaryPress={handleSendInvitation}
+                    primaryLoading={saving}
+                    primaryDisabled={saving || !accountFormValid}
+                    primaryDisabledOpacity={0.2}
+                  />
+                ) : (
+                  <FooterButtonRow
+                    secondaryLabel={tc('buttons.cancel')}
+                    primaryLabel={to('progress.next', { label: nextLabel })}
+                    onSecondaryPress={() => safeBack()}
+                    onPrimaryPress={handleNext}
+                    primaryLoading={saving}
+                    primaryDisabled={saving}
+                  />
+                )
               ) : (
                 <FooterButtonRow
                   secondaryLabel={step === 1 ? tc('buttons.cancel') : tc('buttons.back')}
@@ -1510,45 +1530,62 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   copyLinkMuted: {
-    fontSize: 13,
+    fontSize: 14,
+    lineHeight: 21,
     fontFamily: 'Figtree_300Light',
     color: Colors.secondary,
-    letterSpacing: -0.13,
+    letterSpacing: -0.14,
   },
   copyLinkText: {
-    fontSize: 13,
+    fontSize: 16,
+    lineHeight: 20,
     fontFamily: 'Figtree_700Bold',
     color: Colors.secondary,
-    letterSpacing: -0.13,
+    letterSpacing: 0,
   },
   accountButtons: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 10,
     marginTop: 16,
   },
   accountBtn: {
     flex: 1,
     paddingVertical: 16,
-    borderRadius: 16,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  accountBtnYes: { backgroundColor: Colors.accent },
-  accountBtnNo: { backgroundColor: Colors.accent },
-  accountBtnDisabled: { backgroundColor: '#b8dfd6' },
+  accountBtnSelected: {
+    backgroundColor: Colors.secondary,
+    borderColor: Colors.secondary,
+  },
+  accountBtnUnselected: {
+    backgroundColor: 'transparent',
+    borderColor: Colors.secondary,
+  },
   accountBtnText: {
     fontSize: 16,
     fontFamily: 'Figtree_700Bold',
     color: '#fff',
     letterSpacing: -0.32,
   },
-  accountBtnTextDisabled: { color: '#ffffff' },
-  accountCancel: { alignSelf: 'center', paddingVertical: 12, marginTop: 4 },
-  accountCancelText: {
-    fontSize: 14,
+  accountBtnTextUnselected: { color: Colors.secondary },
+  footerCancelFull: {
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: Colors.secondary,
+  },
+  footerCancelFullText: {
+    fontSize: 16,
     fontFamily: 'Figtree_700Bold',
+    fontWeight: '700',
     color: Colors.secondary,
-    letterSpacing: -0.14,
   },
 
   progressRow: {

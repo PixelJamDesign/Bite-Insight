@@ -40,6 +40,7 @@ import { getRecipe, scanResultParamsFromSnapshot } from '@/lib/recipes';
 import { uploadRecipeCover } from '@/lib/supabase';
 import { formatQuantity } from '@/constants/quantityUnits';
 import { Colors, Spacing, Radius, Shadows } from '@/constants/theme';
+import { TextField } from '@/components/TextField';
 import {
   NUTRISCORE_COLORS,
   NUTRISCORE_VERDICT,
@@ -574,12 +575,10 @@ export default function RecipeBuilderScreen() {
             <View style={styles.group16}>
               <View style={styles.group16}>
                 <Text style={styles.h4}>Recipe name</Text>
-                <TextInput
-                  style={styles.input}
+                <TextField
                   value={d.name}
                   onChangeText={draft.setName}
                   placeholder="Like ‘Garlic & Herb Chicken Salad’?"
-                  placeholderTextColor="rgba(2,52,50,0.5)"
                   returnKeyType="done"
                 />
               </View>

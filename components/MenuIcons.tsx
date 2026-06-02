@@ -233,6 +233,14 @@ export function ActionPenIcon({ color, size = 20 }: IconProps) {
   );
 }
 
+export function ActionLinkIcon({ color, size = 20 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 14.8346 14.8346" fill="none">
+      <Path d="M6.1149 8.75066C5.11093 7.74278 5.20136 6.01791 6.31689 4.89804L9.54867 1.65374C10.6642 0.533875 12.3824 0.443091 13.3864 1.45097C14.3903 2.45884 14.2999 4.1837 13.1844 5.30356L11.5685 6.92572M8.7197 6.08399C9.72368 7.09186 9.63325 8.8167 8.51771 9.93657L5.28597 13.1809C4.17043 14.3008 2.45222 14.3916 1.44824 13.3837C0.444262 12.3758 0.534696 10.6509 1.65023 9.53105L3.26613 7.90888" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
 // ── Navigation icons ──────────────────────────────────────────────────────────
 
 export function MenuChevronRightIcon({ color, size = 24 }: IconProps) {

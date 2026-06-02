@@ -57,6 +57,7 @@ import { useDebugMenu } from '@/lib/debugMenuContext';
 import { FLAG_IMAGES } from '@/lib/regionContext';
 import OfflineDbDownloadIcon from '../assets/icons/offline-db-download.svg';
 import { Colors, Shadows } from '@/constants/theme';
+import { TextField } from '@/components/TextField';
 import { useTransition } from '@/lib/transitionContext';
 import { useUpsellSheet } from '@/lib/upsellSheetContext';
 import { useMyPlanSheet } from '@/lib/myPlanSheetContext';
@@ -1445,103 +1446,54 @@ function ChangePasswordScreen({ goBack }: { goBack: () => void }) {
 
         {/* Current password */}
         <View style={pwStyles.fieldGroup}>
-          <Text style={pwStyles.label}>{t('password.label.current')}</Text>
-          <View style={[pwStyles.inputWrapper, currentFocused && pwStyles.inputFocused]}>
-            <View style={styles.navIcon}>
-              <Ionicons name="lock-closed-outline" size={20} color={Colors.primary} />
-            </View>
-            <TextInput
-              style={pwStyles.input}
-              placeholder={t('password.placeholder.current')}
-              placeholderTextColor={PLACEHOLDER}
-              secureTextEntry={!showCurrent}
-              value={currentPassword}
-              onChangeText={(v) => { setCurrentPassword(v); clearError(); }}
-              onFocus={() => setCurrentFocused(true)}
-              onBlur={() => setCurrentFocused(false)}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            <TouchableOpacity onPress={() => setShowCurrent((v) => !v)} activeOpacity={0.7}>
-              <Ionicons name={showCurrent ? 'eye-off-outline' : 'eye-outline'} size={20} color={Colors.primary} />
-            </TouchableOpacity>
-          </View>
+          <TextField
+            label={t('password.label.current')}
+            icon="lock-closed-outline"
+            secureToggle
+            placeholder={t('password.placeholder.current')}
+            value={currentPassword}
+            onChangeText={(v) => { setCurrentPassword(v); clearError(); }}
+            onFocus={() => setCurrentFocused(true)}
+            onBlur={() => setCurrentFocused(false)}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
         </View>
 
         {/* New password */}
         <View style={pwStyles.fieldGroup}>
-          <Text style={pwStyles.label}>{t('password.label.new')}</Text>
-          <View style={[pwStyles.inputWrapper, newFocused && pwStyles.inputFocused]}>
-            <View style={styles.navIcon}>
-              <Ionicons name="lock-closed-outline" size={20} color={Colors.primary} />
-            </View>
-            <TextInput
-              style={pwStyles.input}
-              placeholder={t('password.placeholder.new')}
-              placeholderTextColor={PLACEHOLDER}
-              secureTextEntry={!showNew}
-              value={newPassword}
-              onChangeText={(v) => { setNewPassword(v); clearError(); }}
-              onFocus={() => setNewFocused(true)}
-              onBlur={() => setNewFocused(false)}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            <TouchableOpacity onPress={() => setShowNew((v) => !v)} activeOpacity={0.7}>
-              <Ionicons name={showNew ? 'eye-off-outline' : 'eye-outline'} size={20} color={Colors.primary} />
-            </TouchableOpacity>
-          </View>
-          {(newFocused || newPassword.length > 0) && (
-            <View style={pwStyles.rules}>
-              {PW_RULES.map((r) => {
-                const pass = r.test(newPassword);
-                return (
-                  <View key={r.key} style={pwStyles.ruleRow}>
-                    <Ionicons
-                      name={pass ? 'checkmark-circle' : 'ellipse-outline'}
-                      size={16}
-                      color={pass ? Colors.status.positive : `${Colors.primary}40`}
-                    />
-                    <Text style={[pwStyles.ruleText, { color: pass ? Colors.status.positive : Colors.primary }]}>
-                      {t(r.prefixKey)}<Text style={pwStyles.ruleBold}>{t(r.boldKey)}</Text>
-                    </Text>
-                  </View>
-                );
-              })}
-            </View>
-          )}
+          <TextField
+            label={t('password.label.new')}
+            icon="lock-closed-outline"
+            secureToggle
+            placeholder={t('password.placeholder.new')}
+            value={newPassword}
+            onChangeText={(v) => { setNewPassword(v); clearError(); }}
+            onFocus={() => setNewFocused(true)}
+            onBlur={() => setNewFocused(false)}
+            autoCapitalize="none"
+            autoCorrect={false}
+            rules={(newFocused || newPassword.length > 0)
+              ? PW_RULES.map((r) => ({ prefix: t(r.prefixKey), bold: t(r.boldKey), met: r.test(newPassword) }))
+              : undefined}
+          />
         </View>
 
         {/* Confirm password */}
         <View style={pwStyles.fieldGroup}>
-          <Text style={pwStyles.label}>{t('password.label.confirm')}</Text>
-          <View style={[
-            pwStyles.inputWrapper,
-            confirmFocused && pwStyles.inputFocused,
-            confirmPassword.length > 0 && !passwordsMatch && pwStyles.inputError,
-          ]}>
-            <View style={styles.navIcon}>
-              <Ionicons name="lock-closed-outline" size={20} color={Colors.primary} />
-            </View>
-            <TextInput
-              style={pwStyles.input}
-              placeholder={t('password.placeholder.confirm')}
-              placeholderTextColor={PLACEHOLDER}
-              secureTextEntry={!showConfirm}
-              value={confirmPassword}
-              onChangeText={(v) => { setConfirmPassword(v); clearError(); }}
-              onFocus={() => setConfirmFocused(true)}
-              onBlur={() => setConfirmFocused(false)}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            <TouchableOpacity onPress={() => setShowConfirm((v) => !v)} activeOpacity={0.7}>
-              <Ionicons name={showConfirm ? 'eye-off-outline' : 'eye-outline'} size={20} color={Colors.primary} />
-            </TouchableOpacity>
-          </View>
-          {confirmPassword.length > 0 && !passwordsMatch && (
-            <Text style={pwStyles.mismatch}>{t('password.error.mismatch')}</Text>
-          )}
+          <TextField
+            label={t('password.label.confirm')}
+            icon="lock-closed-outline"
+            secureToggle
+            placeholder={t('password.placeholder.confirm')}
+            value={confirmPassword}
+            onChangeText={(v) => { setConfirmPassword(v); clearError(); }}
+            onFocus={() => setConfirmFocused(true)}
+            onBlur={() => setConfirmFocused(false)}
+            autoCapitalize="none"
+            autoCorrect={false}
+            error={confirmPassword.length > 0 && !passwordsMatch ? t('password.error.mismatch') : null}
+          />
         </View>
 
         {/* Error */}

@@ -66,6 +66,7 @@ const ROW_REMOVE_ANIMATION = {
   },
 };
 import { Colors, Radius, Shadows } from '@/constants/theme';
+import { TextField } from '@/components/TextField';
 import { CachedAvatar } from '@/components/CachedAvatar';
 import {
   ActionPenIcon,
@@ -506,30 +507,16 @@ export function FamilyIngredientPreferencesPanel({
           tap rather than always occupying screen space. */}
       {searchVisible && (
         <View style={styles.searchRow}>
-          <ActionSearchIcon color={Colors.secondary} size={20} />
-          <TextInput
-            style={[
-              styles.searchInput,
-              searchQuery.length > 0 && styles.searchInputFilled,
-            ]}
+          <TextField
+            iconNode={<ActionSearchIcon color={Colors.secondary} size={20} />}
             value={searchQuery}
             onChangeText={setSearchQuery}
             placeholder="Search ingredients…"
-            placeholderTextColor="rgba(2,52,50,0.5)"
             autoCorrect={false}
             autoCapitalize="none"
             autoFocus
             returnKeyType="search"
           />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity
-              onPress={() => setSearchQuery('')}
-              hitSlop={8}
-              activeOpacity={0.7}
-            >
-              <ActionClearIcon color={Colors.secondary} size={14} />
-            </TouchableOpacity>
-          )}
         </View>
       )}
 

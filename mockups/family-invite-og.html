@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!--
+    Open Graph preview image for the family-invite link (1200×630).
+    Export this to PNG at exactly 1200×630 and upload to:
+      https://biteinsight.co.uk/images/family-invite-og.png
+
+    To export: open in a browser, set the viewport to 1200×630, and screenshot
+    the .card element — or run:
+      npx playwright screenshot --viewport-size=1200,630 family-invite-og.html family-invite-og.png
+  -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300;0,700;1,700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 1200px; height: 630px; }
+    .card {
+      width: 1200px;
+      height: 630px;
+      background: radial-gradient(120% 120% at 80% 0%, #f1f8f7 0%, #e2f1ee 55%, #cfe8e2 100%);
+      font-family: 'Figtree', sans-serif;
+      padding: 80px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+    /* Soft brand orbs for depth */
+    .orb { position: absolute; border-radius: 50%; opacity: 0.18; }
+    .orb-1 { width: 420px; height: 420px; background: #00776f; right: -120px; bottom: -140px; }
+    .orb-2 { width: 260px; height: 260px; background: #3b9586; right: 180px; top: -90px; opacity: 0.12; }
+
+    .logo { height: 56px; width: auto; position: relative; z-index: 1; }
+
+    .body { position: relative; z-index: 1; max-width: 820px; }
+    .eyebrow {
+      font-weight: 700;
+      font-size: 26px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #00776f;
+      margin-bottom: 24px;
+    }
+    .headline {
+      font-weight: 700;
+      font-size: 76px;
+      line-height: 1.04;
+      letter-spacing: -1.5px;
+      color: #023432;
+    }
+    .headline em { font-style: italic; color: #00776f; }
+    .sub {
+      font-weight: 300;
+      font-size: 30px;
+      line-height: 1.4;
+      color: #00776f;
+      margin-top: 28px;
+      max-width: 720px;
+    }
+
+    .footer { position: relative; z-index: 1; display: flex; align-items: center; gap: 16px; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: #00776f;
+      color: #fff;
+      font-weight: 700;
+      font-size: 26px;
+      padding: 18px 30px;
+      border-radius: 999px;
+    }
+    .pill svg { width: 26px; height: 26px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <img class="logo" src="https://biteinsight.co.uk/images/logo-full.svg" alt="Bite Insight">
+
+    <div class="body">
+      <div class="eyebrow">Family invite</div>
+      <div class="headline">You've been invited to <em>join a family</em></div>
+      <div class="sub">Link your account so your food preferences stay in sync. Open Bite Insight to connect.</div>
+    </div>
+
+    <div class="footer">
+      <span class="pill">
+        <svg viewBox="0 0 14.8346 14.8346" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M6.1149 8.75066C5.11093 7.74278 5.20136 6.01791 6.31689 4.89804L9.54867 1.65374C10.6642 0.533875 12.3824 0.443091 13.3864 1.45097C14.3903 2.45884 14.2999 4.1837 13.1844 5.30356L11.5685 6.92572M8.7197 6.08399C9.72368 7.09186 9.63325 8.8167 8.51771 9.93657L5.28597 13.1809C4.17043 14.3008 2.45222 14.3916 1.44824 13.3837C0.444262 12.3758 0.534696 10.6509 1.65023 9.53105L3.26613 7.90888" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        biteinsight.app
+      </span>
+    </div>
+  </div>
+</body>
+</html>
