@@ -44,6 +44,7 @@ import { LottieLoader } from '@/components/LottieLoader';
 import { FamilyIngredientPreferencesPanel } from '@/components/FamilyIngredientPreferencesPanel';
 import { FlagReasonSheet } from '@/components/FlagReasonSheet';
 import { familyInviteShareMessage } from '@/lib/familyInviteShare';
+import { TextField } from '@/components/TextField';
 import type { Ingredient } from '@/lib/types';
 import { CONDITION_INFO } from '@/constants/conditionInfo';
 import Logo from '../assets/images/logo.svg';
@@ -1116,59 +1117,27 @@ export default function AddFamilyMemberScreen() {
               {/* Yes reveals name + email fields and the copy-link option */}
               {hasAccount === true && (
                 <View style={styles.accountReveal}>
-                  {/* Name (required) */}
-                  <View style={styles.fieldBlock}>
-                    <View style={styles.fieldLabelRow}>
-                      <Text style={styles.inviteFieldLabel}>Name</Text>
-                      {!inviteName.trim() && <Text style={styles.fieldRequired}>Required</Text>}
-                    </View>
-                    <View style={[styles.inputRow, focusedField === 'inviteName' && styles.inputRowFocused]}>
-                      <Ionicons name="person-outline" size={18} color={Colors.primary} />
-                      <TextInput
-                        style={styles.inputFieldInner}
-                        placeholder="Their name"
-                        placeholderTextColor={`${Colors.secondary}99`}
-                        value={inviteName}
-                        onChangeText={setInviteName}
-                        autoCapitalize="words"
-                        onFocus={() => setFocusedField('inviteName')}
-                        onBlur={() => setFocusedField(null)}
-                      />
-                      {inviteName.length > 0 && (
-                        <TouchableOpacity onPress={() => setInviteName('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                          <Ionicons name="close" size={18} color={Colors.secondary} />
-                        </TouchableOpacity>
-                      )}
-                    </View>
-                  </View>
+                  <TextField
+                    label="Name"
+                    icon="person-outline"
+                    required
+                    placeholder="Their name"
+                    autoCapitalize="words"
+                    value={inviteName}
+                    onChangeText={setInviteName}
+                  />
 
-                  {/* Email (required) */}
-                  <View style={styles.fieldBlock}>
-                    <View style={styles.fieldLabelRow}>
-                      <Text style={styles.inviteFieldLabel}>Email</Text>
-                      {!accountEmail.trim() && <Text style={styles.fieldRequired}>Required</Text>}
-                    </View>
-                    <View style={[styles.inputRow, focusedField === 'accountEmail' && styles.inputRowFocused]}>
-                      <Ionicons name="mail-outline" size={18} color={Colors.primary} />
-                      <TextInput
-                        style={styles.inputFieldInner}
-                        placeholder="their@email.com"
-                        placeholderTextColor={`${Colors.secondary}99`}
-                        value={accountEmail}
-                        onChangeText={setAccountEmail}
-                        autoCapitalize="none"
-                        keyboardType="email-address"
-                        autoCorrect={false}
-                        onFocus={() => setFocusedField('accountEmail')}
-                        onBlur={() => setFocusedField(null)}
-                      />
-                      {accountEmail.length > 0 && (
-                        <TouchableOpacity onPress={() => setAccountEmail('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                          <Ionicons name="close" size={18} color={Colors.secondary} />
-                        </TouchableOpacity>
-                      )}
-                    </View>
-                  </View>
+                  <TextField
+                    label="Email"
+                    icon="mail-outline"
+                    required
+                    placeholder="their@email.com"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    value={accountEmail}
+                    onChangeText={setAccountEmail}
+                  />
 
                   <TouchableOpacity
                     style={styles.copyLinkRow}
