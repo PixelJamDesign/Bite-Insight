@@ -24,6 +24,7 @@ import { Colors, Spacing, Radius, Shadows } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { PlusBadge } from '@/components/PlusBadge';
+import { MenuNotificationsIcon } from '@/components/MenuIcons';
 
 // ── Constants ───────────────────────────────────────────────────────────────
 
@@ -98,26 +99,10 @@ interface CardData {
   icon: CardIcon;
 }
 
-// Bell icon for the Notifications card (the whats-new SVG set has no bell).
-function BellIcon({ width = 28, height = 28 }: { width?: number; height?: number }) {
-  return (
-    <Svg width={width} height={height} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"
-        stroke={Colors.primary}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <Path
-        d="M13.73 21a2 2 0 0 1-3.46 0"
-        stroke={Colors.primary}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
+// Notifications card uses the same bell as the dashboard (the canonical
+// MenuNotificationsIcon), wrapped to the card-icon's width/height signature.
+function BellIcon({ width = 28 }: { width?: number; height?: number }) {
+  return <MenuNotificationsIcon color={Colors.primary} size={width} />;
 }
 
 // v1.8.0 — two new features worth surfacing: family account linking (Plus)
