@@ -51,8 +51,8 @@ function inviteEmailHtml(opts: { inviterName: string; memberName: string; link: 
   return `<!DOCTYPE html><html><body style="margin:0;background:#e2f1ee;font-family:Figtree,Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#e2f1ee;padding:40px 16px;"><tr><td align="center">
     <table width="100%" style="max-width:520px;background:#fff;border:1px solid #aad4cd;border-radius:16px;"><tr><td style="padding:32px;">
-      <p style="font-size:24px;font-weight:700;color:#023432;margin:0 0 12px;letter-spacing:-0.48px;">${opts.inviterName} wants to add you on Bite Insight</p>
-      <p style="font-size:16px;font-weight:300;color:#023432;line-height:24px;margin:0 0 28px;">Join their family and your preferences and photo will show up in their family view. You stay in control and can leave whenever you like.</p>
+      <p style="font-size:24px;font-weight:700;color:#023432;margin:0 0 12px;letter-spacing:-0.48px;">${opts.inviterName} wants to add you to their family</p>
+      <p style="font-size:16px;font-weight:300;color:#023432;line-height:24px;margin:0 0 28px;">Tap below to join ${opts.inviterName}'s family on Bite Insight.</p>
       <a href="${opts.link}" style="display:inline-block;background:linear-gradient(180deg,#00c8b3,#00776f);color:#fff;font-weight:700;font-size:16px;padding:16px 24px;border-radius:8px;text-decoration:none;">Open Bite Insight to join</a>
       <p style="font-size:12px;font-weight:300;color:#00776f;margin:28px 0 0;">If you didn't expect this, you can ignore this email.</p>
     </td></tr></table>
@@ -134,7 +134,7 @@ Deno.serve(async (req) => {
         user_id: targetUser.id,
         type: 'family_invite',
         title: `${inviterName} wants to add you to their family!`,
-        body: `Would you like to link your account to ${inviterName}'s family? You still own your account. You're just letting ${inviterName} see your preferences.`,
+        body: `Tap to join ${inviterName}'s family on Bite Insight.`,
         data: {
           type: 'family_invite',
           token,
@@ -155,7 +155,7 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           from: FROM,
           to: [email],
-          subject: `${inviterName} wants to add you on Bite Insight`,
+          subject: `${inviterName} wants to add you to their family`,
           html: inviteEmailHtml({ inviterName, memberName: famRow.name, link }),
         }),
       });

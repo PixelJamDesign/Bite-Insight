@@ -68,8 +68,7 @@ export default function FamilyInviteScreen() {
 
         <Text style={styles.title}>Join a family on Bite Insight</Text>
         <Text style={styles.body}>
-          Someone wants to link your account to their family. Join, and your preferences and photo
-          show up in their family view. You stay in control and can leave whenever you like.
+          Someone wants to add you to their family on Bite Insight. Tap below to join.
         </Text>
 
         <TouchableOpacity

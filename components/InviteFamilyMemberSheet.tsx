@@ -146,8 +146,8 @@ export function InviteFamilyMemberSheet({
             </Text>
             <Text style={styles.subtitle}>
               {mode === 'choice'
-                ? `Link ${firstName}'s own account so their preferences and photo sync into your family. They stay in control and can leave anytime.`
-                : `We'll send ${firstName} an invite. If they already have an account it appears in their notifications too.`}
+                ? `Send ${firstName} an invite to join your family. Their preferences sync in once they accept.`
+                : `We'll send ${firstName} an invite to join your family.`}
             </Text>
           </View>
 
