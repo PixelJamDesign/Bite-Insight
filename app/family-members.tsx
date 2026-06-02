@@ -129,6 +129,7 @@ export default function FamilyMembersScreen() {
   const [inviteVisible, setInviteVisible] = useState(false);
   const [inviteMember, setInviteMember] = useState<{ id: string; name: string } | null>(null);
   const [linkedMember, setLinkedMember] = useState<FamilyProfile | null>(null);
+  const [pendingMap, setPendingMap] = useState<Record<string, { email: string | null }>>({});
   const [editMode, setEditMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [searchActive, setSearchActive] = useState(false);
@@ -144,18 +145,36 @@ export default function FamilyMembersScreen() {
     // get_family_members() overlays linked members' live account data
     // (avatar, conditions, allergies, diet, ingredient prefs) over the
     // static managed columns, and is already ordered by sort_order.
-    const { data } = await supabase.rpc('get_family_members');
+    const [{ data }, { data: invites }] = await Promise.all([
+      supabase.rpc('get_family_members'),
+      supabase
+        .from('family_invites')
+        .select('family_profile_id, target_email, expires_at')
+        .eq('inviter_user_id', session.user.id)
+        .eq('status', 'pending'),
+    ]);
     if (data) setProfiles(data as FamilyProfile[]);
+    // Map family_profile_id → invite (drop expired). target_email null = link invite.
+    const now = Date.now();
+    const map: Record<string, { email: string | null }> = {};
+    for (const inv of (invites ?? []) as { family_profile_id: string; target_email: string | null; expires_at: string }[]) {
+      if (new Date(inv.expires_at).getTime() < now) continue;
+      map[inv.family_profile_id] = { email: inv.target_email };
+    }
+    setPendingMap(map);
     setLoading(false);
   }, [session?.user?.id]);
 
   useFocusEffect(useCallback(() => { loadProfiles(); }, [loadProfiles]));
 
-  const count = profiles.length;
+  // Pending = not yet linked, but has a live pending invite.
+  const pendingProfiles = profiles.filter((p) => !p.linked_user_id && pendingMap[p.id]);
+  const regularProfiles = profiles.filter((p) => p.linked_user_id || !pendingMap[p.id]);
+  const count = regularProfiles.length;
 
   const filteredProfiles = searchQuery.trim()
-    ? profiles.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    : profiles;
+    ? regularProfiles.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : regularProfiles;
 
   function toggleSelected(id: string) {
     setSelectedIds(prev => {
@@ -361,6 +380,43 @@ export default function FamilyMembersScreen() {
     );
   }
 
+  // ── Render pending invitation row ────────────────────────────────────────────
+  function renderPendingRow(profile: FamilyProfile) {
+    const invite = pendingMap[profile.id];
+    const status = invite?.email ? `Sent to ${invite.email}` : 'Shared via invitation link';
+    return (
+      <TouchableOpacity
+        key={profile.id}
+        style={styles.row}
+        activeOpacity={0.75}
+        onPress={() => {
+          Alert.alert(profile.name, `${status}. Waiting for them to accept.`, [
+            { text: 'Close', style: 'cancel' },
+            {
+              text: 'Cancel invite',
+              style: 'destructive',
+              onPress: async () => {
+                await supabase.from('family_profiles').delete().eq('id', profile.id);
+                loadProfiles();
+              },
+            },
+          ]);
+        }}
+      >
+        <View style={styles.avatar}>
+          <Text style={styles.avatarText}>{getInitials(profile.name)}</Text>
+        </View>
+        <View style={styles.rowInfo}>
+          <Text style={styles.rowName} numberOfLines={1}>{profile.name}</Text>
+          <Text style={styles.pendingStatus} numberOfLines={1}>{status}</Text>
+        </View>
+        <View style={styles.chevronWrap}>
+          <Ionicons name="chevron-forward" size={16} color={`${Colors.primary}40`} />
+        </View>
+      </TouchableOpacity>
+    );
+  }
+
   // ── Render ─────────────────────────────────────────────────────────────────────
   return (
     <Animated.View style={{ flex: 1, opacity: pageOpacity, transform: [{ translateX: pageTranslateX }] }}>
@@ -401,7 +457,7 @@ export default function FamilyMembersScreen() {
           /* ── Edit mode — draggable list ── */
           <GestureHandlerRootView style={styles.listOuter}>
             <DraggableFlatList
-              data={profiles}
+              data={regularProfiles}
               keyExtractor={(item) => item.id}
               onDragEnd={({ data }) => handleReorder(data)}
               renderItem={(params) => (
@@ -447,6 +503,14 @@ export default function FamilyMembersScreen() {
               showsVerticalScrollIndicator={false}
             >
               {filteredProfiles.map(renderNormalRow)}
+
+              {/* Pending invitations — invited but not yet accepted */}
+              {!searchQuery.trim() && pendingProfiles.length > 0 && (
+                <>
+                  <Text style={styles.pendingHeader}>Pending Invitations</Text>
+                  {pendingProfiles.map(renderPendingRow)}
+                </>
+              )}
             </ScrollView>
 
             {/* Add button — inside ScreenLayout so the menu overlay covers it */}
@@ -600,6 +664,15 @@ const styles = StyleSheet.create({
     color: Colors.primary, letterSpacing: -0.26, lineHeight: 16,
   },
   chevronWrap: { width: 20, height: 20, alignItems: 'center', justifyContent: 'center' },
+  pendingHeader: {
+    fontSize: 18, lineHeight: 24, fontFamily: 'Figtree_700Bold',
+    color: Colors.primary, letterSpacing: -0.36,
+    marginTop: 24, marginBottom: 4,
+  },
+  pendingStatus: {
+    fontSize: 14, lineHeight: 21, fontFamily: 'Figtree_300Light',
+    color: Colors.secondary, letterSpacing: -0.14,
+  },
   rowRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   inviteBtn: {
     width: 36,

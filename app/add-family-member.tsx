@@ -253,6 +253,7 @@ export default function AddFamilyMemberScreen() {
   // Step 0 (add only) — does this family member already have an account?
   // null = unanswered. true → invite-to-link path; false → managed profile.
   const [hasAccount, setHasAccount] = useState<boolean | null>(null);
+  const [inviteName, setInviteName] = useState('');
   const [accountEmail, setAccountEmail] = useState('');
 
   // Step 1 – About them
@@ -633,13 +634,13 @@ export default function AddFamilyMemberScreen() {
   // once they link, so we create a lightweight placeholder row and let
   // live-read overlay their account data. Placeholder name is the email's
   // local part (or "New member" for a link invite).
-  async function createInviteMember(email?: string): Promise<{ id: string } | null> {
+  // Creates the managed row using the name the owner typed (so the pending
+  // invite shows a real name, not a placeholder).
+  async function createInviteMember(name: string): Promise<{ id: string } | null> {
     if (!session?.user?.id) return null;
-    const local = email ? email.split('@')[0] : '';
-    const placeholder = local ? local.charAt(0).toUpperCase() + local.slice(1) : 'New member';
     const { data, error } = await supabase
       .from('family_profiles')
-      .insert({ user_id: session.user.id, name: placeholder })
+      .insert({ user_id: session.user.id, name: name.trim() })
       .select('id')
       .single();
     if (error || !data) {
@@ -649,20 +650,25 @@ export default function AddFamilyMemberScreen() {
     return { id: data.id };
   }
 
-  // "Yes": first tap reveals the email field; once an email is entered,
+  // "Yes": first tap reveals the name + email fields; once both are filled,
   // tapping it again sends the email invite.
   async function handleAccountYes() {
     if (hasAccount !== true) {
       setHasAccount(true);
       return;
     }
+    const name = inviteName.trim();
     const email = accountEmail.trim();
+    if (!name) {
+      Alert.alert('Add a name', 'Enter a name so you can keep track of who you invited.');
+      return;
+    }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       Alert.alert('Add their email', 'Enter their email, or use the copy-link option instead.');
       return;
     }
     setSaving(true);
-    const member = await createInviteMember(email);
+    const member = await createInviteMember(name);
     if (!member) { setSaving(false); return; }
     const { error } = await supabase.functions.invoke('create-family-invite', {
       body: { family_profile_id: member.id, method: 'email', email },
@@ -674,7 +680,7 @@ export default function AddFamilyMemberScreen() {
       Alert.alert('Invite not sent', msg);
       return;
     }
-    Alert.alert('Invite sent', `We've emailed ${email}. They'll appear here once they accept.`);
+    Alert.alert('Invite sent', `We've emailed ${email}. ${name} will appear here once they accept.`);
     safeBack();
   }
 
@@ -684,10 +690,16 @@ export default function AddFamilyMemberScreen() {
     animateExit('forward', () => setStep((s) => Math.min(s + 1, totalSteps)));
   }
 
-  // "Copy invitation link": create the member and share a unique link.
+  // "Copy invitation link": needs a name (to track the invite), then shares
+  // a unique link. Email is optional on this path.
   async function handleCopyLink() {
+    const name = inviteName.trim();
+    if (!name) {
+      Alert.alert('Add a name', 'Enter a name so you can keep track of who you invited.');
+      return;
+    }
     setSaving(true);
-    const member = await createInviteMember();
+    const member = await createInviteMember(name);
     if (!member) { setSaving(false); return; }
     const { data, error } = await supabase.functions.invoke('create-family-invite', {
       body: { family_profile_id: member.id, method: 'link' },
@@ -1100,28 +1112,61 @@ export default function AddFamilyMemberScreen() {
                 </Text>
               </View>
 
-              {/* Yes reveals an email field + copy-link option */}
+              {/* Yes reveals name + email fields and the copy-link option */}
               {hasAccount === true && (
                 <View style={styles.accountReveal}>
-                  <View style={[styles.inputRow, focusedField === 'accountEmail' && styles.inputRowFocused]}>
-                    <Ionicons name="mail-outline" size={18} color={Colors.primary} />
-                    <TextInput
-                      style={styles.inputFieldInner}
-                      placeholder="their@email.com"
-                      placeholderTextColor={`${Colors.secondary}99`}
-                      value={accountEmail}
-                      onChangeText={setAccountEmail}
-                      autoCapitalize="none"
-                      keyboardType="email-address"
-                      autoCorrect={false}
-                      onFocus={() => setFocusedField('accountEmail')}
-                      onBlur={() => setFocusedField(null)}
-                    />
-                    {accountEmail.length > 0 && (
-                      <TouchableOpacity onPress={() => setAccountEmail('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                        <Ionicons name="close" size={18} color={Colors.secondary} />
-                      </TouchableOpacity>
-                    )}
+                  {/* Name (required) */}
+                  <View style={styles.fieldBlock}>
+                    <View style={styles.fieldLabelRow}>
+                      <Text style={styles.inviteFieldLabel}>Name</Text>
+                      {!inviteName.trim() && <Text style={styles.fieldRequired}>Required</Text>}
+                    </View>
+                    <View style={[styles.inputRow, focusedField === 'inviteName' && styles.inputRowFocused]}>
+                      <Ionicons name="person-outline" size={18} color={Colors.primary} />
+                      <TextInput
+                        style={styles.inputFieldInner}
+                        placeholder="Their name"
+                        placeholderTextColor={`${Colors.secondary}99`}
+                        value={inviteName}
+                        onChangeText={setInviteName}
+                        autoCapitalize="words"
+                        onFocus={() => setFocusedField('inviteName')}
+                        onBlur={() => setFocusedField(null)}
+                      />
+                      {inviteName.length > 0 && (
+                        <TouchableOpacity onPress={() => setInviteName('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                          <Ionicons name="close" size={18} color={Colors.secondary} />
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  </View>
+
+                  {/* Email (required) */}
+                  <View style={styles.fieldBlock}>
+                    <View style={styles.fieldLabelRow}>
+                      <Text style={styles.inviteFieldLabel}>Email</Text>
+                      {!accountEmail.trim() && <Text style={styles.fieldRequired}>Required</Text>}
+                    </View>
+                    <View style={[styles.inputRow, focusedField === 'accountEmail' && styles.inputRowFocused]}>
+                      <Ionicons name="mail-outline" size={18} color={Colors.primary} />
+                      <TextInput
+                        style={styles.inputFieldInner}
+                        placeholder="their@email.com"
+                        placeholderTextColor={`${Colors.secondary}99`}
+                        value={accountEmail}
+                        onChangeText={setAccountEmail}
+                        autoCapitalize="none"
+                        keyboardType="email-address"
+                        autoCorrect={false}
+                        onFocus={() => setFocusedField('accountEmail')}
+                        onBlur={() => setFocusedField(null)}
+                      />
+                      {accountEmail.length > 0 && (
+                        <TouchableOpacity onPress={() => setAccountEmail('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                          <Ionicons name="close" size={18} color={Colors.secondary} />
+                        </TouchableOpacity>
+                      )}
+                    </View>
                   </View>
 
                   <TouchableOpacity
@@ -1452,7 +1497,21 @@ const styles = StyleSheet.create({
     lineHeight: 30,
   },
 
-  accountReveal: { gap: 8, marginTop: 8 },
+  accountReveal: { gap: 12, marginTop: 8 },
+  fieldBlock: { gap: 6 },
+  fieldLabelRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
+  inviteFieldLabel: {
+    fontSize: 13,
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.26,
+  },
+  fieldRequired: {
+    fontSize: 12,
+    fontFamily: 'Figtree_300Light',
+    color: Colors.secondary,
+    letterSpacing: -0.12,
+  },
   copyLinkRow: {
     flexDirection: 'row',
     alignItems: 'center',
