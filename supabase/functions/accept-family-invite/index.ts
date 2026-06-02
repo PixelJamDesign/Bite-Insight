@@ -132,14 +132,16 @@ Deno.serve(async (req) => {
     .eq('id', invite.id);
 
   // 6. Notify the inviter (inbox row; push if they have a token — the
-  //    notifications table + realtime surface it in-app).
-  const { data: inviter } = await svc
-    .from('profiles')
-    .select('full_name')
-    .eq('id', invite.inviter_user_id)
-    .maybeSingle();
+  //    notifications table + realtime surface it in-app). The owner card is
+  //    bespoke (member's photo + green tick), so include the accepter's
+  //    avatar + name in the data.
+  const [{ data: inviter }, { data: accepterProfile }] = await Promise.all([
+    svc.from('profiles').select('full_name').eq('id', invite.inviter_user_id).maybeSingle(),
+    svc.from('profiles').select('full_name, avatar_url').eq('id', accepter.id).maybeSingle(),
+  ]);
 
   const accepterName =
+    accepterProfile?.full_name?.split(' ')[0] ||
     (accepter.user_metadata?.full_name as string | undefined)?.split(' ')[0] ||
     famRow.name ||
     'Someone';
@@ -147,9 +149,14 @@ Deno.serve(async (req) => {
   await svc.from('notifications').insert({
     user_id: invite.inviter_user_id,
     type: 'family_link_accepted',
-    title: 'Family member linked',
-    body: `${accepterName} joined your family. Their preferences now show in your family view.`,
-    data: { type: 'family_link_accepted', family_profile_id: famRow.id },
+    title: `${accepterName} has joined the family!`,
+    body: `You can now select ${accepterName} in the scanned results screen and see how scanned items affect ${accepterName}. Happy scanning!`,
+    data: {
+      type: 'family_link_accepted',
+      family_profile_id: famRow.id,
+      member_name: accepterName,
+      member_avatar_url: accepterProfile?.avatar_url ?? null,
+    },
   });
 
   return jsonRes({

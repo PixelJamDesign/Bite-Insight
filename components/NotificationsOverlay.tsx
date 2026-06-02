@@ -146,25 +146,31 @@ function initialsFrom(name: string): string {
   return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
 }
 
+function isFreshNotif(item: InboxNotification): boolean {
+  return !item.read_at && Date.now() - new Date(item.sent_at).getTime() < 24 * 60 * 60 * 1000;
+}
+
 function FamilyInviteCard({
   item,
   onAccept,
   onDecline,
+  onLeave,
   busy,
 }: {
   item: InboxNotification;
   onAccept: () => void;
   onDecline: () => void;
+  onLeave: () => void;
   busy: boolean;
 }) {
   const data = (item.data ?? {}) as {
     inviter_name?: string;
     inviter_avatar_url?: string | null;
+    accepted?: boolean;
   };
   const inviterName = data.inviter_name ?? 'Someone';
   const avatarUrl = data.inviter_avatar_url ?? undefined;
-  const isFresh =
-    !item.read_at && Date.now() - new Date(item.sent_at).getTime() < 24 * 60 * 60 * 1000;
+  const accepted = data.accepted === true;
 
   return (
     <View style={[styles.card, styles.cardUnread]}>
@@ -190,33 +196,99 @@ function FamilyInviteCard({
             <Text style={styles.familyBody}>{item.body}</Text>
           </View>
 
-          <View style={styles.familyButtons}>
-            <TouchableOpacity
-              style={[styles.familyBtn, styles.familyBtnYes]}
-              activeOpacity={0.85}
-              onPress={onAccept}
-              disabled={busy}
-            >
-              {busy ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Text style={styles.familyBtnText}>Yes, Join Family</Text>
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.familyBtn, styles.familyBtnNo]}
-              activeOpacity={0.85}
-              onPress={onDecline}
-              disabled={busy}
-            >
-              <Text style={styles.familyBtnText}>No, Thank You</Text>
-            </TouchableOpacity>
+          {accepted ? (
+            <View style={styles.familyButtons}>
+              <View style={[styles.familyBtn, styles.familyBtnJoined]}>
+                <Text style={styles.familyBtnJoinedText}>Joined!</Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.familyBtn, styles.familyBtnLeave]}
+                activeOpacity={0.85}
+                onPress={onLeave}
+                disabled={busy}
+              >
+                {busy ? (
+                  <ActivityIndicator size="small" color={Colors.status.negative} />
+                ) : (
+                  <Text style={styles.familyBtnLeaveText}>Leave</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.familyButtons}>
+              <TouchableOpacity
+                style={[styles.familyBtn, styles.familyBtnYes]}
+                activeOpacity={0.85}
+                onPress={onAccept}
+                disabled={busy}
+              >
+                {busy ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.familyBtnText}>Yes, Join Family</Text>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.familyBtn, styles.familyBtnNo]}
+                activeOpacity={0.85}
+                onPress={onDecline}
+                disabled={busy}
+              >
+                <Text style={styles.familyBtnText}>No, Thank You</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      </View>
+
+      <View style={styles.timestampWrap}>
+        {isFreshNotif(item) && (
+          <View style={styles.newPill}>
+            <Text style={styles.newPillText}>New</Text>
+          </View>
+        )}
+        <Text style={styles.timestampText}>{formatTimeAgo(item.sent_at)}</Text>
+      </View>
+    </View>
+  );
+}
+
+// Owner-side card: a family member accepted the invite. Shows the member's
+// photo with a green tick and an info-only "Joined!" button.
+function FamilyLinkAcceptedCard({ item }: { item: InboxNotification }) {
+  const data = (item.data ?? {}) as { member_name?: string; member_avatar_url?: string | null };
+  const memberName = data.member_name ?? 'They';
+  const avatarUrl = data.member_avatar_url ?? undefined;
+
+  return (
+    <View style={[styles.card, styles.cardUnread]}>
+      <View style={styles.familyContent}>
+        <View style={styles.avatarWrap}>
+          <View style={styles.avatarCircle}>
+            {avatarUrl ? (
+              <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+            ) : (
+              <Text style={styles.avatarInitials}>{initialsFrom(memberName)}</Text>
+            )}
+          </View>
+          <View style={[styles.avatarBadge, styles.avatarBadgeCheck]}>
+            <Ionicons name="checkmark" size={16} color="#fff" />
+          </View>
+        </View>
+
+        <View style={styles.familyLower}>
+          <View style={styles.familyText}>
+            <Text style={styles.cardTitle}>{item.title}</Text>
+            <Text style={styles.familyBody}>{item.body}</Text>
+          </View>
+          <View style={[styles.familyBtn, styles.familyBtnJoined, styles.familyBtnFull]}>
+            <Text style={styles.familyBtnJoinedText}>Joined!</Text>
           </View>
         </View>
       </View>
 
       <View style={styles.timestampWrap}>
-        {isFresh && (
+        {isFreshNotif(item) && (
           <View style={styles.newPill}>
             <Text style={styles.newPillText}>New</Text>
           </View>
@@ -238,26 +310,40 @@ export function NotificationsOverlay() {
   const [refreshing, setRefreshing] = useState(false);
   const [respondingId, setRespondingId] = useState<string | null>(null);
 
-  // Accept / decline a family invite card. Calls the edge function with the
-  // current user's auth (functions.invoke attaches it), then removes the
-  // card from the inbox.
+  // Respond to a family invite card.
+  //   accept  → links the account, then flips the card to the "Joined!/Leave"
+  //             state (we keep the card rather than dismissing it).
+  //   decline → revokes the invite and removes the card.
+  //   leave   → unlinks (the member leaves the family) and removes the card.
   const respondToInvite = useCallback(
-    async (item: InboxNotification, action: 'accept' | 'decline') => {
-      const token = (item.data as { token?: string } | null)?.token;
-      if (!token) {
-        showToast({ message: 'This invite is no longer valid.', variant: 'error' });
-        return;
-      }
+    async (item: InboxNotification, action: 'accept' | 'decline' | 'leave') => {
       setRespondingId(item.id);
       try {
+        if (action === 'leave') {
+          const { error } = await supabase.functions.invoke('unlink-family-member', {
+            body: { mode: 'leave' },
+          });
+          if (error) {
+            showToast({ message: 'Could not leave. Try again.', variant: 'error' });
+            return;
+          }
+          showToast({ message: "You've left the family.", variant: 'success' });
+          await dismiss(item.id);
+          return;
+        }
+
+        const token = (item.data as { token?: string } | null)?.token;
+        if (!token) {
+          showToast({ message: 'This invite is no longer valid.', variant: 'error' });
+          return;
+        }
         const { data, error } = await supabase.functions.invoke('accept-family-invite', {
           body: { token, action },
         });
 
         if (error) {
           // supabase-js wraps non-2xx responses in a FunctionsHttpError whose
-          // .message is generic ("...non-2xx status code"). The real, human
-          // message is in the response body on .context — dig it out.
+          // .message is generic; the real message is in the response body.
           let msg = 'Something went wrong. Try again.';
           try {
             const ctx = (error as { context?: Response }).context;
@@ -270,7 +356,6 @@ export function NotificationsOverlay() {
           return;
         }
 
-        // Some functions also return { error } in a 200 body — handle that too.
         const bodyErr = (data as { error?: string } | null)?.error;
         if (bodyErr) {
           showToast({ message: bodyErr, variant: 'error' });
@@ -278,16 +363,27 @@ export function NotificationsOverlay() {
         }
 
         if (action === 'accept') {
-          showToast({ message: "You're in. Your profile is now shared.", variant: 'success' });
+          showToast({ message: "You're in. You've joined the family.", variant: 'success' });
+          // Flip the card to the joined state by marking the notification,
+          // rather than dismissing it (gives them the Leave option).
+          await supabase
+            .from('notifications')
+            .update({
+              data: { ...((item.data as Record<string, unknown>) ?? {}), accepted: true },
+              read_at: item.read_at ?? new Date().toISOString(),
+            })
+            .eq('id', item.id);
+          await refresh();
+        } else {
+          await dismiss(item.id);
         }
-        await dismiss(item.id);
       } catch {
         showToast({ message: 'Something went wrong. Try again.', variant: 'error' });
       } finally {
         setRespondingId(null);
       }
     },
-    [dismiss, showToast],
+    [dismiss, refresh, showToast],
   );
 
   const onRefresh = useCallback(async () => {
@@ -316,8 +412,12 @@ export function NotificationsOverlay() {
             busy={respondingId === item.id}
             onAccept={() => respondToInvite(item, 'accept')}
             onDecline={() => respondToInvite(item, 'decline')}
+            onLeave={() => respondToInvite(item, 'leave')}
           />
         );
+      }
+      if (item.type === 'family_link_accepted') {
+        return <FamilyLinkAcceptedCard item={item} />;
       }
       return (
         <NotificationCard
@@ -611,6 +711,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     ...Shadows.level3,
   },
+  avatarBadgeCheck: {
+    backgroundColor: Colors.status.positive, // #3b9586 — green tick = joined
+  },
   familyLower: {
     gap: Spacing.xs, // 8
     width: '100%',
@@ -650,6 +753,27 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     fontFamily: 'Figtree_700Bold',
     color: '#fff',
+    letterSpacing: -0.14,
+  },
+  familyBtnFull: { flex: 0, width: '100%' },
+  familyBtnJoined: {
+    backgroundColor: '#cfe1db', // muted teal-grey "done" state
+  },
+  familyBtnJoinedText: {
+    fontSize: 14,
+    lineHeight: 21,
+    fontFamily: 'Figtree_700Bold',
+    color: '#6f9c93',
+    letterSpacing: -0.14,
+  },
+  familyBtnLeave: {
+    backgroundColor: '#ffd9da', // light red
+  },
+  familyBtnLeaveText: {
+    fontSize: 14,
+    lineHeight: 21,
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.status.negative,
     letterSpacing: -0.14,
   },
   timestampWrap: {
