@@ -17,7 +17,7 @@ interface LottieLoaderProps {
   type?: AnimationType;
   /** Optional message below the animation */
   message?: string;
-  /** Animation size (width & height) — default 48 */
+  /** Animation size (width & height) — default 80 */
   size?: number;
   /** Fill the entire screen (centered) — default true */
   fullScreen?: boolean;
@@ -30,7 +30,7 @@ interface LottieLoaderProps {
 export function LottieLoader({
   type = 'loading',
   message,
-  size = 48,
+  size = 80,
   fullScreen = true,
   loop = true,
   onAnimationFinish,

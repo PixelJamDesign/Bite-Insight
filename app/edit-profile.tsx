@@ -946,7 +946,7 @@ export default function EditProfileScreen() {
                     </Text>
                     {dateOfBirth ? (
                       <TouchableOpacity onPress={() => { setDateOfBirth(null); setShowDatePicker(false); }} hitSlop={8}>
-                        <Ionicons name="close" size={18} color={`${Colors.primary}80`} />
+                        <Ionicons name="close" size={22} color={Colors.primary} />
                       </TouchableOpacity>
                     ) : null}
                   </TouchableOpacity>
