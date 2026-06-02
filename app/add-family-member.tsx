@@ -43,6 +43,7 @@ import { SuggestionSheet, type SuggestionCategory } from '@/components/Suggestio
 import { LottieLoader } from '@/components/LottieLoader';
 import { FamilyIngredientPreferencesPanel } from '@/components/FamilyIngredientPreferencesPanel';
 import { FlagReasonSheet } from '@/components/FlagReasonSheet';
+import { familyInviteShareMessage } from '@/lib/familyInviteShare';
 import type { Ingredient } from '@/lib/types';
 import { CONDITION_INFO } from '@/constants/conditionInfo';
 import Logo from '../assets/images/logo.svg';
@@ -698,9 +699,7 @@ export default function AddFamilyMemberScreen() {
       return;
     }
     try {
-      await Share.share({
-        message: `Join my family on Bite Insight so your preferences sync across. Tap to connect: ${link}`,
-      });
+      await Share.share({ message: familyInviteShareMessage(link) });
     } catch { /* dismissed */ }
     safeBack();
   }
