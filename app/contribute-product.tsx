@@ -58,6 +58,37 @@ const NUTRIENTS: { id: string; labelKey: string }[] = [
   { id: 'salt', labelKey: 'nutrient.salt' },
 ];
 
+/** Tidy a single ingredient: drop a leading "Ingredients:", collapse spaces,
+ *  trim trailing punctuation. */
+function cleanIngredient(s: string): string {
+  return s
+    .replace(/^\s*ingredients?\s*:\s*/i, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/[.;]+$/, '');
+}
+
+/** Split ingredients on TOP-LEVEL commas/newlines only — commas inside (...) or
+ *  [...] belong to that ingredient's sub-list (e.g. "yeast extract (contains
+ *  BARLEY, WHEAT, OATS, RYE)"). Returns [...complete parts, trailingRemainder]. */
+function splitIngredients(text: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let cur = '';
+  for (const ch of text) {
+    if (ch === '(' || ch === '[') depth++;
+    else if (ch === ')' || ch === ']') depth = Math.max(0, depth - 1);
+    if ((ch === ',' || ch === '\n') && depth === 0) {
+      parts.push(cur);
+      cur = '';
+    } else {
+      cur += ch;
+    }
+  }
+  parts.push(cur);
+  return parts;
+}
+
 export default function ContributeProductScreen() {
   const { t } = useTranslation('scan');
   const { showToast } = useToast();
@@ -82,19 +113,21 @@ export default function ContributeProductScreen() {
     Object.values(nutriments).some((v) => v.trim()) ||
     Object.keys(images).length > 0;
 
-  // Ingredient chip entry — return or a comma commits the current ingredient.
+  // Ingredient chip entry — a top-level comma or return commits an ingredient.
+  // Commas inside brackets don't split, so "yeast extract (contains BARLEY,
+  // WHEAT, OATS, RYE)" stays a single chip. Pasting a whole label works too.
   function onIngredientDraftChange(v: string) {
-    if (/[,\n]/.test(v)) {
-      const segs = v.split(/[,\n]/);
-      const complete = segs.slice(0, -1).map((s) => s.trim()).filter(Boolean);
+    const parts = splitIngredients(v);
+    if (parts.length > 1) {
+      const complete = parts.slice(0, -1).map(cleanIngredient).filter(Boolean);
       if (complete.length) setIngredients((prev) => [...prev, ...complete]);
-      setIngredientDraft(segs[segs.length - 1]);
+      setIngredientDraft(parts[parts.length - 1].replace(/^\s+/, ''));
     } else {
       setIngredientDraft(v);
     }
   }
   function commitIngredientDraft() {
-    const d = ingredientDraft.trim();
+    const d = cleanIngredient(ingredientDraft);
     if (d) {
       setIngredients((prev) => [...prev, d]);
       setIngredientDraft('');
@@ -137,7 +170,7 @@ export default function ContributeProductScreen() {
         Object.entries(nutriments).filter(([, v]) => v.trim()).map(([k, v]) => [k, v.trim()]),
       );
       // Chips + any uncommitted draft → OFF's comma-separated ingredients_text.
-      const ingredientsList = [...ingredients, ingredientDraft.trim()].filter(Boolean);
+      const ingredientsList = [...ingredients, cleanIngredient(ingredientDraft)].filter(Boolean);
       const { data, error } = await supabase.functions.invoke('off-contribute', {
         body: {
           code: barcode,
