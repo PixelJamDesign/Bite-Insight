@@ -89,6 +89,25 @@ function splitIngredients(text: string): string[] {
   return parts;
 }
 
+type Ingredient = { name: string; subs: string[] };
+
+/** Split a cleaned ingredient into its name + bracketed sub-ingredients.
+ *  "Yeast Extract (contains Barley, Wheat)" → { name, subs: [Barley, Wheat] } */
+function parseIngredient(s: string): Ingredient {
+  const m = s.match(/^(.*?)[([]\s*(.*?)\s*[)\]]\s*$/);
+  if (m && m[1].trim()) {
+    const inner = m[2].replace(/^\s*contains\s*:?\s*/i, '');
+    const subs = inner.split(',').map((x) => x.trim()).filter(Boolean);
+    return { name: m[1].trim(), subs };
+  }
+  return { name: s.trim(), subs: [] };
+}
+
+/** Re-assemble for OFF's ingredients_text: "name (sub, sub)". */
+function formatIngredient(ing: Ingredient): string {
+  return ing.subs.length ? `${ing.name} (${ing.subs.join(', ')})` : ing.name;
+}
+
 export default function ContributeProductScreen() {
   const { t } = useTranslation('scan');
   const { showToast } = useToast();
@@ -101,7 +120,7 @@ export default function ContributeProductScreen() {
   const [brands, setBrands] = useState('');
   const [quantity, setQuantity] = useState('');
   const [categories, setCategories] = useState('');
-  const [ingredients, setIngredients] = useState<string[]>([]);
+  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [ingredientDraft, setIngredientDraft] = useState('');
   const [nutriments, setNutriments] = useState<Record<string, string>>({});
   const [images, setImages] = useState<Partial<Record<PhotoField, string>>>({});
@@ -119,7 +138,7 @@ export default function ContributeProductScreen() {
   function onIngredientDraftChange(v: string) {
     const parts = splitIngredients(v);
     if (parts.length > 1) {
-      const complete = parts.slice(0, -1).map(cleanIngredient).filter(Boolean);
+      const complete = parts.slice(0, -1).map(cleanIngredient).filter(Boolean).map(parseIngredient);
       if (complete.length) setIngredients((prev) => [...prev, ...complete]);
       setIngredientDraft(parts[parts.length - 1].replace(/^\s+/, ''));
     } else {
@@ -129,7 +148,7 @@ export default function ContributeProductScreen() {
   function commitIngredientDraft() {
     const d = cleanIngredient(ingredientDraft);
     if (d) {
-      setIngredients((prev) => [...prev, d]);
+      setIngredients((prev) => [...prev, parseIngredient(d)]);
       setIngredientDraft('');
     }
   }
@@ -169,8 +188,12 @@ export default function ContributeProductScreen() {
       const cleanNutriments = Object.fromEntries(
         Object.entries(nutriments).filter(([, v]) => v.trim()).map(([k, v]) => [k, v.trim()]),
       );
-      // Chips + any uncommitted draft → OFF's comma-separated ingredients_text.
-      const ingredientsList = [...ingredients, cleanIngredient(ingredientDraft)].filter(Boolean);
+      // Chips (+ any uncommitted draft) → OFF's comma-separated ingredients_text.
+      const draftClean = cleanIngredient(ingredientDraft);
+      const ingredientsList = [
+        ...ingredients.map(formatIngredient),
+        ...(draftClean ? [formatIngredient(parseIngredient(draftClean))] : []),
+      ].filter(Boolean);
       const { data, error } = await supabase.functions.invoke('off-contribute', {
         body: {
           code: barcode,
@@ -303,13 +326,24 @@ export default function ContributeProductScreen() {
                   onSubmitEditing={commitIngredientDraft}
                 />
                 {ingredients.length > 0 && (
-                  <View style={styles.chipWrap}>
+                  <View style={styles.ingredientList}>
                     {ingredients.map((ing, i) => (
-                      <View key={`${ing}-${i}`} style={styles.chip}>
-                        <Text style={styles.chipLabel}>{ing}</Text>
-                        <TouchableOpacity onPress={() => removeIngredient(i)} hitSlop={8} accessibilityLabel={`Remove ${ing}`}>
-                          <Ionicons name="close" size={16} color={Colors.secondary} />
-                        </TouchableOpacity>
+                      <View key={`${ing.name}-${i}`} style={styles.ingredientItem}>
+                        <View style={styles.chip}>
+                          <Text style={styles.chipLabel}>{ing.name}</Text>
+                          <TouchableOpacity onPress={() => removeIngredient(i)} hitSlop={8} accessibilityLabel={`Remove ${ing.name}`}>
+                            <Ionicons name="close" size={16} color={Colors.secondary} />
+                          </TouchableOpacity>
+                        </View>
+                        {ing.subs.length > 0 && (
+                          <View style={styles.subChipWrap}>
+                            {ing.subs.map((sub, j) => (
+                              <View key={`${sub}-${j}`} style={styles.subChip}>
+                                <Text style={styles.subChipText}>{sub}</Text>
+                              </View>
+                            ))}
+                          </View>
+                        )}
                       </View>
                     ))}
                   </View>
@@ -413,11 +447,13 @@ const styles = StyleSheet.create({
   },
   group16: { gap: 16 },
 
-  // Ingredient chips
-  chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  // Ingredient chips (parent + nested sub-ingredients)
+  ingredientList: { gap: 12 },
+  ingredientItem: { gap: 8 },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
+    alignSelf: 'flex-start',
     gap: 8,
     paddingLeft: 12,
     paddingRight: 8,
@@ -433,6 +469,23 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
     letterSpacing: -0.32,
+  },
+  // Sub-ingredients: smaller, lighter pills indented under the parent
+  subChipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginLeft: 16 },
+  subChip: {
+    backgroundColor: Colors.surface.tertiary,
+    borderWidth: 1,
+    borderColor: '#cfe1db',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  subChipText: {
+    fontSize: 13,
+    lineHeight: 16,
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.secondary,
+    letterSpacing: -0.13,
   },
 
   // Tabs (pill style — matches the scan-result tab bar)
