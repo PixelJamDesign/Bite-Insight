@@ -46,6 +46,25 @@ type PhotoField = 'front' | 'ingredients' | 'nutrition';
 type Tab = 'details' | 'ingredients' | 'nutrition';
 const TABS: Tab[] = ['details', 'ingredients', 'nutrition'];
 
+// EU-14 major allergens. `off` is the English name we send to Open Food Facts
+// (its taxonomy maps these to en:gluten, en:milk, … which the app reads back).
+const ALLERGENS: { off: string; labelKey: string }[] = [
+  { off: 'gluten', labelKey: 'gluten' },
+  { off: 'crustaceans', labelKey: 'crustaceans' },
+  { off: 'eggs', labelKey: 'eggs' },
+  { off: 'fish', labelKey: 'fish' },
+  { off: 'peanuts', labelKey: 'peanuts' },
+  { off: 'soybeans', labelKey: 'soybeans' },
+  { off: 'milk', labelKey: 'milk' },
+  { off: 'nuts', labelKey: 'nuts' },
+  { off: 'celery', labelKey: 'celery' },
+  { off: 'mustard', labelKey: 'mustard' },
+  { off: 'sesame seeds', labelKey: 'sesame' },
+  { off: 'sulphur dioxide and sulphites', labelKey: 'sulphites' },
+  { off: 'lupin', labelKey: 'lupin' },
+  { off: 'molluscs', labelKey: 'molluscs' },
+];
+
 // Nutrient ids match Open Food Facts (sent as nutriment_<id>); per 100g.
 const NUTRIENTS: { id: string; labelKey: string }[] = [
   { id: 'energy-kcal', labelKey: 'nutrient.energy' },
@@ -115,13 +134,19 @@ export default function ContributeProductScreen() {
   const [categories, setCategories] = useState('');
   const [ingredients, setIngredients] = useState<string[]>([]);
   const [ingredientDraft, setIngredientDraft] = useState('');
+  const [allergens, setAllergens] = useState<string[]>([]);
+  const [traces, setTraces] = useState<string[]>([]);
   const [nutriments, setNutriments] = useState<Record<string, string>>({});
+
+  function toggleAllergen(list: string[], setList: (v: string[]) => void, off: string) {
+    setList(list.includes(off) ? list.filter((x) => x !== off) : [...list, off]);
+  }
   const [images, setImages] = useState<Partial<Record<PhotoField, string>>>({});
   const [submitting, setSubmitting] = useState(false);
 
   const hasSomething =
     name.trim() || brands.trim() || quantity.trim() || categories.trim() ||
-    ingredients.length || ingredientDraft.trim() ||
+    ingredients.length || ingredientDraft.trim() || allergens.length || traces.length ||
     Object.values(nutriments).some((v) => v.trim()) ||
     Object.keys(images).length > 0;
 
@@ -193,6 +218,8 @@ export default function ContributeProductScreen() {
           quantity: quantity.trim() || undefined,
           categories: categories.trim() || undefined,
           ingredients_text: ingredientsList.length ? ingredientsList.join(', ') : undefined,
+          allergens: allergens.length ? allergens : undefined,
+          traces: traces.length ? traces : undefined,
           nutriments: Object.keys(cleanNutriments).length ? cleanNutriments : undefined,
           images: Object.keys(images).length ? images : undefined,
         },
@@ -214,6 +241,28 @@ export default function ContributeProductScreen() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function AllergenGrid({ selected, onToggle }: { selected: string[]; onToggle: (off: string) => void }) {
+    return (
+      <View style={styles.allergenWrap}>
+        {ALLERGENS.map((a) => {
+          const on = selected.includes(a.off);
+          return (
+            <TouchableOpacity
+              key={a.off}
+              style={[styles.allergenChip, on && styles.allergenChipOn]}
+              onPress={() => onToggle(a.off)}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.allergenChipText, on && styles.allergenChipTextOn]}>
+                {t(`contribute.allergen.${a.labelKey}`)}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    );
   }
 
   function PhotoTile({ field, label }: { field: PhotoField; label: string }) {
@@ -342,6 +391,17 @@ export default function ContributeProductScreen() {
                     })}
                   </View>
                 )}
+                <View style={styles.allergenSection}>
+                  <View style={styles.sectionTitleBlock}>
+                    <Text style={styles.h4}>{t('contribute.allergensTitle')}</Text>
+                    <Text style={styles.subtitle}>{t('contribute.allergensHint')}</Text>
+                  </View>
+                  <Text style={styles.allergenGroupLabel}>{t('contribute.allergensContains')}</Text>
+                  <AllergenGrid selected={allergens} onToggle={(o) => toggleAllergen(allergens, setAllergens, o)} />
+                  <Text style={styles.allergenGroupLabel}>{t('contribute.allergensMayContain')}</Text>
+                  <AllergenGrid selected={traces} onToggle={(o) => toggleAllergen(traces, setTraces, o)} />
+                </View>
+
                 <PhotoTile field="ingredients" label={t('contribute.addIngredientsPhoto')} />
               </View>
             )}
@@ -440,6 +500,11 @@ const styles = StyleSheet.create({
     fontSize: 13, lineHeight: 16, fontFamily: 'Figtree_700Bold', color: Colors.secondary, letterSpacing: -0.26,
   },
   group16: { gap: 16 },
+  sectionTitleBlock: { gap: 4 },
+  h4: {
+    fontSize: 20, lineHeight: 24, fontWeight: '700', fontFamily: 'Figtree_700Bold',
+    color: Colors.primary, letterSpacing: -0.4,
+  },
 
   // Ingredient list — one row per ingredient, with a clear (×) icon and an
   // optional "this ingredient contains" bullet list of sub-ingredients.
@@ -490,6 +555,26 @@ const styles = StyleSheet.create({
     color: Colors.secondary,
     letterSpacing: -0.14,
   },
+
+  // Allergen selector
+  allergenSection: { gap: 12 },
+  allergenGroupLabel: {
+    fontSize: 16, lineHeight: 20, fontFamily: 'Figtree_700Bold', color: Colors.primary, letterSpacing: -0.32,
+  },
+  allergenWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  allergenChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#aad4cd',
+    backgroundColor: '#fff',
+  },
+  allergenChipOn: { backgroundColor: Colors.secondary, borderColor: Colors.secondary },
+  allergenChipText: {
+    fontSize: 14, lineHeight: 17, fontFamily: 'Figtree_700Bold', color: Colors.secondary, letterSpacing: -0.28,
+  },
+  allergenChipTextOn: { color: '#fff' },
 
   // Tabs (pill style — matches the scan-result tab bar)
   tabBar: { flexDirection: 'row', gap: 8 },

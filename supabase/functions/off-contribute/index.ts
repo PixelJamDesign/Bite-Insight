@@ -103,6 +103,8 @@ Deno.serve(async (req) => {
     quantity?: string;
     categories?: string;
     ingredients_text?: string;
+    allergens?: string[];
+    traces?: string[];
     nutriments?: Record<string, string>;
     images?: { front?: string; ingredients?: string; nutrition?: string };
   };
@@ -142,6 +144,13 @@ Deno.serve(async (req) => {
   if (body.quantity?.trim()) fields.quantity = body.quantity.trim();
   if (body.categories?.trim()) fields.categories = body.categories.trim();
   if (body.ingredients_text?.trim()) fields.ingredients_text = body.ingredients_text.trim();
+
+  // Allergens (definitely contains) + traces (may contain). OFF re-parses these
+  // free-text fields into allergens_tags / traces_tags via its taxonomy.
+  const allergens = (body.allergens ?? []).map((a) => a.trim()).filter(Boolean);
+  const traces = (body.traces ?? []).map((a) => a.trim()).filter(Boolean);
+  if (allergens.length) fields.allergens = allergens.join(', ');
+  if (traces.length) fields.traces = traces.join(', ');
 
   // Nutrition facts (per 100g). Each value goes in as nutriment_<id> with its
   // matching unit; only ids we recognise are forwarded.
