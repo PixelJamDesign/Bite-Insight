@@ -27,6 +27,7 @@ import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { Colors, Spacing, Radius, Typography } from '@/constants/theme';
 import { useDebugMenu } from '@/lib/debugMenuContext';
+import { ContributeProductSheet } from '@/components/ContributeProductSheet';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { useTrialUpsell, TRIAL_UPSELL_KEYS } from '@/lib/trialUpsellContext';
 import { useTrialDay6Reminder } from '@/lib/trialDay6ReminderContext';
@@ -159,6 +160,9 @@ function FlagInspector() {
 export function DebugMenu() {
   const { visible, hideDebugMenu } = useDebugMenu();
   const insets = useSafeAreaInsets();
+  // Open the "Help add this product" (Open Food Facts) sheet directly, so the
+  // flow can be tested without scanning a genuinely-unknown barcode.
+  const [offContributeOpen, setOffContributeOpen] = useState(false);
 
   const { session } = useAuth();
   const { isPlus, priceString, trialEligible, trialDays } = useSubscription();
@@ -351,6 +355,7 @@ export function DebugMenu() {
   };
 
   return (
+    <>
     <Modal
       visible={visible}
       transparent
@@ -388,6 +393,10 @@ export function DebugMenu() {
               <ActionButton label="Show Update toast" onPress={triggerUpdateToast} />
               <ActionButton label="Show paid Upsell sheet" onPress={triggerPaidUpsell} />
               <ActionButton label="Show My Plan sheet" onPress={triggerMyPlan} />
+              <ActionButton
+                label="Open OFF Contribute sheet"
+                onPress={() => { hideDebugMenu(); setTimeout(() => setOffContributeOpen(true), 250); }}
+              />
             </Section>
 
             <Section title="Overrides">
@@ -449,7 +458,13 @@ export function DebugMenu() {
           </TouchableOpacity>
         </View>
       </View>
-    </Modal>
+      </Modal>
+      <ContributeProductSheet
+        visible={offContributeOpen}
+        onClose={() => setOffContributeOpen(false)}
+        barcode="2000000000017"
+      />
+    </>
   );
 }
 
