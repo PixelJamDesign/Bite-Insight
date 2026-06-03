@@ -11,6 +11,26 @@
     "addFrontPhoto": "Add front photo",
     "photosTitle": "Photos",
     "photosSubtitle": "A clear shot of the ingredients or nutrition label helps the most.",
+    "tab": {
+      "details": "Details",
+      "ingredients": "Ingredients",
+      "nutrition": "Nutrition"
+    },
+    "ingredientsLabel": "Ingredients list",
+    "ingredientsPlaceholder": "e.g. Water, sugar, cocoa butter, milk…",
+    "addIngredientsPhoto": "Add a photo of the ingredients",
+    "addNutritionPhoto": "Add a photo of the nutrition label",
+    "nutritionHint": "Per 100g, as shown on the label. Add what you can.",
+    "nutrient": {
+      "energy": "Energy (kcal)",
+      "fat": "Fat (g)",
+      "saturatedFat": "Saturated fat (g)",
+      "carbohydrates": "Carbohydrates (g)",
+      "sugars": "Sugars (g)",
+      "fiber": "Fibre (g)",
+      "proteins": "Protein (g)",
+      "salt": "Salt (g)"
+    },
     "field": {
       "name": "Product name",
       "brand": "Brand",

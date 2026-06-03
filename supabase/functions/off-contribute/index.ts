@@ -24,6 +24,18 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 const APP_NAME = 'BiteInsight';
 const CONTACT_EMAIL = 'hello@biteinsight.app';
 
+// Units for the nutriment ids the app collects (values are per 100g).
+const NUTRIMENT_UNITS: Record<string, string> = {
+  'energy-kcal': 'kcal',
+  fat: 'g',
+  'saturated-fat': 'g',
+  carbohydrates: 'g',
+  sugars: 'g',
+  fiber: 'g',
+  proteins: 'g',
+  salt: 'g',
+};
+
 function jsonRes(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -90,6 +102,8 @@ Deno.serve(async (req) => {
     brands?: string;
     quantity?: string;
     categories?: string;
+    ingredients_text?: string;
+    nutriments?: Record<string, string>;
     images?: { front?: string; ingredients?: string; nutrition?: string };
   };
   try {
@@ -127,6 +141,20 @@ Deno.serve(async (req) => {
   if (body.brands?.trim()) fields.brands = body.brands.trim();
   if (body.quantity?.trim()) fields.quantity = body.quantity.trim();
   if (body.categories?.trim()) fields.categories = body.categories.trim();
+  if (body.ingredients_text?.trim()) fields.ingredients_text = body.ingredients_text.trim();
+
+  // Nutrition facts (per 100g). Each value goes in as nutriment_<id> with its
+  // matching unit; only ids we recognise are forwarded.
+  const nutriments = body.nutriments ?? {};
+  let hasNutriment = false;
+  for (const [id, unit] of Object.entries(NUTRIMENT_UNITS)) {
+    const raw = (nutriments[id] ?? '').trim().replace(',', '.');
+    if (!raw || isNaN(Number(raw))) continue;
+    fields[`nutriment_${id}`] = raw;
+    fields[`nutriment_${id}_unit`] = unit;
+    hasNutriment = true;
+  }
+  if (hasNutriment) fields.nutrition_data_per = '100g';
 
   try {
     const res = await fetch(`${base}/cgi/product_jqm2.pl`, {

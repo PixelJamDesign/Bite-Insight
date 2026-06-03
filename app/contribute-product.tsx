@@ -2,11 +2,14 @@
  * Contribute product — full-screen "Help add this product" flow for Open Food
  * Facts, shown from the scan "product not found" state.
  *
- * Mirrors the Recipe Builder design (app/recipes/new.tsx): hero photo on a teal
- * wash with a floating back button, a rounded white body that overlaps the
- * hero, a page title, labelled fields (canonical TextField), and a sticky
- * Cancel / Submit footer. The product's FRONT photo is the hero (its primary
- * image); ingredients + nutrition photos sit in a Photos section.
+ * Mirrors the Recipe Builder design (app/recipes/new.tsx): front photo as the
+ * hero on a teal wash with a floating back button, a rounded white body that
+ * overlaps the hero, and a sticky Cancel / Submit footer.
+ *
+ * Collects enough to give an instant insight once OFF processes it:
+ *   • Details — name, brand, quantity, category
+ *   • Ingredients — ingredients text (for allergen/additive flagging) + photo
+ *   • Nutrition — per-100g values (for Nutri-score) + photo
  *
  * Submits to the `off-contribute` edge function, which performs the
  * authenticated write — the OFF account password never reaches the client.
@@ -40,6 +43,20 @@ import ArrowLeftIcon from '@/assets/icons/recipe-header/arrow-left.svg';
 const HERO_HEIGHT = 300;
 
 type PhotoField = 'front' | 'ingredients' | 'nutrition';
+type Tab = 'details' | 'ingredients' | 'nutrition';
+const TABS: Tab[] = ['details', 'ingredients', 'nutrition'];
+
+// Nutrient ids match Open Food Facts (sent as nutriment_<id>); per 100g.
+const NUTRIENTS: { id: string; labelKey: string }[] = [
+  { id: 'energy-kcal', labelKey: 'nutrient.energy' },
+  { id: 'fat', labelKey: 'nutrient.fat' },
+  { id: 'saturated-fat', labelKey: 'nutrient.saturatedFat' },
+  { id: 'carbohydrates', labelKey: 'nutrient.carbohydrates' },
+  { id: 'sugars', labelKey: 'nutrient.sugars' },
+  { id: 'fiber', labelKey: 'nutrient.fiber' },
+  { id: 'proteins', labelKey: 'nutrient.proteins' },
+  { id: 'salt', labelKey: 'nutrient.salt' },
+];
 
 export default function ContributeProductScreen() {
   const { t } = useTranslation('scan');
@@ -48,15 +65,20 @@ export default function ContributeProductScreen() {
   const params = useLocalSearchParams<{ barcode?: string }>();
   const barcode = typeof params.barcode === 'string' ? params.barcode : null;
 
+  const [tab, setTab] = useState<Tab>('details');
   const [name, setName] = useState('');
   const [brands, setBrands] = useState('');
   const [quantity, setQuantity] = useState('');
   const [categories, setCategories] = useState('');
+  const [ingredientsText, setIngredientsText] = useState('');
+  const [nutriments, setNutriments] = useState<Record<string, string>>({});
   const [images, setImages] = useState<Partial<Record<PhotoField, string>>>({});
   const [submitting, setSubmitting] = useState(false);
 
   const hasSomething =
-    name.trim() || brands.trim() || quantity.trim() || categories.trim() || Object.keys(images).length > 0;
+    name.trim() || brands.trim() || quantity.trim() || categories.trim() ||
+    ingredientsText.trim() || Object.values(nutriments).some((v) => v.trim()) ||
+    Object.keys(images).length > 0;
 
   function addPhoto(field: PhotoField) {
     const pick = async (fromCamera: boolean) => {
@@ -87,6 +109,9 @@ export default function ContributeProductScreen() {
     setSubmitting(true);
     try {
       const appUuid = await getOffContributorId();
+      const cleanNutriments = Object.fromEntries(
+        Object.entries(nutriments).filter(([, v]) => v.trim()).map(([k, v]) => [k, v.trim()]),
+      );
       const { data, error } = await supabase.functions.invoke('off-contribute', {
         body: {
           code: barcode,
@@ -96,6 +121,8 @@ export default function ContributeProductScreen() {
           brands: brands.trim() || undefined,
           quantity: quantity.trim() || undefined,
           categories: categories.trim() || undefined,
+          ingredients_text: ingredientsText.trim() || undefined,
+          nutriments: Object.keys(cleanNutriments).length ? cleanNutriments : undefined,
           images: Object.keys(images).length ? images : undefined,
         },
       });
@@ -116,6 +143,21 @@ export default function ContributeProductScreen() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function PhotoTile({ field, label }: { field: PhotoField; label: string }) {
+    return (
+      <TouchableOpacity style={styles.photoTileWide} activeOpacity={0.85} onPress={() => addPhoto(field)}>
+        {images[field] ? (
+          <Image source={{ uri: `data:image/jpeg;base64,${images[field]}` }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+        ) : (
+          <>
+            <Ionicons name="camera-outline" size={24} color={Colors.secondary} />
+            <Text style={styles.photoTileLabel}>{label}</Text>
+          </>
+        )}
+      </TouchableOpacity>
+    );
   }
 
   return (
@@ -161,36 +203,67 @@ export default function ContributeProductScreen() {
               {barcode ? <Text style={styles.barcode}>{t('contribute.barcode', { code: barcode })}</Text> : null}
             </View>
 
-            {/* Product details */}
-            <View style={styles.group16}>
-              <Text style={styles.h4}>{t('contribute.detailsTitle')}</Text>
-              <TextField value={name} onChangeText={setName} placeholder={t('contribute.field.name')} autoCapitalize="words" />
-              <TextField value={brands} onChangeText={setBrands} placeholder={t('contribute.field.brand')} autoCapitalize="words" />
-              <TextField value={quantity} onChangeText={setQuantity} placeholder={t('contribute.field.quantity')} />
-              <TextField value={categories} onChangeText={setCategories} placeholder={t('contribute.field.category')} autoCapitalize="words" />
+            {/* Tabs */}
+            <View style={styles.tabBar}>
+              {TABS.map((key) => {
+                const active = key === tab;
+                return (
+                  <TouchableOpacity
+                    key={key}
+                    style={[styles.tab, active && styles.tabActive]}
+                    onPress={() => setTab(key)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.tabText, active && styles.tabTextActive]}>{t(`contribute.tab.${key}`)}</Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
 
-            {/* Photos */}
-            <View style={styles.group16}>
-              <View style={styles.sectionTitleBlock}>
-                <Text style={styles.h4}>{t('contribute.photosTitle')}</Text>
-                <Text style={styles.subtitle}>{t('contribute.photosSubtitle')}</Text>
+            {/* Details */}
+            {tab === 'details' && (
+              <View style={styles.group16}>
+                <TextField value={name} onChangeText={setName} placeholder={t('contribute.field.name')} autoCapitalize="words" />
+                <TextField value={brands} onChangeText={setBrands} placeholder={t('contribute.field.brand')} autoCapitalize="words" />
+                <TextField value={quantity} onChangeText={setQuantity} placeholder={t('contribute.field.quantity')} />
+                <TextField value={categories} onChangeText={setCategories} placeholder={t('contribute.field.category')} autoCapitalize="words" />
               </View>
-              <View style={styles.photoRow}>
-                {(['ingredients', 'nutrition'] as const).map((field) => (
-                  <TouchableOpacity key={field} style={styles.photoTile} activeOpacity={0.85} onPress={() => addPhoto(field)}>
-                    {images[field] ? (
-                      <Image source={{ uri: `data:image/jpeg;base64,${images[field]}` }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-                    ) : (
-                      <>
-                        <Ionicons name="camera-outline" size={24} color={Colors.secondary} />
-                        <Text style={styles.photoTileLabel}>{t(`contribute.photo.${field}`)}</Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
+            )}
+
+            {/* Ingredients */}
+            {tab === 'ingredients' && (
+              <View style={styles.group16}>
+                <TextField
+                  label={t('contribute.ingredientsLabel')}
+                  value={ingredientsText}
+                  onChangeText={setIngredientsText}
+                  placeholder={t('contribute.ingredientsPlaceholder')}
+                  multiline
+                  clearable={false}
+                  autoCapitalize="sentences"
+                />
+                <PhotoTile field="ingredients" label={t('contribute.addIngredientsPhoto')} />
+              </View>
+            )}
+
+            {/* Nutrition */}
+            {tab === 'nutrition' && (
+              <View style={styles.group16}>
+                <Text style={styles.subtitle}>{t('contribute.nutritionHint')}</Text>
+                {NUTRIENTS.map((n) => (
+                  <TextField
+                    key={n.id}
+                    label={t(`contribute.${n.labelKey}`)}
+                    value={nutriments[n.id] ?? ''}
+                    onChangeText={(v) => setNutriments((p) => ({ ...p, [n.id]: v }))}
+                    placeholder="0"
+                    keyboardType="decimal-pad"
+                    clearable={false}
+                  />
                 ))}
+                <PhotoTile field="nutrition" label={t('contribute.addNutritionPhoto')} />
               </View>
-            </View>
+            )}
           </View>
         </ScrollView>
 
@@ -253,7 +326,7 @@ const styles = StyleSheet.create({
     marginTop: -16,
     paddingHorizontal: 24,
     paddingTop: 32,
-    gap: 32,
+    gap: 24,
   },
   titleBlock: { gap: 8 },
   pageTitle: {
@@ -266,18 +339,25 @@ const styles = StyleSheet.create({
   barcode: {
     fontSize: 13, lineHeight: 16, fontFamily: 'Figtree_700Bold', color: Colors.secondary, letterSpacing: -0.26,
   },
-  h4: {
-    fontSize: 20, lineHeight: 24, fontWeight: '700', fontFamily: 'Figtree_700Bold',
-    color: Colors.primary, letterSpacing: -0.4,
-  },
   group16: { gap: 16 },
-  sectionTitleBlock: { gap: 4 },
 
-  // Photo tiles
-  photoRow: { flexDirection: 'row', gap: 16 },
-  photoTile: {
-    flex: 1,
-    aspectRatio: 1,
+  // Tabs (pill style — matches the scan-result tab bar)
+  tabBar: { flexDirection: 'row', gap: 8 },
+  tab: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  tabActive: { backgroundColor: Colors.surface.tertiary, borderColor: '#aad4cd' },
+  tabText: { fontSize: 16, lineHeight: 20, fontWeight: '700', fontFamily: 'Figtree_700Bold', color: Colors.secondary, letterSpacing: -0.32 },
+  tabTextActive: { color: Colors.primary },
+
+  // Photo tile (full width)
+  photoTileWide: {
+    width: '100%',
+    height: 140,
     backgroundColor: '#f5fbfb',
     borderWidth: 1,
     borderColor: '#aad4cd',
