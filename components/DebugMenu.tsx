@@ -27,7 +27,6 @@ import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { Colors, Spacing, Radius, Typography } from '@/constants/theme';
 import { useDebugMenu } from '@/lib/debugMenuContext';
-import { ContributeProductSheet } from '@/components/ContributeProductSheet';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { useTrialUpsell, TRIAL_UPSELL_KEYS } from '@/lib/trialUpsellContext';
 import { useTrialDay6Reminder } from '@/lib/trialDay6ReminderContext';
@@ -158,11 +157,8 @@ function FlagInspector() {
 // ── Main component ──────────────────────────────────────────────────────────
 
 export function DebugMenu() {
-  const { visible, hideDebugMenu } = useDebugMenu();
+  const { visible, hideDebugMenu, showOffContribute } = useDebugMenu();
   const insets = useSafeAreaInsets();
-  // Open the "Help add this product" (Open Food Facts) sheet directly, so the
-  // flow can be tested without scanning a genuinely-unknown barcode.
-  const [offContributeOpen, setOffContributeOpen] = useState(false);
 
   const { session } = useAuth();
   const { isPlus, priceString, trialEligible, trialDays } = useSubscription();
@@ -355,7 +351,6 @@ export function DebugMenu() {
   };
 
   return (
-    <>
     <Modal
       visible={visible}
       transparent
@@ -395,7 +390,7 @@ export function DebugMenu() {
               <ActionButton label="Show My Plan sheet" onPress={triggerMyPlan} />
               <ActionButton
                 label="Open OFF Contribute sheet"
-                onPress={() => { hideDebugMenu(); setTimeout(() => setOffContributeOpen(true), 250); }}
+                onPress={() => { hideDebugMenu(); setTimeout(showOffContribute, 350); }}
               />
             </Section>
 
@@ -458,13 +453,7 @@ export function DebugMenu() {
           </TouchableOpacity>
         </View>
       </View>
-      </Modal>
-      <ContributeProductSheet
-        visible={offContributeOpen}
-        onClose={() => setOffContributeOpen(false)}
-        barcode="2000000000017"
-      />
-    </>
+    </Modal>
   );
 }
 

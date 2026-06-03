@@ -58,7 +58,6 @@ import { FLAG_IMAGES } from '@/lib/regionContext';
 import OfflineDbDownloadIcon from '../assets/icons/offline-db-download.svg';
 import { Colors, Shadows } from '@/constants/theme';
 import { TextField } from '@/components/TextField';
-import { OFF_URL } from '@/lib/openFoodFacts';
 import { useTransition } from '@/lib/transitionContext';
 import { useUpsellSheet } from '@/lib/upsellSheetContext';
 import { useMyPlanSheet } from '@/lib/myPlanSheetContext';
@@ -222,13 +221,6 @@ function SettingsScreen({ goBack, onNavigate, onOpenPolicy }: { goBack: () => vo
             plus={!isPlus}
           />
         )}
-        {/* ODbL attribution — product data is sourced from Open Food Facts. */}
-        <NavItem
-          icon={<MenuDataIcon color={Colors.secondary} />}
-          label={t('settings.dataSource')}
-          onPress={() => Linking.openURL(OFF_URL)}
-          chevron
-        />
       </View>
     </>
   );

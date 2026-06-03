@@ -25,23 +25,38 @@ interface DebugMenuContextValue {
   visible: boolean;
   showDebugMenu: () => void;
   hideDebugMenu: () => void;
+  /** OFF "Help add this product" sheet — rendered at app root, triggered from
+   *  the debug menu (the debug menu itself returns null when hidden, so the
+   *  sheet can't live inside it). */
+  offContributeVisible: boolean;
+  showOffContribute: () => void;
+  hideOffContribute: () => void;
 }
 
 const DebugMenuContext = createContext<DebugMenuContextValue>({
   visible: false,
   showDebugMenu: () => {},
   hideDebugMenu: () => {},
+  offContributeVisible: false,
+  showOffContribute: () => {},
+  hideOffContribute: () => {},
 });
 
 export function DebugMenuProvider({ children }: { children: ReactNode }) {
   const [visible, setVisible] = useState(false);
+  const [offContributeVisible, setOffContributeVisible] = useState(false);
 
   const showDebugMenu = useCallback(() => setVisible(true), []);
   const hideDebugMenu = useCallback(() => setVisible(false), []);
+  const showOffContribute = useCallback(() => setOffContributeVisible(true), []);
+  const hideOffContribute = useCallback(() => setOffContributeVisible(false), []);
 
   const value = useMemo<DebugMenuContextValue>(
-    () => ({ visible, showDebugMenu, hideDebugMenu }),
-    [visible, showDebugMenu, hideDebugMenu],
+    () => ({
+      visible, showDebugMenu, hideDebugMenu,
+      offContributeVisible, showOffContribute, hideOffContribute,
+    }),
+    [visible, showDebugMenu, hideDebugMenu, offContributeVisible, showOffContribute, hideOffContribute],
   );
 
   return <DebugMenuContext.Provider value={value}>{children}</DebugMenuContext.Provider>;
