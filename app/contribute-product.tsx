@@ -70,15 +70,39 @@ export default function ContributeProductScreen() {
   const [brands, setBrands] = useState('');
   const [quantity, setQuantity] = useState('');
   const [categories, setCategories] = useState('');
-  const [ingredientsText, setIngredientsText] = useState('');
+  const [ingredients, setIngredients] = useState<string[]>([]);
+  const [ingredientDraft, setIngredientDraft] = useState('');
   const [nutriments, setNutriments] = useState<Record<string, string>>({});
   const [images, setImages] = useState<Partial<Record<PhotoField, string>>>({});
   const [submitting, setSubmitting] = useState(false);
 
   const hasSomething =
     name.trim() || brands.trim() || quantity.trim() || categories.trim() ||
-    ingredientsText.trim() || Object.values(nutriments).some((v) => v.trim()) ||
+    ingredients.length || ingredientDraft.trim() ||
+    Object.values(nutriments).some((v) => v.trim()) ||
     Object.keys(images).length > 0;
+
+  // Ingredient chip entry — return or a comma commits the current ingredient.
+  function onIngredientDraftChange(v: string) {
+    if (/[,\n]/.test(v)) {
+      const segs = v.split(/[,\n]/);
+      const complete = segs.slice(0, -1).map((s) => s.trim()).filter(Boolean);
+      if (complete.length) setIngredients((prev) => [...prev, ...complete]);
+      setIngredientDraft(segs[segs.length - 1]);
+    } else {
+      setIngredientDraft(v);
+    }
+  }
+  function commitIngredientDraft() {
+    const d = ingredientDraft.trim();
+    if (d) {
+      setIngredients((prev) => [...prev, d]);
+      setIngredientDraft('');
+    }
+  }
+  function removeIngredient(i: number) {
+    setIngredients((prev) => prev.filter((_, idx) => idx !== i));
+  }
 
   function addPhoto(field: PhotoField) {
     const pick = async (fromCamera: boolean) => {
@@ -112,6 +136,8 @@ export default function ContributeProductScreen() {
       const cleanNutriments = Object.fromEntries(
         Object.entries(nutriments).filter(([, v]) => v.trim()).map(([k, v]) => [k, v.trim()]),
       );
+      // Chips + any uncommitted draft → OFF's comma-separated ingredients_text.
+      const ingredientsList = [...ingredients, ingredientDraft.trim()].filter(Boolean);
       const { data, error } = await supabase.functions.invoke('off-contribute', {
         body: {
           code: barcode,
@@ -121,7 +147,7 @@ export default function ContributeProductScreen() {
           brands: brands.trim() || undefined,
           quantity: quantity.trim() || undefined,
           categories: categories.trim() || undefined,
-          ingredients_text: ingredientsText.trim() || undefined,
+          ingredients_text: ingredientsList.length ? ingredientsList.join(', ') : undefined,
           nutriments: Object.keys(cleanNutriments).length ? cleanNutriments : undefined,
           images: Object.keys(images).length ? images : undefined,
         },
@@ -230,18 +256,31 @@ export default function ContributeProductScreen() {
               </View>
             )}
 
-            {/* Ingredients */}
+            {/* Ingredients — each entry becomes a chip */}
             {tab === 'ingredients' && (
               <View style={styles.group16}>
                 <TextField
                   label={t('contribute.ingredientsLabel')}
-                  value={ingredientsText}
-                  onChangeText={setIngredientsText}
+                  value={ingredientDraft}
+                  onChangeText={onIngredientDraftChange}
                   placeholder={t('contribute.ingredientsPlaceholder')}
-                  multiline
-                  clearable={false}
                   autoCapitalize="sentences"
+                  returnKeyType="done"
+                  blurOnSubmit={false}
+                  onSubmitEditing={commitIngredientDraft}
                 />
+                {ingredients.length > 0 && (
+                  <View style={styles.chipWrap}>
+                    {ingredients.map((ing, i) => (
+                      <View key={`${ing}-${i}`} style={styles.chip}>
+                        <Text style={styles.chipLabel}>{ing}</Text>
+                        <TouchableOpacity onPress={() => removeIngredient(i)} hitSlop={8} accessibilityLabel={`Remove ${ing}`}>
+                          <Ionicons name="close" size={16} color={Colors.secondary} />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                )}
                 <PhotoTile field="ingredients" label={t('contribute.addIngredientsPhoto')} />
               </View>
             )}
@@ -340,6 +379,28 @@ const styles = StyleSheet.create({
     fontSize: 13, lineHeight: 16, fontFamily: 'Figtree_700Bold', color: Colors.secondary, letterSpacing: -0.26,
   },
   group16: { gap: 16 },
+
+  // Ingredient chips
+  chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingLeft: 12,
+    paddingRight: 8,
+    paddingVertical: 8,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#aad4cd',
+    borderRadius: 8,
+  },
+  chipLabel: {
+    flexShrink: 1,
+    fontSize: 16,
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.32,
+  },
 
   // Tabs (pill style — matches the scan-result tab bar)
   tabBar: { flexDirection: 'row', gap: 8 },

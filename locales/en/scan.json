@@ -17,7 +17,7 @@
       "nutrition": "Nutrition"
     },
     "ingredientsLabel": "Ingredients list",
-    "ingredientsPlaceholder": "e.g. Water, sugar, cocoa butter, milk…",
+    "ingredientsPlaceholder": "Type an ingredient, then press return",
     "addIngredientsPhoto": "Add a photo of the ingredients",
     "addNutritionPhoto": "Add a photo of the nutrition label",
     "nutritionHint": "Per 100g, as shown on the label. Add what you can.",
