@@ -85,7 +85,7 @@ export default function ScannerScreen() {
         // Android + fallback: expo-camera scanFromURLAsync (all types on Android)
         const barcodes = await Camera.scanFromURLAsync(uri, [
           'ean13', 'ean8', 'upc_a', 'upc_e',
-          'code128', 'code39', 'qr',
+          'code128', 'code39',
         ]);
         if (barcodes.length > 0) {
           handleBarcodeScan(barcodes[0] as BarcodeScanningResult);
@@ -136,6 +136,10 @@ export default function ScannerScreen() {
   );
 
   async function handleBarcodeScan(result: BarcodeScanningResult) {
+    // Only act on real product barcodes. QR codes / Data Matrix on packaging
+    // carry URLs or text — ignore anything that isn't a numeric barcode
+    // (EAN-8/13, UPC-A/E, numeric Code-128/ITF) so a URL never becomes a "barcode".
+    if (!/^\d{6,14}$/.test((result.data ?? '').trim())) return;
     // Synchronous ref lock — prevents race conditions when multiple barcodes
     // are in the camera view (setState is async, ref is immediate)
     if (scanLock.current) return;
@@ -616,7 +620,7 @@ export default function ScannerScreen() {
         style={StyleSheet.absoluteFillObject}
         facing="back"
         barcodeScannerSettings={{
-          barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'qr', 'pdf417', 'code128'],
+          barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128'],
         }}
         onBarcodeScanned={scanning ? handleBarcodeScan : undefined}
       />
