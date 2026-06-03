@@ -89,6 +89,18 @@ function splitIngredients(text: string): string[] {
   return parts;
 }
 
+/** Split a stored ingredient into its display name + bracketed sub-ingredients
+ *  (for the "this ingredient contains" bullet list). The full string is what we
+ *  send to OFF; this is display-only. */
+function parseIngredient(s: string): { name: string; subs: string[] } {
+  const m = s.match(/^(.*?)[([]\s*(.*?)\s*[)\]]\s*$/);
+  if (m && m[1].trim()) {
+    const inner = m[2].replace(/^\s*contains\s*:?\s*/i, '');
+    return { name: m[1].trim(), subs: inner.split(',').map((x) => x.trim()).filter(Boolean) };
+  }
+  return { name: s.trim(), subs: [] };
+}
+
 export default function ContributeProductScreen() {
   const { t } = useTranslation('scan');
   const { showToast } = useToast();
@@ -304,14 +316,30 @@ export default function ContributeProductScreen() {
                 />
                 {ingredients.length > 0 && (
                   <View style={styles.ingredientList}>
-                    {ingredients.map((ing, i) => (
-                      <View key={`${ing}-${i}`} style={styles.ingredientRow}>
-                        <Text style={styles.ingredientRowText}>{ing}</Text>
-                        <TouchableOpacity onPress={() => removeIngredient(i)} hitSlop={8} accessibilityLabel={`Remove ${ing}`}>
-                          <Ionicons name="close" size={18} color={Colors.secondary} />
-                        </TouchableOpacity>
-                      </View>
-                    ))}
+                    {ingredients.map((ing, i) => {
+                      const { name, subs } = parseIngredient(ing);
+                      return (
+                        <View key={`${ing}-${i}`} style={styles.ingredientRow}>
+                          <View style={styles.ingredientRowTop}>
+                            <Text style={styles.ingredientRowText}>{name}</Text>
+                            <TouchableOpacity onPress={() => removeIngredient(i)} hitSlop={8} accessibilityLabel={`Remove ${name}`}>
+                              <Ionicons name="close" size={18} color={Colors.secondary} />
+                            </TouchableOpacity>
+                          </View>
+                          {subs.length > 0 && (
+                            <View style={styles.subList}>
+                              <Text style={styles.subListTitle}>{t('contribute.containsTitle')}</Text>
+                              {subs.map((sub, j) => (
+                                <View key={`${sub}-${j}`} style={styles.bulletRow}>
+                                  <Text style={styles.bullet}>•</Text>
+                                  <Text style={styles.bulletText}>{sub}</Text>
+                                </View>
+                              ))}
+                            </View>
+                          )}
+                        </View>
+                      );
+                    })}
                   </View>
                 )}
                 <PhotoTile field="ingredients" label={t('contribute.addIngredientsPhoto')} />
@@ -413,12 +441,10 @@ const styles = StyleSheet.create({
   },
   group16: { gap: 16 },
 
-  // Ingredient list — one row per ingredient, with a clear (×) icon
+  // Ingredient list — one row per ingredient, with a clear (×) icon and an
+  // optional "this ingredient contains" bullet list of sub-ingredients.
   ingredientList: { gap: 8 },
   ingredientRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
     backgroundColor: '#f5fbfb',
     borderWidth: 1,
     borderColor: '#aad4cd',
@@ -426,6 +452,12 @@ const styles = StyleSheet.create({
     paddingLeft: 16,
     paddingRight: 12,
     paddingVertical: 12,
+    gap: 12,
+  },
+  ingredientRowTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   ingredientRowText: {
     flex: 1,
@@ -434,6 +466,29 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
     letterSpacing: -0.32,
+  },
+  subList: { gap: 4, paddingLeft: 4 },
+  subListTitle: {
+    fontSize: 13,
+    lineHeight: 16,
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.secondary,
+    letterSpacing: -0.26,
+    marginBottom: 2,
+  },
+  bulletRow: { flexDirection: 'row', gap: 8 },
+  bullet: {
+    fontSize: 14,
+    lineHeight: 21,
+    color: Colors.secondary,
+  },
+  bulletText: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 21,
+    fontFamily: 'Figtree_300Light',
+    color: Colors.secondary,
+    letterSpacing: -0.14,
   },
 
   // Tabs (pill style — matches the scan-result tab bar)
