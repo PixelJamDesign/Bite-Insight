@@ -39,6 +39,7 @@ import { useRegion, REGIONS, FLAG_IMAGES, PlusTag } from '@/lib/regionContext';
 import type { Region } from '@/lib/regionContext';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
+import { OFF_HEADERS } from '@/lib/openFoodFacts';
 
 // ─── Nutriscore colours ─────────────────────────────────────────────────────
 const NUTRISCORE_COLORS: Record<string, string> = {
@@ -504,7 +505,7 @@ export default function FoodSearchScreen() {
     currentTermRef.current = searchTerm;
 
     try {
-      const headers = { 'User-Agent': 'BiteInsight/1.0 (mobile app)' };
+      const headers = OFF_HEADERS;
       const signal = controller.signal;
 
       /** Fetch from Search-a-Licious first, fall back to CGI if it fails */
@@ -650,7 +651,7 @@ export default function FoodSearchScreen() {
       const url = buildSearchUrl(searchTerm, region, nextPage);
 
       const res = await fetch(url, {
-        headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
+        headers: OFF_HEADERS,
       });
 
       if (!res.ok) throw new Error('Network error');

@@ -12,12 +12,14 @@ import {
   Platform,
   Animated,
   LayoutAnimation,
+  Linking,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Spacing, Radius, Typography } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
+import { OFF_HEADERS, OFF_URL } from '@/lib/openFoodFacts';
 import { useAuth } from '@/lib/auth';
 import { getCachedProfile, fetchAndCacheProfile } from '@/lib/profileCache';
 import { cacheProduct } from '@/lib/productCache';
@@ -1015,7 +1017,7 @@ export default function ScanResultScreen() {
     if (!needsOffFetch) return;
     setFetchingOff(true);
     fetch(`https://${offRegion}.openfoodfacts.org/api/v0/product/${p.barcode}.json?lc=en`, {
-      headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
+      headers: OFF_HEADERS,
     })
       .then((r) => r.json())
       .then((data) => {
@@ -1166,7 +1168,7 @@ export default function ScanResultScreen() {
   useEffect(() => {
     if (needsOffFetch || !p.barcode) return; // main fetch handles this case
     fetch(`https://world.openfoodfacts.org/api/v0/product/${p.barcode}.json?lc=en`, {
-      headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' },
+      headers: OFF_HEADERS,
     })
       .then((r) => r.json())
       .then((data) => {
@@ -3302,6 +3304,16 @@ export default function ScanResultScreen() {
             </Text>
           </View>
         )}
+
+        {/* ODbL attribution — all product data comes from Open Food Facts. */}
+        <TouchableOpacity
+          style={styles.offAttribution}
+          activeOpacity={0.7}
+          onPress={() => Linking.openURL(OFF_URL)}
+          accessibilityRole="link"
+        >
+          <Text style={styles.offAttributionText}>{t('attribution.openFoodFacts')}</Text>
+        </TouchableOpacity>
         </ScrollView>
         {/* White gradient fade at top of scroll area */}
         <LinearGradient
@@ -3453,6 +3465,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
+  // Open Food Facts attribution (ODbL)
+  offAttribution: {
+    marginTop: Spacing.m,
+    paddingVertical: Spacing.s,
+    alignItems: 'center',
+  },
+  offAttributionText: {
+    fontSize: 12,
+    lineHeight: 18,
+    fontFamily: 'Figtree_300Light',
+    fontWeight: '300',
+    color: Colors.secondary,
+    letterSpacing: -0.12,
+    textAlign: 'center',
+    textDecorationLine: 'underline',
+  },
   // Scroll
   scroll: { flex: 1 },
   scrollContent: {

@@ -36,7 +36,8 @@
     "cookiePolicy": "Cookie Policy",
     "myData": "My Data",
     "offlineDatabase": "Offline Database",
-    "marketingPreferences": "Marketing Preferences"
+    "marketingPreferences": "Marketing Preferences",
+    "dataSource": "Data by Open Food Facts"
   },
   "marketingPreferences": {
     "title": "Marketing Preferences",

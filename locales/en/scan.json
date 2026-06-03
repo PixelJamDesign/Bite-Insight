@@ -1,4 +1,7 @@
 {
+  "attribution": {
+    "openFoodFacts": "Product data from Open Food Facts, under the Open Database License (ODbL)"
+  },
   "product": {
     "unknownName": "Unknown Product",
     "notFound": "Product not found",

@@ -13,6 +13,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as VisionScanner from '@/modules/barcode-scanner-vision/src';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
+import { OFF_HEADERS } from '@/lib/openFoodFacts';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { useUpsellSheet } from '@/lib/upsellSheetContext';
 import { useRegion, REGIONS, FLAG_IMAGES, PlusTag } from '@/lib/regionContext';
@@ -262,7 +263,7 @@ export default function ScannerScreen() {
             const offRegionSubdomain = selectedRegion.subdomain;
             const res = await fetch(
               `https://${offRegionSubdomain}.openfoodfacts.org/api/v0/product/${result.data}.json?lc=en`,
-              { headers: { 'User-Agent': 'BiteInsight/1.0 (mobile app)' } },
+              { headers: OFF_HEADERS },
             );
             const data = await res.json();
             if (data.status === 1 && data.product) {
