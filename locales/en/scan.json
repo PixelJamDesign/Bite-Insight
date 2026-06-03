@@ -2,6 +2,31 @@
   "attribution": {
     "openFoodFacts": "Product data from Open Food Facts, under the Open Database License (ODbL)"
   },
+  "contribute": {
+    "cta": "Help add this product",
+    "title": "Add this product",
+    "subtitle": "Add what you can. Even one photo helps. It goes to Open Food Facts, so the next person who scans it gets the details too.",
+    "barcode": "Barcode: {{code}}",
+    "photosTitle": "Photos",
+    "field": {
+      "name": "Product name",
+      "brand": "Brand",
+      "quantity": "Quantity (e.g. 330ml)",
+      "category": "Category (e.g. Soft drinks)"
+    },
+    "photo": {
+      "front": "Front",
+      "ingredients": "Ingredients",
+      "nutrition": "Nutrition"
+    },
+    "takePhoto": "Take photo",
+    "chooseLibrary": "Choose from library",
+    "cancel": "Cancel",
+    "submit": "Submit to Open Food Facts",
+    "success": "Thanks! That's been sent to Open Food Facts.",
+    "error": "That didn't send. Please try again.",
+    "cameraPermission": "We need camera access to add a photo."
+  },
   "product": {
     "unknownName": "Unknown Product",
     "notFound": "Product not found",
