@@ -7,7 +7,10 @@
     "title": "Add this product",
     "subtitle": "Add what you can. Even one photo helps. It goes to Open Food Facts, so the next person who scans it gets the details too.",
     "barcode": "Barcode: {{code}}",
+    "detailsTitle": "Product details",
+    "addFrontPhoto": "Add front photo",
     "photosTitle": "Photos",
+    "photosSubtitle": "A clear shot of the ingredients or nutrition label helps the most.",
     "field": {
       "name": "Product name",
       "brand": "Brand",

@@ -157,7 +157,7 @@ function FlagInspector() {
 // ── Main component ──────────────────────────────────────────────────────────
 
 export function DebugMenu() {
-  const { visible, hideDebugMenu, showOffContribute } = useDebugMenu();
+  const { visible, hideDebugMenu } = useDebugMenu();
   const insets = useSafeAreaInsets();
 
   const { session } = useAuth();
@@ -389,8 +389,8 @@ export function DebugMenu() {
               <ActionButton label="Show paid Upsell sheet" onPress={triggerPaidUpsell} />
               <ActionButton label="Show My Plan sheet" onPress={triggerMyPlan} />
               <ActionButton
-                label="Open OFF Contribute sheet"
-                onPress={() => { hideDebugMenu(); setTimeout(showOffContribute, 350); }}
+                label="Open OFF Contribute screen"
+                onPress={() => { hideDebugMenu(); router.push({ pathname: '/contribute-product', params: { barcode: '2000000000017' } }); }}
               />
             </Section>
 

@@ -20,7 +20,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Spacing, Radius, Typography } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
 import { OFF_HEADERS, OFF_URL } from '@/lib/openFoodFacts';
-import { ContributeProductSheet } from '@/components/ContributeProductSheet';
 import { useAuth } from '@/lib/auth';
 import { getCachedProfile, fetchAndCacheProfile } from '@/lib/profileCache';
 import { cacheProduct } from '@/lib/productCache';
@@ -708,8 +707,6 @@ export default function ScanResultScreen() {
 
   // Add-to-recipe sheet state
   const [addToRecipeOpen, setAddToRecipeOpen] = useState(false);
-  // "Help add this product" (Open Food Facts contribution) sheet state
-  const [contributeOpen, setContributeOpen] = useState(false);
 
   // Page-level entrance/exit animation
   const { opacity: pageOpacity, translateX: pageTranslateX, animateExit: pageExit } = usePageTransition();
@@ -1853,7 +1850,7 @@ export default function ScanResultScreen() {
             <TouchableOpacity
               style={{ backgroundColor: Colors.secondary, borderRadius: 999, paddingHorizontal: 32, paddingVertical: 14, marginBottom: 12 }}
               activeOpacity={0.85}
-              onPress={() => setContributeOpen(true)}
+              onPress={() => router.push({ pathname: '/contribute-product', params: { barcode: String(p.barcode) } })}
             >
               <Text style={{ ...Typography.h5, color: '#fff' }}>{t('contribute.cta')}</Text>
             </TouchableOpacity>
@@ -1866,11 +1863,6 @@ export default function ScanResultScreen() {
             <Text style={{ ...Typography.h5, color: Colors.secondary }}>{t('product.notFoundAction')}</Text>
           </TouchableOpacity>
         </View>
-        <ContributeProductSheet
-          visible={contributeOpen}
-          onClose={() => setContributeOpen(false)}
-          barcode={typeof p.barcode === 'string' ? p.barcode : null}
-        />
       </SafeAreaView>
     );
   }

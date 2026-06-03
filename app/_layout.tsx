@@ -36,9 +36,8 @@ import { useUpdateAvailable } from '@/lib/useUpdateAvailable';
 import { TrialUpsellProvider } from '@/lib/trialUpsellContext';
 import { TrialUpsellSheet } from '@/components/TrialUpsellSheet';
 import { useTrialUpsellTrigger } from '@/lib/useTrialUpsellTrigger';
-import { DebugMenuProvider, useDebugMenu } from '@/lib/debugMenuContext';
+import { DebugMenuProvider } from '@/lib/debugMenuContext';
 import { DebugMenu } from '@/components/DebugMenu';
-import { ContributeProductSheet } from '@/components/ContributeProductSheet';
 import { TrialDay6ReminderProvider, useTrialDay6Reminder } from '@/lib/trialDay6ReminderContext';
 import { TrialDay6ReminderSheet } from '@/components/TrialDay6ReminderSheet';
 import { useExpoPushToken } from '@/lib/useExpoPushToken';
@@ -369,6 +368,7 @@ function RootLayoutInner() {
             <Stack.Screen name="family-members" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="add-family-member" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="food-search" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="contribute-product" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="recipes/new" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="recipes/pick-scan" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="recipes/[id]/index" options={{ animation: 'slide_from_right' }} />
@@ -390,22 +390,7 @@ function RootLayoutInner() {
       <BadgeClearGate />
       <PostHogIdentifyGate />
       <DebugMenu />
-      <DebugOffContributeGate />
     </>
-  );
-}
-
-// Renders the OFF "Help add this product" sheet at app root so the debug menu
-// can open it (the debug menu unmounts when hidden, so the sheet can't live
-// inside it). Staging test barcode.
-function DebugOffContributeGate() {
-  const { offContributeVisible, hideOffContribute } = useDebugMenu();
-  return (
-    <ContributeProductSheet
-      visible={offContributeVisible}
-      onClose={hideOffContribute}
-      barcode="2000000000017"
-    />
   );
 }
 
