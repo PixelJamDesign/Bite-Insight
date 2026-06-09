@@ -22,7 +22,8 @@
     "noGallbladder": "Senza cistifellea",
     "pregnancy": "Gravidanza",
     "cancer": "Cancro",
-    "cf": "Fibrosi Cistica"
+    "cf": "Fibrosi Cistica",
+    "candida": "Candida Overgrowth (SIFO)"
   },
   "allergies": {
     "celery": "Allergia al sedano",
@@ -41,7 +42,8 @@
     "shellfish": "Allergia ai crostacei",
     "soy": "Allergia alla soia",
     "sulphite": "Sensibilità ai solfiti",
-    "treeNut": "Allergia alla frutta a guscio"
+    "treeNut": "Allergia alla frutta a guscio",
+    "yeast": "Yeast Intolerance"
   },
   "dietaryPreferences": {
     "childFriendly": "Adatto ai bambini/senza additivi",

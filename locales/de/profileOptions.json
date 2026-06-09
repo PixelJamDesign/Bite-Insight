@@ -22,7 +22,8 @@
     "noGallbladder": "Keine Gallenblase",
     "pregnancy": "Schwangerschaft",
     "cancer": "Krebs",
-    "cf": "Mukoviszidose"
+    "cf": "Mukoviszidose",
+    "candida": "Candida Overgrowth (SIFO)"
   },
   "allergies": {
     "celery": "Sellerie-Allergie",
@@ -41,7 +42,8 @@
     "shellfish": "Schalentierallergie",
     "soy": "Sojaallergie",
     "sulphite": "Sulfitempfindlichkeit",
-    "treeNut": "Baumnussallergie"
+    "treeNut": "Baumnussallergie",
+    "yeast": "Yeast Intolerance"
   },
   "dietaryPreferences": {
     "childFriendly": "Kinderfreundlich / frei von Zusatzstoffen",

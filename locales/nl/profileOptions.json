@@ -22,7 +22,8 @@
     "noGallbladder": "Geen galblaas",
     "pregnancy": "Zwangerschap",
     "cancer": "Kanker",
-    "cf": "Taaislijmziekte"
+    "cf": "Taaislijmziekte",
+    "candida": "Candida Overgrowth (SIFO)"
   },
   "allergies": {
     "celery": "Selderijallergie",
@@ -41,7 +42,8 @@
     "shellfish": "Allergie voor schaaldieren",
     "soy": "Soja-allergie",
     "sulphite": "Sulfietgevoeligheid",
-    "treeNut": "Allergie voor boomnoten"
+    "treeNut": "Allergie voor boomnoten",
+    "yeast": "Yeast Intolerance"
   },
   "dietaryPreferences": {
     "childFriendly": "Kindvriendelijk / Additiefvrij",

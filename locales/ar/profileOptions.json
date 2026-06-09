@@ -22,7 +22,8 @@
     "noGallbladder": "بدون مرارة",
     "pregnancy": "الحمل",
     "cancer": "السرطان",
-    "cf": "التليف الكيسي"
+    "cf": "التليف الكيسي",
+    "candida": "Candida Overgrowth (SIFO)"
   },
   "allergies": {
     "celery": "حساسية الكرفس",
@@ -41,7 +42,8 @@
     "shellfish": "حساسية المحار",
     "soy": "حساسية الصويا",
     "sulphite": "حساسية الكبريتيت",
-    "treeNut": "حساسية شجرة الجوز"
+    "treeNut": "حساسية شجرة الجوز",
+    "yeast": "Yeast Intolerance"
   },
   "dietaryPreferences": {
     "childFriendly": "صديق للأطفال / خالي من الإضافات",

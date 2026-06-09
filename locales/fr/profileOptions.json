@@ -22,7 +22,8 @@
     "noGallbladder": "Sans vésicule biliaire",
     "pregnancy": "Grossesse",
     "cancer": "Cancer",
-    "cf": "Mucoviscidose"
+    "cf": "Mucoviscidose",
+    "candida": "Candida Overgrowth (SIFO)"
   },
   "allergies": {
     "celery": "Allergie au céleri",
@@ -41,7 +42,8 @@
     "shellfish": "Allergie aux crustacés",
     "soy": "Allergie au soja",
     "sulphite": "Sensibilité aux sulfites",
-    "treeNut": "Allergie aux noix"
+    "treeNut": "Allergie aux noix",
+    "yeast": "Yeast Intolerance"
   },
   "dietaryPreferences": {
     "childFriendly": "Adapté aux enfants/sans additifs",

@@ -2358,6 +2358,23 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
       },
     ],
   },
+
+  // Candida overgrowth (SIFO) is driven by ingredients (sugar, yeast, refined
+  // carbs — handled by healthIngredientFlags), not micronutrients. Keep a light
+  // entry so onboarding nutrient pre-selection stays coherent.
+  'Candida Overgrowth (SIFO)': {
+    limit: [],
+    boost: [
+      {
+        nutrient: 'Fibre',
+        offKey: 'fiber_100g',
+        unit: 'g',
+        reason:
+          'Fibre from non-starchy vegetables supports gut balance while starving yeast of the refined carbs it feeds on',
+        userConfirmRequired: true,
+      },
+    ],
+  },
 };
 
 // ── Helper utilities ────────────────────────────────────────────────────────

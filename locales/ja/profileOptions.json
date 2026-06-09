@@ -22,7 +22,8 @@
     "noGallbladder": "胆嚢なし",
     "pregnancy": "妊娠中",
     "cancer": "がん",
-    "cf": "嚢胞性線維症"
+    "cf": "嚢胞性線維症",
+    "candida": "Candida Overgrowth (SIFO)"
   },
   "allergies": {
     "celery": "セロリアレルギー",
@@ -41,7 +42,8 @@
     "shellfish": "甲殻類アレルギー",
     "soy": "大豆アレルギー",
     "sulphite": "亜硫酸塩過敏症",
-    "treeNut": "木の実アレルギー"
+    "treeNut": "木の実アレルギー",
+    "yeast": "Yeast Intolerance"
   },
   "dietaryPreferences": {
     "childFriendly": "お子様にも優しい・無添加",

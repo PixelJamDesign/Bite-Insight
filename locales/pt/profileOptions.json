@@ -22,7 +22,8 @@
     "noGallbladder": "Sem vesícula biliar",
     "pregnancy": "Gravidez",
     "cancer": "Cancro",
-    "cf": "Fibrose Quística"
+    "cf": "Fibrose Quística",
+    "candida": "Candida Overgrowth (SIFO)"
   },
   "allergies": {
     "celery": "Alergia ao aipo",
@@ -41,7 +42,8 @@
     "shellfish": "Alergia a Marisco",
     "soy": "Alergia à soja",
     "sulphite": "Sensibilidade ao Sulfito",
-    "treeNut": "Alergia a nozes"
+    "treeNut": "Alergia a nozes",
+    "yeast": "Yeast Intolerance"
   },
   "dietaryPreferences": {
     "childFriendly": "Adequado para crianças/sem aditivos",

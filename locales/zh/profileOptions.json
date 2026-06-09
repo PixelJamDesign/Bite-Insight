@@ -22,7 +22,8 @@
     "noGallbladder": "无胆囊",
     "pregnancy": "怀孕",
     "cancer": "癌症",
-    "cf": "囊性纤维化"
+    "cf": "囊性纤维化",
+    "candida": "Candida Overgrowth (SIFO)"
   },
   "allergies": {
     "celery": "芹菜过敏",
@@ -41,7 +42,8 @@
     "shellfish": "贝类过敏",
     "soy": "大豆过敏",
     "sulphite": "亚硫酸盐敏感性",
-    "treeNut": "树坚果过敏"
+    "treeNut": "树坚果过敏",
+    "yeast": "Yeast Intolerance"
   },
   "dietaryPreferences": {
     "childFriendly": "儿童友好/无添加剂",

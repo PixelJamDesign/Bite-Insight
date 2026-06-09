@@ -33,7 +33,8 @@
     "uc": "Ulcerative Colitis",
     "pregnancy": "Pregnancy",
     "cancer": "Cancer",
-    "cf": "Cystic Fibrosis"
+    "cf": "Cystic Fibrosis",
+    "candida": "Candida Overgrowth (SIFO)"
   },
   "allergies": {
     "celery": "Celery Allergy",
@@ -55,7 +56,8 @@
     "dairy": "Dairy Allergy",
     "raspberry": "Raspberry Allergy",
     "sulphite": "Sulphite Sensitivity",
-    "treeNut": "Tree Nut Allergy"
+    "treeNut": "Tree Nut Allergy",
+    "yeast": "Yeast Intolerance"
   },
   "dietaryPreferences": {
     "childFriendly": "Child-Friendly / Additive-Free",

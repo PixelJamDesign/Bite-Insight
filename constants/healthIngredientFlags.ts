@@ -1087,6 +1087,43 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
       'en:mushroom', 'en:mushrooms', 'en:cashew', 'en:pistachio',
     ],
   },
+  // Candida overgrowth (SIFO) — fungal cousin of SIBO. Yeast feeds on sugar,
+  // so the anti-candida approach flags sugars, refined carbs, yeast, vinegar/
+  // fermented foods, alcohol and mould-prone foods.
+  candida: {
+    flagsTaxonomyAncestors: ['en:added-sugar', 'en:refined-starch'],
+    keywords: [
+      // Sugars (candida's fuel)
+      'sugar', 'sucrose', 'glucose', 'glucose syrup', 'fructose',
+      'high fructose corn syrup', 'hfcs', 'dextrose', 'maltose', 'maltodextrin',
+      'corn syrup', 'golden syrup', 'treacle', 'molasses', 'cane sugar',
+      'invert sugar', 'honey', 'agave', 'maple syrup', 'rice syrup',
+      'fruit juice concentrate', 'dried fruit', 'dates', 'raisins', 'sultanas',
+      // Yeast & malt
+      'yeast', 'yeast extract', 'brewers yeast', 'bakers yeast',
+      'autolyzed yeast', 'autolysed yeast', 'malt', 'malt extract',
+      // Fermented
+      'malt vinegar', 'vinegar', 'soy sauce', 'tamari', 'miso',
+      'kombucha', 'sauerkraut', 'wine', 'beer', 'alcohol',
+      // Refined carbs
+      'white flour', 'refined flour', 'enriched flour', 'white rice',
+      // Mould-prone
+      'mushroom', 'blue cheese', 'peanut',
+    ],
+    ingredientIds: [
+      'en:sugar', 'en:sucrose', 'en:glucose', 'en:glucose-syrup', 'en:fructose',
+      'en:high-fructose-corn-syrup', 'en:dextrose', 'en:maltose',
+      'en:maltodextrin', 'en:corn-syrup', 'en:golden-syrup', 'en:treacle',
+      'en:molasses', 'en:cane-sugar', 'en:invert-sugar', 'en:honey',
+      'en:agave-syrup', 'en:maple-syrup', 'en:rice-syrup',
+      'en:fruit-juice-concentrate', 'en:dried-fruit',
+      'en:yeast', 'en:yeast-extract', 'en:brewers-yeast', 'en:malt-extract',
+      'en:malt-vinegar', 'en:vinegar', 'en:soy-sauce',
+      'en:white-flour', 'en:wheat-flour', 'en:white-rice',
+      'en:mushroom',
+    ],
+    denyTextPatterns: ['sugar-free', 'no added sugar', 'yeast-free', 'alcohol-free'],
+  },
 };
 
 // ── Dietary Preferences ──────────────────────────────────────────────────────

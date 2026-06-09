@@ -342,6 +342,7 @@ const ALLERGY_DERIVATIVE_MAP: Record<string, string[]> = {
   'msg':         ['msg'],
   'histamine':   ['histamine'],
   'salicylate':  ['salicylate'],
+  'yeast':       ['yeast'],
   // Display-name keys (used by ALLERGY_KEYWORDS / cross-reactivity lookups)
   'Peanut Allergy':       ['peanut'],
   'Tree Nut Allergy':     ['almond', 'cashew', 'walnut', 'pecan', 'pistachio', 'macadamia', 'brazil nut', 'hazelnut', 'chestnut', 'pine nut', 'coconut', 'tree nuts'],
@@ -360,6 +361,7 @@ const ALLERGY_DERIVATIVE_MAP: Record<string, string[]> = {
   'MSG Sensitivity':      ['msg'],
   'Histamine Intolerance': ['histamine'],
   'Salicylate Sensitivity': ['salicylate'],
+  'Yeast Intolerance':     ['yeast'],
 };
 function _allergyToDerivativeKeys(profileAllergy: string): string[] {
   return ALLERGY_DERIVATIVE_MAP[profileAllergy] ?? [profileAllergy.replace(/\s*(allergy|intolerance|sensitivity)\s*/gi, '').trim().toLowerCase()];
@@ -1315,6 +1317,7 @@ export default function ScanResultScreen() {
     'msg': 'MSG Sensitivity',
     'histamine': 'Histamine Intolerance',
     'salicylate': 'Salicylate Sensitivity',
+    'yeast': 'Yeast Intolerance',
   };
 
   const matchedAllergens = profileAllergies.filter((profileAllergy) => {

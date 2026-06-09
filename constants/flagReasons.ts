@@ -123,6 +123,13 @@ const HEALTH_CONDITION_REASONS: Record<string, string[]> = {
     'FODMAP trigger',
     'Makes symptoms worse',
   ],
+  candida: [
+    'Feeds yeast overgrowth',
+    'High in sugar',
+    'Contains yeast',
+    'Fermented food',
+    'Doctor advised to avoid',
+  ],
   me: [
     'Causes energy crash',
     'Worsens fatigue',
@@ -300,6 +307,7 @@ const ALLERGY_CLASSIFICATION: Record<string, 'allergy' | 'intolerance' | 'sensit
   raspberry: 'allergy',
   sulphite: 'sensitivity',
   treeNut: 'allergy',
+  yeast: 'intolerance',
 };
 
 // ── Dietary Preferences ─────────────────────────────────────────────────────

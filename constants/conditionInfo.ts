@@ -172,6 +172,11 @@ export const CONDITION_INFO: Record<string, ConditionInfoEntry> = {
     description:
       'Fibromyalgia causes widespread muscle pain, fatigue and cognitive difficulties. While there is no single dietary cure, an anti-inflammatory approach may help manage symptoms. Reducing processed foods, refined sugars and artificial additives, while boosting magnesium, vitamin D and omega-3 intake, is generally recommended.',
   },
+  candida: {
+    fullName: 'Candida Overgrowth (SIFO)',
+    description:
+      "Candida overgrowth — sometimes called SIFO, small intestinal fungal overgrowth — is when yeast in the gut grows past healthy levels. The usual approach starves it: cutting back sugar, refined carbs, yeast, alcohol and fermented foods. We'll flag those so you can spot them, and they pair well with probiotics and plenty of non-starchy veg.",
+  },
   sibo: {
     fullName: 'Small Intestinal Bacterial Overgrowth (SIBO)',
     description:
@@ -283,6 +288,11 @@ export const CONDITION_INFO: Record<string, ConditionInfoEntry> = {
     fullName: 'Tree Nut Allergy',
     description:
       'Tree nut allergy covers almonds, cashews, walnuts, hazelnuts, pecans, pistachios, Brazil nuts and macadamias. Reactions can be severe, including anaphylaxis. Tree nuts turn up in baked goods, cereals, pesto, marzipan and many processed foods, so label checking is important.',
+  },
+  yeast: {
+    fullName: 'Yeast Intolerance',
+    description:
+      "A yeast intolerance means your body reacts to yeast and yeast-derived ingredients. The tricky part is how often it hides — yeast extract and autolysed yeast turn up in crisps, stock cubes, gravy, soups and savoury snacks as a flavour booster. We'll flag those, plus baker's and brewer's yeast, malt extract and malt vinegar.",
   },
 
   // ── Dietary Preferences ────────────────────────────────────────────────────

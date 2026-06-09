@@ -13,6 +13,7 @@ export const HEALTH_CONDITION_KEYS = [
   'adhd',
   'autism',
   'cancer',
+  'candida',
   'cf',
   'ckd',
   'coeliac',
@@ -97,6 +98,7 @@ export const ALLERGY_KEYS = [
   'soy',
   'sulphite',
   'treeNut',
+  'yeast',
 ] as const;
 
 export type AllergyKey = (typeof ALLERGY_KEYS)[number];
@@ -153,6 +155,12 @@ export const HEALTH_CONDITION_LEGACY_MAP: Record<string, HealthConditionKey> = {
   // as 'Cancer', so 'Cancer' must come last for the lookup to resolve.
   'Cancer (General)': 'cancer',
   'Cancer': 'cancer',
+  // Order matters (see Cancer note above): KEY_TO_LEGACY takes the LAST entry
+  // per key, and CONDITION_NUTRIENT_MAP keys this as 'Candida Overgrowth (SIFO)',
+  // so that alias must come last for the nutrient lookup to resolve.
+  'Candida': 'candida',
+  'SIFO': 'candida',
+  'Candida Overgrowth (SIFO)': 'candida',
   // Same ordering rule: CONDITION_NUTRIENT_MAP keys cf as 'CF'.
   'Cystic Fibrosis': 'cf' as HealthConditionKey,
   'CF': 'cf' as HealthConditionKey,
@@ -213,6 +221,7 @@ export const ALLERGY_LEGACY_MAP: Record<string, AllergyKey> = {
   'Raspberry Allergy': 'raspberry',
   'Sulphite Sensitivity': 'sulphite',
   'Tree Nut Allergy': 'treeNut',
+  'Yeast Intolerance': 'yeast',
 };
 
 export const DIETARY_PREFERENCE_LEGACY_MAP: Record<string, DietaryPreferenceKey> = {

@@ -65,6 +65,27 @@ export const ALLERGY_KEYWORDS: Record<string, AllergyEntry> = {
       'en:bulgur', 'en:couscous', 'en:seitan',
     ],
   },
+  'Yeast Intolerance': {
+    // Yeast is not an EU-14 allergen, so OFF has no allergen tag for it —
+    // detection is by ingredient name/ID only.
+    tags: [],
+    keywords: [
+      'yeast', 'yeast extract', 'bakers yeast', "baker's yeast",
+      'brewers yeast', "brewer's yeast", 'nutritional yeast',
+      'autolyzed yeast', 'autolysed yeast', 'autolyzed yeast extract',
+      'autolysed yeast extract', 'hydrolyzed yeast', 'hydrolysed yeast',
+      'hydrolyzed yeast protein', 'torula yeast', 'deactivated yeast',
+      'dried yeast', 'active dry yeast', 'instant yeast', 'yeast powder',
+      'malt extract', 'malt vinegar',
+      'marmite', 'vegemite', 'bovril',
+    ],
+    ingredientIds: [
+      'en:yeast', 'en:yeast-extract', 'en:bakers-yeast', 'en:brewers-yeast',
+      'en:nutritional-yeast', 'en:autolysed-yeast-extract',
+      'en:autolyzed-yeast-extract', 'en:torula-yeast', 'en:deactivated-yeast',
+      'en:dried-yeast', 'en:yeast-powder', 'en:malt-extract', 'en:malt-vinegar',
+    ],
+  },
   'Histamine Intolerance': {
     tags: ['histamine'],
     keywords: [

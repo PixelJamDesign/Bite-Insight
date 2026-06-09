@@ -22,7 +22,8 @@
     "noGallbladder": "Brak woreczka żółciowego",
     "pregnancy": "Ciąża",
     "cancer": "Rak",
-    "cf": "Mukowiscydoza"
+    "cf": "Mukowiscydoza",
+    "candida": "Candida Overgrowth (SIFO)"
   },
   "allergies": {
     "celery": "Alergia na seler",
@@ -41,7 +42,8 @@
     "shellfish": "Alergia na skorupiaki",
     "soy": "Alergia na soję",
     "sulphite": "Wrażliwość na siarczyny",
-    "treeNut": "Alergia na orzechy drzewne"
+    "treeNut": "Alergia na orzechy drzewne",
+    "yeast": "Yeast Intolerance"
   },
   "dietaryPreferences": {
     "childFriendly": "Przyjazny dla dzieci / bez dodatków",

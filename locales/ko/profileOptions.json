@@ -22,7 +22,8 @@
     "noGallbladder": "담낭 없음",
     "pregnancy": "임신",
     "cancer": "암",
-    "cf": "낭포성 섬유증"
+    "cf": "낭포성 섬유증",
+    "candida": "Candida Overgrowth (SIFO)"
   },
   "allergies": {
     "celery": "셀러리 알레르기",
@@ -41,7 +42,8 @@
     "shellfish": "조개 알레르기",
     "soy": "콩 알레르기",
     "sulphite": "아황산염 감도",
-    "treeNut": "나무 견과류 알레르기"
+    "treeNut": "나무 견과류 알레르기",
+    "yeast": "Yeast Intolerance"
   },
   "dietaryPreferences": {
     "childFriendly": "어린이 친화적 / 무첨가",
