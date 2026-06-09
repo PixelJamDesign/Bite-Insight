@@ -2,7 +2,7 @@
   "expo": {
     "name": "Bite Insight",
     "slug": "gcahill",
-    "version": "1.8.1",
+    "version": "1.8.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "biteinsight",
@@ -10,7 +10,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.biteinsight.app",
-      "buildNumber": "18",
+      "buildNumber": "19",
       "icon": {
         "light": "./assets/images/icon.png",
         "dark": "./assets/images/icon-dark.png",
