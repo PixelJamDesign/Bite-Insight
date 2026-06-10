@@ -343,42 +343,62 @@ export default function EditProfileScreen() {
     if (!session?.user?.id) return;
     supabase
       .from('profiles')
-      .select('full_name, avatar_url, health_conditions, allergies, dietary_preferences, date_of_birth, nutrient_watchlist, ibs_subtype, cancer_subtype, cf_subtype, pregnancy_status, pregnancy_due_date')
+      .select('full_name, avatar_url, health_conditions, allergies, dietary_preferences, date_of_birth, nutrient_watchlist, conflict_priorities, ibs_subtype, cancer_subtype, cf_subtype, pregnancy_status, pregnancy_due_date')
       .eq('id', session.user.id)
       .single()
       .then(({ data, error }) => {
         if (error) console.error('Profile load error:', error.message);
         if (data) {
           const loadedConditions = ((data.health_conditions as string[]) ?? []).map(normalizeHealthCondition);
+          const loadedAllergies = ((data.allergies as string[]) ?? []).map(normalizeAllergy);
+          const loadedDietary = ((data.dietary_preferences as string[]) ?? []).map(normalizeDietaryPreference);
           const loadedCancer = (data.cancer_subtype as CancerSubtype | null) ?? null;
+          const loadedIbs = (data.ibs_subtype as IbsSubtype | null) ?? null;
+          const loadedCf = (data.cf_subtype as CfSubtype | null) ?? null;
+          const loadedPregnancy = (data.pregnancy_status as PregnancyStatus | null) ?? null;
           setFullName(data.full_name ?? '');
           setExistingAvatar(getAvatarUrl(data.avatar_url));
           setHealthConditions(loadedConditions);
-          setAllergies(((data.allergies as string[]) ?? []).map(normalizeAllergy));
-          setDietaryPrefs(((data.dietary_preferences as string[]) ?? []).map(normalizeDietaryPreference));
+          setAllergies(loadedAllergies);
+          setDietaryPrefs(loadedDietary);
           setDateOfBirth(data.date_of_birth ? new Date(data.date_of_birth + 'T00:00:00') : null);
-          setIbsSubtype((data.ibs_subtype as IbsSubtype | null) ?? null);
+          setIbsSubtype(loadedIbs);
           setCancerSubtype(loadedCancer);
-          setCfSubtype((data.cf_subtype as CfSubtype | null) ?? null);
-          setPregnancyStatus((data.pregnancy_status as PregnancyStatus | null) ?? null);
+          setCfSubtype(loadedCf);
+          setPregnancyStatus(loadedPregnancy);
           setPregnancyDueDate((data.pregnancy_due_date as string | null) ?? null);
 
           // Restore the saved watchlist; if there isn't one, seed suggestions
-          // from the loaded conditions. Either way, snapshot the condition
-          // signature as the baseline so the reset effect (below) only fires on a
-          // genuine change the user makes afterwards.
+          // from the loaded conditions.
           const existing = (data.nutrient_watchlist as NutrientWatchlistEntry[] | null) ?? [];
+          const choices: Record<string, 'limit' | 'boost' | 'none'> = {};
           if (existing.length > 0) {
-            const choices: Record<string, 'limit' | 'boost' | 'none'> = {};
             for (const e of existing) choices[e.offKey] = e.direction;
-            setNutrientChoices(choices);
           } else {
-            const choices: Record<string, 'limit' | 'boost' | 'none'> = {};
             for (const n of buildUniqueNutrients(loadedConditions, loadedCancer)) {
               choices[n.offKey] = n.hasConflict ? 'none' : n.recommendedDirection;
             }
-            setNutrientChoices(choices);
           }
+          // Reconcile against conflicts: a disputed nutrient stays neutral unless
+          // the user deliberately picked a side (recorded in conflict_priorities).
+          // This catches profiles saved before the conflict feature existed, where
+          // an old direction (e.g. salt from CF) would otherwise persist.
+          const priorities = (data.conflict_priorities as Record<string, string> | null) ?? {};
+          const cautions = detectProfileConflicts({
+            healthConditions: loadedConditions,
+            allergies: loadedAllergies,
+            dietaryPreferences: loadedDietary,
+            ibsSubtype: loadedIbs,
+            cancerSubtype: loadedCancer,
+            cfSubtype: loadedCf,
+            pregnancyStatus: loadedPregnancy,
+          }).cautions;
+          for (const c of cautions) {
+            if (!c.resolvable) continue;
+            const chosen = priorities[c.id];
+            if (!chosen || chosen === 'both') choices[c.resolvable.offKey] = 'none';
+          }
+          setNutrientChoices(choices);
           lastConditionSigRef.current = conditionSignature(loadedConditions, loadedCancer);
         }
         setFetched(true);

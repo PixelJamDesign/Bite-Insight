@@ -420,12 +420,14 @@ export default function AddFamilyMemberScreen() {
             return;
           }
           const loadedConditions = ((data.health_conditions as string[]) ?? []).map(normalizeHealthCondition);
+          const loadedAllergies = ((data.allergies as string[]) ?? []).map(normalizeAllergy);
+          const loadedDietary = ((data.dietary_preferences as string[]) ?? []).map(normalizeDietaryPreference);
           setFullName(data.name ?? '');
           setRelationship(data.relationship ?? '');
           setExistingAvatar(getAvatarUrl(data.avatar_url));
           setHealthConditions(loadedConditions);
-          setAllergies(((data.allergies as string[]) ?? []).map(normalizeAllergy));
-          setDietaryPrefs(((data.dietary_preferences as string[]) ?? []).map(normalizeDietaryPreference));
+          setAllergies(loadedAllergies);
+          setDietaryPrefs(loadedDietary);
           // Hydrate ingredient preference arrays. Columns may not exist yet
           // on older rows — tolerate undefined.
           setLikedIngredients(((data as any).liked_ingredients as string[] | null) ?? []);
@@ -461,6 +463,19 @@ export default function AddFamilyMemberScreen() {
             for (const n of buildUniqueNutrients(loadedConditions)) {
               choices[n.offKey] = n.hasConflict ? 'none' : n.recommendedDirection;
             }
+          }
+          // Reconcile against conflicts: a disputed nutrient stays neutral unless
+          // the user deliberately picked a side (recorded in conflict_priorities).
+          const priorities = ((data as any).conflict_priorities as Record<string, string> | null) ?? {};
+          const cautions = detectProfileConflicts({
+            healthConditions: loadedConditions,
+            allergies: loadedAllergies,
+            dietaryPreferences: loadedDietary,
+          }).cautions;
+          for (const c of cautions) {
+            if (!c.resolvable) continue;
+            const chosen = priorities[c.id];
+            if (!chosen || chosen === 'both') choices[c.resolvable.offKey] = 'none';
           }
           setNutrientChoices(choices);
           lastConditionSigRef.current = [...loadedConditions].sort().join(',');
