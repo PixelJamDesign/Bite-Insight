@@ -9,6 +9,7 @@
  */
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { HeartPlusIcon } from '@/components/MenuIcons';
 import { Radius } from '@/constants/theme';
 
 const ORANGE = '#ff8736';
@@ -42,7 +43,7 @@ export function NutrientConflictNotice({ items, neutralLabel, subject = 'you' }:
   return (
     <View style={styles.card}>
       <View style={styles.badge}>
-        <Ionicons name="medical" size={13} color="#fff" />
+        <HeartPlusIcon size={15} color="#fff" />
         <Text style={styles.badgeText}>Attention</Text>
       </View>
 

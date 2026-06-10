@@ -365,3 +365,19 @@ export function ActionCheckIcon({ color, size = 20 }: IconProps) {
     </Svg>
   );
 }
+
+// Heart-with-plus used in the nutrient-conflict "Attention" chip.
+// Source: Figma node 5463-15088 (Bite Insight App, node 4549-9602).
+export function HeartPlusIcon({ color, size = 16 }: IconProps) {
+  return (
+    <Svg width={size} height={size * (13.6017 / 14.9333)} viewBox="0 0 14.9333 13.6017" fill="none">
+      <Path
+        d="M11.8 4.80177H10.4667M10.4667 4.80177H9.13334M10.4667 4.80177V3.46842M10.4667 4.80177V6.13509M5.44115 11.7208C3.47962 10.1291 0.8 7.49958 0.8 5.01341C0.8 0.860064 4.46677 -0.690591 7.46666 2.51782C10.4666 -0.690591 14.1333 0.860064 14.1333 5.01339C14.1333 7.49962 11.4537 10.1291 9.49218 11.7208C8.60419 12.4414 8.16019 12.8017 7.46667 12.8017C6.77314 12.8017 6.32915 12.4414 5.44115 11.7208Z"
+        stroke={color}
+        strokeWidth={1.6}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
