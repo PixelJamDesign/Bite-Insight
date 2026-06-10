@@ -1524,12 +1524,12 @@ const styles = StyleSheet.create({
   },
   nutrientName: {
     flex: 1,
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: 'Figtree_700Bold',
     fontWeight: '700',
     color: Colors.primary,
-    letterSpacing: -0.36,
-    lineHeight: 24,
+    letterSpacing: 0,
+    lineHeight: 20,
   },
   dropdown: {
     width: 154,
