@@ -175,7 +175,7 @@ export const CONDITION_INFO: Record<string, ConditionInfoEntry> = {
   candida: {
     fullName: 'Candida Overgrowth (SIFO)',
     description:
-      "Candida overgrowth — sometimes called SIFO, small intestinal fungal overgrowth — is when yeast in the gut grows past healthy levels. The usual approach starves it: cutting back sugar, refined carbs, yeast, alcohol and fermented foods. We'll flag those so you can spot them, and they pair well with probiotics and plenty of non-starchy veg.",
+      'Candida overgrowth, also called SIFO (small intestinal fungal overgrowth), is when yeast in the gut grows beyond healthy levels. The yeast feeds on sugar, so the usual approach cuts back on sugar, refined carbs, yeast, alcohol and fermented foods. Probiotics and plenty of non-starchy vegetables can help alongside it.',
   },
   sibo: {
     fullName: 'Small Intestinal Bacterial Overgrowth (SIBO)',
@@ -292,7 +292,7 @@ export const CONDITION_INFO: Record<string, ConditionInfoEntry> = {
   yeast: {
     fullName: 'Yeast Intolerance',
     description:
-      "A yeast intolerance means your body reacts to yeast and yeast-derived ingredients. The tricky part is how often it hides — yeast extract and autolysed yeast turn up in crisps, stock cubes, gravy, soups and savoury snacks as a flavour booster. We'll flag those, plus baker's and brewer's yeast, malt extract and malt vinegar.",
+      "A yeast intolerance means your body reacts to yeast and the ingredients made from it. It hides in a lot of processed food: yeast extract and autolysed yeast are added to crisps, stock cubes, gravy, soups and savoury snacks for flavour. Baker's and brewer's yeast, malt extract and malt vinegar are common sources too.",
   },
 
   // ── Dietary Preferences ────────────────────────────────────────────────────
