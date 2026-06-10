@@ -166,6 +166,12 @@ function toggle(list: string[], item: string): string[] {
   return list.includes(item) ? list.filter(i => i !== item) : [...list, item];
 }
 
+/** Stable signature of the inputs that drive the nutrient watchlist, so we can
+ *  tell when the user has actually changed their conditions. */
+function conditionSignature(conditions: string[], cancerSubtype: string | null): string {
+  return [...conditions].sort().join(',') + '|' + (cancerSubtype ?? '');
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function EditProfileScreen() {
   const { session, setAvatarUrl: setContextAvatarUrl } = useAuth();
@@ -343,54 +349,57 @@ export default function EditProfileScreen() {
       .then(({ data, error }) => {
         if (error) console.error('Profile load error:', error.message);
         if (data) {
+          const loadedConditions = ((data.health_conditions as string[]) ?? []).map(normalizeHealthCondition);
+          const loadedCancer = (data.cancer_subtype as CancerSubtype | null) ?? null;
           setFullName(data.full_name ?? '');
           setExistingAvatar(getAvatarUrl(data.avatar_url));
-          setHealthConditions(((data.health_conditions as string[]) ?? []).map(normalizeHealthCondition));
+          setHealthConditions(loadedConditions);
           setAllergies(((data.allergies as string[]) ?? []).map(normalizeAllergy));
           setDietaryPrefs(((data.dietary_preferences as string[]) ?? []).map(normalizeDietaryPreference));
           setDateOfBirth(data.date_of_birth ? new Date(data.date_of_birth + 'T00:00:00') : null);
           setIbsSubtype((data.ibs_subtype as IbsSubtype | null) ?? null);
-          setCancerSubtype((data.cancer_subtype as CancerSubtype | null) ?? null);
+          setCancerSubtype(loadedCancer);
           setCfSubtype((data.cf_subtype as CfSubtype | null) ?? null);
           setPregnancyStatus((data.pregnancy_status as PregnancyStatus | null) ?? null);
           setPregnancyDueDate((data.pregnancy_due_date as string | null) ?? null);
 
-          // Pre-load existing nutrient watchlist choices
+          // Restore the saved watchlist; if there isn't one, seed suggestions
+          // from the loaded conditions. Either way, snapshot the condition
+          // signature as the baseline so the reset effect (below) only fires on a
+          // genuine change the user makes afterwards.
           const existing = (data.nutrient_watchlist as NutrientWatchlistEntry[] | null) ?? [];
           if (existing.length > 0) {
             const choices: Record<string, 'limit' | 'boost' | 'none'> = {};
             for (const e of existing) choices[e.offKey] = e.direction;
             setNutrientChoices(choices);
+          } else {
+            const choices: Record<string, 'limit' | 'boost' | 'none'> = {};
+            for (const n of buildUniqueNutrients(loadedConditions, loadedCancer)) {
+              choices[n.offKey] = n.hasConflict ? 'none' : n.recommendedDirection;
+            }
+            setNutrientChoices(choices);
           }
+          lastConditionSigRef.current = conditionSignature(loadedConditions, loadedCancer);
         }
         setFetched(true);
       });
   }, [session]);
 
-  // The watchlist is loaded from the saved profile on first open. After that,
-  // if the user changes which conditions they have, we throw the old choices
-  // away and rebuild fresh suggestions for the new set — otherwise stale picks
-  // from conditions they removed (or a now-resolved conflict) would linger. We
-  // snapshot the condition signature on the first pass so loading doesn't itself
-  // count as a change and wipe the saved watchlist.
+  // The baseline signature is set by the profile-load effect above. Once that's
+  // in place, any change the user makes to their conditions throws the old
+  // watchlist away and rebuilds fresh suggestions for the new set — otherwise
+  // stale picks from a removed condition (or a now-resolved conflict) linger.
   const lastConditionSigRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!fetched) return;
-    const sig = [...healthConditions].sort().join(',') + '|' + (cancerSubtype ?? '');
-    const firstPass = lastConditionSigRef.current === null;
-    if (!firstPass && lastConditionSigRef.current === sig) return; // conditions unchanged
+    if (!fetched || lastConditionSigRef.current === null) return; // wait for load baseline
+    const sig = conditionSignature(healthConditions, cancerSubtype);
+    if (lastConditionSigRef.current === sig) return; // conditions unchanged
     lastConditionSigRef.current = sig;
-    setNutrientChoices(prev => {
-      // First open: honour the saved watchlist if there is one; only seed
-      // defaults when there's nothing saved. Any later condition change rebuilds
-      // fresh so stale picks don't linger.
-      if (firstPass && Object.keys(prev).length > 0) return prev;
-      const choices: Record<string, 'limit' | 'boost' | 'none'> = {};
-      for (const n of uniqueNutrients) {
-        choices[n.offKey] = n.hasConflict ? 'none' : n.recommendedDirection;
-      }
-      return choices;
-    });
+    const choices: Record<string, 'limit' | 'boost' | 'none'> = {};
+    for (const n of uniqueNutrients) {
+      choices[n.offKey] = n.hasConflict ? 'none' : n.recommendedDirection;
+    }
+    setNutrientChoices(choices);
   }, [healthConditions, cancerSubtype, uniqueNutrients, fetched]);
 
   // Step progress animation (5 dots max to support optional nutrient step)
