@@ -46,6 +46,24 @@ export interface Conflict {
    * For Tier 1, omitted (user picks).
    */
   autoRemove?: { category: 'health' | 'allergy' | 'dietary'; key: string };
+  /**
+   * Tier 3 only. When a caution comes down to a single nutrient the two sides
+   * disagree on (e.g. salt for CF vs high blood pressure), this carries enough
+   * to (a) explain the tension on that nutrient's row in the watchlist step and
+   * (b) record which side the user chose to follow. `options[].direction` is
+   * what following that side means for the nutrient: a condition that wants the
+   * nutrient kept down is 'limit', one that wants more is 'boost'.
+   */
+  resolvable?: {
+    offKey: string;
+    /** Plain lowercase nutrient word for copy, e.g. "salt", "fibre". */
+    nutrientLabel: string;
+    options: Array<{
+      category: 'health' | 'dietary';
+      key: string;
+      direction: 'limit' | 'boost';
+    }>;
+  };
 }
 
 export interface ConflictResult {
@@ -301,17 +319,33 @@ export function detectProfileConflicts(selection: ProfileSelection): ConflictRes
         { category: 'health', key: 'cf' },
         { category: 'health', key: 'hypertension' },
       ],
+      resolvable: {
+        offKey: 'salt_100g',
+        nutrientLabel: 'salt',
+        options: [
+          { category: 'health', key: 'cf', direction: 'boost' },
+          { category: 'health', key: 'hypertension', direction: 'limit' },
+        ],
+      },
     });
   }
   if (has(hc, 'cf') && has(hc, 'heartDisease')) {
     addCaution({
       id: 'cf_vs_heartdisease',
       title: 'Cystic Fibrosis and Heart Disease',
-      message: "CF usually needs high fat and calories, while heart disease usually needs them lower. That's a balance for your care team to set. Until then we'll hold off flagging fat in either direction.",
+      message: "CF often needs more salt and calories, while heart disease usually means keeping salt down. That's a balance for your care team to set. Until then we'll leave salt off your watchlist.",
       selections: [
         { category: 'health', key: 'cf' },
         { category: 'health', key: 'heartDisease' },
       ],
+      resolvable: {
+        offKey: 'salt_100g',
+        nutrientLabel: 'salt',
+        options: [
+          { category: 'health', key: 'cf', direction: 'boost' },
+          { category: 'health', key: 'heartDisease', direction: 'limit' },
+        ],
+      },
     });
   }
   if (has(hc, 'cf') && has(hc, 'highCholesterol')) {
@@ -366,6 +400,14 @@ export function detectProfileConflicts(selection: ProfileSelection): ConflictRes
           { category: 'dietary', key: 'lowFiber' },
           { category: 'health', key: cond },
         ],
+        resolvable: {
+          offKey: 'fiber_100g',
+          nutrientLabel: 'fibre',
+          options: [
+            { category: 'health', key: cond, direction: 'boost' },
+            { category: 'dietary', key: 'lowFiber', direction: 'limit' },
+          ],
+        },
       });
     }
   }
@@ -508,4 +550,46 @@ export function detectProfileConflicts(selection: ProfileSelection): ConflictRes
   };
 
   return { hardConflicts, redundancies, cautions, resolved };
+}
+
+// ── Phase 2: applying the user's "which leads?" decision ──────────────────────
+//
+// Resolvable cautions come down to one nutrient the two sides disagree on. The
+// app never forces a side — but the nutrient watchlist step already lets the
+// user set that nutrient to limit / boost / neutral. These helpers read that
+// per-nutrient choice back into a durable record of which side they followed,
+// so we can remember it and label it later without re-nagging.
+
+/** Map of conflict id → followed selection key, or 'both' when left neutral. */
+export type ConflictPriorities = Record<string, string>;
+
+/** The resolvable caution (if any) whose nutrient is this offKey. */
+export function resolvableCautionForOffKey(
+  offKey: string,
+  cautions: Conflict[],
+): Conflict | null {
+  return cautions.find((c) => c.resolvable?.offKey === offKey) ?? null;
+}
+
+/**
+ * Derive which side of each resolvable caution the user ended up following,
+ * from their per-nutrient watchlist choices. A direction match → that side's
+ * key; anything else (neutral / unset) → 'both', meaning no side chosen yet.
+ */
+export function deriveConflictPriorities(
+  cautions: Conflict[],
+  nutrientChoices: Record<string, 'limit' | 'boost' | 'none'>,
+): ConflictPriorities {
+  const out: ConflictPriorities = {};
+  for (const c of cautions) {
+    if (!c.resolvable) continue;
+    const choice = nutrientChoices[c.resolvable.offKey];
+    if (choice === 'limit' || choice === 'boost') {
+      const side = c.resolvable.options.find((o) => o.direction === choice);
+      out[c.id] = side ? side.key : 'both';
+    } else {
+      out[c.id] = 'both';
+    }
+  }
+  return out;
 }

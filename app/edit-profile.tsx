@@ -50,7 +50,7 @@ import { CancerSubtypePicker } from '@/components/CancerSubtypePicker';
 import { CfSubtypePicker } from '@/components/CfSubtypePicker';
 import { PregnancyStep } from '@/components/PregnancyStep';
 import { ConflictReviewStep } from '@/components/ConflictReviewStep';
-import { detectProfileConflicts, type Conflict } from '@/lib/profileConflicts';
+import { detectProfileConflicts, deriveConflictPriorities, resolvableCautionForOffKey, type Conflict } from '@/lib/profileConflicts';
 import type { IbsSubtype, CancerSubtype, CfSubtype, PregnancyStatus } from '@/lib/types';
 import Logo from '../assets/images/logo.svg';
 
@@ -547,6 +547,7 @@ export default function EditProfileScreen() {
         dietary_preferences: resolved.dietaryPreferences,
         date_of_birth: dateOfBirth ? toLocalDateString(dateOfBirth) : null,
         nutrient_watchlist: buildFinalWatchlist(),
+        conflict_priorities: deriveConflictPriorities(conflictResult.cautions, nutrientChoices),
         ibs_subtype: hasIbs ? ibsSubtype : null,
         cancer_subtype: hasCancer ? cancerSubtype : null,
         cf_subtype: hasCf ? cfSubtype : null,
@@ -785,6 +786,9 @@ export default function EditProfileScreen() {
 
   // ── Nutrient watchlist step ────────────────────────────────────────────────
   function renderNutrientStep() {
+    // Show the "your conditions disagree here" note once per disputed nutrient,
+    // even though the nutrient appears under each condition it belongs to.
+    const notedOffKeys = new Set<string>();
     return (
       <>
         <View style={styles.nutrientHeader}>
@@ -811,15 +815,29 @@ export default function EditProfileScreen() {
             </View>
 
             {/* Nutrient rows */}
-            {group.nutrients.map((n) => (
-              <View
-                key={`${group.conditionKey}-${n.offKey}`}
-                style={styles.nutrientRow}
-              >
-                <Text style={styles.nutrientName}>{n.nutrient}</Text>
-                <NutrientDropdown offKey={n.offKey} />
-              </View>
-            ))}
+            {group.nutrients.map((n) => {
+              const conflict = resolvableCautionForOffKey(n.offKey, conflictResult.cautions);
+              const showNote = conflict != null && !notedOffKeys.has(n.offKey);
+              if (conflict) notedOffKeys.add(n.offKey);
+              return (
+                <View key={`${group.conditionKey}-${n.offKey}`}>
+                  <View style={styles.nutrientRow}>
+                    <Text style={styles.nutrientName}>{n.nutrient}</Text>
+                    <NutrientDropdown offKey={n.offKey} />
+                  </View>
+                  {showNote && (
+                    <View style={styles.nutrientConflictNote}>
+                      <Ionicons name="medical" size={13} color="#b87400" style={{ marginTop: 1 }} />
+                      <Text style={styles.nutrientConflictNoteText}>
+                        Your conditions don't agree on {conflict.resolvable!.nutrientLabel}. We've
+                        left it neutral — set a direction only if your care team has told you which
+                        way to go.
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              );
+            })}
           </View>
         ))}
       </>
@@ -1468,6 +1486,24 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   nutrientRowBorder: {},
+  nutrientConflictNote: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 6,
+    backgroundColor: '#fdf3e0',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginTop: 6,
+  },
+  nutrientConflictNoteText: {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 16,
+    fontFamily: 'Figtree_300Light',
+    fontWeight: '300',
+    color: '#7a5200',
+  },
   nutrientName: {
     flex: 1,
     fontSize: 18,

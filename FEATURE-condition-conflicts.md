@@ -1,6 +1,6 @@
 # FEATURE — Profile conflict review (expanded)
 
-**Status:** Phase 1 ready to implement; Phase 2 designed
+**Status:** Phase 1 built; Phase 2 built; Phase 3 (scan-time dual-perspective) deferred
 **Origin:** Review of condition / allergy / dietary combinations that contradict
 each other or aren't safe together (e.g. Keto + Pregnancy).
 
@@ -59,19 +59,40 @@ neutral until they decide.
 
 ---
 
-## Phase 2 — "Which leads?" resolution (designed, not yet built)
-For each caution conflict on a nutrient (e.g. salt for CF + hypertension):
-1. Offer the user a choice, framed as a provider decision: follow Condition A,
-   follow Condition B, or "show me both / don't pick" (default).
-2. Persist the choice (new `profiles.conflict_priorities` jsonb, keyed by
-   conflict id → chosen condition key).
-3. Apply it:
-   - **Nutrient watchlist** — keep only the chosen condition's limit/boost for
-     the conflicting nutrient; if unset, leave that nutrient off the watchlist.
-   - **Scan flagging** — for the conflicting nutrient/ingredient, follow the
-     chosen condition; if unset, show *both* perspectives ("high salt — in line
-     with CF, above your hypertension target") rather than a single verdict.
-4. Re-surface the caution if a new conflicting condition is later added.
+## Phase 2 — "Which leads?" resolution (BUILT)
+The key realisation: the nutrient watchlist step **already** lets the user set
+each nutrient to limit / boost / neutral, and conflicted nutrients already
+default to neutral. So we didn't build a separate choice screen — we made the
+existing control the resolution point and recorded the outcome.
+
+For each *resolvable* caution (one nutrient the two sides disagree on — salt for
+CF vs hypertension / heart disease; fibre for low-fibre vs diabetes / heart
+disease / high cholesterol):
+
+1. `Conflict.resolvable` (in `lib/profileConflicts.ts`) carries the `offKey`,
+   a plain `nutrientLabel`, and which direction each side wants.
+2. The nutrient step (edit-profile / onboarding / add-family-member) shows an
+   amber note on that nutrient's row: "your conditions don't agree on salt —
+   we've left it neutral, set a direction only if your care team advised one."
+   The default stays neutral, so nothing is silently guessed.
+3. On save we record the outcome via `deriveConflictPriorities()` into the new
+   `profiles.conflict_priorities` / `family_profiles.conflict_priorities` jsonb
+   (conflict id → followed selection key, or `'both'` when left neutral).
+4. **Scan flagging** is applied automatically: whatever direction the user sets
+   (or doesn't) for the nutrient is exactly what `nutrient_watchlist` carries,
+   and the scan screen flags from that watchlist. Neutral → the nutrient simply
+   isn't flagged either way. No scan-screen changes were needed.
+5. Re-surfacing is inherent: cautions are recomputed live from the current
+   selection, so adding a new conflicting condition shows the note again.
+
+### Phase 3 — scan-time dual perspective (deferred, optional polish)
+The richer "show both perspectives" treatment ("high salt — in line with CF,
+above your hypertension target") would re-insert a neutral/disputed nutrient
+into the scan as an informational row carrying both verdicts. It's deliberately
+deferred: the safe behaviour (leave neutral nutrients unflagged) already holds,
+and the change lands in a 2,700-line scan screen that can't be exercised in the
+local sim right now. `conflict_priorities` already persists the data this would
+need.
 
 ## Files
 **Phase 1:**
@@ -80,10 +101,15 @@ For each caution conflict on a nutrient (e.g. salt for CF + hypertension):
 - `app/onboarding.tsx`, `app/edit-profile.tsx` — pass cautions through; show the
   step when cautions exist; keep save blocked only on hard conflicts
 
-**Phase 2:**
-- `profiles.conflict_priorities` (migration), the "which leads?" UI, and the
-  watchlist + scan-flagging resolution in `conditionNutrientMap` consumers and
-  `scan-result.tsx`.
+**Phase 2 (built):**
+- `lib/profileConflicts.ts` — `Conflict.resolvable` metadata +
+  `deriveConflictPriorities()` / `resolvableCautionForOffKey()` helpers
+- `profiles.conflict_priorities` + `family_profiles.conflict_priorities` jsonb
+  (migration `add_conflict_priorities`), plus the type fields in `lib/types.ts`
+- `app/edit-profile.tsx`, `app/onboarding.tsx`, `app/add-family-member.tsx` —
+  amber conflict note on the disputed nutrient row + persist the outcome on save
+- Scan flagging needs no change — it already reads `nutrient_watchlist`, which
+  the resolution writes through.
 
 ## Copy
 Plain and human (per the standing voice rule). No alarm, no jargon dumps —

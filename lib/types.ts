@@ -53,6 +53,10 @@ export interface UserProfile {
   disliked_ingredients: string[] | null;
   flagged_ingredients: string[] | null;
   nutrient_watchlist: NutrientWatchlistEntry[] | null;
+  /** Phase 2 conflict resolution: conflict id → followed selection key (or
+   *  'both' when the user left the disputed nutrient neutral). See
+   *  lib/profileConflicts.ts. */
+  conflict_priorities: Record<string, string> | null;
   marketing_preferences: {
     promotional_emails: boolean;
     product_updates: boolean;
@@ -117,6 +121,8 @@ export interface FamilyProfile {
   health_conditions: string[];
   allergies: string[];
   nutrient_watchlist: NutrientWatchlistEntry[];
+  /** Phase 2 conflict resolution (see Profile.conflict_priorities). */
+  conflict_priorities: Record<string, string> | null;
   // Per-member ingredient preferences (added in 1.5.0). Mutually
   // exclusive — an ingredient is in at most one of these three arrays.
   liked_ingredients: string[] | null;
