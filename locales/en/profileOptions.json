@@ -34,7 +34,8 @@
     "pregnancy": "Pregnancy",
     "cancer": "Cancer",
     "cf": "Cystic Fibrosis",
-    "candida": "Candida Overgrowth (SIFO)"
+    "candida": "Candida Overgrowth (SIFO)",
+    "asthma": "Asthma"
   },
   "allergies": {
     "celery": "Celery Allergy",

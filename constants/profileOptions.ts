@@ -11,6 +11,7 @@
 // ── Health Conditions ────────────────────────────────────────────────────────
 export const HEALTH_CONDITION_KEYS = [
   'adhd',
+  'asthma',
   'autism',
   'cancer',
   'candida',
@@ -148,6 +149,7 @@ export type RelationshipKey = (typeof RELATIONSHIP_KEYS)[number];
 
 export const HEALTH_CONDITION_LEGACY_MAP: Record<string, HealthConditionKey> = {
   'ADHD': 'adhd',
+  'Asthma': 'asthma',
   'Autism': 'autism',
   // Order matters here: KEY_TO_LEGACY (the reverse map built in
   // onboarding/edit-profile) iterates entries in insertion order and

@@ -23,7 +23,8 @@
     "pregnancy": "Schwangerschaft",
     "cancer": "Krebs",
     "cf": "Mukoviszidose",
-    "candida": "Candida Overgrowth (SIFO)"
+    "candida": "Candida Overgrowth (SIFO)",
+    "asthma": "Asthma"
   },
   "allergies": {
     "celery": "Sellerie-Allergie",

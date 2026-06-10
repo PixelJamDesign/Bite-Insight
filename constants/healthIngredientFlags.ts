@@ -1124,6 +1124,37 @@ export const HEALTH_CONDITION_INGREDIENTS: Record<string, HealthFlagEntry> = {
     ],
     denyTextPatterns: ['sugar-free', 'no added sugar', 'yeast-free', 'alcohol-free'],
   },
+  // Asthma — diet isn't the cause, but some additives trigger symptoms in
+  // sensitive people. Sulphites are the best-evidenced; azo colourings and
+  // benzoate preservatives (plus weaker-evidence BHA/BHT, MSG, nitrites) too.
+  asthma: {
+    flagsTaxonomyAncestors: [],
+    keywords: [
+      // Sulphites (strongest evidence)
+      'sulphite', 'sulfite', 'sulphites', 'sulfites', 'sulphur dioxide', 'sulfur dioxide',
+      'sodium sulphite', 'sodium bisulphite', 'sodium metabisulphite', 'sodium metabisulfite',
+      'potassium metabisulphite', 'potassium bisulphite', 'potassium sulphite',
+      'e220', 'e221', 'e222', 'e223', 'e224', 'e225', 'e226', 'e227', 'e228',
+      // Azo colourings
+      'tartrazine', 'sunset yellow', 'quinoline yellow', 'carmoisine', 'ponceau', 'allura red',
+      'e102', 'e104', 'e110', 'e122', 'e124', 'e129',
+      // Benzoate preservatives
+      'benzoic acid', 'sodium benzoate', 'potassium benzoate', 'calcium benzoate',
+      'e210', 'e211', 'e212', 'e213',
+      // Weaker-evidence suspects
+      'monosodium glutamate', 'msg', 'e621',
+      'bha', 'bht', 'e320', 'e321',
+      'sodium nitrite', 'potassium nitrite', 'sodium nitrate', 'e249', 'e250', 'e251', 'e252',
+    ],
+    ingredientIds: [
+      'en:e220', 'en:e221', 'en:e222', 'en:e223', 'en:e224', 'en:e225', 'en:e226', 'en:e227', 'en:e228',
+      'en:sulphur-dioxide', 'en:sulphur-dioxide-and-sulphites',
+      'en:e102', 'en:e104', 'en:e110', 'en:e122', 'en:e124', 'en:e129',
+      'en:e210', 'en:e211', 'en:e212', 'en:e213',
+      'en:e621', 'en:e320', 'en:e321',
+      'en:e249', 'en:e250', 'en:e251', 'en:e252',
+    ],
+  },
 };
 
 // ── Dietary Preferences ──────────────────────────────────────────────────────

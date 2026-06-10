@@ -2359,6 +2359,37 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
     ],
   },
 
+  Asthma: {
+    limit: [],
+    boost: [
+      {
+        nutrient: 'Vitamin D',
+        offKey: 'vitamin-d_100g',
+        unit: 'µg',
+        reason: 'Low vitamin D is linked to more frequent asthma attacks; healthy levels support lung function and immune balance',
+      },
+      {
+        nutrient: 'Vitamin C',
+        offKey: 'vitamin-c_100g',
+        unit: 'mg',
+        reason: 'Vitamin C is an antioxidant that may help protect the airways from inflammation and oxidative stress',
+      },
+      {
+        nutrient: 'Magnesium',
+        offKey: 'magnesium_100g',
+        unit: 'mg',
+        reason: 'Magnesium helps relax the airway muscles and is often low in people with asthma',
+      },
+      {
+        nutrient: 'Omega-3',
+        offKey: 'omega-3-fat_100g',
+        unit: 'g',
+        reason: 'Omega-3 fats are anti-inflammatory and may help calm airway inflammation',
+        userConfirmRequired: true,
+      },
+    ],
+  },
+
   // Candida overgrowth (SIFO) is driven by ingredients (sugar, yeast, refined
   // carbs — handled by healthIngredientFlags), not micronutrients. Keep a light
   // entry so onboarding nutrient pre-selection stays coherent.

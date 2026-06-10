@@ -23,7 +23,8 @@
     "pregnancy": "Embarazo",
     "cancer": "Cáncer",
     "cf": "Fibrosis Quística",
-    "candida": "Candida Overgrowth (SIFO)"
+    "candida": "Candida Overgrowth (SIFO)",
+    "asthma": "Asthma"
   },
   "allergies": {
     "celery": "Alergia al apio",

@@ -172,6 +172,11 @@ export const CONDITION_INFO: Record<string, ConditionInfoEntry> = {
     description:
       'Fibromyalgia causes widespread muscle pain, fatigue and cognitive difficulties. While there is no single dietary cure, an anti-inflammatory approach may help manage symptoms. Reducing processed foods, refined sugars and artificial additives, while boosting magnesium, vitamin D and omega-3 intake, is generally recommended.',
   },
+  asthma: {
+    fullName: 'Asthma',
+    description:
+      'Asthma is a long-term condition that inflames and narrows the airways, making it harder to breathe. Diet is not the main cause, but some food additives can set off symptoms in sensitive people. Sulphites are the best-evidenced trigger, found in dried fruit, wine, beer and some processed foods. Colourings and preservatives like tartrazine and benzoates can affect some people too.',
+  },
   candida: {
     fullName: 'Candida Overgrowth (SIFO)',
     description:

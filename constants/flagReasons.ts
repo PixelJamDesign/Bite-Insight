@@ -130,6 +130,13 @@ const HEALTH_CONDITION_REASONS: Record<string, string[]> = {
     'Fermented food',
     'Doctor advised to avoid',
   ],
+  asthma: [
+    'Contains sulphites',
+    'Additive trigger',
+    'Artificial colour',
+    'May worsen symptoms',
+    'Doctor advised to avoid',
+  ],
   me: [
     'Causes energy crash',
     'Worsens fatigue',
