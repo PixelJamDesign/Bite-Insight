@@ -316,7 +316,7 @@ export function detectProfileConflicts(selection: ProfileSelection): ConflictRes
     addCaution({
       id: 'cf_vs_hypertension',
       title: 'Cystic Fibrosis and High Blood Pressure',
-      message: "These two pull in opposite directions on salt — CF often needs more to replace what's lost in sweat, while high blood pressure needs it kept low. Your care team can tell you which to prioritise. Until then we'll leave salt off your watchlist.",
+      message: "The two pull in opposite directions on sodium/salt. Cystic Fibrosis often needs more salt to replace what's lost in sweat, while high blood pressure needs it kept low. Your care team can tell you which to prioritise.",
       selections: [
         { category: 'health', key: 'cf' },
         { category: 'health', key: 'hypertension' },
