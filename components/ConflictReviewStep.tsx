@@ -14,6 +14,8 @@ import type { Conflict } from '@/lib/profileConflicts';
 
 interface Props {
   hardConflicts: Conflict[];
+  /** Non-blocking cautions — advise the user's healthcare provider. */
+  cautions?: Conflict[];
   redundancies: Conflict[];
   /** Resolve a hard conflict by removing one of its selections */
   onResolve: (conflictId: string, removeCategory: 'health' | 'allergy' | 'dietary', removeKey: string) => void;
@@ -21,7 +23,7 @@ interface Props {
   labelFor: (category: 'health' | 'allergy' | 'dietary', key: string) => string;
 }
 
-export function ConflictReviewStep({ hardConflicts, redundancies, onResolve, labelFor }: Props) {
+export function ConflictReviewStep({ hardConflicts, cautions = [], redundancies, onResolve, labelFor }: Props) {
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scroll}>
       <Text style={styles.heading}>Quick check before we save</Text>
@@ -60,6 +62,23 @@ export function ConflictReviewStep({ hardConflicts, redundancies, onResolve, lab
         </View>
       )}
 
+      {cautions.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>WORTH A WORD WITH YOUR DOCTOR</Text>
+          {cautions.map((c) => (
+            <View key={c.id} style={[styles.card, styles.cardCaution]}>
+              <View style={styles.cardHeader}>
+                <View style={styles.badgeCaution}>
+                  <Ionicons name="medical" size={14} color="#fff" />
+                </View>
+                <Text style={styles.cardTitle}>{c.title}</Text>
+              </View>
+              <Text style={styles.cardMessage}>{c.message}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
       {redundancies.length > 0 && (
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>WE TIDIED THESE UP</Text>
@@ -77,7 +96,7 @@ export function ConflictReviewStep({ hardConflicts, redundancies, onResolve, lab
         </View>
       )}
 
-      {hardConflicts.length === 0 && redundancies.length === 0 && (
+      {hardConflicts.length === 0 && cautions.length === 0 && redundancies.length === 0 && (
         <View style={styles.emptyWrap}>
           <View style={styles.emptyIconBg}>
             <Ionicons name="checkmark-circle" size={40} color={Colors.status.positive} />
@@ -124,6 +143,10 @@ const styles = StyleSheet.create({
     borderColor: Colors.status.negative,
     borderWidth: 1.5,
   },
+  cardCaution: {
+    borderColor: '#f0a020',
+    borderWidth: 1.5,
+  },
   cardRedundancy: {
     borderColor: '#aad4cd',
   },
@@ -135,6 +158,11 @@ const styles = StyleSheet.create({
   badgeHard: {
     width: 28, height: 28, borderRadius: 14,
     backgroundColor: Colors.status.negative,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  badgeCaution: {
+    width: 28, height: 28, borderRadius: 14,
+    backgroundColor: '#f0a020',
     alignItems: 'center', justifyContent: 'center',
   },
   badgeRedundancy: {

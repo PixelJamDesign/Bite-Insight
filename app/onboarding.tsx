@@ -288,7 +288,7 @@ export default function OnboardingScreen() {
     [healthConditions, allergies, dietaryPrefs, ibsSubtype, cancerSubtype, cfSubtype, pregnancyStatus],
   );
   const showConflictStep =
-    conflictResult.hardConflicts.length > 0 || conflictResult.redundancies.length > 0;
+    conflictResult.hardConflicts.length > 0 || conflictResult.cautions.length > 0 || conflictResult.redundancies.length > 0;
 
   // ── Dynamic step sequence ──────────────────────────────────────────────────
   const stepSequence: StepKey[] = useMemo(() => [
@@ -1051,6 +1051,7 @@ export default function OnboardingScreen() {
               {currentStepKey === 'conflicts' && (
                 <ConflictReviewStep
                   hardConflicts={conflictResult.hardConflicts}
+                  cautions={conflictResult.cautions}
                   redundancies={conflictResult.redundancies}
                   onResolve={(_id, category, key) => {
                     if (category === 'health') setHealthConditions(prev => prev.filter(k => k !== key));

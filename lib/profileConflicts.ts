@@ -22,7 +22,7 @@ export interface ProfileSelection {
   pregnancyStatus?: 'pregnant' | 'breastfeeding' | null;
 }
 
-export type ConflictTier = 'hard' | 'redundancy';
+export type ConflictTier = 'hard' | 'redundancy' | 'caution';
 
 export interface Conflict {
   tier: ConflictTier;
@@ -51,6 +51,13 @@ export interface Conflict {
 export interface ConflictResult {
   hardConflicts: Conflict[];
   redundancies: Conflict[];
+  /**
+   * Tier 3 — non-blocking cautions. Combinations that pull in opposite
+   * directions but can't be "resolved" by dropping one (e.g. two real
+   * conditions), or that are an individual clinical call. We advise the user's
+   * healthcare provider rather than forcing a choice. These do NOT block save.
+   */
+  cautions: Conflict[];
   /** Resolved selection with Tier 2 auto-removals applied */
   resolved: ProfileSelection;
 }
@@ -69,6 +76,7 @@ export function detectProfileConflicts(selection: ProfileSelection): ConflictRes
   const dp = selection.dietaryPreferences ?? [];
   const hardConflicts: Conflict[] = [];
   const redundancies: Conflict[] = [];
+  const cautions: Conflict[] = [];
   const removed: Conflict['autoRemove'][] = [];
 
   // ── Tier 1: Hard contradictions ────────────────────────────────────────────
@@ -187,6 +195,179 @@ export function detectProfileConflicts(selection: ProfileSelection): ConflictRes
         { category: 'health', key: 'ckd' },
       ],
     });
+  }
+
+  // Keto + CKD: keto is high in protein and fat, so it has the same problem as
+  // a high-protein diet for kidney disease.
+  if (has(dp, 'keto') && has(hc, 'ckd')) {
+    hardConflicts.push({
+      tier: 'hard',
+      id: 'keto_vs_ckd',
+      title: 'Keto with Kidney Disease',
+      message: "Keto is high in protein and fat, but kidney disease usually means keeping protein down. Worth checking with your kidney team before combining these.",
+      selections: [
+        { category: 'dietary', key: 'keto' },
+        { category: 'health', key: 'ckd' },
+      ],
+    });
+  }
+
+  // Pregnancy + Weight Loss: deliberately restricting calories isn't safe in pregnancy.
+  if (has(hc, 'pregnancy') && has(dp, 'weightLoss')) {
+    hardConflicts.push({
+      tier: 'hard',
+      id: 'pregnancy_vs_weightloss',
+      title: 'Pregnancy and Weight Loss',
+      message: "Cutting calories to lose weight isn't recommended during pregnancy, when you and your baby need steady nutrition. Speak to your midwife or GP about the right approach.",
+      selections: [
+        { category: 'health', key: 'pregnancy' },
+        { category: 'dietary', key: 'weightLoss' },
+      ],
+    });
+  }
+
+  // Gout + high-purine diets: high protein / keto are meat-heavy and raise uric acid.
+  if (has(hc, 'gout') && has(dp, 'highProtein')) {
+    hardConflicts.push({
+      tier: 'hard',
+      id: 'gout_vs_highprotein',
+      title: 'Gout and High Protein',
+      message: "A high protein, meat-heavy diet raises uric acid, which is what triggers gout flares. These two work against each other.",
+      selections: [
+        { category: 'health', key: 'gout' },
+        { category: 'dietary', key: 'highProtein' },
+      ],
+    });
+  }
+  if (has(hc, 'gout') && has(dp, 'keto')) {
+    hardConflicts.push({
+      tier: 'hard',
+      id: 'gout_vs_keto',
+      title: 'Gout and Keto',
+      message: "Keto tends to be meat-heavy and can push uric acid up, which makes gout flares more likely. Worth checking with your GP before combining these.",
+      selections: [
+        { category: 'health', key: 'gout' },
+        { category: 'dietary', key: 'keto' },
+      ],
+    });
+  }
+
+  // Paleo is built around meat and fish — it can't sit alongside vegan,
+  // plant-based or vegetarian. Pick one.
+  for (const veg of ['vegan', 'plantBased', 'vegetarian'] as const) {
+    if (has(dp, 'paleo') && has(dp, veg)) {
+      const label = veg === 'plantBased' ? 'Plant-Based' : veg.charAt(0).toUpperCase() + veg.slice(1);
+      hardConflicts.push({
+        tier: 'hard',
+        id: `paleo_vs_${veg}`,
+        title: `Paleo and ${label}`,
+        message: `Paleo is built around meat and fish, so it doesn't fit with a ${label.toLowerCase()} diet. Pick the one that matches how you eat.`,
+        selections: [
+          { category: 'dietary', key: 'paleo' },
+          { category: 'dietary', key: veg },
+        ],
+      });
+    }
+  }
+  // Whole30 needs meat and eggs and bans legumes and grains — nothing left for vegan.
+  if (has(dp, 'whole30') && has(dp, 'vegan')) {
+    hardConflicts.push({
+      tier: 'hard',
+      id: 'whole30_vs_vegan',
+      title: 'Whole30 and Vegan',
+      message: "Whole30 is built around meat, fish and eggs and rules out legumes and grains, so there's nothing left for a vegan diet. Pick the one that fits.",
+      selections: [
+        { category: 'dietary', key: 'whole30' },
+        { category: 'dietary', key: 'vegan' },
+      ],
+    });
+  }
+
+  // ── Tier 3: Cautions (non-blocking — advise the healthcare provider) ────────
+
+  function addCaution(c: Omit<Conflict, 'tier'>) {
+    cautions.push({ ...c, tier: 'caution' });
+  }
+
+  // Cystic Fibrosis pulls toward high salt / fat / calories; cardiovascular and
+  // blood-pressure conditions pull the other way. Two real conditions — we
+  // don't force a choice, we point them to their care team.
+  if (has(hc, 'cf') && has(hc, 'hypertension')) {
+    addCaution({
+      id: 'cf_vs_hypertension',
+      title: 'Cystic Fibrosis and High Blood Pressure',
+      message: "These two pull in opposite directions on salt — CF often needs more to replace what's lost in sweat, while high blood pressure needs it kept low. Your care team can tell you which to prioritise. Until then we'll leave salt off your watchlist.",
+      selections: [
+        { category: 'health', key: 'cf' },
+        { category: 'health', key: 'hypertension' },
+      ],
+    });
+  }
+  if (has(hc, 'cf') && has(hc, 'heartDisease')) {
+    addCaution({
+      id: 'cf_vs_heartdisease',
+      title: 'Cystic Fibrosis and Heart Disease',
+      message: "CF usually needs high fat and calories, while heart disease usually needs them lower. That's a balance for your care team to set. Until then we'll hold off flagging fat in either direction.",
+      selections: [
+        { category: 'health', key: 'cf' },
+        { category: 'health', key: 'heartDisease' },
+      ],
+    });
+  }
+  if (has(hc, 'cf') && has(hc, 'highCholesterol')) {
+    addCaution({
+      id: 'cf_vs_highcholesterol',
+      title: 'Cystic Fibrosis and High Cholesterol',
+      message: "CF tends to need high fat and calories, while high cholesterol usually means keeping fat down. Your care team can guide the balance. Until then we'll hold off flagging fat in either direction.",
+      selections: [
+        { category: 'health', key: 'cf' },
+        { category: 'health', key: 'highCholesterol' },
+      ],
+    });
+  }
+
+  // Keto + Diabetes: can help Type 2, but risky with insulin / Type 1. Don't
+  // block it — flag it as something to do with medical supervision.
+  if (has(dp, 'keto') && has(hc, 'diabetes')) {
+    addCaution({
+      id: 'keto_with_diabetes',
+      title: 'Keto with Diabetes',
+      message: "Keto can help some people with Type 2 diabetes, but it needs medical supervision — especially if you take insulin — because of the risk of lows and ketoacidosis. Worth setting up with your diabetes team.",
+      selections: [
+        { category: 'dietary', key: 'keto' },
+        { category: 'health', key: 'diabetes' },
+      ],
+    });
+  }
+
+  // Pregnancy + Whole30: not designed for pregnancy (restrictive elimination).
+  if (has(hc, 'pregnancy') && has(dp, 'whole30')) {
+    addCaution({
+      id: 'pregnancy_with_whole30',
+      title: 'Pregnancy and Whole30',
+      message: "Whole30's own guidance says it isn't designed for pregnancy — it cuts out whole food groups you may need right now. Worth a word with your midwife or GP before continuing.",
+      selections: [
+        { category: 'health', key: 'pregnancy' },
+        { category: 'dietary', key: 'whole30' },
+      ],
+    });
+  }
+
+  // Low fibre alongside conditions where fibre actively helps. Low-fibre is a
+  // legitimate therapeutic diet (flares), so we don't force its removal.
+  for (const cond of ['diabetes', 'heartDisease', 'highCholesterol'] as const) {
+    if (has(dp, 'lowFiber') && has(hc, cond)) {
+      const label = cond === 'heartDisease' ? 'heart disease' : cond === 'highCholesterol' ? 'high cholesterol' : 'diabetes';
+      addCaution({
+        id: `lowfiber_with_${cond}`,
+        title: `Low Fibre with ${label.replace(/\b\w/g, (m) => m.toUpperCase())}`,
+        message: `Fibre usually helps ${label}, so a low fibre diet works against it. If you're low fibre for a flare-up, that's fine — just worth raising with your GP so it's the right call for you.`,
+        selections: [
+          { category: 'dietary', key: 'lowFiber' },
+          { category: 'health', key: cond },
+        ],
+      });
+    }
   }
 
   // ── Tier 2: Redundancies (auto-resolve) ────────────────────────────────────
@@ -326,5 +507,5 @@ export function detectProfileConflicts(selection: ProfileSelection): ConflictRes
     pregnancyStatus: selection.pregnancyStatus ?? null,
   };
 
-  return { hardConflicts, redundancies, resolved };
+  return { hardConflicts, redundancies, cautions, resolved };
 }

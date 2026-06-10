@@ -234,7 +234,7 @@ export default function EditProfileScreen() {
       }),
     [healthConditions, allergies, dietaryPrefs, ibsSubtype, cancerSubtype, cfSubtype, pregnancyStatus],
   );
-  const showConflictStep = conflictResult.hardConflicts.length > 0 || conflictResult.redundancies.length > 0;
+  const showConflictStep = conflictResult.hardConflicts.length > 0 || conflictResult.cautions.length > 0 || conflictResult.redundancies.length > 0;
 
   const stepSequence: StepKey[] = useMemo(() => [
     'about',
@@ -1005,6 +1005,7 @@ export default function EditProfileScreen() {
           {currentStepKey === 'conflicts' && (
             <ConflictReviewStep
               hardConflicts={conflictResult.hardConflicts}
+              cautions={conflictResult.cautions}
               redundancies={conflictResult.redundancies}
               onResolve={(_id, category, key) => {
                 if (category === 'health') setHealthConditions(prev => prev.filter(k => k !== key));
