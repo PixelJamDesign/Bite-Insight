@@ -323,7 +323,7 @@ export function detectProfileConflicts(selection: ProfileSelection): ConflictRes
       ],
       resolvable: {
         offKey: 'salt_100g',
-        nutrientName: 'Sodium',
+        nutrientName: 'Sodium/Salt',
         nutrientLabel: 'salt',
         options: [
           { category: 'health', key: 'cf', direction: 'boost' },
@@ -343,7 +343,7 @@ export function detectProfileConflicts(selection: ProfileSelection): ConflictRes
       ],
       resolvable: {
         offKey: 'salt_100g',
-        nutrientName: 'Sodium',
+        nutrientName: 'Sodium/Salt',
         nutrientLabel: 'salt',
         options: [
           { category: 'health', key: 'cf', direction: 'boost' },

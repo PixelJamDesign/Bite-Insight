@@ -192,7 +192,7 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
           'High sugar intake contributes to excess body weight, an established cancer risk factor linked to at least 13 types of cancer. Limiting added sugars supports a healthy body weight.',
       },
       {
-        nutrient: 'Sodium',
+        nutrient: 'Sodium/Salt',
         offKey: 'salt_100g',
         unit: 'g',
         reason:
@@ -368,7 +368,7 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
   'Cancer (Stomach)': {
     limit: [
       {
-        nutrient: 'Sodium',
+        nutrient: 'Sodium/Salt',
         offKey: 'salt_100g',
         unit: 'g',
         reason:
@@ -488,7 +488,7 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
           'Iron deficiency is common in CF, partly due to chronic infection and inflammation (which sequesters iron) and partly due to poor absorption. Iron is essential for oxygen transport and immune function. Red meat, fortified cereals, legumes and dark leafy greens are good sources.',
       },
       {
-        nutrient: 'Sodium',
+        nutrient: 'Sodium/Salt',
         offKey: 'salt_100g',
         unit: 'g',
         reason:
@@ -503,7 +503,7 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
   'Chronic Kidney Disease': {
     limit: [
       {
-        nutrient: 'Sodium',
+        nutrient: 'Sodium/Salt',
         offKey: 'salt_100g',
         unit: 'g',
         reason:
@@ -638,7 +638,7 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
   Diabetes: {
     limit: [
       {
-        nutrient: 'Sodium',
+        nutrient: 'Sodium/Salt',
         offKey: 'salt_100g',
         unit: 'g',
         reason:
@@ -823,7 +823,7 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
   'Heart Disease': {
     limit: [
       {
-        nutrient: 'Sodium',
+        nutrient: 'Sodium/Salt',
         offKey: 'salt_100g',
         unit: 'g',
         reason:
@@ -929,7 +929,7 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
   Hypertension: {
     limit: [
       {
-        nutrient: 'Sodium',
+        nutrient: 'Sodium/Salt',
         offKey: 'salt_100g',
         unit: 'g',
         reason:
@@ -1064,7 +1064,7 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
   Lupus: {
     limit: [
       {
-        nutrient: 'Sodium',
+        nutrient: 'Sodium/Salt',
         offKey: 'salt_100g',
         unit: 'g',
         reason:
@@ -1188,7 +1188,7 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
   'Metabolic Syndrome': {
     limit: [
       {
-        nutrient: 'Sodium',
+        nutrient: 'Sodium/Salt',
         offKey: 'salt_100g',
         unit: 'g',
         reason:
@@ -1262,7 +1262,7 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
   'Migraine / Chronic Headaches': {
     limit: [
       {
-        nutrient: 'Sodium',
+        nutrient: 'Sodium/Salt',
         offKey: 'salt_100g',
         unit: 'g',
         reason:
@@ -1310,7 +1310,7 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
   'Multiple Sclerosis': {
     limit: [
       {
-        nutrient: 'Sodium',
+        nutrient: 'Sodium/Salt',
         offKey: 'salt_100g',
         unit: 'g',
         reason:
@@ -1366,7 +1366,7 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
   Osteoporosis: {
     limit: [
       {
-        nutrient: 'Sodium',
+        nutrient: 'Sodium/Salt',
         offKey: 'salt_100g',
         unit: 'g',
         reason:
@@ -1450,7 +1450,7 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
   PCOS: {
     limit: [
       {
-        nutrient: 'Sodium',
+        nutrient: 'Sodium/Salt',
         offKey: 'salt_100g',
         unit: 'g',
         reason:
@@ -1525,7 +1525,7 @@ export const CONDITION_NUTRIENT_MAP: Record<string, ConditionNutrientProfile> = 
   'Rheumatoid Arthritis': {
     limit: [
       {
-        nutrient: 'Sodium',
+        nutrient: 'Sodium/Salt',
         offKey: 'salt_100g',
         unit: 'g',
         reason:
