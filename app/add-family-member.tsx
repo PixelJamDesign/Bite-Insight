@@ -489,25 +489,29 @@ export default function AddFamilyMemberScreen() {
     };
   }, []);
 
-  // Auto-select non-userConfirmRequired nutrients when suggestions change
-  const hasLoadedExistingRef = useRef(false);
+  // Keep the member's saved watchlist on first open, but rebuild fresh
+  // suggestions whenever their conditions change — otherwise stale picks from
+  // a removed condition (or a now-resolved conflict) would linger. The first
+  // pass just snapshots the condition signature so loading isn't seen as a change.
+  const lastConditionSigRef = useRef<string | null>(null);
   useEffect(() => {
     if (!fetched) return;
-    if (hasLoadedExistingRef.current) return;
-    hasLoadedExistingRef.current = true;
-  }, [fetched]);
-
-  // When health conditions change after initial load, recalculate choices
-  useEffect(() => {
-    if (!hasLoadedExistingRef.current) return;
+    const sig = [...healthConditions].sort().join(',');
+    const firstPass = lastConditionSigRef.current === null;
+    if (!firstPass && lastConditionSigRef.current === sig) return; // conditions unchanged
+    lastConditionSigRef.current = sig;
     setNutrientChoices(prev => {
+      // First open: honour the saved watchlist if there is one; only seed
+      // defaults when there's nothing saved. Any later condition change rebuilds
+      // fresh so stale picks don't linger.
+      if (firstPass && Object.keys(prev).length > 0) return prev;
       const choices: Record<string, 'limit' | 'boost' | 'none'> = {};
       for (const n of uniqueNutrients) {
-        choices[n.offKey] = prev[n.offKey] ?? (n.hasConflict ? 'none' : n.recommendedDirection);
+        choices[n.offKey] = n.hasConflict ? 'none' : n.recommendedDirection;
       }
       return choices;
     });
-  }, [uniqueNutrients]);
+  }, [healthConditions, uniqueNutrients, fetched]);
 
   // ── Content slide transition (same pattern as onboarding/edit-profile) ──
   const scrollRef = useRef<ScrollView>(null);

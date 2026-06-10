@@ -367,27 +367,31 @@ export default function EditProfileScreen() {
       });
   }, [session]);
 
-  // Auto-select non-userConfirmRequired nutrients when suggestions change
-  // (only if user hasn't already got a saved watchlist — we detect this via fetched + empty keys)
-  const hasLoadedExistingRef = useRef(false);
+  // The watchlist is loaded from the saved profile on first open. After that,
+  // if the user changes which conditions they have, we throw the old choices
+  // away and rebuild fresh suggestions for the new set — otherwise stale picks
+  // from conditions they removed (or a now-resolved conflict) would linger. We
+  // snapshot the condition signature on the first pass so loading doesn't itself
+  // count as a change and wipe the saved watchlist.
+  const lastConditionSigRef = useRef<string | null>(null);
   useEffect(() => {
     if (!fetched) return;
-    // Only auto-select on first load or if user had no existing watchlist
-    if (hasLoadedExistingRef.current) return;
-    hasLoadedExistingRef.current = true;
-  }, [fetched]);
-
-  // When health conditions change after initial load, recalculate choices
-  useEffect(() => {
-    if (!hasLoadedExistingRef.current) return;
+    const sig = [...healthConditions].sort().join(',') + '|' + (cancerSubtype ?? '');
+    const firstPass = lastConditionSigRef.current === null;
+    if (!firstPass && lastConditionSigRef.current === sig) return; // conditions unchanged
+    lastConditionSigRef.current = sig;
     setNutrientChoices(prev => {
+      // First open: honour the saved watchlist if there is one; only seed
+      // defaults when there's nothing saved. Any later condition change rebuilds
+      // fresh so stale picks don't linger.
+      if (firstPass && Object.keys(prev).length > 0) return prev;
       const choices: Record<string, 'limit' | 'boost' | 'none'> = {};
       for (const n of uniqueNutrients) {
-        choices[n.offKey] = prev[n.offKey] ?? (n.hasConflict ? 'none' : n.recommendedDirection);
+        choices[n.offKey] = n.hasConflict ? 'none' : n.recommendedDirection;
       }
       return choices;
     });
-  }, [uniqueNutrients]);
+  }, [healthConditions, cancerSubtype, uniqueNutrients, fetched]);
 
   // Step progress animation (5 dots max to support optional nutrient step)
   const stepAnim    = useRef(new Animated.Value(1)).current;
