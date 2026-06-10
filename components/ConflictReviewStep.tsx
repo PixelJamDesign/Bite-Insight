@@ -11,7 +11,7 @@
  *
  * Design: Figma node 5463-14952.
  */
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Radius, Shadows, Typography } from '@/constants/theme';
 import { HeartPlusIcon } from '@/components/MenuIcons';
@@ -34,7 +34,7 @@ export function ConflictReviewStep({ hardConflicts, cautions = [], redundancies,
   const allGood = hardConflicts.length === 0 && cautions.length === 0 && redundancies.length === 0;
 
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scroll}>
+    <View style={styles.root}>
       <View style={styles.panel}>
         <View style={styles.panelHeader}>
           <Text style={styles.heading}>Quick check before we save</Text>
@@ -117,14 +117,14 @@ export function ConflictReviewStep({ hardConflicts, cautions = [], redundancies,
           </View>
         )}
       </View>
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: {
-    padding: Spacing.m,
-    paddingBottom: 120,
+  root: {
+    width: '100%',
+    paddingBottom: Spacing.m,
   },
   panel: {
     backgroundColor: Colors.surface.secondary,
