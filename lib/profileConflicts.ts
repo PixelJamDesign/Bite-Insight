@@ -56,6 +56,8 @@ export interface Conflict {
    */
   resolvable?: {
     offKey: string;
+    /** Display name for the nutrient heading, e.g. "Sodium", "Fibre". */
+    nutrientName: string;
     /** Plain lowercase nutrient word for copy, e.g. "salt", "fibre". */
     nutrientLabel: string;
     options: Array<{
@@ -321,6 +323,7 @@ export function detectProfileConflicts(selection: ProfileSelection): ConflictRes
       ],
       resolvable: {
         offKey: 'salt_100g',
+        nutrientName: 'Sodium',
         nutrientLabel: 'salt',
         options: [
           { category: 'health', key: 'cf', direction: 'boost' },
@@ -340,6 +343,7 @@ export function detectProfileConflicts(selection: ProfileSelection): ConflictRes
       ],
       resolvable: {
         offKey: 'salt_100g',
+        nutrientName: 'Sodium',
         nutrientLabel: 'salt',
         options: [
           { category: 'health', key: 'cf', direction: 'boost' },
@@ -402,6 +406,7 @@ export function detectProfileConflicts(selection: ProfileSelection): ConflictRes
         ],
         resolvable: {
           offKey: 'fiber_100g',
+          nutrientName: 'Fibre',
           nutrientLabel: 'fibre',
           options: [
             { category: 'health', key: cond, direction: 'boost' },
@@ -569,6 +574,36 @@ export function resolvableCautionForOffKey(
   cautions: Conflict[],
 ): Conflict | null {
   return cautions.find((c) => c.resolvable?.offKey === offKey) ?? null;
+}
+
+/** A disputed nutrient and the sides that disagree on it, for the notice card. */
+export interface NutrientConflictGroup {
+  offKey: string;
+  nutrientName: string;
+  nutrientLabel: string;
+  sides: Array<{ category: 'health' | 'dietary'; key: string; direction: 'limit' | 'boost' }>;
+}
+
+/**
+ * Collapse the resolvable cautions into one entry per disputed nutrient, with
+ * the disagreeing sides unioned (so e.g. CF + hypertension + heart disease
+ * shows a single "Sodium" block with all three sides, not two near-duplicates).
+ */
+export function nutrientConflictGroups(cautions: Conflict[]): NutrientConflictGroup[] {
+  const byKey = new Map<string, NutrientConflictGroup>();
+  for (const c of cautions) {
+    const r = c.resolvable;
+    if (!r) continue;
+    let g = byKey.get(r.offKey);
+    if (!g) {
+      g = { offKey: r.offKey, nutrientName: r.nutrientName, nutrientLabel: r.nutrientLabel, sides: [] };
+      byKey.set(r.offKey, g);
+    }
+    for (const o of r.options) {
+      if (!g.sides.some((s) => s.category === o.category && s.key === o.key)) g.sides.push(o);
+    }
+  }
+  return Array.from(byKey.values());
 }
 
 /**

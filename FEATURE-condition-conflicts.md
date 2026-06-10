@@ -72,9 +72,13 @@ disease / high cholesterol):
 1. `Conflict.resolvable` (in `lib/profileConflicts.ts`) carries the `offKey`,
    a plain `nutrientLabel`, and which direction each side wants.
 2. The nutrient step (edit-profile / onboarding / add-family-member) shows an
-   amber note on that nutrient's row: "your conditions don't agree on salt —
-   we've left it neutral, set a direction only if your care team advised one."
-   The default stays neutral, so nothing is silently guessed.
+   "Attention" notice pinned at the **top** of the card (component
+   `components/NutrientConflictNotice.tsx`, Figma 4549-9602 / 5463-15085). It
+   lists each disputed nutrient with a line per condition ("Cystic Fibrosis:
+   wants more salt", "Hypertension: wants less salt") and says we've left it on
+   the neutral option, change only on a GP's say-so. `nutrientConflictGroups()`
+   collapses cautions to one block per nutrient with the sides unioned. The
+   default stays neutral, so nothing is silently guessed.
 3. On save we record the outcome via `deriveConflictPriorities()` into the new
    `profiles.conflict_priorities` / `family_profiles.conflict_priorities` jsonb
    (conflict id → followed selection key, or `'both'` when left neutral).

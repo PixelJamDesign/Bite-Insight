@@ -53,7 +53,8 @@ import { CancerSubtypePicker } from '@/components/CancerSubtypePicker';
 import { CfSubtypePicker } from '@/components/CfSubtypePicker';
 import { PregnancyStep } from '@/components/PregnancyStep';
 import { ConflictReviewStep } from '@/components/ConflictReviewStep';
-import { detectProfileConflicts, deriveConflictPriorities, resolvableCautionForOffKey } from '@/lib/profileConflicts';
+import { detectProfileConflicts, deriveConflictPriorities, nutrientConflictGroups } from '@/lib/profileConflicts';
+import { NutrientConflictNotice } from '@/components/NutrientConflictNotice';
 import type { IbsSubtype, CancerSubtype, CfSubtype, PregnancyStatus } from '@/lib/types';
 
 // ── Step types ────────────────────────────────────────────────────────────────
@@ -841,8 +842,16 @@ export default function OnboardingScreen() {
 
   // ── Nutrient watchlist step ────────────────────────────────────────────────
   function renderNutrientStep() {
-    // Show the "your conditions disagree here" note once per disputed nutrient.
-    const notedOffKeys = new Set<string>();
+    const conflictItems = nutrientConflictGroups(conflictResult.cautions).map((g) => ({
+      nutrientName: g.nutrientName,
+      sides: g.sides.map((s) => ({
+        label: s.category === 'health'
+          ? tpo(`healthConditions.${s.key}` as any)
+          : tpo(`dietaryPreferences.${s.key}` as any),
+        direction: s.direction,
+        nutrientLabel: g.nutrientLabel,
+      })),
+    }));
     return (
       <>
         {/* Header text */}
@@ -854,6 +863,8 @@ export default function OnboardingScreen() {
             {t('nutrient.conditionSubtitle')}
           </Text>
         </View>
+
+        <NutrientConflictNotice items={conflictItems} neutralLabel={tc('nutrientDirections.balance')} />
 
         {/* Per-condition groups */}
         {conditionGroups.map((group) => (
@@ -874,29 +885,15 @@ export default function OnboardingScreen() {
             </View>
 
             {/* Nutrient rows */}
-            {group.nutrients.map((n) => {
-              const conflict = resolvableCautionForOffKey(n.offKey, conflictResult.cautions);
-              const showNote = conflict != null && !notedOffKeys.has(n.offKey);
-              if (conflict) notedOffKeys.add(n.offKey);
-              return (
-                <View key={`${group.conditionKey}-${n.offKey}`}>
-                  <View style={styles.nutrientRow}>
-                    <Text style={styles.nutrientName}>{n.nutrient}</Text>
-                    <NutrientDropdown offKey={n.offKey} />
-                  </View>
-                  {showNote && (
-                    <View style={styles.nutrientConflictNote}>
-                      <Ionicons name="medical" size={13} color="#b87400" style={{ marginTop: 1 }} />
-                      <Text style={styles.nutrientConflictNoteText}>
-                        Your conditions don't agree on {conflict.resolvable!.nutrientLabel}. We've
-                        left it neutral — set a direction only if your care team has told you which
-                        way to go.
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              );
-            })}
+            {group.nutrients.map((n) => (
+              <View
+                key={`${group.conditionKey}-${n.offKey}`}
+                style={styles.nutrientRow}
+              >
+                <Text style={styles.nutrientName}>{n.nutrient}</Text>
+                <NutrientDropdown offKey={n.offKey} />
+              </View>
+            ))}
           </View>
         ))}
       </>
@@ -1524,24 +1521,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-  },
-  nutrientConflictNote: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 6,
-    backgroundColor: '#fdf3e0',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    marginTop: 6,
-  },
-  nutrientConflictNoteText: {
-    flex: 1,
-    fontSize: 12,
-    lineHeight: 16,
-    fontFamily: 'Figtree_300Light',
-    fontWeight: '300',
-    color: '#7a5200',
   },
   nutrientName: {
     flex: 1,
