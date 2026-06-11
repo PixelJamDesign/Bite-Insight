@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
   ctaGroup: {
     width: '100%',
     alignItems: 'center',
-    gap: 4,
+    gap: 8,
   },
   primaryBtn: {
     backgroundColor: ACCENT,
