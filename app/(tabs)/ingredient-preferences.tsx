@@ -828,6 +828,7 @@ const styles = StyleSheet.create({
   },
   // ── Search ────────────────────────────────────────────────────────────────────
   searchSection: {
+    paddingHorizontal: 24,
     paddingBottom: 4,
   },
   searchBar: {
