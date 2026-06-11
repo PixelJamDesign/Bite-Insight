@@ -39,8 +39,9 @@ const ICON_FLAG    = require('@/assets/icons/upsell/card-flag.png');
 const ICON_RECIPES = require('@/assets/icons/upsell/card-recipes.png');
 const ICON_BARCODE = require('@/assets/icons/upsell/card-barcode.png');
 
-const FADE_DURATION_MS = 500;    // length of each cross-fade
+const SLIDE_DURATION_MS = 420;   // length of each horizontal slide
 const DWELL_MS = 3200;           // time each card stays fully visible
+const OFFSCREEN = 9999;          // parked position before the window width is known
 
 interface CardData {
   icon: any;
@@ -76,40 +77,54 @@ export function UpsellPanel() {
   const [activeIndex, setActiveIndex] = useState(0);
   // One Animated.Value per card holding its opacity. Cross-fade works by
   // animating the outgoing card to 0 and the incoming card to 1 in parallel.
-  const opacities = useRef(CARDS.map((_, i) => new Animated.Value(i === 0 ? 1 : 0))).current;
+  // One Animated.Value per card holding its horizontal offset. The active card
+  // sits at 0; the others are parked off-screen. A transition slides the
+  // outgoing card out one side and the incoming card in from the other.
+  const translateX = useRef(CARDS.map((_, i) => new Animated.Value(i === 0 ? 0 : OFFSCREEN))).current;
   const indexRef = useRef(0);
   const animatingRef = useRef(false);
   // Measured height of each card, so the window can size to the active one
   // instead of a fixed height that leaves a gap under the shorter cards.
   const cardHeights = useRef<number[]>([]);
   const windowHeight = useRef(new Animated.Value(210)).current;
-  const [heightReady, setHeightReady] = useState(false);
+  const widthRef = useRef(0);
+  const [ready, setReady] = useState(false);
 
-  // Cross-fade to a card. Shared by the auto-advance timer and swipe gestures.
-  const transitionTo = useCallback((next: number) => {
+  const maybeReady = useCallback(() => {
+    if (!ready && widthRef.current > 0 && (cardHeights.current[0] ?? 0) > 0) setReady(true);
+  }, [ready]);
+
+  // Slide to a card. `dir` is the slide direction; if omitted it's inferred
+  // (forward for the next card / a higher index, backward otherwise).
+  const transitionTo = useCallback((next: number, dir?: 'forward' | 'backward') => {
     const cur = indexRef.current;
-    if (next === cur || animatingRef.current) return;
+    const w = widthRef.current;
+    if (next === cur || animatingRef.current || w <= 0) return;
+    // next/prev pass dir explicitly; a dot tap infers it from the index jump.
+    const direction = dir ?? (next > cur ? 'forward' : 'backward');
     animatingRef.current = true;
     indexRef.current = next;
     setActiveIndex(next);
+    translateX[next].setValue(direction === 'forward' ? w : -w);
     Animated.parallel([
-      Animated.timing(opacities[cur], {
-        toValue: 0, duration: FADE_DURATION_MS, easing: Easing.inOut(Easing.cubic), useNativeDriver: true,
+      Animated.timing(translateX[cur], {
+        toValue: direction === 'forward' ? -w : w,
+        duration: SLIDE_DURATION_MS, easing: Easing.out(Easing.cubic), useNativeDriver: true,
       }),
-      Animated.timing(opacities[next], {
-        toValue: 1, duration: FADE_DURATION_MS, easing: Easing.inOut(Easing.cubic), useNativeDriver: true,
+      Animated.timing(translateX[next], {
+        toValue: 0, duration: SLIDE_DURATION_MS, easing: Easing.out(Easing.cubic), useNativeDriver: true,
       }),
     ]).start(({ finished }) => { if (finished) animatingRef.current = false; });
     const targetH = cardHeights.current[next];
     if (targetH) {
       Animated.timing(windowHeight, {
-        toValue: targetH, duration: FADE_DURATION_MS, easing: Easing.inOut(Easing.cubic), useNativeDriver: false,
+        toValue: targetH, duration: SLIDE_DURATION_MS, easing: Easing.out(Easing.cubic), useNativeDriver: false,
       }).start();
     }
-  }, [opacities, windowHeight]);
+  }, [translateX, windowHeight]);
 
-  const goNext = useCallback(() => transitionTo((indexRef.current + 1) % CARDS.length), [transitionTo]);
-  const goPrev = useCallback(() => transitionTo((indexRef.current - 1 + CARDS.length) % CARDS.length), [transitionTo]);
+  const goNext = useCallback(() => transitionTo((indexRef.current + 1) % CARDS.length, 'forward'), [transitionTo]);
+  const goPrev = useCallback(() => transitionTo((indexRef.current - 1 + CARDS.length) % CARDS.length, 'backward'), [transitionTo]);
 
   // Swipe left → next, right → previous. Created once; reads live index via ref.
   const panRef = useRef<ReturnType<typeof PanResponder.create> | null>(null);
@@ -126,19 +141,22 @@ export function UpsellPanel() {
   // Auto-advance. Restarts whenever the active card changes (including swipes),
   // so a manual swipe gives the user a fresh dwell before the next auto-slide.
   useEffect(() => {
-    if (!heightReady) return;
+    if (!ready) return;
     const timer = setTimeout(goNext, DWELL_MS);
     return () => clearTimeout(timer);
-  }, [activeIndex, heightReady, goNext]);
+  }, [activeIndex, ready, goNext]);
+
+  const handleWindowLayout = (e: LayoutChangeEvent) => {
+    const w = Math.round(e.nativeEvent.layout.width);
+    if (w > 0 && widthRef.current !== w) { widthRef.current = w; maybeReady(); }
+  };
 
   const handleSlideLayout = (i: number) => (e: LayoutChangeEvent) => {
     const h = Math.round(e.nativeEvent.layout.height);
     if (h <= 0 || cardHeights.current[i] === h) return;
     cardHeights.current[i] = h;
-    if (i === indexRef.current && !animatingRef.current) {
-      windowHeight.setValue(h);
-      if (!heightReady) setHeightReady(true);
-    }
+    if (i === indexRef.current && !animatingRef.current) windowHeight.setValue(h);
+    maybeReady();
   };
 
   if (isPlus) return null;
@@ -179,6 +197,7 @@ export function UpsellPanel() {
           the window height tracks the active card so there's no dead space. */}
       <Animated.View
         style={[styles.carouselWindow, { height: windowHeight }]}
+        onLayout={handleWindowLayout}
         {...panRef.current!.panHandlers}
       >
         {CARDS.map((c, i) => (
@@ -186,7 +205,7 @@ export function UpsellPanel() {
             key={i}
             pointerEvents={i === activeIndex ? 'auto' : 'none'}
             onLayout={handleSlideLayout(i)}
-            style={[styles.slide, { opacity: opacities[i] }]}
+            style={[styles.slide, { transform: [{ translateX: translateX[i] }] }]}
           >
             <View style={styles.iconWrap}>
               <Image source={c.icon} style={styles.iconImg} resizeMode="contain" />
@@ -280,21 +299,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   iconWrap: {
-    width: 60,
-    height: 60,
+    width: 48,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: -42,
+    marginBottom: -34,
     zIndex: 2,
   },
   iconImg: {
-    width: 60,
-    height: 60,
+    width: 48,
+    height: 48,
   },
   cardBody: {
     backgroundColor: CARD_BG,
     borderRadius: Radius.m,
-    paddingTop: 48,
+    paddingTop: 40,
     paddingBottom: 24,
     paddingHorizontal: 24,
     width: '100%',
