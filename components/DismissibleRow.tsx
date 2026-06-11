@@ -136,8 +136,11 @@ export function DismissibleRow({
       onSwipeableClose={handleSwipeableClose}
       // Allow the row to be dragged past the button width so a full drag-left
       // triggers the delete directly (iOS Mail style). The long-swipe listener
-      // above fires onDismiss once the drag passes longSwipeThreshold.
+      // above fires onDismiss once the drag passes longSwipeThreshold — but it
+      // only fires if the drag value runs on the JS thread, so disable native
+      // animations here.
       overshootRight
+      useNativeAnimations={false}
       rightThreshold={40}
     >
       {children}
