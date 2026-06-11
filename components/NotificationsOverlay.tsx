@@ -407,17 +407,23 @@ export function NotificationsOverlay() {
     ({ item }: { item: InboxNotification }) => {
       if (item.type === 'family_invite') {
         return (
-          <FamilyInviteCard
-            item={item}
-            busy={respondingId === item.id}
-            onAccept={() => respondToInvite(item, 'accept')}
-            onDecline={() => respondToInvite(item, 'decline')}
-            onLeave={() => respondToInvite(item, 'leave')}
-          />
+          <DismissibleRow onDismiss={() => dismiss(item.id)} accessibilityLabel="Dismiss notification">
+            <FamilyInviteCard
+              item={item}
+              busy={respondingId === item.id}
+              onAccept={() => respondToInvite(item, 'accept')}
+              onDecline={() => respondToInvite(item, 'decline')}
+              onLeave={() => respondToInvite(item, 'leave')}
+            />
+          </DismissibleRow>
         );
       }
       if (item.type === 'family_link_accepted') {
-        return <FamilyLinkAcceptedCard item={item} />;
+        return (
+          <DismissibleRow onDismiss={() => dismiss(item.id)} accessibilityLabel="Dismiss notification">
+            <FamilyLinkAcceptedCard item={item} />
+          </DismissibleRow>
+        );
       }
       return (
         <NotificationCard
