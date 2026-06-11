@@ -175,7 +175,7 @@ function FamilyInviteCard({
   return (
     <View style={[styles.card, styles.cardUnread]}>
       <View style={styles.familyContent}>
-        {/* Avatar + "+" badge */}
+        {/* Inviter avatar */}
         <View style={styles.avatarWrap}>
           <View style={styles.avatarCircle}>
             {avatarUrl ? (
@@ -183,9 +183,6 @@ function FamilyInviteCard({
             ) : (
               <Text style={styles.avatarInitials}>{initialsFrom(inviterName)}</Text>
             )}
-          </View>
-          <View style={styles.avatarBadge}>
-            <Ionicons name="add" size={16} color="#fff" />
           </View>
         </View>
 
