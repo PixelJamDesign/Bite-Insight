@@ -42,7 +42,7 @@ const ICON_BARCODE = require('@/assets/icons/upsell/card-barcode.png');
 const SLIDE_DURATION_MS = 620;   // length of each horizontal slide
 // Soft ease-in-out — eases gently off the mark and settles without a snap.
 const SLIDE_EASING = Easing.bezier(0.4, 0, 0.2, 1);
-const DWELL_MS = 3200;           // time each card stays fully visible
+const DWELL_MS = 4200;           // time each card stays fully visible
 const OFFSCREEN = 9999;          // parked position before the window width is known
 
 interface CardData {
