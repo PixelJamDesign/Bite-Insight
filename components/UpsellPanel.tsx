@@ -374,11 +374,12 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   cancelNote: {
-    fontSize: 14,
-    lineHeight: 21,
+    // Caption: smaller, lighter fine-print under the CTA.
+    fontSize: 12,
+    lineHeight: 16,
     fontFamily: 'Figtree_300Light',
-    color: '#fff',
+    color: 'rgba(255,255,255,0.7)',
     textAlign: 'center',
-    letterSpacing: -0.14,
+    letterSpacing: -0.12,
   },
 });
