@@ -40,6 +40,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import Svg, { Path } from 'react-native-svg';
 import { router } from 'expo-router';
 import { useTrialUpsell } from '@/lib/trialUpsellContext';
 import { useSubscription } from '@/lib/subscriptionContext';
@@ -259,7 +260,15 @@ export function TrialUpsellSheet() {
                 <View style={styles.activeDotWrapper}>
                   <View style={styles.activeDotInner}>
                     <View style={[styles.railDot, styles.railDotActive]}>
-                      <Ionicons name="checkmark" size={16} color="#ffffff" />
+                      <Svg width={15} height={15} viewBox="0 0 16 16" fill="none">
+                        <Path
+                          d="M3.5 8.5l3 3 6-7"
+                          stroke="#ffffff"
+                          strokeWidth={2.6}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </Svg>
                     </View>
                   </View>
                 </View>
