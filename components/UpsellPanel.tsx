@@ -39,7 +39,9 @@ const ICON_FLAG    = require('@/assets/icons/upsell/card-flag.png');
 const ICON_RECIPES = require('@/assets/icons/upsell/card-recipes.png');
 const ICON_BARCODE = require('@/assets/icons/upsell/card-barcode.png');
 
-const SLIDE_DURATION_MS = 420;   // length of each horizontal slide
+const SLIDE_DURATION_MS = 620;   // length of each horizontal slide
+// Soft ease-in-out — eases gently off the mark and settles without a snap.
+const SLIDE_EASING = Easing.bezier(0.4, 0, 0.2, 1);
 const DWELL_MS = 3200;           // time each card stays fully visible
 const OFFSCREEN = 9999;          // parked position before the window width is known
 
@@ -75,8 +77,6 @@ const CARDS: CardData[] = [
 export function UpsellPanel() {
   const { isPlus, purchasing, priceString, purchasePlus, trialEligible, trialDays } = useSubscription();
   const [activeIndex, setActiveIndex] = useState(0);
-  // One Animated.Value per card holding its opacity. Cross-fade works by
-  // animating the outgoing card to 0 and the incoming card to 1 in parallel.
   // One Animated.Value per card holding its horizontal offset. The active card
   // sits at 0; the others are parked off-screen. A transition slides the
   // outgoing card out one side and the incoming card in from the other.
@@ -109,16 +109,16 @@ export function UpsellPanel() {
     Animated.parallel([
       Animated.timing(translateX[cur], {
         toValue: direction === 'forward' ? -w : w,
-        duration: SLIDE_DURATION_MS, easing: Easing.out(Easing.cubic), useNativeDriver: true,
+        duration: SLIDE_DURATION_MS, easing: SLIDE_EASING, useNativeDriver: true,
       }),
       Animated.timing(translateX[next], {
-        toValue: 0, duration: SLIDE_DURATION_MS, easing: Easing.out(Easing.cubic), useNativeDriver: true,
+        toValue: 0, duration: SLIDE_DURATION_MS, easing: SLIDE_EASING, useNativeDriver: true,
       }),
     ]).start(({ finished }) => { if (finished) animatingRef.current = false; });
     const targetH = cardHeights.current[next];
     if (targetH) {
       Animated.timing(windowHeight, {
-        toValue: targetH, duration: SLIDE_DURATION_MS, easing: Easing.out(Easing.cubic), useNativeDriver: false,
+        toValue: targetH, duration: SLIDE_DURATION_MS, easing: SLIDE_EASING, useNativeDriver: false,
       }).start();
     }
   }, [translateX, windowHeight]);
