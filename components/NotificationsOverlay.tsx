@@ -586,6 +586,7 @@ const styles = StyleSheet.create({
   titleBlock: {
     marginBottom: Spacing.s,
     gap: Spacing.xs,
+    paddingHorizontal: Spacing.m,
   },
   title: {
     fontSize: 24,
@@ -627,13 +628,16 @@ const styles = StyleSheet.create({
   },
   // ── List + cards ──
   listContent: {
-    paddingHorizontal: Spacing.m,
+    // No horizontal padding — the rows span the full width so a swiped card
+    // can slide off the screen edge. Cards inset themselves via marginHorizontal
+    // (and the title block re-applies the 24px gutter).
   },
   listContentEmpty: {
     flexGrow: 1,
   },
   card: {
-    width: '100%',
+    alignSelf: 'stretch',
+    marginHorizontal: Spacing.m,
     borderRadius: Radius.l,
     borderWidth: 1,
     borderColor: Colors.stroke.primary,
