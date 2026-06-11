@@ -15,7 +15,7 @@
  * Hidden when the user is already Plus (debug menu's 'Force non-Plus'
  * toggle bypasses that — see lib/subscriptionContext.tsx).
  */
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -25,6 +25,8 @@ import {
   ActivityIndicator,
   Animated,
   Easing,
+  PanResponder,
+  type LayoutChangeEvent,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -75,43 +77,69 @@ export function UpsellPanel() {
   // One Animated.Value per card holding its opacity. Cross-fade works by
   // animating the outgoing card to 0 and the incoming card to 1 in parallel.
   const opacities = useRef(CARDS.map((_, i) => new Animated.Value(i === 0 ? 1 : 0))).current;
+  const indexRef = useRef(0);
+  const animatingRef = useRef(false);
+  // Measured height of each card, so the window can size to the active one
+  // instead of a fixed height that leaves a gap under the shorter cards.
+  const cardHeights = useRef<number[]>([]);
+  const windowHeight = useRef(new Animated.Value(210)).current;
+  const [heightReady, setHeightReady] = useState(false);
 
+  // Cross-fade to a card. Shared by the auto-advance timer and swipe gestures.
+  const transitionTo = useCallback((next: number) => {
+    const cur = indexRef.current;
+    if (next === cur || animatingRef.current) return;
+    animatingRef.current = true;
+    indexRef.current = next;
+    setActiveIndex(next);
+    Animated.parallel([
+      Animated.timing(opacities[cur], {
+        toValue: 0, duration: FADE_DURATION_MS, easing: Easing.inOut(Easing.cubic), useNativeDriver: true,
+      }),
+      Animated.timing(opacities[next], {
+        toValue: 1, duration: FADE_DURATION_MS, easing: Easing.inOut(Easing.cubic), useNativeDriver: true,
+      }),
+    ]).start(({ finished }) => { if (finished) animatingRef.current = false; });
+    const targetH = cardHeights.current[next];
+    if (targetH) {
+      Animated.timing(windowHeight, {
+        toValue: targetH, duration: FADE_DURATION_MS, easing: Easing.inOut(Easing.cubic), useNativeDriver: false,
+      }).start();
+    }
+  }, [opacities, windowHeight]);
+
+  const goNext = useCallback(() => transitionTo((indexRef.current + 1) % CARDS.length), [transitionTo]);
+  const goPrev = useCallback(() => transitionTo((indexRef.current - 1 + CARDS.length) % CARDS.length), [transitionTo]);
+
+  // Swipe left → next, right → previous. Created once; reads live index via ref.
+  const panRef = useRef<ReturnType<typeof PanResponder.create> | null>(null);
+  if (!panRef.current) {
+    panRef.current = PanResponder.create({
+      onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 10 && Math.abs(g.dx) > Math.abs(g.dy),
+      onPanResponderRelease: (_, g) => {
+        if (g.dx <= -40) goNext();
+        else if (g.dx >= 40) goPrev();
+      },
+    });
+  }
+
+  // Auto-advance. Restarts whenever the active card changes (including swipes),
+  // so a manual swipe gives the user a fresh dwell before the next auto-slide.
   useEffect(() => {
-    let cancelled = false;
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    let current = 0;
+    if (!heightReady) return;
+    const timer = setTimeout(goNext, DWELL_MS);
+    return () => clearTimeout(timer);
+  }, [activeIndex, heightReady, goNext]);
 
-    const step = () => {
-      if (cancelled) return;
-      const next = (current + 1) % CARDS.length;
-      Animated.parallel([
-        Animated.timing(opacities[current], {
-          toValue: 0,
-          duration: FADE_DURATION_MS,
-          easing: Easing.inOut(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacities[next], {
-          toValue: 1,
-          duration: FADE_DURATION_MS,
-          easing: Easing.inOut(Easing.cubic),
-          useNativeDriver: true,
-        }),
-      ]).start(({ finished }) => {
-        if (!finished || cancelled) return;
-        current = next;
-        setActiveIndex(next);
-        timer = setTimeout(step, DWELL_MS);
-      });
-    };
-
-    timer = setTimeout(step, DWELL_MS);
-
-    return () => {
-      cancelled = true;
-      if (timer) clearTimeout(timer);
-    };
-  }, [opacities]);
+  const handleSlideLayout = (i: number) => (e: LayoutChangeEvent) => {
+    const h = Math.round(e.nativeEvent.layout.height);
+    if (h <= 0 || cardHeights.current[i] === h) return;
+    cardHeights.current[i] = h;
+    if (i === indexRef.current && !animatingRef.current) {
+      windowHeight.setValue(h);
+      if (!heightReady) setHeightReady(true);
+    }
+  };
 
   if (isPlus) return null;
 
@@ -147,12 +175,17 @@ export function UpsellPanel() {
       <Text style={styles.headline}>{headline}</Text>
 
       {/* Carousel — all four cards rendered absolutely in the same slot,
-          opacity-driven cross-fade between them. */}
-      <View style={styles.carouselWindow}>
+          opacity-driven cross-fade between them. Swipe left/right to navigate;
+          the window height tracks the active card so there's no dead space. */}
+      <Animated.View
+        style={[styles.carouselWindow, { height: windowHeight }]}
+        {...panRef.current!.panHandlers}
+      >
         {CARDS.map((c, i) => (
           <Animated.View
             key={i}
             pointerEvents={i === activeIndex ? 'auto' : 'none'}
+            onLayout={handleSlideLayout(i)}
             style={[styles.slide, { opacity: opacities[i] }]}
           >
             <View style={styles.iconWrap}>
@@ -164,12 +197,20 @@ export function UpsellPanel() {
             </View>
           </Animated.View>
         ))}
-      </View>
+      </Animated.View>
 
-      {/* Dot indicators */}
+      {/* Dot indicators — tappable to jump to a card */}
       <View style={styles.dots}>
         {CARDS.map((_, i) => (
-          <View key={i} style={[styles.dot, i !== activeIndex && styles.dotInactive]} />
+          <TouchableOpacity
+            key={i}
+            onPress={() => transitionTo(i)}
+            hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
+            accessibilityRole="button"
+            accessibilityLabel={`Go to feature ${i + 1}`}
+          >
+            <View style={[styles.dot, i !== activeIndex && styles.dotInactive]} />
+          </TouchableOpacity>
         ))}
       </View>
 
@@ -225,9 +266,9 @@ const styles = StyleSheet.create({
     // Small top buffer for the floating icon. The icon negative-margins
     // by 42 into the card body so we don't need the full 60 px.
     paddingTop: 4,
-    minHeight: 220,
     marginTop: -8,
     position: 'relative',
+    overflow: 'hidden',
   },
   slide: {
     position: 'absolute',
