@@ -233,27 +233,29 @@ export function UpsellPanel() {
         ))}
       </View>
 
-      {/* CTA */}
-      <TouchableOpacity
-        style={[styles.primaryBtn, purchasing && styles.primaryBtnDisabled]}
-        activeOpacity={0.85}
-        disabled={purchasing}
-        onPress={handlePress}
-      >
-        {purchasing ? (
-          <ActivityIndicator size="small" color="#fff" />
-        ) : (
-          <Text
-            style={styles.primaryBtnText}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.85}
-          >
-            {ctaLabel}
-          </Text>
-        )}
-      </TouchableOpacity>
-      <Text style={styles.cancelNote}>Cancel anytime in the App Store</Text>
+      {/* CTA + fine print — grouped so the caption tucks 4px under the button */}
+      <View style={styles.ctaGroup}>
+        <TouchableOpacity
+          style={[styles.primaryBtn, purchasing && styles.primaryBtnDisabled]}
+          activeOpacity={0.85}
+          disabled={purchasing}
+          onPress={handlePress}
+        >
+          {purchasing ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text
+              style={styles.primaryBtnText}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.85}
+            >
+              {ctaLabel}
+            </Text>
+          )}
+        </TouchableOpacity>
+        <Text style={styles.cancelNote}>Cancel anytime in the App Store</Text>
+      </View>
     </LinearGradient>
   );
 }
@@ -349,6 +351,11 @@ const styles = StyleSheet.create({
   },
   dotInactive: {
     opacity: 0.3,
+  },
+  ctaGroup: {
+    width: '100%',
+    alignItems: 'center',
+    gap: 4,
   },
   primaryBtn: {
     backgroundColor: ACCENT,
