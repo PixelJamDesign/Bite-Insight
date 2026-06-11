@@ -15,7 +15,8 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Radius, Shadows, Typography } from '@/constants/theme';
 import { HeartPlusIcon } from '@/components/MenuIcons';
-import type { Conflict } from '@/lib/profileConflicts';
+import { NutrientConflictNotice } from '@/components/NutrientConflictNotice';
+import { nutrientConflictGroups, type Conflict } from '@/lib/profileConflicts';
 
 const ORANGE = '#ff8736';
 
@@ -28,10 +29,28 @@ interface Props {
   onResolve: (conflictId: string, removeCategory: 'health' | 'allergy' | 'dietary', removeKey: string) => void;
   /** Keys of labels — caller provides. Pass any Map/dict/function that returns a label for a given (category,key) */
   labelFor: (category: 'health' | 'allergy' | 'dietary', key: string) => string;
+  /** Label of the neutral nutrient option, e.g. "Balance". */
+  neutralLabel?: string;
 }
 
-export function ConflictReviewStep({ hardConflicts, cautions = [], redundancies, onResolve, labelFor }: Props) {
+export function ConflictReviewStep({ hardConflicts, cautions = [], redundancies, onResolve, labelFor, neutralLabel = 'Balance' }: Props) {
   const allGood = hardConflicts.length === 0 && cautions.length === 0 && redundancies.length === 0;
+
+  // Group the nutrient-based cautions by disputed nutrient so every condition
+  // pulling on that nutrient shows in one place (e.g. CF + heart disease +
+  // hypertension all under "Sodium"), matching the watchlist notice design.
+  const noticeItems = nutrientConflictGroups(cautions).map((g) => ({
+    nutrientName: g.nutrientName,
+    sides: g.sides.map((s) => ({
+      label: labelFor(s.category, s.key),
+      direction: s.direction,
+      nutrientLabel: g.nutrientLabel,
+    })),
+  }));
+  // Cautions that aren't tied to a single shared nutrient (e.g. CF vs high
+  // cholesterol's total-fat vs saturated-fat tension, keto + diabetes) stay as
+  // their own notes beneath the grouped card.
+  const otherCautions = cautions.filter((c) => !c.resolvable);
 
   return (
     <View style={styles.root}>
@@ -76,7 +95,10 @@ export function ConflictReviewStep({ hardConflicts, cautions = [], redundancies,
         {cautions.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>Worth a word with your doctor</Text>
-            {cautions.map((c) => (
+            {noticeItems.length > 0 && (
+              <NutrientConflictNotice items={noticeItems} neutralLabel={neutralLabel} />
+            )}
+            {otherCautions.map((c) => (
               <View key={c.id} style={styles.cautionCard}>
                 <View style={styles.attentionPill}>
                   <HeartPlusIcon size={15} color="#fff" />

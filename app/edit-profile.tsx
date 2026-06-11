@@ -1054,6 +1054,7 @@ export default function EditProfileScreen() {
               hardConflicts={conflictResult.hardConflicts}
               cautions={conflictResult.cautions}
               redundancies={conflictResult.redundancies}
+              neutralLabel={tc('nutrientDirections.balance')}
               onResolve={(_id, category, key) => {
                 if (category === 'health') setHealthConditions(prev => prev.filter(k => k !== key));
                 if (category === 'allergy') setAllergies(prev => prev.filter(k => k !== key));
