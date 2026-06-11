@@ -21,7 +21,7 @@ import {
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Radius } from '@/constants/theme';
+import { Colors } from '@/constants/theme';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
@@ -109,7 +109,7 @@ export function DismissibleRow({
       // progress, so the red plate fades in/out at the same rate as the
       // icon rather than sitting solid the moment the row moves.
       return (
-        <Animated.View style={{ opacity: iconOpacity }}>
+        <Animated.View style={[styles.actionContainer, { opacity: iconOpacity }]}>
           <TouchableOpacity
             style={styles.defaultAction}
             onPress={onDismiss}
@@ -143,11 +143,19 @@ export function DismissibleRow({
 }
 
 const styles = StyleSheet.create({
+  // Full row height so the circular button can centre vertically against
+  // the card, regardless of how tall the card is.
+  actionContainer: {
+    width: 72,
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   defaultAction: {
     backgroundColor: Colors.status.negative,
-    borderRadius: Radius.l,
-    width: 72,
-    marginLeft: 4,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },
