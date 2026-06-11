@@ -29,9 +29,11 @@
 import { useEffect, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
+import { useSegments } from 'expo-router';
 import { useAuth } from '@/lib/auth';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { useTrialUpsell, TRIAL_UPSELL_KEYS } from '@/lib/trialUpsellContext';
+import { shouldShowWhatsNew } from '@/app/whats-new';
 
 const GRACE_HOURS = 48;
 const COOLDOWN_DAYS = 7;
@@ -46,6 +48,9 @@ export function useTrialUpsellTrigger() {
   const { session } = useAuth();
   const { isPlus, trialEligible } = useSubscription();
   const { showTrialUpsell } = useTrialUpsell();
+  const segments = useSegments();
+  // segments[0] is the active route group; '(tabs)' is the dashboard area.
+  const onDashboard = segments[0] === '(tabs)';
 
   // One-shot per app launch — prevents the rules being re-evaluated
   // on every dependency change. A relaunch resets the ref naturally.
@@ -58,27 +63,36 @@ export function useTrialUpsellTrigger() {
 
     const userId = session?.user?.id;
     if (!userId) return;
-
-    // DEV-ONLY override — bypass every rule (Plus, eligibility, grace
-    // period, cooldown, max-shows, coin flip) so the sheet is visible
-    // on every cold launch in Expo Go / sim. Lets you QA the trial
-    // sheet without flipping Supabase state or waiting 48h. Strip
-    // before shipping or just leave it — __DEV__ is false in release
-    // builds so prod is unaffected.
-    if (__DEV__ && !firedThisLaunchRef.current) {
-      firedThisLaunchRef.current = true;
-      setTimeout(() => showTrialUpsell(), SHOW_DELAY_MS);
-      return;
-    }
-
-    if (isPlus) return;
-    if (!trialEligible) return;
     if (firedThisLaunchRef.current) return;
+    // Only ever consider firing on the dashboard — never over the What's New
+    // screen (or any other route), so the trial sheet sits *after* What's New.
+    // This re-runs when the route segment changes, so once the user dismisses
+    // What's New and lands back here it gets a chance to fire.
+    if (!onDashboard) return;
 
     let cancelled = false;
 
     (async () => {
       try {
+        // Hold off while a What's New is still pending for this version — the
+        // user is about to be redirected to it. Don't set the one-shot ref so
+        // we re-evaluate once they've dismissed it and come back.
+        if (await shouldShowWhatsNew()) return;
+        if (cancelled) return;
+
+        // DEV-ONLY override — bypass every rule (Plus, eligibility, grace
+        // period, cooldown, max-shows, coin flip) so the sheet is visible on
+        // every cold launch in Expo Go / sim. __DEV__ is false in release
+        // builds so prod is unaffected.
+        if (__DEV__) {
+          firedThisLaunchRef.current = true;
+          setTimeout(() => { if (!cancelled) showTrialUpsell(); }, SHOW_DELAY_MS);
+          return;
+        }
+
+        if (isPlus) return;
+        if (!trialEligible) return;
+
         // Read all four persisted markers in parallel.
         const [convertedAt, firstSeenAt, lastShownAt, dismissCountRaw] =
           await Promise.all([
@@ -143,5 +157,5 @@ export function useTrialUpsellTrigger() {
     return () => {
       cancelled = true;
     };
-  }, [session?.user?.id, isPlus, trialEligible, showTrialUpsell]);
+  }, [session?.user?.id, isPlus, trialEligible, showTrialUpsell, onDashboard]);
 }
