@@ -105,23 +105,59 @@ function BellIcon({ width = 28 }: { width?: number; height?: number }) {
   return <MenuNotificationsIcon color={Colors.primary} size={width} />;
 }
 
-// v1.8.0 — two new features worth surfacing: family account linking (Plus)
-// and the notification inbox.
+// Apple glyph for the ingredients card (Figma "Food=Apple"). Line style to
+// match the other What's New card icons.
+function AppleIcon({ width = 28 }: { width?: number; height?: number }) {
+  return (
+    <Svg width={width} height={width} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 8.2c-1.5-1.7-4-2.2-6-1C3.9 8.6 3.3 11.6 4.3 14.3 5.3 17 7.6 20 9.9 20c1 0 1.4-.5 2.1-.5s1.1.5 2.1.5c2.3 0 4.6-3 5.6-5.7 1-2.7.4-5.7-1.7-7.1-2-1.2-4.5-.7-6 1z"
+        stroke={Colors.primary}
+        strokeWidth={1.8}
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M12 8.2c-.2-1.9.4-3.4 2-4.3 1.4-.8 3-.7 4.3-.2-.2 1.4-1 2.7-2.3 3.4-1.3.7-2.8.8-4 1.1z"
+        stroke={Colors.primary}
+        strokeWidth={1.8}
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+// v1.8.2 — new conditions/allergies, and the biggest ingredient update yet.
 const CARDS: CardData[] = [
   {
-    badge: 'New Feature',
-    title: 'Invite & Link Family Accounts',
-    plus: true,
-    icon: FamilyInsightsIcon,
+    badge: 'New Additions!',
+    title: 'New Conditions, Allergies & Diets',
+    icon: ProfileAdditionsIcon,
     description:
-      'Bite Insight+ members can now invite family members to link their own accounts, giving your household clearer, more personalised insights when scanning food.',
+      "You spoke, and we listened. We've updated the health conditions, allergies and diets to now include:",
+    subsections: [
+      { heading: 'Health Conditions', bullets: ['Asthma', 'Candida Overgrowth (SIFO)'] },
+      { heading: 'Allergies', bullets: ['Yeast Intolerance'] },
+    ],
   },
   {
-    badge: 'New Feature',
-    title: 'Notifications',
-    icon: BellIcon,
+    badge: 'New Additions!',
+    title: '50+ New Ingredients!',
+    icon: AppleIcon,
     description:
-      'Stay in the loop with helpful Bite Insight notifications, including important updates, account activity, and reminders that support your food choices.',
+      'Our biggest ingredient update since we launched the app, all here to give you better insight.',
+    subsections: [
+      {
+        heading: 'Ingredients and categories added:',
+        bullets: [
+          { title: 'Artificial Sweeteners', sub: 'Including Aspartame, Sucralose, Xylitol, Acesulfame K and more.' },
+          { title: 'Colours', sub: 'Including Titanium Dioxide, Tartrazine, Sunset Yellow, Caramel Colour and more.' },
+          { title: 'Preservatives', sub: 'Including Sodium Nitrite and Nitrate, Sulphites, Sodium Benzoate, Potassium Sorbate and more.' },
+          { title: 'Sugars & Syrups', sub: 'Including Agave Syrup, Corn Syrup, Fructose, Glucose Syrup, Golden Syrup, Invert Sugar, Maltodextrin and more.' },
+          { title: 'Yeasts', sub: "Including Brewer's Yeast, Dried Yeast, Nutritional Yeast, Yeast Extract and Malt Extract." },
+          { title: 'Fermented', sub: 'Including Kombucha, Miso, Sauerkraut, Soy Sauce, Vinegar and Malt Vinegar.' },
+        ],
+      },
+    ],
   },
 ];
 
@@ -212,17 +248,16 @@ export default function WhatsNewScreen() {
                     const isStructured = typeof bullet !== 'string';
                     return (
                       <View key={k} style={styles.bulletRow}>
-                        <BulletMarker size={18} />
+                        <View style={styles.bulletMarker}>
+                          <BulletMarker size={18} />
+                        </View>
                         {isStructured ? (
-                          <Text style={styles.bulletText}>
+                          <View style={styles.bulletContent}>
                             <Text style={styles.bulletTitle}>{bullet.title}</Text>
                             {bullet.sub ? (
-                              <>
-                                {'\n'}
-                                <Text style={styles.bulletSub}>{bullet.sub}</Text>
-                              </>
+                              <Text style={styles.bulletSub}>{bullet.sub}</Text>
                             ) : null}
-                          </Text>
+                          </View>
                         ) : (
                           <Text style={styles.bulletText}>{bullet}</Text>
                         )}
@@ -403,22 +438,30 @@ const styles = StyleSheet.create({
     gap: Spacing.s,
     marginBottom: 2,
   },
+  // Nudge the marker down so it lines up with the first line of text
+  // (matches the Figma "Bullet Container" top padding).
+  bulletMarker: {
+    paddingTop: 3,
+  },
   bulletText: {
     fontSize: 16,
     lineHeight: 24,
     fontWeight: '300',
     fontFamily: 'Figtree_300Light',
     letterSpacing: 0,
-    color: Colors.secondary,
+    color: Colors.primary,
+    flex: 1,
+  },
+  bulletContent: {
     flex: 1,
   },
   bulletTitle: {
     fontSize: 16,
     lineHeight: 24,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    letterSpacing: -0.32,
-    color: Colors.secondary,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
+    letterSpacing: 0,
+    color: Colors.primary,
   },
   bulletSub: {
     fontSize: 14,
@@ -427,6 +470,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_300Light',
     letterSpacing: -0.14,
     color: Colors.secondary,
+    paddingBottom: Spacing.s,
   },
 
   // ── Footer ────────────────────────────────────────────────────────────────
