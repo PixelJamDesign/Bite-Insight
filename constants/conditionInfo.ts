@@ -180,7 +180,7 @@ export const CONDITION_INFO: Record<string, ConditionInfoEntry> = {
   candida: {
     fullName: 'Candida Overgrowth (SIFO)',
     description:
-      'Candida overgrowth, also called SIFO (small intestinal fungal overgrowth), is when yeast in the gut grows beyond healthy levels. The yeast feeds on sugar, so the usual approach cuts back on sugar, refined carbs, yeast, alcohol and fermented foods. Probiotics and plenty of non-starchy vegetables can help alongside it.',
+      "Candida overgrowth, sometimes called SIFO (small intestinal fungal overgrowth), is when yeast in the gut grows beyond its usual levels. The popular anti-candida diet cuts back on sugar, refined carbs, yeast, alcohol and fermented foods, with probiotics and non-starchy vegetables alongside. Worth knowing: the evidence that diet treats candida is limited, and antifungal medicine is the usual medical route, so this is a good one to talk through with your GP. We flag the foods the diet avoids so you can follow it if that's the path you've chosen.",
   },
   sibo: {
     fullName: 'Small Intestinal Bacterial Overgrowth (SIBO)',

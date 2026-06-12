@@ -76,9 +76,9 @@ export const ALLERGY_KEYWORDS: Record<string, AllergyEntry> = {
       'autolysed yeast extract', 'hydrolyzed yeast', 'hydrolysed yeast',
       'hydrolyzed yeast protein', 'torula yeast', 'deactivated yeast',
       'dried yeast', 'active dry yeast', 'instant yeast', 'yeast powder',
-      'malt extract', 'malt vinegar',
       'marmite', 'vegemite', 'bovril',
-      // Yeast-leavened / yeast-fermented products
+      // Yeast-leavened / yeast-fermented products. (Malt is excluded — malting
+      // is enzymatic, not yeast-fermented, so it isn't a yeast source.)
       'sourdough', 'beer', 'ale', 'lager', 'stout', 'wine', 'cider',
       'stock cube', 'bouillon', 'gravy granules', 'kombucha',
     ],
@@ -86,7 +86,7 @@ export const ALLERGY_KEYWORDS: Record<string, AllergyEntry> = {
       'en:yeast', 'en:yeast-extract', 'en:bakers-yeast', 'en:brewers-yeast',
       'en:nutritional-yeast', 'en:autolysed-yeast-extract',
       'en:autolyzed-yeast-extract', 'en:torula-yeast', 'en:deactivated-yeast',
-      'en:dried-yeast', 'en:yeast-powder', 'en:malt-extract', 'en:malt-vinegar',
+      'en:dried-yeast', 'en:yeast-powder',
       'en:beer', 'en:wine', 'en:cider',
     ],
   },
