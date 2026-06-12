@@ -163,7 +163,7 @@ export const INSIGHT_DEFS: InsightDef[] = [
     label: 'Glycemic impact',
     iconWidth: 31,
     iconHeight: 44,
-    relevantTo: ['diabetes', 'preDiabetes', 'insulinResistance', 'pcos', 'keto', 'weightLoss'],
+    relevantTo: ['diabetes', 'preDiabetes', 'insulinResistance', 'pcos', 'keto', 'weightLoss', 'candida'],
     compute: (d) => {
       const sugars = d.sugars ? parseFloat(d.sugars) : NaN;
       if (isNaN(sugars)) return null;
@@ -199,7 +199,7 @@ export const INSIGHT_DEFS: InsightDef[] = [
     label: 'Sugar',
     iconWidth: 48,
     iconHeight: 48,
-    relevantTo: ['diabetes', 'preDiabetes', 'insulinResistance', 'pcos', 'nafld', 'weightLoss', 'keto', 'childFriendly'],
+    relevantTo: ['diabetes', 'preDiabetes', 'insulinResistance', 'pcos', 'nafld', 'weightLoss', 'keto', 'childFriendly', 'candida'],
     compute: (d) => {
       const sugars = d.sugars ? parseFloat(d.sugars) : NaN;
       if (isNaN(sugars)) return null;
@@ -299,7 +299,7 @@ export const INSIGHT_DEFS: InsightDef[] = [
     label: 'Carb load',
     iconWidth: 43,
     iconHeight: 44,
-    relevantTo: ['keto', 'diabetes', 'preDiabetes', 'insulinResistance'],
+    relevantTo: ['keto', 'diabetes', 'preDiabetes', 'insulinResistance', 'candida'],
     compute: (d) => {
       const carbs = d.carbs ? parseFloat(d.carbs) : NaN;
       if (isNaN(carbs)) return null;
@@ -315,7 +315,7 @@ export const INSIGHT_DEFS: InsightDef[] = [
     label: 'Additives',
     iconWidth: 33,
     iconHeight: 44,
-    relevantTo: ['childFriendly', 'adhd', 'autism', 'eczema', 'ibs', 'migraine', 'cleanEating'],
+    relevantTo: ['childFriendly', 'adhd', 'autism', 'eczema', 'ibs', 'migraine', 'cleanEating', 'asthma'],
     compute: (d) => {
       const count = d.additiveCount ?? -1;
       if (count < 0) return null;
@@ -375,6 +375,8 @@ export const INSIGHT_WEIGHTS: Record<string, Partial<Record<InsightKey, number>>
   hypothyroidism:    { sugar: 8 },
   hashimotos:        { sugar: 8 },
   fructose:          { sugar: 10 },
+  candida:           { sugar: 10, glycemic: 9, carbLoad: 8 },
+  asthma:            { additives: 10 },
 };
 
 /**

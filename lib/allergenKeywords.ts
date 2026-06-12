@@ -78,12 +78,16 @@ export const ALLERGY_KEYWORDS: Record<string, AllergyEntry> = {
       'dried yeast', 'active dry yeast', 'instant yeast', 'yeast powder',
       'malt extract', 'malt vinegar',
       'marmite', 'vegemite', 'bovril',
+      // Yeast-leavened / yeast-fermented products
+      'sourdough', 'beer', 'ale', 'lager', 'stout', 'wine', 'cider',
+      'stock cube', 'bouillon', 'gravy granules', 'kombucha',
     ],
     ingredientIds: [
       'en:yeast', 'en:yeast-extract', 'en:bakers-yeast', 'en:brewers-yeast',
       'en:nutritional-yeast', 'en:autolysed-yeast-extract',
       'en:autolyzed-yeast-extract', 'en:torula-yeast', 'en:deactivated-yeast',
       'en:dried-yeast', 'en:yeast-powder', 'en:malt-extract', 'en:malt-vinegar',
+      'en:beer', 'en:wine', 'en:cider',
     ],
   },
   'Histamine Intolerance': {
