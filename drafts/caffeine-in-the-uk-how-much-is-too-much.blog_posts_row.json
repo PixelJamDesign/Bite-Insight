@@ -1,0 +1,27 @@
+{
+  "_note": "Shaped to match the real public.blog_posts table in the Bite Insight Supabase project (checked via the Supabase MCP tools). NOT inserted into the database by this run, per the task instructions to never publish/deploy/upload anything live. `body` here is a pointer to the actual HTML file since it's long; paste the contents of caffeine-in-the-uk-how-much-is-too-much.body.html into the real body field.",
+  "title": "Caffeine in the UK: How Much Is In Your Coffee, Tea and Energy Drinks (And When to Stop)",
+  "slug": "caffeine-in-the-uk-how-much-is-too-much",
+  "excerpt": "A coffee to start, tea at your desk, maybe an energy drink to get through the afternoon. Here's how much caffeine is actually in each one, why the same cup hits some people much harder than others, and when to actually stop drinking it before bed.",
+  "body": "see caffeine-in-the-uk-how-much-is-too-much.body.html",
+  "category": "Nutrition",
+  "categories": ["Nutrition", "Health Tips"],
+  "featured_image_url": "/images/blog/caffeine-in-the-uk-how-much-is-too-much/hero-coffee-cup-morning.jpg",
+  "author": "Bite Insight Team",
+  "status": "draft",
+  "meta_title": "Caffeine in the UK: How Much Is In Your Coffee, Tea and Energy Drinks",
+  "meta_description": "The FSA's daily caffeine limit, how much is actually in coffee, tea, decaf and energy drinks, the new under 16s energy drink ban, and why genetics changes how caffeine affects you.",
+  "reading_time_mins": 8,
+  "ai_summary": "Caffeine's UK safe upper limit is 400mg a day, or 200mg during pregnancy, but ordinary drinks add up faster than most people track. This guide breaks down how much caffeine is actually in filter coffee, espresso, instant, tea and decaf, explains England's incoming under 16s energy drink ban and the high caffeine warning label rule already on shelves, and shows why a gene called CYP1A2 makes the same cup of coffee affect some people four times longer than others, with a practical cutoff time for better sleep.",
+  "sources": [
+    { "url": "https://www.food.gov.uk/print/pdf/node/24361", "title": "Caffeine guidance", "source": "Food Standards Agency" },
+    { "url": "https://www.efsa.europa.eu/sites/default/files/corporate_publications/files/efsaexplainscaffeine150527.pdf", "title": "EFSA explains caffeine", "source": "European Food Safety Authority" },
+    { "url": "https://www.itv.com/news/2026-07-16/under-16s-in-england-to-be-banned-from-buying-energy-drinks", "title": "Under-16s in England to be banned from buying energy drinks", "source": "ITV News" },
+    { "url": "https://www.gov.uk/food-labelling-and-packaging/food-and-drink-warnings", "title": "Food and drink warnings", "source": "GOV.UK" },
+    { "url": "https://www.eufic.org/en/healthy-living/article/caffeine-levels-in-different-foods-and-drinks", "title": "Caffeine levels in different foods and drinks", "source": "EUFIC" },
+    { "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9956387/", "title": "Sleep Quality and Duration in Children That Consume Caffeine: Impact of Dose and Genetic Variation in ADORA2A and CYP1A", "source": "PMC" }
+  ],
+  "is_featured": false,
+  "audio_url": "/audio/blog/caffeine-in-the-uk-how-much-is-too-much.mp3",
+  "wordCount": 1665
+}
