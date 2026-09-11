@@ -1,12 +1,12 @@
 {
-  "_note": "Shaped to match the real public.blog_posts table in the Bite Insight Supabase project (checked via the Supabase MCP tools). NOT inserted into the database by this run, per the task instructions to never publish/deploy/upload anything live. `body` here is a pointer to the actual HTML file since it's long; paste the contents of caffeine-in-the-uk-how-much-is-too-much.body.html into the real body field.",
+  "_note": "Shaped to match the real public.blog_posts table in the Bite Insight Supabase project. This row IS live in the database (id 892b8ebf-24ba-4a5e-bbd5-9a3e9023544a, status draft), inserted and then updated in this session at the user's explicit request, with real image/audio files uploaded to the blog-images Storage bucket. `body` here is a pointer to the actual HTML file since it's long; the live DB row's body field has the same content with Storage URLs substituted for the local paths.",
   "title": "Caffeine in the UK: How Much Is In Your Coffee, Tea and Energy Drinks (And When to Stop)",
   "slug": "caffeine-in-the-uk-how-much-is-too-much",
   "excerpt": "A coffee to start, tea at your desk, maybe an energy drink to get through the afternoon. Here's how much caffeine is actually in each one, why the same cup hits some people much harder than others, and when to actually stop drinking it before bed.",
   "body": "see caffeine-in-the-uk-how-much-is-too-much.body.html",
   "category": "Nutrition",
   "categories": ["Nutrition", "Health Tips"],
-  "featured_image_url": "/images/blog/caffeine-in-the-uk-how-much-is-too-much/hero-coffee-cup-morning.jpg",
+  "featured_image_url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/1789117137343-hero-coffee-cup-morning.jpg",
   "author": "Bite Insight Team",
   "status": "draft",
   "meta_title": "Caffeine in the UK: How Much Is In Your Coffee, Tea and Energy Drinks",
@@ -22,7 +22,7 @@
     { "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9956387/", "title": "Sleep Quality and Duration in Children That Consume Caffeine: Impact of Dose and Genetic Variation in ADORA2A and CYP1A", "source": "PMC" }
   ],
   "is_featured": false,
-  "audio_url": "/audio/blog/caffeine-in-the-uk-how-much-is-too-much.mp3",
+  "audio_url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/audio/1789117137346-Caffeine_in_the_UK_How_Much_Is_In_Your_Coffee.mp3",
   "audioGeneration": {
     "provider": "ElevenLabs (direct API call, not Magnific)",
     "model": "eleven_multilingual_v2",
