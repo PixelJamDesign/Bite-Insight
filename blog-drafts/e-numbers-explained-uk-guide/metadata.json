@@ -23,7 +23,7 @@
   "is_featured": false,
   "ai_summary": "This article explains what E numbers actually are and why having one does not mean an ingredient is synthetic or unsafe. It highlights the additives with genuine evidence against them, including the Southampton Six food colourings, nitrites in processed meat, gut-disrupting emulsifiers and titanium dioxide, and gives practical tips for reading UK food labels.",
   "featured_image_url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/e-numbers-explained-what-they-really-mean-hero.jpg",
-  "audio_url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/audio/1789121507206-E_Numbers_Explained.mp3",
+  "audio_url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/audio/1789123574103-E_Numbers_Explained.mp3",
   "images": [
     {
       "role": "hero",
@@ -45,7 +45,7 @@
     }
   ],
   "audio": {
-    "url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/audio/1789121507206-E_Numbers_Explained.mp3",
+    "url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/audio/1789123574103-E_Numbers_Explained.mp3",
     "voice": "Glenn (nqjdE3SY6EzSAFVCxO3s)",
     "provider": "ElevenLabs",
     "model": "eleven_multilingual_v2",
@@ -57,8 +57,9 @@
       "speed": 1.05
     },
     "output_format": "mp3_44100_128",
-    "duration_approx": "12 minutes 32 seconds",
-    "note": "Generated in 12 chunks (each request from the same voice/model/settings) due to a ~30s upstream timeout on longer single requests, then concatenated and re-encoded with ffmpeg into a single file before upload."
+    "duration_approx": "12 minutes 36 seconds",
+    "opens_with_title": true,
+    "note": "Narration opens by speaking the article title (\"E Numbers Explained: What UK Shoppers Need to Know\") before the intro paragraph. Generated in 12 chunks (each request from the same voice/model/settings) due to a ~30s upstream timeout on longer single requests, then concatenated and re-encoded with ffmpeg into a single file before upload. Regenerated once after the title/slug/excerpt were tightened for SEO, so the spoken title matches the final title; the previous audio file (without the title) was removed from Storage."
   },
   "sources": [
     {
