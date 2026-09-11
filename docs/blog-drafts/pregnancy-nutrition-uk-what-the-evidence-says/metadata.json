@@ -1,0 +1,54 @@
+{
+  "supabase_row_id": "ecae6d1d-b605-4192-b339-59e363167a97",
+  "title": "Pregnancy Nutrition in the UK: What the Evidence Actually Says",
+  "slug": "pregnancy-nutrition-uk-what-the-evidence-says",
+  "status": "draft",
+  "category": "Health Tips",
+  "categories": ["Health Tips", "Nutrition"],
+  "author": "Bite Insight Team",
+  "author_id": "c18da159-509f-4529-8e07-baf2c57d9c4e",
+  "excerpt": "Folic acid, fish limits and a change coming to UK bread this winter: what the NHS really says about eating well in pregnancy.",
+  "meta_title": "Pregnancy Nutrition in the UK: What to Eat | Bite Insight",
+  "meta_description": "Folic acid, fish limits and a change coming to UK bread this winter. Here is what the NHS and the evidence actually say about eating well in pregnancy.",
+  "reading_time_mins": 9,
+  "word_count": 1852,
+  "is_featured": false,
+  "ai_summary": "Pregnancy nutrition in the UK comes down to a short list of nutrients worth prioritising, folic acid at 400 micrograms daily, vitamin D at 10 micrograms, iron and omega 3, alongside a compact list of genuine food safety risks such as unpasteurised soft cheese, pate and raw eggs without the Lion stamp. From December 2026, UK law will require most wheat flour to be fortified with folic acid, expected to reduce neural tube defects by around 20 percent, though supplements remain essential in early pregnancy since fortification only supports rather than replaces that advice. Common worries like caffeine, alcohol, sushi and takeaways are addressed using actual NHS limits and food safety guidance rather than internet myth. Use Bite Insight with your profile set to pregnant to make it easier to spot ingredients worth double checking while you shop.",
+  "sources": [
+    { "url": "https://www.nhs.uk/pregnancy/keeping-well/foods-to-avoid/", "title": "Foods to avoid in pregnancy", "source": "NHS" },
+    { "url": "https://www.gov.uk/government/news/birth-defects-prevented-by-fortifying-flour-with-folic-acid", "title": "Birth defects prevented by fortifying flour with folic acid", "source": "GOV.UK" },
+    { "url": "https://www.bda.uk.com/resource/folic-acid-fortification-of-flour-the-long-wait-is-over.html", "title": "Folic acid fortification of flour: the long wait is over", "source": "British Dietetic Association" },
+    { "url": "https://www.gov.uk/government/publications/folic-acid-supplementation-advice-to-health-professionals/folic-acid-supplementation-advice-to-health-professionals-from-the-uk-chief-medical-officers-chief-nursing-officers-and-chief-midwifery-officers", "title": "Folic acid supplementation advice to health professionals", "source": "UK Chief Medical Officers" },
+    { "url": "https://www.tommys.org/pregnancy-information/im-pregnant/nutrition-in-pregnancy/foods-avoid-pregnancy", "title": "Foods to avoid in pregnancy", "source": "Tommy's" }
+  ],
+  "images": [
+    {
+      "role": "featured_image_url (hero)",
+      "url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/1789118076702-pregnant-woman-preparing-healthy-meal.jpg",
+      "source": "Magnific stock library (Freepik catalogue), item id 4570591, \"Pregnant woman cooking healthy food\"",
+      "resized_to": "1600x1067"
+    },
+    {
+      "role": "inline figure, \"The big change landing in UK bread this winter\" section",
+      "url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/1789118076703-fortified-bread-loaves-uk-bakery.jpg",
+      "source": "Magnific stock library (Freepik catalogue), item id 24526564, \"Large loaves of bread on the counter of a bakery\"",
+      "resized_to": "1600x1144"
+    },
+    {
+      "role": "inline figure, \"Eating well when someone else is doing the cooking\" section",
+      "url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/1789118076704-pregnant-woman-with-fresh-fruit.jpg",
+      "source": "Magnific stock library (Freepik catalogue), item id 1280503, \"Healthy food for pregnant\"",
+      "resized_to": "1600x1067"
+    }
+  ],
+  "audio": {
+    "url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/audio/1789118380313-Pregnancy_Nutrition_in_the_UK_What_the_Evidence_Actually_Says.mp3",
+    "voice_id": "nqjdE3SY6EzSAFVCxO3s",
+    "voice_name": "Glenn",
+    "model_id": "eleven_multilingual_v2",
+    "output_format": "mp3_44100_128",
+    "duration_seconds": 673,
+    "notes": "Generated as 5 sequential ElevenLabs requests (article text exceeded a single safe request length), each chunk's ID3/LAME Info header stripped, then concatenated into one continuous CBR 128kbps stream and verified with mutagen (673s total, matches sum of chunk durations)."
+  },
+  "hosting_confirmation": "All three images and the audio file are uploaded to Supabase Storage bucket 'blog-images' on project bfkxjgbvsygvenmciasg, and are publicly reachable (verified with HTTP 200 on each public URL). No Magnific/stock preview links or local repo-relative paths remain in the body, featured_image_url, or audio_url fields."
+}
