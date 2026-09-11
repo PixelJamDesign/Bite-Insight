@@ -1,0 +1,77 @@
+{
+  "slug": "decoding-may-contain-allergen-labels",
+  "headline": "Decoding \"May Contain\" Labels: What UK Allergen Warnings Actually Mean",
+  "category": "Allergens & Labelling",
+  "wordCount": 1667,
+  "aiSummary": "UK food labels carry two very different systems: a legally required ingredients list that names all 14 major allergens in bold, and a voluntary 'may contain' warning that reflects a manufacturer's own judgement about accidental cross contamination risk. This piece explains the difference, lists the 14 allergens and where they commonly hide, walks through Natasha's Law, and gives a five step routine for reading any label with more confidence, including when a quick scan is the fastest way to settle any doubt.",
+  "sources": [
+    {
+      "title": "Precautionary allergen labelling | Food Standards Agency",
+      "url": "https://www.food.gov.uk/business-guidance/precautionary-allergen-labelling"
+    },
+    {
+      "title": "Around 6% of the UK adult population have a food allergy, new FSA-backed report finds",
+      "url": "https://www.food.gov.uk/news-alerts/news/around-6-of-the-uk-adult-population-have-a-food-allergy-new-report-from-the-food-standards-agency-finds"
+    },
+    {
+      "title": "Around 2.4 million UK adults estimated to have food allergies, new study finds | Anaphylaxis UK",
+      "url": "https://www.anaphylaxis.org.uk/around-2-4-million-uk-adults-estimated-to-have-food-allergies-new-study-finds/"
+    },
+    {
+      "title": "One in four Britons impacted by food allergies or intolerances | Ipsos",
+      "url": "https://www.ipsos.com/en-uk/one-four-britons-impacted-food-allergies-or-intolerances-ipsos-poll-highlights-prevalence-and-self"
+    },
+    {
+      "title": "UK FSA Updates Guidance on Precautionary Allergen Labeling | Food Safety Magazine",
+      "url": "https://www.food-safety.com/articles/8852-uk-fsa-updates-guidance-on-precautionary-allergen-labeling-clarifies-vegan-vs-free-from"
+    },
+    {
+      "title": "UK regulator clarifies 'may contain' food allergen labelling requirements | Pinsent Masons",
+      "url": "https://www.pinsentmasons.com/out-law/news/uk-regulator-clarifies-may-contain-food-allergen-labelling-requirements"
+    },
+    {
+      "title": "What is Natasha's Law? | Natasha's Foundation",
+      "url": "https://www.narf.org.uk/what-is-natashas-law"
+    }
+  ],
+  "images": [
+    {
+      "placement": "Hero image",
+      "stockPageUrl": "https://www.magnific.com/free-photo/woman-supermarket-reading-nutrition-values-from-product-by-shelf_11450386.htm",
+      "suggestedFilename": "hero.jpg",
+      "finalPath": "/images/blog/decoding-may-contain-allergen-labels/hero.jpg",
+      "altText": "A woman in a supermarket aisle reading the nutrition and ingredients label on a food product"
+    },
+    {
+      "placement": "Section: The 14 allergens UK law actually requires",
+      "stockPageUrl": "https://www.magnific.com/free-photo/assortment-common-food-allergens-people_33757320.htm",
+      "suggestedFilename": "14-allergens.jpg",
+      "finalPath": "/images/blog/decoding-may-contain-allergen-labels/14-allergens.jpg",
+      "altText": "A flat lay of common allergenic foods including nuts, eggs, shellfish and dairy arranged on a table"
+    },
+    {
+      "placement": "Section: How to actually read a label, step by step",
+      "stockPageUrl": "https://www.magnific.com/free-photo/young-woman-buys-groceries-supermarket-with-phone-her-hands_10922862.htm",
+      "suggestedFilename": "scanning-a-label.jpg",
+      "finalPath": "/images/blog/decoding-may-contain-allergen-labels/scanning-a-label.jpg",
+      "altText": "A shopper holding a smartphone up to a food product in a supermarket aisle to check its label"
+    }
+  ],
+  "imagesNotUsedInFinalDraft": [
+    {
+      "consideredFor": "Section: Why almost every product seems to carry a warning",
+      "stockPageUrl": "https://www.magnific.com/free-photo/common-food-allergens-people_33757291.htm",
+      "note": "Dropped to avoid a near duplicate flat lay next to the 14 allergens section image; Glenn may prefer this one instead of 14-allergens.jpg."
+    },
+    {
+      "consideredFor": "Section: \"May contain\" versus the ingredients list",
+      "stockPageUrl": "https://www.magnific.com/free-photo/woman-checking-label-medium-shot_19894381.htm",
+      "note": "Dropped to keep total image count to hero plus two section images; article already carries a comparison table in this section."
+    }
+  ],
+  "audio": {
+    "status": "failed",
+    "path": "audio/blog/decoding-may-contain-allergen-labels.mp3",
+    "error": "ELEVENLABS_API_KEY is not set in this environment (confirmed via `printenv | grep -i eleven`, no matching variable). No ElevenLabs MCP tool is available in this session either, only a direct API call was possible, and the task prompt also left the voice ID unspecified. The call was never attempted because there is no key to authenticate with. Retried by re-checking the environment a second time before giving up, per the run's retry-once rule; the key was absent both times."
+  }
+}
