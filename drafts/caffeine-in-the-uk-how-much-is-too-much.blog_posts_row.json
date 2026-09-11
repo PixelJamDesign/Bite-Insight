@@ -23,5 +23,14 @@
   ],
   "is_featured": false,
   "audio_url": "/audio/blog/caffeine-in-the-uk-how-much-is-too-much.mp3",
+  "audioGeneration": {
+    "provider": "ElevenLabs (direct API call, not Magnific)",
+    "model": "eleven_multilingual_v2",
+    "voiceId": "nqjdE3SY6EzSAFVCxO3s",
+    "voiceName": "Glenn (custom cloned voice)",
+    "voiceSettings": { "stability": 0.3, "similarityBoost": 0.85, "style": 1.0, "useSpeakerBoost": true, "speed": 1.05 },
+    "outputFormat": "mp3_44100_128",
+    "note": "Matches the ElevenLabs Voice Lab settings screenshot (speed, stability, similarity, style exaggeration, speaker boost, MP3 44.1kHz 128kbps). Panning is not controllable via the TTS API and was not replicated."
+  },
   "wordCount": 1665
 }
