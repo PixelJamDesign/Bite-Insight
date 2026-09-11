@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>E Numbers Explained: What They Really Mean (and Which Ones to Watch) — Draft Preview</title>
+<style>
+  :root {
+    --background: #e2f1ee;
+    --primary: #023432;
+    --secondary: #00776f;
+    --accent: #3b9586;
+    --surface-secondary: #ffffff;
+    --surface-tertiary: #f1f8f7;
+    --stroke: #aad4cd;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--background);
+    color: var(--primary);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-weight: 300;
+  }
+  .draft-banner {
+    background: var(--primary);
+    color: #fff;
+    text-align: center;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 32px 20px 64px;
+  }
+  .meta {
+    background: var(--surface-secondary);
+    border: 1px solid var(--stroke);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 32px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .meta h1 {
+    font-size: 28px;
+    line-height: 1.2;
+    margin: 0 0 12px;
+    letter-spacing: -0.02em;
+  }
+  .meta p { margin: 6px 0; }
+  .meta .excerpt { font-style: italic; color: var(--secondary); }
+  audio { width: 100%; margin-top: 12px; }
+
+  .article-article-body,
+  .body-content { font-size: 16px; line-height: 1.6; }
+  .body-content h2 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; margin: 40px 0 16px; }
+  .body-content h3 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; margin: 28px 0 12px; }
+  .body-content h4 { font-size: 17px; font-weight: 700; margin: 0 0 6px; }
+  .body-content p { margin: 0 0 18px; }
+  .body-content a { color: var(--accent); }
+  .body-content strong { color: var(--primary); }
+  .body-content figure { margin: 24px 0; }
+  .body-content figure img { width: 100%; border-radius: 16px; display: block; }
+  .body-content figcaption { font-size: 13px; color: var(--secondary); margin-top: 8px; text-align: center; }
+  .body-content ul { padding-left: 20px; }
+  .body-content ul li { margin-bottom: 8px; }
+  .body-content ul li::marker { content: "⚡  "; }
+  .body-content table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 14px; }
+  .body-content th, .body-content td { border: 1px solid var(--stroke); padding: 10px 12px; text-align: left; }
+  .body-content th { background: var(--surface-tertiary); }
+  .body-content blockquote {
+    border-left: 4px solid var(--accent);
+    margin: 24px 0;
+    padding: 8px 20px;
+    font-size: 19px;
+    font-style: italic;
+    color: var(--primary);
+    background: var(--surface-tertiary);
+    border-radius: 0 12px 12px 0;
+  }
+  .article-divider { border: none; border-top: 1px solid var(--stroke); margin: 36px 0; }
+
+  .article-stat {
+    background: var(--surface-tertiary);
+    border-radius: 16px;
+    padding: 24px;
+    margin: 24px 0;
+    text-align: center;
+  }
+  .article-stat-lead { font-size: 20px; font-weight: 300; margin: 0 0 8px; }
+  .article-stat-num { font-weight: 700; color: var(--accent); font-size: 32px; }
+  .article-stat-pill {
+    display: inline-block;
+    background: #fff;
+    border-radius: 999px;
+    padding: 8px 18px;
+    font-size: 14px;
+    margin: 0;
+  }
+
+  .article-cardgrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin: 24px 0;
+  }
+  .article-cardgrid-card {
+    background: var(--surface-secondary);
+    border: 1px solid var(--stroke);
+    border-radius: 16px;
+    padding: 18px;
+  }
+  .article-cardgrid-label { font-size: 12px; font-weight: 700; color: var(--secondary); margin: 0 0 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .article-cardgrid-title { margin: 0 0 8px; }
+  .article-cardgrid-note { font-size: 13px; color: var(--secondary); margin: 0 0 8px; }
+  .article-cardgrid-text { font-size: 14px; margin: 0; }
+  .article-cardgrid-list { font-size: 14px; margin: 8px 0 0; padding-left: 18px; }
+
+  .article-numlist { display: flex; flex-direction: column; gap: 12px; margin: 24px 0; background: var(--primary); border-radius: 16px; padding: 8px; }
+  .article-numlist-item { display: flex; gap: 12px; background: rgba(255,255,255,0.06); border-radius: 12px; padding: 16px; counter-increment: numlist; }
+  .article-numlist { counter-reset: numlist; }
+  .article-numlist-item::before {
+    content: counter(numlist);
+    flex: 0 0 auto;
+    width: 28px; height: 28px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .article-numlist-title { color: #fff; font-weight: 700; margin: 0 0 4px; font-size: 15px; }
+  .article-numlist-desc { color: #d9ece8; margin: 0; font-size: 14px; }
+
+  .article-accordion { margin: 24px 0; display: flex; flex-direction: column; gap: 8px; }
+  .article-accordion details {
+    background: var(--surface-secondary);
+    border: 1px solid var(--stroke);
+    border-radius: 12px;
+    padding: 14px 18px;
+  }
+  .article-accordion summary { font-weight: 700; cursor: pointer; }
+  .article-accordion-body { margin-top: 10px; font-size: 14px; }
+
+  .article-conclusion {
+    background: var(--surface-tertiary);
+    border-radius: 16px;
+    padding: 28px;
+    margin: 36px 0 0;
+    text-align: center;
+  }
+  .article-conclusion-title { margin: 0 0 12px; font-size: 22px; }
+  .article-conclusion-lead { margin: 0; font-size: 17px; }
+</style>
+</head>
+<body>
+  <div class="draft-banner">DRAFT PREVIEW — status: draft — not published to biteinsight.co.uk</div>
+  <div class="wrap">
+    <div class="meta">
+      <h1>E Numbers Explained: What They Really Mean (and Which Ones to Watch)</h1>
+      <p class="excerpt">E numbers cover more than 300 approved substances, and most are nothing to worry about. Here's which ones, like the Southampton Six colourings and nitrites in bacon, actually have evidence behind them, and how to spot them on a UK label.</p>
+      <p><strong>Category:</strong> Nutrition, Health Tips &nbsp;·&nbsp; <strong>Author:</strong> Bite Insight Team &nbsp;·&nbsp; <strong>Reading time:</strong> 10 min</p>
+      <p><strong>Slug:</strong> e-numbers-explained-what-they-really-mean</p>
+      <p><strong>Narration (Glenn, ElevenLabs):</strong></p>
+      <audio controls src="https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/audio/1789121507206-E_Numbers_Explained.mp3"></audio>
+    </div>
+
+    <div class="body-content">
+<p>Turn over almost any packet in your kitchen cupboard and somewhere in the ingredients list you will spot a string of letters and numbers: E150d, E407, E466, E296. For a lot of shoppers, that little code is where the eye glazes over and the worry creeps in. Is it a chemical? Is it safe? Should you be putting it back on the shelf?</p>
+
+<p>The honest answer is more useful than either "additives are evil" or "don't worry about it at all". Some E numbers are just vitamin C or beetroot extract with a formal name. Others genuinely deserve a second look, and a few have research behind them that is serious enough to have UK campaigners calling for change right now. This guide walks through what an E number actually means, which additives have real evidence against them, and how to use that information without needing a chemistry degree every time you go shopping.</p>
+
+<figure>
+<img src="https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/e-numbers-explained-what-they-really-mean-hero.jpg" alt="A woman reading the ingredients label on a food packet in a supermarket">
+<figcaption>Understanding what is behind an E number takes the guesswork out of label reading.</figcaption>
+</figure>
+
+<h2>What an E Number Actually Is</h2>
+
+<p>An E number is simply a code given to a food additive that has been assessed and approved for use in the UK and the European Union. The "E" stands for Europe, and the number that follows places the substance in a category: colours sit in the E100s, preservatives in the E200s, antioxidants and acidity regulators around the E300s, and thickeners, emulsifiers and stabilisers fill most of the E400s. Flavour enhancers, sweeteners and other miscellaneous additives take up the higher numbers.</p>
+
+<p>The important thing that gets lost in the panic is that having an E number does not automatically mean a substance is synthetic or risky. Vitamin C is E300. Vitamin E is E306. Beetroot red, the pigment that gives your smoothie its colour, is E162. Carbon dioxide, the gas that makes your fizzy drink fizzy, is E290. These are additives in the technical sense because they are added to food for a specific function, not because they are dangerous.</p>
+
+<p>According to the <a href="https://www.food.gov.uk/business-guidance/approved-additives-and-e-numbers">Food Standards Agency</a>, roughly 300 to 450 substances are currently authorised for use as food additives in the UK, depending on how you count related forms of the same compound. Every one of them has gone through a safety assessment before it was allowed onto shelves, and the list is reviewed as new evidence comes in. The UK kept EU additive rules after leaving the EU, so the approved list in Great Britain remains broadly the same as the EU's, with a handful of exceptions where the two have started to diverge.</p>
+
+<div class="article-stat">
+<p class="article-stat-lead"><span class="article-stat-num">300+</span> individual substances are approved as food additives for use in the UK</p>
+<p class="article-stat-pill">Yet only a small handful have strong enough evidence against them to be worth actively avoiding</p>
+</div>
+
+<hr class="article-divider">
+
+<h2>The Main Categories, and What They Are Actually Doing</h2>
+
+<p>Before worrying about any specific additive, it helps to know what job it is doing in the product. Almost every additive on a label falls into one of a few functional groups.</p>
+
+<div class="article-cardgrid">
+  <div class="article-cardgrid-card">
+    <div class="article-cardgrid-head">
+      <p class="article-cardgrid-label">E100s</p>
+      <h4 class="article-cardgrid-title">Colours</h4>
+    </div>
+    <p class="article-cardgrid-text">Make food look the way we expect it to, from the orange of an orange squash to the pink of a strawberry yoghurt.</p>
+  </div>
+  <div class="article-cardgrid-card">
+    <div class="article-cardgrid-head">
+      <p class="article-cardgrid-label">E200s</p>
+      <h4 class="article-cardgrid-title">Preservatives</h4>
+    </div>
+    <p class="article-cardgrid-text">Stop food from spoiling, growing mould or harbouring harmful bacteria, extending shelf life and reducing food waste.</p>
+  </div>
+  <div class="article-cardgrid-card">
+    <div class="article-cardgrid-head">
+      <p class="article-cardgrid-label">E300s</p>
+      <h4 class="article-cardgrid-title">Antioxidants and acidity regulators</h4>
+    </div>
+    <p class="article-cardgrid-text">Stop fats going rancid, stop cut fruit browning, and keep the pH of a product stable.</p>
+  </div>
+  <div class="article-cardgrid-card">
+    <div class="article-cardgrid-head">
+      <p class="article-cardgrid-label">E400s</p>
+      <h4 class="article-cardgrid-title">Emulsifiers, stabilisers and thickeners</h4>
+    </div>
+    <p class="article-cardgrid-text">Keep oil and water mixed together, give sauces and desserts their texture, and stop ice cream turning icy.</p>
+  </div>
+  <div class="article-cardgrid-card">
+    <div class="article-cardgrid-head">
+      <p class="article-cardgrid-label">E600s and above</p>
+      <h4 class="article-cardgrid-title">Flavour enhancers and sweeteners</h4>
+    </div>
+    <p class="article-cardgrid-text">Boost savoury or sweet taste, often allowing manufacturers to use less salt or sugar overall.</p>
+  </div>
+</div>
+
+<hr class="article-divider">
+
+<h2>The Additives That Do Deserve a Closer Look</h2>
+
+<p>Most additives on the approved list are genuinely low concern. But a small group have accumulated enough evidence, or enough regulatory attention, that it is worth knowing their names. Here are the ones that come up most often, and why.</p>
+
+<h3>The Southampton Six food colourings</h3>
+
+<p>In 2007, researchers at the University of Southampton, funded by the Food Standards Agency, published a <a href="https://www.southampton.ac.uk/news/2007/09/hyperactivity-in-children-and-food-additives.page">study in The Lancet</a> looking at hyperactivity in children aged three and eight. They found that consuming certain artificial colours together with the preservative sodium benzoate was linked to an increase in hyperactive behaviour.</p>
+
+<p>Six colours came out of that research with a lasting reputation: tartrazine (E102), quinoline yellow (E104), sunset yellow (E110), carmoisine (E122), ponceau 4R (E124) and allura red (E129). Since 2010, any food or drink sold in the UK containing one of these must carry a warning that the colour "may have an effect on activity and attention in children". Most major UK manufacturers reformulated years ago, swapping these dyes for natural alternatives like beetroot, paprika extract or turmeric, which is why you will see the warning far less often now than you would have in 2009. But the six colours are still legal, and still turn up in some sweets, drinks and imported products.</p>
+
+<figure>
+<img src="https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/e-numbers-explained-what-they-really-mean-southampton-six-colours.jpg" alt="A close up of brightly coloured sweets and candies">
+<figcaption>Bright artificial colours are the additive category most families ask us about.</figcaption>
+</figure>
+
+<h3>Nitrites in processed meat</h3>
+
+<p>Sodium nitrite (E250) and potassium nitrite (E249) are used to cure bacon, ham, salami and other processed meats. They stop the growth of the bacteria that causes botulism, which is a genuine food safety benefit, and they give cured meat its characteristic pink colour.</p>
+
+<p>The concern is what nitrites can turn into inside the body and during cooking, particularly at high heat. The World Health Organization's International Agency for Research on Cancer classified processed meat as a Group 1 carcinogen back in 2015, in the same category as tobacco smoking, largely because of its link to bowel cancer. Researchers behind a growing UK campaign, the Coalition Against Nitrites, have estimated that nitrites in processed meat may have contributed to around <strong>54,000 cases of bowel cancer in the UK over the past decade</strong>, and are pushing the government to restrict or ban their use, in the same way the EU has already tightened permitted levels. Whatever your view on how strong that evidence is, it is one of the very few additive stories with cancer specifically attached to it, which is why it gets flagged so often in health guidance.</p>
+
+<h3>Emulsifiers and your gut microbiome</h3>
+
+<p>Emulsifiers such as carboxymethylcellulose (E466) and polysorbate 80 (E433) keep sauces, ice cream and baked goods smooth and stable. They are extremely common in packaged food. A growing body of laboratory and animal research, summarised in reviews published in 2025, has found that some emulsifiers can disturb the balance of bacteria in the gut, thin the protective mucus layer of the intestine and encourage low grade inflammation. Human studies are still catching up, and results in people are less consistent than in lab models, but it is an active area of research and one of the stronger emerging concerns around additives in ultra-processed food more broadly.</p>
+
+<h3>Titanium dioxide</h3>
+
+<p>Titanium dioxide (E171) is a whitening agent once common in chewing gum, icing and sauces. The EU banned it as a food additive in 2022 over concerns it could damage DNA after building up in the body. The UK's Committee on Toxicity reviewed the same evidence and concluded in 2024 that current UK exposure levels were unlikely to pose a health risk, so E171 remains legally permitted in Great Britain even though it is banned across the EU. This is one of the clearest examples of UK and EU food rules pulling apart since Brexit, and it means the same product can legally contain different ingredients depending on which side of the Channel it is sold.</p>
+
+<hr class="article-divider">
+
+<table>
+  <thead>
+    <tr><th>Additive</th><th>What it is used for</th><th>The concern</th><th>UK status</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Southampton Six colours (E102, E104, E110, E122, E124, E129)</td><td>Bright artificial colouring</td><td>Linked to hyperactivity in children</td><td>Legal, requires a warning label</td></tr>
+    <tr><td>Sodium and potassium nitrite (E249, E250)</td><td>Curing and preserving processed meat</td><td>Linked to bowel cancer risk</td><td>Legal, campaigners want limits reduced</td></tr>
+    <tr><td>Carboxymethylcellulose and polysorbate 80 (E466, E433)</td><td>Emulsifying sauces, ice cream and baked goods</td><td>May disrupt gut bacteria and gut lining</td><td>Legal, under ongoing research</td></tr>
+    <tr><td>Titanium dioxide (E171)</td><td>Whitening icing, sauces and gum</td><td>Possible DNA damage at high exposure</td><td>Banned in the EU, still legal in the UK</td></tr>
+  </tbody>
+</table>
+
+<blockquote>Having an E number does not mean an ingredient is artificial or unsafe. It means it has been assessed. Whether it is worth avoiding is a separate question, one worth asking additive by additive rather than all at once.</blockquote>
+
+<hr class="article-divider">
+
+<h2>How to Actually Read a Label Without Losing Your Mind</h2>
+
+<p>You do not need to memorise 300 codes to shop with confidence. A few practical habits do most of the work.</p>
+
+<figure>
+<img src="https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/e-numbers-explained-what-they-really-mean-reading-a-label.jpg" alt="A man reading the ingredients information on a food packet">
+<figcaption>A quick scan of the ingredients list tells you far more than the marketing on the front of the pack.</figcaption>
+</figure>
+
+<div class="article-numlist">
+  <div class="article-numlist-item"><div class="article-numlist-content">
+    <p class="article-numlist-title">Check the front of the ingredients list, not just the additives</p>
+    <p class="article-numlist-desc">Ingredients are listed by weight, so what comes first in the list matters more than any single E number buried at the end.</p>
+  </div></div>
+  <div class="article-numlist-item"><div class="article-numlist-content">
+    <p class="article-numlist-title">Learn the handful of names on this page, not the whole list</p>
+    <p class="article-numlist-desc">The Southampton Six, nitrites and titanium dioxide cover almost everything you actually need to watch for day to day.</p>
+  </div></div>
+  <div class="article-numlist-item"><div class="article-numlist-content">
+    <p class="article-numlist-title">Watch for the pattern, not just one ingredient</p>
+    <p class="article-numlist-desc">A product with a long list of additives doing overlapping jobs is usually more heavily processed overall, even if each additive on its own is low risk.</p>
+  </div></div>
+  <div class="article-numlist-item"><div class="article-numlist-content">
+    <p class="article-numlist-title">Use fresh and simple alternatives where they are easy wins</p>
+    <p class="article-numlist-desc">Home cured or fresh meat instead of processed, fresh fruit instead of brightly coloured sweets, and plain yoghurt instead of a heavily stabilised one are all straightforward swaps.</p>
+  </div></div>
+  <div class="article-numlist-item"><div class="article-numlist-content">
+    <p class="article-numlist-title">Let a scanning app do the memory work for you</p>
+    <p class="article-numlist-desc">Rather than trying to hold the whole list in your head at the supermarket, scanning a barcode and letting the ingredients get checked against known flags is a far more realistic habit to keep up.</p>
+  </div></div>
+</div>
+
+<hr class="article-divider">
+
+<h2>Frequently Asked Questions</h2>
+
+<div class="article-accordion">
+  <details open>
+    <summary>Are natural additives automatically safer than synthetic ones?</summary>
+    <div class="article-accordion-body"><p>Not necessarily. Safety depends on the specific substance and the dose, not on whether it started life in a plant or a laboratory. Some natural compounds are more likely to cause allergic reactions than their synthetic equivalents, and some synthetic additives, like vitamin C, are identical to the natural version at a molecular level.</p></div>
+  </details>
+  <details>
+    <summary>Is it true that the UK and EU no longer use exactly the same list of approved additives?</summary>
+    <div class="article-accordion-body"><p>Yes. The UK kept EU additive law after Brexit, so the two lists still overlap heavily, but they have started to diverge on specific substances. Titanium dioxide (E171) is the clearest example, remaining legal in Great Britain while being banned across the EU since 2022.</p></div>
+  </details>
+  <details>
+    <summary>Should I avoid every product that contains an E number?</summary>
+    <div class="article-accordion-body"><p>No. That would rule out things like vitamin C, beetroot extract and the carbon dioxide in sparkling water, none of which are a concern. It makes far more sense to know the small number of additives with real evidence against them and check for those specifically.</p></div>
+  </details>
+  <details>
+    <summary>Do additives explain why ultra-processed food is linked to poorer health?</summary>
+    <div class="article-accordion-body"><p>Additives are part of the picture, but not the whole story. Ultra-processed foods also tend to be higher in sugar, salt and refined fat and lower in fibre, and the combination of these factors together is what most research links to poorer health outcomes, rather than any single additive in isolation.</p></div>
+  </details>
+</div>
+
+<div class="article-conclusion">
+  <h2 class="article-conclusion-title">The Bottom Line</h2>
+  <p class="article-conclusion-lead">Most E numbers are nothing to worry about, but a handful genuinely are, and now you know their names. Learn to spot the Southampton Six, nitrites and titanium dioxide, and let the rest of the code stop being a source of anxiety on your next shop.</p>
+</div>
+    </div>
+  </div>
+</body>
+</html>
