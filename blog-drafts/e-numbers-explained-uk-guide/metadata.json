@@ -1,0 +1,91 @@
+{
+  "supabase_row_id": "dd190e95-6324-45ce-9773-049a6b0d5060",
+  "title": "E Numbers Explained: What UK Shoppers Need to Know",
+  "slug": "e-numbers-explained-uk-guide",
+  "slug_history": ["e-numbers-explained-what-they-really-mean"],
+  "status": "draft",
+  "excerpt": "Most E numbers are harmless, but a few, like the Southampton Six and nitrites in bacon, have real evidence behind them. Here's what to actually watch for.",
+  "category": "Nutrition",
+  "categories": ["Nutrition", "Health Tips"],
+  "author": "Bite Insight Team",
+  "author_id": "c18da159-509f-4529-8e07-baf2c57d9c4e",
+  "meta_title": "E Numbers Explained: What UK Shoppers Need to Know",
+  "meta_description": "E numbers explained in plain English: what they are, which ones like the Southampton Six and nitrites are worth watching, and how to read UK labels.",
+  "seo_field_lengths": {
+    "title_chars": 50,
+    "slug_words": 5,
+    "excerpt_chars": 154,
+    "meta_title_chars": 50,
+    "meta_description_chars": 148,
+    "targets": "Title 50-60 chars, Slug max 7 words, Excerpt 70-160 chars, Meta title max 60 chars, Meta description 120-158 chars"
+  },
+  "reading_time_mins": 10,
+  "is_featured": false,
+  "ai_summary": "This article explains what E numbers actually are and why having one does not mean an ingredient is synthetic or unsafe. It highlights the additives with genuine evidence against them, including the Southampton Six food colourings, nitrites in processed meat, gut-disrupting emulsifiers and titanium dioxide, and gives practical tips for reading UK food labels.",
+  "featured_image_url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/e-numbers-explained-what-they-really-mean-hero.jpg",
+  "audio_url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/audio/1789123574103-E_Numbers_Explained.mp3",
+  "images": [
+    {
+      "role": "hero",
+      "url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/e-numbers-explained-what-they-really-mean-hero.jpg",
+      "alt": "A woman reading the ingredients label on a food packet in a supermarket",
+      "source": "Freepik stock photo via Magnific, resized to a 1600px max edge"
+    },
+    {
+      "role": "section: The Southampton Six food colourings",
+      "url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/e-numbers-explained-what-they-really-mean-southampton-six-colours.jpg",
+      "alt": "A close up of brightly coloured sweets and candies",
+      "source": "Freepik stock photo via Magnific, resized to a 1600px max edge"
+    },
+    {
+      "role": "section: How to Actually Read a Label Without Losing Your Mind",
+      "url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/e-numbers-explained-what-they-really-mean-reading-a-label.jpg",
+      "alt": "A man reading the ingredients information on a food packet",
+      "source": "Freepik stock photo via Magnific, resized to a 1600px max edge"
+    }
+  ],
+  "audio": {
+    "url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/audio/1789123574103-E_Numbers_Explained.mp3",
+    "voice": "Glenn (nqjdE3SY6EzSAFVCxO3s)",
+    "provider": "ElevenLabs",
+    "model": "eleven_multilingual_v2",
+    "voice_settings": {
+      "stability": 0.3,
+      "similarity_boost": 0.85,
+      "style": 1.0,
+      "use_speaker_boost": true,
+      "speed": 1.05
+    },
+    "output_format": "mp3_44100_128",
+    "duration_approx": "12 minutes 36 seconds",
+    "opens_with_title": true,
+    "note": "Narration opens by speaking the article title (\"E Numbers Explained: What UK Shoppers Need to Know\") before the intro paragraph. Generated in 12 chunks (each request from the same voice/model/settings) due to a ~30s upstream timeout on longer single requests, then concatenated and re-encoded with ffmpeg into a single file before upload. Regenerated once after the title/slug/excerpt were tightened for SEO, so the spoken title matches the final title; the previous audio file (without the title) was removed from Storage."
+  },
+  "sources": [
+    {
+      "url": "https://www.food.gov.uk/business-guidance/approved-additives-and-e-numbers",
+      "title": "Approved additives and E numbers",
+      "source": "Food Standards Agency"
+    },
+    {
+      "url": "https://www.southampton.ac.uk/news/2007/09/hyperactivity-in-children-and-food-additives.page",
+      "title": "Major study indicates a link between hyperactivity in children and certain food additives",
+      "source": "University of Southampton"
+    },
+    {
+      "url": "https://theconversation.com/the-case-for-a-cancer-warning-on-your-bacon-butty-268404",
+      "title": "The case for a cancer warning on your bacon butty",
+      "source": "The Conversation"
+    },
+    {
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13364841/",
+      "title": "Dietary exposure to food additives in ultra-processed foods: implications for gut microbiome, metabolic health, and risk assessment",
+      "source": "PMC / National Library of Medicine"
+    },
+    {
+      "url": "https://cms.law/en/gbr/legal-updates/Titanium-Dioxide-E171-A-practical-example-of-UK-divergence-from-EU-law",
+      "title": "Titanium Dioxide (E171): A practical example of UK divergence from EU law",
+      "source": "CMS Law"
+    }
+  ]
+}
