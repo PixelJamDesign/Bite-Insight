@@ -1,0 +1,36 @@
+{
+  "_note": "Shaped to match the real public.blog_posts table in the Bite Insight Supabase project. This row IS live in the database (id 892b8ebf-24ba-4a5e-bbd5-9a3e9023544a, status draft), inserted and then updated in this session at the user's explicit request, with real image/audio files uploaded to the blog-images Storage bucket. `body` here is a pointer to the actual HTML file since it's long; the live DB row's body field has the same content with Storage URLs substituted for the local paths.",
+  "title": "Caffeine in the UK: How Much Is In Your Coffee, Tea and Energy Drinks (And When to Stop)",
+  "slug": "caffeine-in-the-uk-how-much-is-too-much",
+  "excerpt": "A coffee to start, tea at your desk, maybe an energy drink to get through the afternoon. Here's how much caffeine is actually in each one, why the same cup hits some people much harder than others, and when to actually stop drinking it before bed.",
+  "body": "see caffeine-in-the-uk-how-much-is-too-much.body.html",
+  "category": "Nutrition",
+  "categories": ["Nutrition", "Health Tips"],
+  "featured_image_url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/1789117137343-hero-coffee-cup-morning.jpg",
+  "author": "Bite Insight Team",
+  "status": "draft",
+  "meta_title": "Caffeine in the UK: How Much Is In Your Coffee, Tea and Energy Drinks",
+  "meta_description": "The FSA's daily caffeine limit, how much is actually in coffee, tea, decaf and energy drinks, the new under 16s energy drink ban, and why genetics changes how caffeine affects you.",
+  "reading_time_mins": 8,
+  "ai_summary": "Caffeine's UK safe upper limit is 400mg a day, or 200mg during pregnancy, but ordinary drinks add up faster than most people track. This guide breaks down how much caffeine is actually in filter coffee, espresso, instant, tea and decaf, explains England's incoming under 16s energy drink ban and the high caffeine warning label rule already on shelves, and shows why a gene called CYP1A2 makes the same cup of coffee affect some people four times longer than others, with a practical cutoff time for better sleep.",
+  "sources": [
+    { "url": "https://www.food.gov.uk/print/pdf/node/24361", "title": "Caffeine guidance", "source": "Food Standards Agency" },
+    { "url": "https://www.efsa.europa.eu/sites/default/files/corporate_publications/files/efsaexplainscaffeine150527.pdf", "title": "EFSA explains caffeine", "source": "European Food Safety Authority" },
+    { "url": "https://www.itv.com/news/2026-07-16/under-16s-in-england-to-be-banned-from-buying-energy-drinks", "title": "Under-16s in England to be banned from buying energy drinks", "source": "ITV News" },
+    { "url": "https://www.gov.uk/food-labelling-and-packaging/food-and-drink-warnings", "title": "Food and drink warnings", "source": "GOV.UK" },
+    { "url": "https://www.eufic.org/en/healthy-living/article/caffeine-levels-in-different-foods-and-drinks", "title": "Caffeine levels in different foods and drinks", "source": "EUFIC" },
+    { "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9956387/", "title": "Sleep Quality and Duration in Children That Consume Caffeine: Impact of Dose and Genetic Variation in ADORA2A and CYP1A", "source": "PMC" }
+  ],
+  "is_featured": false,
+  "audio_url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/audio/1789117137346-Caffeine_in_the_UK_How_Much_Is_In_Your_Coffee.mp3",
+  "audioGeneration": {
+    "provider": "ElevenLabs (direct API call, not Magnific)",
+    "model": "eleven_multilingual_v2",
+    "voiceId": "nqjdE3SY6EzSAFVCxO3s",
+    "voiceName": "Glenn (custom cloned voice)",
+    "voiceSettings": { "stability": 0.3, "similarityBoost": 0.85, "style": 1.0, "useSpeakerBoost": true, "speed": 1.05 },
+    "outputFormat": "mp3_44100_128",
+    "note": "Matches the ElevenLabs Voice Lab settings screenshot (speed, stability, similarity, style exaggeration, speaker boost, MP3 44.1kHz 128kbps). Panning is not controllable via the TTS API and was not replicated."
+  },
+  "wordCount": 1665
+}
