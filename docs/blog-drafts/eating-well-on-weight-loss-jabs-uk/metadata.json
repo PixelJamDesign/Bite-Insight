@@ -1,0 +1,78 @@
+{
+  "title": "Eating Well on Weight Loss Jabs: A Practical UK Guide",
+  "slug": "eating-well-on-weight-loss-jabs-uk",
+  "excerpt": "Weight loss jabs like Mounjaro and Wegovy curb appetite fast, but that can mean too little protein and fibre. Here's how to eat well on them.",
+  "category": "Health Tips",
+  "categories": ["Health Tips", "Nutrition"],
+  "author": "Bite Insight Team",
+  "author_id": "c18da159-509f-4529-8e07-baf2c57d9c4e",
+  "status": "draft",
+  "is_featured": false,
+  "meta_title": "Eating Well on Weight Loss Jabs: UK Guide | Bite Insight",
+  "meta_description": "Over 2 million people in the UK are on Mounjaro or Wegovy. Here's how to protect your muscle, gut and nutrient levels while the appetite drops away.",
+  "reading_time_mins": 10,
+  "ai_summary": "GLP-1 weight loss injections such as Mounjaro and Wegovy suppress appetite so effectively that protein, fibre and micronutrient intake often drop along with calories, putting users at risk of losing muscle rather than just fat. This guide explains the mechanism, gives practical UK-relevant protein and fibre targets, offers tips for managing nausea and constipation, and provides a sample day of eating plus answers to common questions.",
+  "featured_image_url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/1789373373970-diabetic-insulin-pen-injection-home.webp",
+  "audio_url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/audio/1789374176271-Eating_Well_on_Weight_Loss_Jabs_A_Practical_UK_Guide.mp3",
+  "supabase_blog_posts_row_id": "9af7e4b9-9f2c-4a36-ba37-a4f12e0613ad",
+  "sources": [
+    {
+      "title": "1.6 million UK adults used weight loss drugs in past year",
+      "source": "UCL News",
+      "url": "https://www.ucl.ac.uk/news/2026/jan/16-million-uk-adults-used-weight-loss-drugs-past-year"
+    },
+    {
+      "title": "Weight Loss Medication UK Statistics 2026",
+      "source": "heySlim",
+      "url": "https://www.heyslim.co.uk/blog/uk-weight-loss-medication-statistics-2026"
+    },
+    {
+      "title": "Weight-loss injections explained",
+      "source": "British Heart Foundation",
+      "url": "https://www.bhf.org.uk/informationsupport/heart-matters-magazine/medical/weight-loss-injections-explained"
+    },
+    {
+      "title": "Consuming more protein may protect patients taking anti-obesity drug from muscle loss",
+      "source": "Endocrine Society",
+      "url": "https://www.endocrine.org/news-and-advocacy/news-room/endo-annual-meeting/endo-2025-press-releases/haines-press-release"
+    },
+    {
+      "title": "Suboptimal protein intake for hypocaloric diet needs while using glucagon-like peptide-1 receptor agonists",
+      "source": "PMC",
+      "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12419545/"
+    },
+    {
+      "title": "Avoiding Malnutrition in the Era of Glucagon-Like Peptide-1 Medications",
+      "source": "PubMed",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/42323133/"
+    },
+    {
+      "title": "7 Tips for Navigating Nausea on a GLP-1 Medicine",
+      "source": "diaTribe",
+      "url": "https://diatribe.org/diet-and-nutrition/7-tips-navigating-nausea-glp-1-medicine"
+    }
+  ],
+  "images": [
+    {
+      "role": "hero",
+      "stock_source": "Freepik/Magnific stock library",
+      "stock_id": 28092615,
+      "original_title": "A diabetic patient using insulin pen for making an insulin injection at home",
+      "hosted_url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/1789373373970-diabetic-insulin-pen-injection-home.webp"
+    },
+    {
+      "role": "section: How much protein you actually need",
+      "stock_source": "Freepik/Magnific stock library",
+      "stock_id": 9384067,
+      "original_title": "Top view boiled eggs with olives, fresh vegetables and tomatoes",
+      "hosted_url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/1789373373971-high-protein-eggs-vegetables-plate.webp"
+    },
+    {
+      "role": "section: A sample day of eating",
+      "stock_source": "Freepik/Magnific stock library",
+      "stock_id": 7380705,
+      "original_title": "Vegetarian meal prep containers with eggs, brussel sprouts, green beans and tomato",
+      "hosted_url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/1789373373972-meal-prep-containers-vegetables-eggs.webp"
+    }
+  ]
+}
