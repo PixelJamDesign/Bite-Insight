@@ -1,0 +1,81 @@
+{
+  "supabase_row_id": "9ae0bf3d-f83d-44f7-bffb-10456e4d8082",
+  "status": "draft",
+  "title": "Eating With IBS: A UK Guide to Diet, FODMAPs and Fibre",
+  "slug": "eating-with-ibs-uk-guide-diet-fodmaps",
+  "excerpt": "Nearly one in five UK adults live with IBS. Here's what the evidence actually says about diet, fibre types and the low FODMAP approach.",
+  "category": "Health Tips",
+  "categories": ["Health Tips", "Nutrition"],
+  "author": "Bite Insight Team",
+  "author_id": "c18da159-509f-4529-8e07-baf2c57d9c4e",
+  "meta_title": "Eating With IBS: A UK Guide to Diet, FODMAPs and Fibre",
+  "meta_description": "IBS affects almost one in five UK adults. This guide explains what the evidence says about diet, fibre types, FODMAPs and everyday food triggers.",
+  "reading_time_mins": 10,
+  "word_count": 1988,
+  "is_featured": false,
+  "ai_summary": "IBS affects almost one in five UK adults and shows up in three patterns: constipation type, diarrhoea type and mixed type. This guide explains why generic fibre advice can backfire, how the low FODMAP diet works when done properly with a dietitian, and which everyday foods and habits tend to trigger symptoms. It also covers the red flag symptoms that mean a trip to the GP rather than a diet change.",
+  "featured_image_url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/1789546957157-woman-with-abdominal-pain-ibs.jpg",
+  "audio_url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/audio/1789546957160-Eating_With_IBS_A_UK_Guide_to_Diet_FODMAPs_and_Fibre.mp3",
+  "images": [
+    {
+      "role": "hero / featured_image_url",
+      "url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/1789546957157-woman-with-abdominal-pain-ibs.jpg",
+      "source": "Freepik stock photo via Magnific (id 26143383), free license",
+      "alt": "Young woman feeling abdominal pain while lying on a sofa at home"
+    },
+    {
+      "role": "inline / Low FODMAP section",
+      "url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/content/1789546957158-fresh-produce-meal-prep-counter.jpg",
+      "source": "Freepik stock photo via Magnific (id 425655786), free license",
+      "alt": "Fresh fruit and vegetables from a shopping bag laid out on a kitchen counter"
+    },
+    {
+      "role": "inline / lifestyle section",
+      "url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/content/1789546957159-woman-relaxing-outdoors-park.jpg",
+      "source": "Freepik stock photo via Magnific (id 6209758), free license",
+      "alt": "Woman relaxing outdoors in a green park"
+    }
+  ],
+  "audio": {
+    "voice_id": "nqjdE3SY6EzSAFVCxO3s",
+    "voice_name": "Glenn",
+    "model_id": "eleven_multilingual_v2",
+    "voice_settings": {
+      "stability": 0.3,
+      "similarity_boost": 0.85,
+      "style": 1.0,
+      "use_speaker_boost": true,
+      "speed": 1.05
+    },
+    "output_format": "mp3_44100_128",
+    "duration": "00:12:39",
+    "note": "Generated as 6 sequential requests (2026-09-16 API run returned HTTP 502 upstream errors above roughly 2500 characters per request) and concatenated losslessly with ffmpeg; final narration includes the article title read at the start."
+  },
+  "sources": [
+    {
+      "url": "https://pubmed.ncbi.nlm.nih.gov/36091797/",
+      "title": "Factors related to irritable bowel syndrome and differences among subtypes: a cross-sectional study in the UK Biobank",
+      "source": "PubMed (UK Biobank)"
+    },
+    {
+      "url": "https://gutscharity.org.uk/advice-and-information/conditions/irritable-bowel-syndrome/",
+      "title": "Irritable Bowel Syndrome (IBS): Diagnosis, Treatment and Support",
+      "source": "Guts UK"
+    },
+    {
+      "url": "https://www.gloshospitals.nhs.uk/our-services/services-we-offer/nutrition-dietetics/irritable-bowel-syndrome-ibs/ibs-and-low-fodmap-diet/",
+      "title": "IBS and the Low FODMAP Diet",
+      "source": "Gloucestershire Hospitals NHS Foundation Trust"
+    },
+    {
+      "url": "https://www.nhsinform.scot/illnesses-and-conditions/stomach-liver-and-gastrointestinal-tract/irritable-bowel-syndrome-ibs/managing-irritable-bowel-syndrome-ibs/",
+      "title": "Managing Irritable Bowel Syndrome (IBS)",
+      "source": "NHS inform"
+    },
+    {
+      "url": "http://www.monashfodmap.com/blog/nice-guidelines-diet-and-ibs/",
+      "title": "The NICE Guidelines, Diet and IBS",
+      "source": "Monash FODMAP"
+    }
+  ]
+}
