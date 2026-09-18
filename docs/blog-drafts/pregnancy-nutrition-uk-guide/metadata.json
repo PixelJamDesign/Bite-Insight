@@ -1,0 +1,64 @@
+{
+  "supabase_row_id": "bbf156d1-8393-4eb3-bffa-a17d9f4c4385",
+  "title": "Pregnancy Nutrition: A UK Guide to Eating Safely and Well",
+  "slug": "pregnancy-nutrition-uk-guide",
+  "excerpt": "Most UK women don't get enough folate and vitamin D from diet alone in pregnancy. Here's what to eat, what to avoid, and why.",
+  "category": "Nutrition",
+  "categories": ["Nutrition", "Health Tips"],
+  "author": "Bite Insight Team",
+  "author_id": "c18da159-509f-4529-8e07-baf2c57d9c4e",
+  "status": "draft",
+  "meta_title": "Pregnancy Nutrition UK: A Guide to Eating Safely and Well",
+  "meta_description": "A clear, evidence based UK guide to pregnancy nutrition: the two key supplements, foods to avoid and why, caffeine limits, fish guidance and more.",
+  "reading_time_mins": 11,
+  "is_featured": false,
+  "ai_summary": "This guide breaks down UK pregnancy nutrition into what actually matters: folic acid and vitamin D supplementation, a short list of foods to avoid for listeria, toxoplasmosis and mercury risk, and safe caffeine and fish limits. It draws on NHS, RCOG and SACN guidance to separate genuine food safety rules from overcautious myths. The aim is to make pregnancy eating feel manageable rather than restrictive.",
+  "featured_image_url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/1789719497045-pregnant-woman-vegetable-salad.jpg",
+  "audio_url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/audio/1789719517041-Pregnancy_Nutrition_A_UK_Guide_to_Eating_Safely_and_Well.mp3",
+  "images": [
+    {
+      "role": "hero / featured_image_url",
+      "url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/1789719497045-pregnant-woman-vegetable-salad.jpg",
+      "source": "Magnific stock (Freepik catalogue)",
+      "stock_id": 11100420,
+      "alt": "Pregnant woman preparing a fresh vegetable salad"
+    },
+    {
+      "role": "inline / supplements section",
+      "url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/1789719497047-pregnancy-folic-acid-vitamin-d-supplements.jpg",
+      "source": "Magnific stock (Freepik catalogue)",
+      "stock_id": 24644149,
+      "alt": "Pregnant woman holding folic acid and vitamin D supplements with a glass of water"
+    },
+    {
+      "role": "inline / fish section",
+      "url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/1789719497046-grilled-salmon-oily-fish-pregnancy.jpg",
+      "source": "Magnific stock (Freepik catalogue)",
+      "stock_id": 3567246,
+      "alt": "Grilled salmon steak, a good source of omega 3 for pregnancy"
+    }
+  ],
+  "audio": {
+    "voice_id": "nqjdE3SY6EzSAFVCxO3s",
+    "voice_name": "Glenn",
+    "model_id": "eleven_multilingual_v2",
+    "voice_settings": {
+      "stability": 0.3,
+      "similarity_boost": 0.85,
+      "style": 1.0,
+      "use_speaker_boost": true,
+      "speed": 1.05
+    },
+    "output_format": "mp3_44100_128",
+    "note": "Generated as 9 sequential ElevenLabs requests (segmented to stay under a proxy request timeout) and concatenated into a single mp3. Narration begins with the article title."
+  },
+  "sources": [
+    { "url": "https://www.nhs.uk/pregnancy/keeping-well/foods-to-avoid/", "title": "Foods to avoid in pregnancy", "source": "NHS" },
+    { "url": "https://www.rcog.org.uk/for-the-public/browse-our-patient-information/healthy-eating-and-vitamin-supplements-in-pregnancy/", "title": "Healthy eating and vitamin supplements in pregnancy", "source": "Royal College of Obstetricians and Gynaecologists" },
+    { "url": "https://www.tommys.org/pregnancy-information/im-pregnant/nutrition-in-pregnancy/foods-avoid-pregnancy", "title": "Foods to avoid in pregnancy", "source": "Tommy's" },
+    { "url": "https://www.gov.uk/government/publications/nutrition-and-maternal-weight-outcomes-sacn-report/nutrition-and-maternal-weight-outcomes-sacn-report-summary", "title": "Nutrition and maternal weight outcomes: SACN report summary", "source": "GOV.UK / SACN" },
+    { "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11820898/", "title": "Dietary Micronutrient Intake During Pregnancy Is Suboptimal in a Group of Healthy Scottish Women", "source": "PMC" },
+    { "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12398648/", "title": "Diet in Pregnancy: A Review of Current Challenges and Recommendations", "source": "British Nutrition Foundation / Nutrition Bulletin" },
+    { "url": "https://www.bda.uk.com/resource/pregnancy-diet.html", "title": "Pregnancy and diet", "source": "British Dietetic Association" }
+  ]
+}
