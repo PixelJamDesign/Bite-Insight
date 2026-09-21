@@ -1,0 +1,85 @@
+{
+  "supabase_row_id": "3ebb390b-430e-49d2-863e-e8111fecf3b9",
+  "title": "Type 2 Diabetes and Diet: A UK Guide That Actually Helps",
+  "slug": "type-2-diabetes-diet-uk-guide",
+  "excerpt": "1 in 4 UK adults now live with diabetes or prediabetes. Here's what the evidence says about food, blood sugar and remission.",
+  "category": "Health Tips",
+  "categories": ["Health Tips", "Nutrition"],
+  "status": "draft",
+  "author": "Bite Insight Team",
+  "author_id": "c18da159-509f-4529-8e07-baf2c57d9c4e",
+  "meta_title": "Type 2 Diabetes Diet: A UK Guide to Food & Blood Sugar",
+  "meta_description": "5.6 million people in the UK live with diabetes. Here's what NHS and NICE guidance says about diet, blood sugar control and remission.",
+  "reading_time_mins": 9,
+  "is_featured": false,
+  "ai_summary": "Type 2 diabetes affects over 5.6 million people in the UK, with 90% of cases being type 2. This guide explains what NHS and NICE guidance actually recommends for managing blood sugar through food, debunks the myth that sugar alone causes diabetes, and covers the plate method plus the DiRECT trial evidence showing that structured weight loss can put type 2 diabetes into remission for some people.",
+  "featured_image_url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/type-2-diabetes-diet-uk-guide-hero.jpg",
+  "audio_url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/audio/type-2-diabetes-diet-uk-guide-Type_2_Diabetes_and_Diet_A_UK_Guide.mp3",
+  "images": [
+    {
+      "role": "hero / featured_image_url",
+      "url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/type-2-diabetes-diet-uk-guide-hero.jpg",
+      "source": "Magnific stock (Freepik catalogue), stock item id 13012927",
+      "description": "Healthy vegan lunch bowl / buddha bowl with balanced vegetables, representing the plate method"
+    },
+    {
+      "role": "inline, 'Just how big is this in the UK?' section",
+      "url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/type-2-diabetes-diet-uk-guide-glucose-check.jpg",
+      "source": "Magnific stock (Freepik catalogue), stock item id 65609427",
+      "description": "Woman checking her blood glucose level at home"
+    },
+    {
+      "role": "inline, 'Not all carbs behave the same way' section",
+      "url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/type-2-diabetes-diet-uk-guide-low-gi-foods.jpg",
+      "source": "Magnific stock (Freepik catalogue), stock item id 5352527",
+      "description": "Flat lay porridge with fruit and nuts, an example of a low GI breakfast"
+    }
+  ],
+  "sources": [
+    {
+      "url": "https://www.nice.org.uk/guidance/ng28/chapter/Dietary-advice-and-interventions",
+      "title": "Dietary advice and interventions: Type 2 diabetes in adults",
+      "source": "NICE (NG28)"
+    },
+    {
+      "url": "https://www.diabetes.org.uk/about-us/about-the-charity/our-strategy/statistics",
+      "title": "How many people in the UK have diabetes?",
+      "source": "Diabetes UK"
+    },
+    {
+      "url": "https://www.diabetes.org.uk/living-with-diabetes/eating/the-eatwell-guide",
+      "title": "The Eatwell Guide: What does it mean for diabetes?",
+      "source": "Diabetes UK"
+    },
+    {
+      "url": "https://www.ncl.ac.uk/press/articles/archive/2017/12/directstudy",
+      "title": "DiRECT trial: Weight loss puts type 2 diabetes into remission",
+      "source": "Newcastle University"
+    },
+    {
+      "url": "https://newcastlebrc.nihr.ac.uk/news-and-events/284-all-news/4396-weight-loss-puts-type-2-diabetes-into-remission-for-five-years",
+      "title": "Weight loss puts type 2 diabetes into remission for five years",
+      "source": "Newcastle Biomedical Research Centre (NIHR)"
+    },
+    {
+      "url": "https://www.bhf.org.uk/informationsupport/heart-matters-magazine/nutrition/myths-about-diet-and-diabetes",
+      "title": "Sugar and diabetes: 5 key questions answered",
+      "source": "British Heart Foundation"
+    }
+  ],
+  "audio": {
+    "provider": "ElevenLabs",
+    "voice_id": "nqjdE3SY6EzSAFVCxO3s",
+    "voice_name": "Glenn",
+    "model_id": "eleven_multilingual_v2",
+    "voice_settings": {
+      "stability": 0.3,
+      "similarity_boost": 0.85,
+      "style": 1.0,
+      "use_speaker_boost": true,
+      "speed": 1.05
+    },
+    "output_format": "mp3_44100_128",
+    "note": "Generated in two parts (article split at a section boundary to stay under request limits) and concatenated with ffmpeg into one file."
+  }
+}
