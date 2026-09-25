@@ -1,0 +1,73 @@
+{
+  "supabase_row_id": "87c95b0c-dd22-49ce-bcad-9cb951eba739",
+  "title": "Iron Deficiency and Diet: A UK Guide to Getting Enough",
+  "slug": "iron-deficiency-diet-uk-guide",
+  "excerpt": "Nearly a third of UK women are low in iron. Here's what actually boosts absorption, and what quietly blocks it.",
+  "category": "Nutrition",
+  "categories": ["Nutrition", "Health Tips"],
+  "author": "Bite Insight Team",
+  "author_id": "c18da159-509f-4529-8e07-baf2c57d9c4e",
+  "status": "draft",
+  "is_featured": false,
+  "meta_title": "Iron Deficiency and Diet: A UK Guide to Getting Enough",
+  "meta_description": "Almost a third of UK women are low in iron. Learn the best food sources, what blocks absorption, and simple swaps that help your body take up more.",
+  "reading_time_mins": 8,
+  "word_count": 1658,
+  "ai_summary": "This guide explains why iron deficiency is so common in the UK, particularly among women, and breaks down the difference between haem and non haem iron. It covers who is most at risk, the warning signs to watch for, and practical food pairings that boost absorption, such as combining plant iron with vitamin C. It also explains what blocks absorption, like tea, coffee and dairy, and when to see a GP for testing rather than self supplementing.",
+  "featured_image_url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/1790324280755-iron-rich-foods-flat-lay.webp",
+  "audio_url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/audio/iron-deficiency-diet-uk-guide-Iron_Deficiency_and_Diet_A_UK_Guide_to_Getting_Enough.mp3",
+  "audio_voice": {
+    "provider": "ElevenLabs",
+    "voice_id": "nqjdE3SY6EzSAFVCxO3s",
+    "voice_name": "Glenn",
+    "model_id": "eleven_multilingual_v2",
+    "voice_settings": {
+      "stability": 0.3,
+      "similarity_boost": 0.85,
+      "style": 1.0,
+      "use_speaker_boost": true,
+      "speed": 1.05
+    },
+    "output_format": "mp3_44100_128",
+    "note": "Generated as 5 chunked requests (proxy enforces a ~30s upstream timeout on long ElevenLabs calls) and concatenated with ffmpeg into a single continuous narration."
+  },
+  "images": [
+    {
+      "role": "featured/hero",
+      "url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/1790324280755-iron-rich-foods-flat-lay.webp",
+      "source": "Magnific stock library (Freepik catalogue)",
+      "stock_id": 156746451,
+      "original_title": "The ingredients for Roasted pepper and butter bean salad with harissa dressing",
+      "alt": "Flat lay of beans and roasted peppers, iron rich and vitamin C rich ingredients",
+      "resized_to": "1600x1066"
+    },
+    {
+      "role": "inline, Signs section",
+      "url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/1790324280755-woman-fatigue-tired-iron-deficiency.webp",
+      "source": "Magnific stock library (Freepik catalogue)",
+      "stock_id": 43149267,
+      "original_title": "Beautiful caucasian woman wearing casual clothes tired rubbing nose and eyes feeling fatigue and headache",
+      "alt": "Woman rubbing her tired eyes, a common sign of low iron",
+      "resized_to": "1600x1254"
+    },
+    {
+      "role": "inline, Day of iron smart eating section",
+      "url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/1790324280755-lentil-pepper-salad-vitamin-c.webp",
+      "source": "Magnific stock library (Freepik catalogue)",
+      "stock_id": 26540212,
+      "original_title": "Lentil salad with peppers, onion and carrot in bowl",
+      "alt": "Lentil salad with peppers, onion and carrot in a bowl",
+      "resized_to": "1600x1066"
+    }
+  ],
+  "sources": [
+    { "url": "https://www.nhs.uk/conditions/iron-deficiency-anaemia/", "title": "Iron deficiency anaemia", "source": "NHS" },
+    { "url": "https://www.nhsinform.scot/illnesses-and-conditions/nutritional/iron-deficiency-anaemia/", "title": "Iron deficiency anaemia", "source": "NHS inform Scotland" },
+    { "url": "https://www.bda.uk.com/resource/iron-rich-foods-iron-deficiency.html", "title": "Iron rich foods and iron deficiency", "source": "British Dietetic Association" },
+    { "url": "https://bjgp.org/content/64/621/172.2", "title": "Top dietary iron sources in the UK", "source": "British Journal of General Practice" },
+    { "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11881008/", "title": "Prevalence and patterns of testing for anaemia in primary care in England", "source": "British Journal of General Practice (PMC)" },
+    { "url": "https://vegsoc.org/eating-veggie/nutritional-advice/iron/", "title": "Iron", "source": "Vegetarian Society" },
+    { "url": "https://www.boots.com/healthhub/vitamins-supplements/how-to-improve-iron-absorption", "title": "How to improve iron absorption", "source": "Boots Healthhub" }
+  ],
+  "research_note": "Queried public.blog_posts (12 existing rows, all UK health/nutrition guides) to confirm iron deficiency was not already covered, published or draft, before choosing this topic. It pairs naturally with BiteInsight's ingredient scanning feature (iron content, absorption blockers like tannins and phytates, absorption boosters like vitamin C)."
+}

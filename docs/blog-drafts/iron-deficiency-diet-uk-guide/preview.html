@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Iron Deficiency and Diet: A UK Guide to Getting Enough — Preview</title>
+<style>
+  :root {
+    --color-bg: #e2f1ee;
+    --color-primary: #023432;
+    --color-secondary: #00776f;
+    --color-accent: #3b9586;
+    --color-surface: #ffffff;
+    --color-surface-tertiary: #f1f8f7;
+    --color-stroke: #aad4cd;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--color-bg);
+    color: var(--color-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 32px 16px 64px;
+  }
+  .meta-banner {
+    background: var(--color-surface);
+    border: 1px solid var(--color-stroke);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 24px;
+    font-size: 13px;
+    color: var(--color-secondary);
+  }
+  .meta-banner strong { color: var(--color-primary); }
+  .category-pill {
+    display: inline-block;
+    background: var(--color-surface-tertiary);
+    border: 1px solid var(--color-stroke);
+    color: var(--color-secondary);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+  h1.article-title {
+    font-size: 36px;
+    line-height: 1.15;
+    letter-spacing: -0.72px;
+    font-weight: 700;
+    margin: 0 0 12px;
+  }
+  .article-excerpt {
+    font-size: 18px;
+    font-weight: 300;
+    color: var(--color-secondary);
+    margin: 0 0 24px;
+  }
+  .hero-image {
+    width: 100%;
+    border-radius: 16px;
+    display: block;
+    margin-bottom: 24px;
+  }
+  .audio-player {
+    background: var(--color-surface);
+    border: 1px solid var(--color-stroke);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 32px;
+  }
+  .audio-player p { margin: 0 0 8px; font-size: 13px; font-weight: 700; color: var(--color-secondary); }
+  .audio-player audio { width: 100%; }
+
+  /* Article body */
+  .article-body h2 { font-size: 24px; line-height: 1.25; letter-spacing: -0.48px; font-weight: 700; margin: 40px 0 12px; }
+  .article-body h3 { font-size: 18px; line-height: 1.3; letter-spacing: -0.36px; font-weight: 700; margin: 24px 0 8px; }
+  .article-body h4 { font-size: 16px; font-weight: 700; margin: 0 0 8px; }
+  .article-body p { font-size: 16px; font-weight: 300; margin: 0 0 16px; }
+  .article-body ul, .article-body ol { padding-left: 20px; margin: 0 0 16px; }
+  .article-body ul { list-style: none; padding-left: 0; }
+  .article-body ul li { position: relative; padding-left: 24px; margin-bottom: 8px; font-weight: 300; }
+  .article-body ul li::before { content: "⚡"; position: absolute; left: 0; color: var(--color-accent); }
+  .article-body ol li { margin-bottom: 8px; font-weight: 300; }
+  .article-body blockquote {
+    border-left: 4px solid var(--color-accent);
+    margin: 24px 0;
+    padding: 8px 20px;
+    font-style: italic;
+    color: var(--color-secondary);
+    font-size: 18px;
+  }
+  hr.article-divider { border: none; border-top: 1px solid var(--color-stroke); margin: 32px 0; }
+  .article-body figure { margin: 24px 0; }
+  .article-body figure img { width: 100%; border-radius: 16px; display: block; }
+  .article-body figcaption { font-size: 13px; color: var(--color-secondary); margin-top: 8px; text-align: center; }
+  .article-body table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: 14px; }
+  .article-body th, .article-body td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--color-stroke); }
+  .article-body th { background: var(--color-surface-tertiary); font-weight: 700; }
+
+  .article-stat {
+    background: var(--color-surface);
+    border: 1px solid var(--color-stroke);
+    border-radius: 16px;
+    padding: 24px;
+    margin: 24px 0;
+  }
+  .article-stat-lead { font-size: 20px; font-weight: 300; margin: 0 0 8px; }
+  .article-stat-num { font-weight: 700; color: var(--color-accent); font-size: 28px; }
+  .article-stat-pill {
+    display: inline-block;
+    background: var(--color-surface-tertiary);
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 14px;
+    margin: 0;
+  }
+
+  .article-numbers {
+    background: var(--color-primary);
+    color: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    margin: 24px 0;
+  }
+  .article-numbers-subtitle { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.7; margin: 0 0 4px; }
+  .article-numbers-title { font-size: 20px; font-weight: 700; margin: 0 0 16px; color: #fff; }
+  .article-numbers-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .article-numbers-item { background: rgba(255,255,255,0.08); border-radius: 8px; padding: 16px; }
+  .article-numbers-stat { display: block; font-size: 28px; font-weight: 700; color: var(--color-accent); }
+  .article-numbers-item-text { font-size: 13px; font-weight: 300; margin: 4px 0 0; color: #fff; }
+
+  .article-cardgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin: 24px 0; }
+  .article-cardgrid-card { background: var(--color-surface); border: 1px solid var(--color-stroke); border-radius: 16px; padding: 20px; }
+  .article-cardgrid-label { font-size: 13px; font-weight: 700; color: var(--color-secondary); margin: 0 0 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .article-cardgrid-title { margin: 0 0 4px; }
+  .article-cardgrid-note { font-size: 13px; color: var(--color-secondary); margin: 0 0 8px; font-style: italic; }
+  .article-cardgrid-text { font-size: 14px; font-weight: 300; margin: 8px 0 0; }
+  .article-cardgrid-list { list-style: none; padding: 0; margin: 8px 0 0; }
+  .article-cardgrid-list li { font-size: 14px; padding-left: 20px; position: relative; margin-bottom: 6px; }
+  .article-cardgrid-list li::before { content: "⚡"; position: absolute; left: 0; color: var(--color-accent); }
+
+  .article-numlist { background: var(--color-surface-tertiary); border-radius: 16px; padding: 8px; margin: 24px 0; }
+  .article-numlist-item { display: flex; gap: 12px; padding: 16px; counter-increment: numlist; }
+  .article-numlist-item::before {
+    content: counter(numlist);
+    flex-shrink: 0;
+    width: 28px; height: 28px;
+    background: var(--color-accent);
+    color: #fff;
+    border-radius: 999px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px;
+  }
+  .article-numlist { counter-reset: numlist; }
+  .article-numlist-title { font-weight: 700; margin: 0 0 4px; font-size: 15px; }
+  .article-numlist-desc { font-size: 14px; font-weight: 300; margin: 0; color: var(--color-secondary); }
+
+  .article-accordion { margin: 24px 0; }
+  .article-accordion details { background: var(--color-surface); border: 1px solid var(--color-stroke); border-radius: 12px; padding: 16px; margin-bottom: 8px; }
+  .article-accordion summary { font-weight: 700; cursor: pointer; }
+  .article-accordion-body { margin-top: 8px; }
+  .article-accordion-body p { margin: 0; font-size: 14px; }
+
+  .article-conclusion {
+    background: var(--color-surface-tertiary);
+    border-radius: 16px;
+    padding: 24px;
+    margin: 32px 0 0;
+  }
+  .article-conclusion-title { margin: 0 0 8px; font-size: 20px; }
+  .article-conclusion-lead { font-size: 16px; font-weight: 300; margin: 0; }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="meta-banner">
+      <strong>Preview only.</strong> This mirrors the draft row inserted into <code>public.blog_posts</code>
+      (id <code>87c95b0c-dd22-49ce-bcad-9cb951eba739</code>, status <code>draft</code>). Styling here is an
+      approximation of the site's article template using BiteInsight's design tokens, not the production stylesheet.
+    </div>
+
+    <span class="category-pill">Nutrition</span>
+    <h1 class="article-title">Iron Deficiency and Diet: A UK Guide to Getting Enough</h1>
+    <p class="article-excerpt">Nearly a third of UK women are low in iron. Here's what actually boosts absorption, and what quietly blocks it.</p>
+
+    <img class="hero-image" src="https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/1790324280755-iron-rich-foods-flat-lay.webp" alt="Flat lay of beans and roasted peppers, iron rich and vitamin C rich ingredients">
+
+    <div class="audio-player">
+      <p>Listen to this article (narrated by Glenn)</p>
+      <audio controls src="https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/audio/iron-deficiency-diet-uk-guide-Iron_Deficiency_and_Diet_A_UK_Guide_to_Getting_Enough.mp3"></audio>
+    </div>
+
+    <div class="article-body">
+<p>If you have felt exhausted for no obvious reason, cold all the time, or found yourself out of breath climbing the stairs, iron might be the missing piece. It is one of the most common nutrient shortfalls in the UK, and one of the easiest to miss, because the symptoms feel so much like ordinary tiredness.</p>
+
+<h2>Why iron deficiency matters more than you think</h2>
+<p>Iron is not just about avoiding anaemia. Your body uses it to make haemoglobin, the part of red blood cells that carries oxygen from your lungs to every other cell. When iron runs low, less oxygen reaches your muscles and brain, which is why the early signs are so often fatigue, poor concentration and a general feeling of running on empty rather than anything dramatic.</p>
+<p>Left unchecked, low iron can progress to iron deficiency anaemia, which affects immunity, mood, hair and skin, and in pregnancy carries real risks for both mother and baby.</p>
+
+<div class="article-stat">
+  <p class="article-stat-lead"><span class="article-stat-num">1 in 3</span> UK women are thought to be low in iron</p>
+  <p class="article-stat-pill">Yet it often goes unnoticed for months because the symptoms feel like "just being tired"</p>
+</div>
+
+<h2>How common is this in the UK</h2>
+<p>Recent NHS data puts overall anaemia in the UK population at around 6%, but that figure hides a big gap between men and women. Almost 10% of women are affected, and it climbs higher still in women aged 18 to 50, the years when periods, pregnancy and breastfeeding all increase how much iron the body needs.</p>
+
+<div class="article-numbers">
+  <p class="article-numbers-subtitle">Iron in the UK</p>
+  <h3 class="article-numbers-title">The numbers behind the tiredness</h3>
+  <div class="article-numbers-grid">
+    <div class="article-numbers-item">
+      <span class="article-numbers-stat">31%</span>
+      <p class="article-numbers-item-text">of UK women are estimated to be low in iron</p>
+    </div>
+    <div class="article-numbers-item">
+      <span class="article-numbers-stat">14.8mg</span>
+      <p class="article-numbers-item-text">is the daily target for women aged 19 to 50</p>
+    </div>
+    <div class="article-numbers-item">
+      <span class="article-numbers-stat">30%</span>
+      <p class="article-numbers-item-text">of UK pregnancies involve iron deficiency anaemia</p>
+    </div>
+    <div class="article-numbers-item">
+      <span class="article-numbers-stat">300%</span>
+      <p class="article-numbers-item-text">more iron absorbed when vitamin C is added to a meal</p>
+    </div>
+  </div>
+</div>
+
+<h2>Who is most likely to be low on iron</h2>
+<p>Some groups need far more day to day vigilance than others. In the UK, the people most likely to run low include:</p>
+<ul>
+  <li>Women who have heavy or frequent periods</li>
+  <li>Pregnant women, whose iron needs roughly double</li>
+  <li>Vegetarians and vegans, since plant iron is harder to absorb</li>
+  <li>Teenagers and children during growth spurts</li>
+  <li>Endurance runners, cyclists and other athletes in heavy training</li>
+  <li>People with coeliac disease, Crohn's disease or IBS that affects gut absorption</li>
+  <li>Frequent blood donors</li>
+  <li>Older adults who eat smaller or less varied meals</li>
+</ul>
+<p>Periods are the single biggest reason women need almost double the iron target of men, since blood loss each month has to be replaced from food. Anyone on a plant based diet faces a second challenge on top of that, because non haem iron from plants is absorbed at a fraction of the rate of iron from meat, fish or eggs. That does not mean a vegan or vegetarian diet has to leave you short, it just means the combinations on your plate matter more.</p>
+
+<h2>Signs your body might be asking for more iron</h2>
+<p>Iron deficiency tends to creep up gradually, so the signs are easy to explain away. Watch out for:</p>
+<ul>
+  <li>Ongoing tiredness that does not improve with sleep</li>
+  <li>Pale skin, especially inside the lower eyelid</li>
+  <li>Shortness of breath during everyday activity</li>
+  <li>Heart palpitations or a racing pulse</li>
+  <li>Headaches, dizziness or ringing in the ears</li>
+  <li>Brittle nails or unusual hair loss</li>
+  <li>Restless legs, especially at night</li>
+  <li>Strange cravings for ice, chalk or other non food items</li>
+</ul>
+<p>If several of these sound familiar, the sensible next step is a blood test with your GP rather than guessing. A simple full blood count can confirm whether iron is actually the issue, since fatigue has plenty of other causes too.</p>
+
+<figure>
+  <img src="https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/1790324280755-woman-fatigue-tired-iron-deficiency.webp" alt="Woman rubbing her tired eyes, a common sign of low iron">
+  <figcaption>Persistent tiredness is one of the most common, and most overlooked, signs of low iron.</figcaption>
+</figure>
+
+<blockquote>Fatigue is so often written off as "just life" that it takes a blood test to remind us it might be biology instead.</blockquote>
+
+<hr class="article-divider">
+
+<h2>Haem iron and non haem iron, what is the difference</h2>
+<p>Not all dietary iron behaves the same way once it reaches your gut. There are two forms, and knowing which is which changes how you plan meals.</p>
+
+<table>
+  <thead>
+    <tr><th>Type of iron</th><th>Found in</th><th>How well it is absorbed</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Haem iron</td><td>Red meat, poultry, fish and shellfish</td><td>Well absorbed, roughly 15 to 35%, and barely affected by other foods</td></tr>
+    <tr><td>Non haem iron</td><td>Pulses, grains, nuts, seeds, fortified cereals and vegetables</td><td>Absorbed at a much lower rate, typically 2 to 20%, and highly dependent on what else is on the plate</td></tr>
+  </tbody>
+</table>
+
+<p>More than three quarters of the iron in a typical UK diet comes from plant sources, which is exactly why absorption tricks matter so much for anyone who is not eating meat at every meal.</p>
+
+<h2>The best UK sources of each type</h2>
+<div class="article-cardgrid">
+  <div class="article-cardgrid-card">
+    <div class="article-cardgrid-head">
+      <p class="article-cardgrid-label">Animal sources</p>
+      <h4 class="article-cardgrid-title">Haem iron</h4>
+      <p class="article-cardgrid-note">(Absorbed easily by the body)</p>
+    </div>
+    <ul class="article-cardgrid-list">
+      <li>Lean red meat and liver</li>
+      <li>Dark poultry meat</li>
+      <li>Sardines, mackerel and other oily fish</li>
+      <li>Eggs</li>
+    </ul>
+  </div>
+  <div class="article-cardgrid-card">
+    <div class="article-cardgrid-head">
+      <p class="article-cardgrid-label">Plant sources</p>
+      <h4 class="article-cardgrid-title">Non haem iron</h4>
+      <p class="article-cardgrid-note">(Needs a little help to absorb well)</p>
+    </div>
+    <ul class="article-cardgrid-list">
+      <li>Lentils, chickpeas and kidney beans</li>
+      <li>Tofu and tempeh</li>
+      <li>Fortified breakfast cereals</li>
+      <li>Pumpkin seeds and cashews</li>
+      <li>Dried apricots and figs</li>
+      <li>Dark leafy greens such as kale</li>
+    </ul>
+  </div>
+</div>
+<p>Spinach has a reputation as an iron powerhouse, but its oxalates bind to iron and limit how much you actually absorb, so treat it as a useful extra rather than your main source.</p>
+
+<h2>What blocks iron absorption without you realising</h2>
+<p>Some everyday habits quietly undo the good work of an iron rich meal. The main culprits are:</p>
+<ul>
+  <li>Tea and coffee, thanks to the tannins they contain, which can cut non haem absorption by 60 to 80% when drunk with or straight after food</li>
+  <li>Milk and other calcium rich foods, which compete with iron for absorption</li>
+  <li>Phytates in raw grains, pulses and nuts, which bind to iron before your gut can take it up</li>
+  <li>Some antacids and long term use of certain heartburn medications</li>
+</ul>
+<p>None of these need cutting out altogether. Timing is usually all that is needed.</p>
+
+<h2>What a day of iron smart eating could look like</h2>
+<p>Small changes across the day add up. Here is one simple way to build in more iron without overhauling every meal.</p>
+<div class="article-cardgrid">
+  <div class="article-cardgrid-card">
+    <div class="article-cardgrid-head">
+      <p class="article-cardgrid-label">Breakfast</p>
+      <h4 class="article-cardgrid-title">Fortified cereal with berries</h4>
+    </div>
+    <p class="article-cardgrid-text">Choose a fortified wholegrain cereal, add fresh berries for vitamin C, and save the tea or coffee for half an hour later.</p>
+  </div>
+  <div class="article-cardgrid-card">
+    <div class="article-cardgrid-head">
+      <p class="article-cardgrid-label">Lunch</p>
+      <h4 class="article-cardgrid-title">Lentil and pepper salad</h4>
+    </div>
+    <p class="article-cardgrid-text">Lentils bring non haem iron, and roasted red peppers or a squeeze of lemon dressing help your body absorb more of it.</p>
+  </div>
+  <div class="article-cardgrid-card">
+    <div class="article-cardgrid-head">
+      <p class="article-cardgrid-label">Dinner</p>
+      <h4 class="article-cardgrid-title">Chilli with a side of greens</h4>
+    </div>
+    <p class="article-cardgrid-text">Kidney beans and a little lean mince combine haem and non haem iron in one dish, with tomatoes adding another dose of vitamin C.</p>
+  </div>
+</div>
+
+<figure>
+  <img src="https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/1790324280755-lentil-pepper-salad-vitamin-c.webp" alt="Lentil salad with peppers, onion and carrot in a bowl">
+  <figcaption>Lentils pair naturally with peppers, a simple way to combine non haem iron with vitamin C in one bowl.</figcaption>
+</figure>
+
+<h2>Simple ways to absorb more iron from the same meal</h2>
+<div class="article-numlist">
+  <div class="article-numlist-item"><div class="article-numlist-content">
+    <p class="article-numlist-title">Add something with vitamin C</p>
+    <p class="article-numlist-desc">A glass of orange juice, a few strips of pepper or a squeeze of lemon alongside a plant based meal can lift non haem iron absorption by up to 300%.</p>
+  </div></div>
+  <div class="article-numlist-item"><div class="article-numlist-content">
+    <p class="article-numlist-title">Leave a gap between tea or coffee and meals</p>
+    <p class="article-numlist-desc">Even a small cup of tea taken with food noticeably reduces absorption, so save it for an hour either side of eating.</p>
+  </div></div>
+  <div class="article-numlist-item"><div class="article-numlist-content">
+    <p class="article-numlist-title">Soak, sprout or ferment pulses and grains</p>
+    <p class="article-numlist-desc">This lowers the phytate content and makes the iron inside more available to your body.</p>
+  </div></div>
+  <div class="article-numlist-item"><div class="article-numlist-content">
+    <p class="article-numlist-title">Pair plant iron with a little meat or fish</p>
+    <p class="article-numlist-desc">Even a small portion added to a bean stew or grain salad increases how much non haem iron your body takes up from the whole meal.</p>
+  </div></div>
+  <div class="article-numlist-item"><div class="article-numlist-content">
+    <p class="article-numlist-title">Keep calcium rich foods for a different time of day</p>
+    <p class="article-numlist-desc">Save the milky tea, cheese and calcium supplements for away from your main iron sources.</p>
+  </div></div>
+</div>
+
+<hr class="article-divider">
+
+<h2>Should you just take a supplement</h2>
+<p>It is tempting to reach for an iron tablet at the first sign of tiredness, but the NHS is clear that you should get a blood test first. Taking iron you do not need will not give you more energy, and high dose supplements can cause constipation, nausea and stomach pain. Iron tablets are also genuinely dangerous to children in overdose, so they need to be stored well out of reach.</p>
+<p>If a blood test does confirm you are low, your GP can prescribe the right dose and will usually recommend taking it with a vitamin C source and away from tea, coffee, milk and calcium supplements, for exactly the reasons above.</p>
+<p>Ask specifically about a ferritin test if your GP only mentions haemoglobin. Ferritin measures your stored iron and can flag a problem even when your haemoglobin still looks normal, which is often the earliest stage worth catching.</p>
+
+<h2>Common questions about iron and diet</h2>
+<div class="article-accordion">
+  <details open>
+    <summary>Can you have too much iron?</summary>
+    <div class="article-accordion-body"><p>Yes. Iron overload is possible, particularly for people with a genetic condition called haemochromatosis, and high dose supplements taken without medical advice can cause unpleasant digestive symptoms. Food sources rarely cause a problem on their own.</p></div>
+  </details>
+  <details>
+    <summary>Is porridge a good source of iron?</summary>
+    <div class="article-accordion-body"><p>Plain oats contain a modest amount of iron, and many UK breakfast cereals are fortified with significantly more. Adding fruit for vitamin C, such as berries or a sliced orange, helps your body absorb more of it.</p></div>
+  </details>
+  <details>
+    <summary>Does cooking in a cast iron pan really help?</summary>
+    <div class="article-accordion-body"><p>It can make a small difference, particularly when cooking acidic foods like tomato sauces, which draw a little extra iron from the pan into the meal. It is a nice bonus rather than a replacement for iron rich foods.</p></div>
+  </details>
+  <details>
+    <summary>How long does it take to correct low iron through diet alone?</summary>
+    <div class="article-accordion-body"><p>Mild cases can improve over a few months of consistently iron rich, well combined meals. Confirmed anaemia usually needs a prescribed supplement alongside dietary changes, since food alone is a slow way to rebuild stores once they are properly depleted.</p></div>
+  </details>
+</div>
+
+<div class="article-conclusion">
+  <h2 class="article-conclusion-title">The Bottom Line</h2>
+  <p class="article-conclusion-lead">Low iron is common, often silent, and genuinely fixable. Get a blood test if you suspect it, then build meals that pair iron rich foods with vitamin C and keep tea, coffee and dairy at arm's length from them.</p>
+</div>
+    </div>
+  </div>
+</body>
+</html>
