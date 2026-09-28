@@ -1,0 +1,26 @@
+{
+  "title": "Vitamin D in the UK: Why So Many of Us Are Running Low",
+  "slug": "vitamin-d-deficiency-uk-guide",
+  "excerpt": "Nearly half of UK adults have low vitamin D. Here's what actually works, from sunlight and food to safe supplement doses.",
+  "category": "Nutrition",
+  "categories": ["Nutrition", "Health Tips"],
+  "meta_title": "Vitamin D in the UK: Why So Many of Us Are Running Low",
+  "meta_description": "Nearly half of UK adults are low in vitamin D. See the NHS guidance, at risk groups, food sources and safe supplement doses.",
+  "reading_time_mins": 11,
+  "ai_summary": "Close to half of UK adults have vitamin D levels below the optimal range, largely because Britain's latitude blocks vitamin D producing sunlight for roughly six months a year. This guide explains who is most at risk, including people with darker skin, adults over 65 and those who are housebound, and lays out the current NHS and SACN guidance of 10 micrograms a day. It covers the best food sources, from oily fish to fortified cereals, how to get safe sun exposure in summer, and what to look for in a supplement.",
+  "author": "Bite Insight Team",
+  "author_id": "c18da159-509f-4529-8e07-baf2c57d9c4e",
+  "is_featured": false,
+  "status": "draft",
+  "supabase_row_id": "5c9f6938-41a1-4233-ba71-10cdad080e17",
+  "featured_image_url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/vitamin-d-deficiency-uk-guide-woman-sunlight-garden.webp",
+  "audio_url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/audio/vitamin-d-deficiency-uk-guide-Vitamin_D_in_the_UK_Why_So_Many_of_Us_Are_Running_Low.mp3",
+  "sources": [
+    { "url": "https://www.nhs.uk/conditions/vitamins-and-minerals/vitamin-d/", "title": "Vitamin D", "source": "NHS" },
+    { "url": "https://www.gov.uk/government/publications/fortifying-food-and-drink-with-vitamin-d-a-sacn-rapid-review/fortifying-foods-and-drinks-with-vitamin-d-summary", "title": "Fortifying foods and drinks with vitamin D: SACN rapid review", "source": "GOV.UK / SACN" },
+    { "url": "https://www.nice.org.uk/guidance/ph56/resources/vitamin-d-supplement-use-in-specific-population-groups-pdf-1996421765317", "title": "Vitamin D: supplement use in specific population groups", "source": "NICE" },
+    { "url": "https://www.bhf.org.uk/informationsupport/heart-matters-magazine/nutrition/ask-the-expert/foods-high-in-vitamin-d", "title": "Which foods are high in vitamin D?", "source": "British Heart Foundation" },
+    { "url": "https://www.nutrition.org.uk/media/gyceqobk/vital-vitamin-d_may-2022.pdf", "title": "Vital vitamin D!", "source": "British Nutrition Foundation" },
+    { "url": "https://www.forthwithlife.co.uk/blog/uk-vitamin-d-statistics/", "title": "2025 Vitamin D Deficiency Statistics of UK Adults", "source": "Forth" }
+  ]
+}
