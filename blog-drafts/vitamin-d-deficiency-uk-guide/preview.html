@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vitamin D in the UK: Why So Many of Us Are Running Low — Preview</title>
+<style>
+  :root {
+    --primary: #023432;
+    --secondary: #00776f;
+    --accent: #3b9586;
+    --background: #e2f1ee;
+    --surface-secondary: #ffffff;
+    --surface-tertiary: #f1f8f7;
+    --stroke: #aad4cd;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--background);
+    color: var(--primary);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .page { max-width: 760px; margin: 0 auto; padding: 32px 20px 80px; }
+  .draft-banner {
+    background: var(--primary);
+    color: #fff;
+    text-align: center;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  .hero {
+    width: 100%;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    border-radius: 16px;
+    border: 1px solid var(--stroke);
+  }
+  .meta-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+    font-size: 13px;
+    color: var(--secondary);
+    margin: 16px 0 8px;
+  }
+  .pill {
+    background: var(--surface-tertiary);
+    border: 1px solid var(--stroke);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-weight: 700;
+  }
+  h1.title { font-size: 32px; line-height: 1.2; font-weight: 700; margin: 8px 0 4px; letter-spacing: -0.02em; }
+  p.excerpt { font-size: 18px; font-weight: 300; color: var(--secondary); margin: 0 0 24px; }
+  audio { width: 100%; margin: 8px 0 32px; }
+
+  article h2 { font-size: 24px; font-weight: 700; margin: 40px 0 12px; letter-spacing: -0.02em; }
+  article h3 { font-size: 20px; font-weight: 700; margin: 28px 0 10px; }
+  article h4 { font-size: 17px; font-weight: 700; margin: 0 0 6px; }
+  article p { font-size: 16px; line-height: 1.6; font-weight: 300; margin: 0 0 16px; }
+  article a { color: var(--accent); font-weight: 700; }
+  article ul, article ol { padding-left: 22px; margin: 0 0 16px; }
+  article ul { list-style: none; padding-left: 0; }
+  article ul li {
+    position: relative;
+    padding-left: 26px;
+    margin-bottom: 8px;
+    line-height: 1.5;
+  }
+  article ul li::before {
+    content: "\26A1";
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+  }
+  article ol li { margin-bottom: 8px; line-height: 1.5; }
+
+  hr.article-divider { border: none; border-top: 1px solid var(--stroke); margin: 32px 0; }
+
+  figure { margin: 24px 0; }
+  figure img { width: 100%; border-radius: 16px; border: 1px solid var(--stroke); display: block; }
+  figcaption { font-size: 13px; color: var(--secondary); margin-top: 8px; text-align: center; }
+
+  blockquote {
+    border-left: 4px solid var(--accent);
+    margin: 24px 0;
+    padding: 4px 20px;
+    font-size: 20px;
+    font-style: italic;
+    color: var(--primary);
+  }
+
+  .article-stat, .article-numbers, .article-conclusion {
+    background: var(--surface-tertiary);
+    border: 1px solid var(--stroke);
+    border-radius: 16px;
+    padding: 24px;
+    margin: 24px 0;
+  }
+  .article-stat-lead { font-size: 20px; font-weight: 700; margin: 0 0 8px; }
+  .article-stat-num { color: var(--accent); font-size: 28px; }
+  .article-stat-pill { font-size: 15px; color: var(--secondary); margin: 0; }
+
+  .article-numbers-subtitle { font-size: 13px; font-weight: 700; text-transform: uppercase; color: var(--accent); margin: 0 0 4px; }
+  .article-numbers-title { margin: 0 0 16px; }
+  .article-numbers-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .article-numbers-stat { display: block; font-size: 28px; font-weight: 700; color: var(--accent); }
+  .article-numbers-item-text { font-size: 14px; color: var(--secondary); margin: 4px 0 0; }
+
+  .article-cardgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin: 24px 0; }
+  .article-cardgrid-card {
+    background: var(--surface-secondary);
+    border: 1px solid var(--stroke);
+    border-radius: 16px;
+    padding: 20px;
+  }
+  .article-cardgrid-title { margin: 0 0 8px; }
+  .article-cardgrid-text { font-size: 14px; line-height: 1.5; margin: 0; color: var(--primary); }
+
+  .article-numlist { display: flex; flex-direction: column; gap: 12px; margin: 24px 0; }
+  .article-numlist-item {
+    background: var(--primary);
+    color: #fff;
+    border-radius: 16px;
+    padding: 16px 20px;
+    counter-increment: numlist;
+    position: relative;
+    padding-left: 52px;
+  }
+  .article-numlist { counter-reset: numlist; }
+  .article-numlist-item::before {
+    content: counter(numlist);
+    position: absolute;
+    left: 16px;
+    top: 16px;
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 700;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .article-numlist-title { font-weight: 700; margin: 0 0 4px; }
+  .article-numlist-desc { font-size: 14px; opacity: 0.85; margin: 0; }
+
+  table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--stroke); }
+  th { color: var(--secondary); font-size: 13px; text-transform: uppercase; }
+
+  .article-accordion { margin: 24px 0; }
+  details {
+    background: var(--surface-secondary);
+    border: 1px solid var(--stroke);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+  }
+  summary { font-weight: 700; cursor: pointer; }
+  .article-accordion-body { margin-top: 10px; font-size: 15px; color: var(--primary); }
+  .article-accordion-body p { margin: 0; }
+
+  .article-conclusion-title { margin: 0 0 8px; }
+  .article-conclusion-lead { font-size: 18px; line-height: 1.5; margin: 0; }
+
+  @media (max-width: 560px) {
+    .article-cardgrid, .article-numbers-grid { grid-template-columns: 1fr; }
+    h1.title { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+  <div class="draft-banner">DRAFT PREVIEW — not published on biteinsight.co.uk</div>
+  <div class="page">
+    <img class="hero" src="https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/vitamin-d-deficiency-uk-guide-woman-sunlight-garden.webp" alt="Woman sitting outdoors in sunlight in a garden">
+    <div class="meta-row">
+      <span class="pill">Nutrition</span>
+      <span class="pill">Health Tips</span>
+      <span>11 min read</span>
+      <span>By Bite Insight Team</span>
+    </div>
+    <h1 class="title">Vitamin D in the UK: Why So Many of Us Are Running Low</h1>
+    <p class="excerpt">Nearly half of UK adults have low vitamin D. Here's what actually works, from sunlight and food to safe supplement doses.</p>
+    <audio controls src="https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/audio/vitamin-d-deficiency-uk-guide-Vitamin_D_in_the_UK_Why_So_Many_of_Us_Are_Running_Low.mp3"></audio>
+
+    <article>
+<p>If you live in the UK, there is a good chance your vitamin D levels are lower than they should be right now, and you would have no way of knowing it. Vitamin D does not come with obvious warning signs the way running low on iron or B12 sometimes does. Most people who are deficient feel completely normal, at least at first. Yet recent testing data suggests close to half of UK adults are sitting below the level doctors consider optimal, and the reason has less to do with diet than with something we cannot control: where we live on the map.</p>
+
+<p>This guide looks at why vitamin D is such a persistent problem in Britain, who is most affected, how to spot the signs, and what actually works, from food and safe sun exposure through to choosing a sensible supplement.</p>
+
+<figure>
+  <img src="https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/vitamin-d-deficiency-uk-guide-woman-sunlight-garden.webp" alt="Woman sitting outdoors in sunlight in a garden">
+  <figcaption>Sunlight on bare skin is how most of us make the bulk of our vitamin D, but only when the sun is high enough in the sky.</figcaption>
+</figure>
+
+<h2>Why the UK has a vitamin D problem</h2>
+
+<p>Vitamin D is unusual among nutrients because your body mostly makes it itself, using a reaction that happens in the skin when it is exposed to UVB rays from the sun. The trouble is that the UK sits quite far north, and from around October to the end of March, the sun simply never gets high enough in the sky for that reaction to happen at all, no matter how much time you spend outdoors. The Department of Health calls this the "vitamin D winter", and it covers roughly half the year.</p>
+
+<p>During the summer months, most people with reasonable outdoor access can make enough vitamin D through sunlight on bare skin. But stack a grey, indoor heavy British lifestyle on top of six months where the sun cannot help you at all, and it becomes very easy to run a deficit that never quite gets topped back up.</p>
+
+<div class="article-stat">
+  <p class="article-stat-lead"><span class="article-stat-num">49.5%</span> of UK adults tested in 2025 had vitamin D levels below the optimal range</p>
+  <p class="article-stat-pill">Women were slightly more affected than men, averaging just under the minimum healthy threshold</p>
+</div>
+
+<p>It is worth being clear that "deficient" and "below optimal" are not quite the same thing. NHS guidance defines deficiency as blood levels under 25 nmol/L, with levels above 50 nmol/L considered sufficient for most people. A lot of people sit in the grey zone between the two, technically not deficient but not thriving either, and it is this group that tends to notice the subtle effects most: low energy, aching joints, a mood that dips along with the daylight.</p>
+
+<h2>What vitamin D actually does for you</h2>
+
+<p>It is easy to think of vitamin D purely as a bone nutrient, and bone health is genuinely where the evidence is strongest, but its role goes well beyond that.</p>
+
+<ul>
+  <li>Helps your gut absorb calcium and phosphate, which keeps bones and teeth strong</li>
+  <li>Supports normal muscle function, including in older adults where low levels are linked to falls</li>
+  <li>Plays a role in normal immune system function</li>
+  <li>Contributes to normal cell division and the maintenance of a healthy immune response</li>
+  <li>May influence mood, though the evidence here is still developing and researchers are cautious about overstating it</li>
+</ul>
+
+<p>Severe, prolonged deficiency in children can cause rickets, a softening of the bones, and in adults the equivalent condition is called osteomalacia. Both are rare in the UK today but not unheard of, particularly in groups with several risk factors stacking up at once.</p>
+
+<hr class="article-divider">
+
+<h2>Who is most at risk</h2>
+
+<p>Everyone in the UK is at some risk during the winter months, but a few groups are at meaningfully higher risk all year round, because something about their body, lifestyle or circumstances reduces how much vitamin D they make from sunlight even in summer.</p>
+
+<div class="article-cardgrid">
+  <div class="article-cardgrid-card">
+    <div class="article-cardgrid-head">
+      <h4 class="article-cardgrid-title">People with darker skin</h4>
+    </div>
+    <p class="article-cardgrid-text">More melanin in the skin means the vitamin D producing reaction happens more slowly, so people of African, African Caribbean or South Asian heritage often need considerably more sun exposure to make the same amount.</p>
+  </div>
+  <div class="article-cardgrid-card">
+    <div class="article-cardgrid-head">
+      <h4 class="article-cardgrid-title">Adults over 65</h4>
+    </div>
+    <p class="article-cardgrid-text">Skin becomes less efficient at making vitamin D with age, and older adults typically spend less time outdoors, so this group is advised to supplement all year, not just in winter.</p>
+  </div>
+  <div class="article-cardgrid-card">
+    <div class="article-cardgrid-head">
+      <h4 class="article-cardgrid-title">Anyone housebound or frail</h4>
+    </div>
+    <p class="article-cardgrid-text">If you rarely get outdoors, whether through illness, mobility issues or caring responsibilities, sunlight simply is not reaching your skin often enough to help.</p>
+  </div>
+  <div class="article-cardgrid-card">
+    <div class="article-cardgrid-head">
+      <h4 class="article-cardgrid-title">Those who cover their skin</h4>
+    </div>
+    <p class="article-cardgrid-text">Religious or cultural dress that covers most of the body, or consistently high factor sunscreen use, reduces the skin area available to make vitamin D.</p>
+  </div>
+  <div class="article-cardgrid-card">
+    <div class="article-cardgrid-head">
+      <h4 class="article-cardgrid-title">Pregnant or breastfeeding women</h4>
+    </div>
+    <p class="article-cardgrid-text">Vitamin D needs increase to support the baby's bone development, and the NHS specifically recommends a daily supplement throughout pregnancy and while breastfeeding.</p>
+  </div>
+  <div class="article-cardgrid-card">
+    <div class="article-cardgrid-head">
+      <h4 class="article-cardgrid-title">People living with obesity</h4>
+    </div>
+    <p class="article-cardgrid-text">Vitamin D is fat soluble and can be sequestered in body fat, making it less available in the bloodstream, so higher body weight is linked with lower circulating levels.</p>
+  </div>
+</div>
+
+<p>If more than one of these applies to you, it is worth paying closer attention to your intake, and possibly speaking to your GP or pharmacist about testing.</p>
+
+<h2>The signs your levels might be low</h2>
+
+<p>The honest answer is that most people with low vitamin D have no symptoms at all, which is exactly why it slips under the radar. When symptoms do appear, they tend to be vague and easy to blame on something else, particularly in winter when everyone feels a bit more tired and low.</p>
+
+<ul>
+  <li>Persistent tiredness or low energy that does not improve with rest</li>
+  <li>Bone or muscle pain, sometimes described as a dull, generalised ache</li>
+  <li>Muscle weakness, or a noticeable dip in physical strength</li>
+  <li>Frequent minor infections, as the immune system relies partly on adequate levels</li>
+  <li>A low mood that tracks with the darker months</li>
+</ul>
+
+<p>None of these are specific to vitamin D on their own, so they are not something to self diagnose from. But if several apply and it is winter or spring, it is a reasonable prompt to check your intake and consider a supplement, or ask your GP about a blood test if symptoms are more significant.</p>
+
+<hr class="article-divider">
+
+<h2>How much do you actually need</h2>
+
+<p>Official UK guidance, from the Scientific Advisory Committee on Nutrition and the Department of Health, is fairly simple once you know the headline number.</p>
+
+<div class="article-numbers">
+  <p class="article-numbers-subtitle">UK Government Guidance</p>
+  <h3 class="article-numbers-title">Vitamin D, By the Numbers</h3>
+  <div class="article-numbers-grid">
+    <div class="article-numbers-item">
+      <span class="article-numbers-stat">10mcg</span>
+      <p class="article-numbers-item-text">the daily amount recommended for everyone over 4, from October to March</p>
+    </div>
+    <div class="article-numbers-item">
+      <span class="article-numbers-stat">400IU</span>
+      <p class="article-numbers-item-text">the international unit equivalent of that 10 microgram dose</p>
+    </div>
+    <div class="article-numbers-item">
+      <span class="article-numbers-stat">6</span>
+      <p class="article-numbers-item-text">months of the year (roughly) when UK sunlight cannot make vitamin D at all</p>
+    </div>
+    <div class="article-numbers-item">
+      <span class="article-numbers-stat">100mcg</span>
+      <p class="article-numbers-item-text">the safe upper limit per day for adults, not a target to aim for</p>
+    </div>
+  </div>
+</div>
+
+<p>If you fall into one of the higher risk groups listed above, the advice is to take that 10 microgram supplement all year, not only in winter. For everyone else, taking one from around October to March is considered sensible, and there is no harm in taking it in summer too if you are simply someone who prefers to stay indoors or covers up in the sun.</p>
+
+<p>The 100 microgram figure is a safety ceiling, not something to work toward. Vitamin D toxicity is rare and almost always comes from taking very high dose supplements over long periods, not from food or sunlight, since your body has natural mechanisms that limit how much it produces from sun exposure alone.</p>
+
+<h2>Getting it from food</h2>
+
+<p>Food alone rarely covers your full vitamin D needs in the UK, particularly in winter, but it still matters, and building a few reliable sources into your week adds up.</p>
+
+<figure>
+  <img src="https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/vitamin-d-deficiency-uk-guide-salmon-vitamin-d-foods.webp" alt="Salmon steak and ingredients, a leading food source of vitamin D">
+  <figcaption>Oily fish like salmon, mackerel and sardines are the richest natural food sources of vitamin D in the UK diet.</figcaption>
+</figure>
+
+<table>
+  <thead>
+    <tr><th>Food</th><th>Typical vitamin D content</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Oily fish (salmon, mackerel, sardines), per 100g</td><td>Around 8 to 16mcg, often most of a day's needs in one portion</td></tr>
+    <tr><td>Egg yolks, per 100g</td><td>Roughly 2 to 3mcg</td></tr>
+    <tr><td>Red meat, per 100g</td><td>A small amount, typically under 1mcg</td></tr>
+    <tr><td>Fortified breakfast cereals, per serving</td><td>Varies by brand, often 1 to 4mcg, check the label</td></tr>
+    <tr><td>Fortified spreads and margarines, per serving</td><td>Small but consistent amounts, again check the label</td></tr>
+    <tr><td>Fortified plant milks (soya, oat, almond), per glass</td><td>Varies widely by brand, some match dairy alternatives closely</td></tr>
+    <tr><td>UV exposed mushrooms, per 100g</td><td>Can be notably high, though standard mushrooms contain very little</td></tr>
+  </tbody>
+</table>
+
+<p>A useful habit if you use Bite Insight to scan your shopping is to check the nutrition panel on breakfast cereals, spreads and plant milks specifically for vitamin D. Fortification levels vary a surprising amount between brands making the same type of product, and a quick scan can help you pick the version that actually contributes something.</p>
+
+<h2>Sunlight: the free source, used sensibly</h2>
+
+<figure>
+  <img src="https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/vitamin-d-deficiency-uk-guide-woman-walking-autumn-sunlight.webp" alt="Woman walking outdoors in a sunlit park">
+  <figcaption>Short, regular spells outdoors between March and September are usually enough, no sunbathing required.</figcaption>
+</figure>
+
+<p>From late March to the end of September, most people in the UK can make enough vitamin D through regular, casual sun exposure, meaning bare arms and face outdoors for short spells several times a week, without needing to sunbathe or burn. You do not need direct, prolonged exposure, and there is no benefit to staying out longer once your skin starts to turn pink, since that is a sign of damage rather than extra vitamin D production.</p>
+
+<p>Cancer Research UK and the British Association of Dermatologists are both clear that there is no safe way to deliberately seek a tan or use a sunbed to top up vitamin D. The goal is short, incidental exposure as part of normal outdoor time, alongside sensible sun protection once you have had a few minutes, not an extended session in direct sun.</p>
+
+<h2>Choosing a sensible supplement</h2>
+
+<div class="article-numlist">
+  <div class="article-numlist-item"><div class="article-numlist-content">
+    <p class="article-numlist-title">Pick vitamin D3 over D2 where possible</p>
+    <p class="article-numlist-desc">D3 (cholecalciferol) is the form your body makes naturally and raises blood levels more effectively than D2, though both are available and either is better than none.</p>
+  </div></div>
+  <div class="article-numlist-item"><div class="article-numlist-content">
+    <p class="article-numlist-title">Take it with a meal that contains some fat</p>
+    <p class="article-numlist-desc">Vitamin D is fat soluble, so absorption improves when taken alongside food rather than on an empty stomach.</p>
+  </div></div>
+  <div class="article-numlist-item"><div class="article-numlist-content">
+    <p class="article-numlist-title">Stick to 10mcg unless advised otherwise</p>
+    <p class="article-numlist-desc">Higher dose supplements exist and are sometimes prescribed for confirmed deficiency, but that should be guided by a blood test result and a GP or pharmacist, not guesswork.</p>
+  </div></div>
+  <div class="article-numlist-item"><div class="article-numlist-content">
+    <p class="article-numlist-title">Check if it is suitable for your diet</p>
+    <p class="article-numlist-desc">Most D3 supplements are derived from lanolin in sheep's wool, so they are not vegan. Vegan D3 made from lichen is available and worth seeking out if that matters to you.</p>
+  </div></div>
+</div>
+
+<h2>Should you get tested</h2>
+
+<p>Routine testing is not recommended for everyone, mainly because the treatment for low levels is the same simple supplement regardless of exactly how low you are. Your GP may offer a blood test if you have symptoms that concern them, a condition that affects absorption, or several risk factors at once. If you are simply wondering whether to take a supplement through winter, the guidance is straightforward enough that most people do not need a test first, they can safely start the standard 10 microgram dose.</p>
+
+<hr class="article-divider">
+
+<div class="article-accordion">
+  <details open>
+    <summary>Can I get too much vitamin D from food or sunlight?</summary>
+    <div class="article-accordion-body"><p>No. Your body has natural limits on how much it produces from sun exposure, and it is very difficult to reach unsafe levels through food alone. Toxicity is almost always linked to very high dose supplements taken over a long period.</p></div>
+  </details>
+  <details>
+    <summary>Does vitamin D actually help with mood in winter?</summary>
+    <div class="article-accordion-body"><p>There is a plausible link, and low vitamin D is common in people with seasonal low mood, but the research on supplementing purely to lift mood is still mixed. It is reasonable to take a supplement for general health regardless, since the wider benefits are well established.</p></div>
+  </details>
+  <details>
+    <summary>What is the best time of day to take a vitamin D supplement?</summary>
+    <div class="article-accordion-body"><p>There is no strict rule, but taking it alongside your largest meal of the day, or whichever meal contains some fat, tends to support better absorption than taking it on an empty stomach first thing.</p></div>
+  </details>
+  <details>
+    <summary>Are there good vegan sources of vitamin D?</summary>
+    <div class="article-accordion-body"><p>UV exposed mushrooms, fortified plant milks, fortified cereals and fortified spreads all contribute. Since these sources are often modest, a vegan D3 supplement made from lichen is a sensible addition for most plant based eaters, especially in winter.</p></div>
+  </details>
+</div>
+
+<div class="article-conclusion">
+  <h2 class="article-conclusion-title">The Bottom Line</h2>
+  <p class="article-conclusion-lead">Britain's grey winters make vitamin D one of the few nutrients where diet alone genuinely is not enough for most of us. Take a 10 microgram supplement from October to March, all year if you fall into a higher risk group, eat oily fish and fortified foods where you can, and get sensible, unprotected sun on bare skin for a few minutes at a time through the summer months.</p>
+</div>
+
+    </article>
+  </div>
+</body>
+</html>
