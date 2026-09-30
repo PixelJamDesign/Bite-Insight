@@ -1,0 +1,73 @@
+{
+  "supabase_row_id": "5b80439c-8f19-41e2-8d1c-7be598be0d5b",
+  "title": "PCOS Is Now PMOS: A UK Guide to Eating Well With It",
+  "slug": "pmos-pcos-diet-uk-guide",
+  "excerpt": "PCOS was renamed PMOS in 2026. Here's what changed, and the UK dietitian backed diet advice that actually eases symptoms.",
+  "category": "Nutrition",
+  "categories": ["Nutrition", "Health Tips"],
+  "status": "draft",
+  "author": "Bite Insight Team",
+  "author_id": "c18da159-509f-4529-8e07-baf2c57d9c4e",
+  "featured_image_url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/pmos-pcos-diet-uk-guide-woman-preparing-salad.webp",
+  "audio_url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/audio/pmos-pcos-diet-uk-guide-PCOS_Is_Now_PMOS_A_UK_Guide_to_Eating_Well_With_It.mp3",
+  "meta_title": "PCOS Is Now PMOS: A UK Guide to Eating Well With It",
+  "meta_description": "PCOS was officially renamed PMOS in 2026. This UK guide explains what changed and the dietitian backed food advice that eases insulin resistance and symptoms.",
+  "reading_time_mins": 10,
+  "is_featured": false,
+  "ai_summary": "In May 2026, PCOS was officially renamed PMOS, Polyendocrine Metabolic Ovarian Syndrome, after a global consensus published in The Lancet. This guide explains why the name changed, why insulin resistance sits at the centre of the condition for up to 80 percent of those affected, and the UK dietitian backed food approach that helps: low GI carbohydrates, regular balanced meals, protein and fibre at every meal, and a realistic 5 percent weight loss goal rather than restrictive dieting. It also covers the evidence on myo inositol and other supplements, and answers common questions about managing symptoms through diet.",
+  "sources": [
+    {
+      "url": "https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(26)00717-8/fulltext",
+      "title": "Polyendocrine metabolic ovarian syndrome, the new name for polycystic ovary syndrome: a multistep global consensus process",
+      "source": "The Lancet"
+    },
+    {
+      "url": "https://www.endocrine.org/news-and-advocacy/news-room/2026/pcos-name-change",
+      "title": "Polyendocrine Metabolic Ovarian Syndrome: New name to improve diagnosis and care",
+      "source": "Endocrine Society"
+    },
+    {
+      "url": "https://www.bda.uk.com/resource/polycystic-ovary-syndrome-pcos-diet.html",
+      "title": "Polycystic ovary syndrome (PCOS) and diet",
+      "source": "British Dietetic Association"
+    },
+    {
+      "url": "https://academic.oup.com/jcem/article/109/6/1630/7504796",
+      "title": "Inositol for Polycystic Ovary Syndrome: A Systematic Review and Meta-analysis to Inform the 2023 Update of the International Evidence-based PCOS Guidelines",
+      "source": "Journal of Clinical Endocrinology & Metabolism"
+    },
+    {
+      "url": "https://www.rcn.org.uk/magazines/Clinical/2026/Feb/Polycystic-ovary-syndrome-why-arent-we-talking-about-it-more",
+      "title": "PMOS, previously known as PCOS: it's time to talk about it",
+      "source": "Royal College of Nursing"
+    }
+  ],
+  "images": [
+    {
+      "role": "featured/hero",
+      "url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/pmos-pcos-diet-uk-guide-woman-preparing-salad.webp",
+      "source": "Freepik stock (Magnific stock library)",
+      "credit": "Young woman making salad at the kitchen"
+    },
+    {
+      "role": "inline section image (insulin resistance section)",
+      "url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/pmos-pcos-diet-uk-guide-balanced-plate-salmon.webp",
+      "source": "Freepik stock (Magnific stock library)",
+      "credit": "Grilled salmon fish fillet and fresh green lettuce vegetable tomato salad with avocado guacamole"
+    },
+    {
+      "role": "inline section image (weekly practice section)",
+      "url": "https://bfkxjgbvsygvenmciasg.supabase.co/storage/v1/object/public/blog-images/blog/pmos-pcos-diet-uk-guide-weekly-meal-prep.webp",
+      "source": "Freepik stock (Magnific stock library)",
+      "credit": "Healthy Weekly Meal Prep Containers with Salmon, Pasta and Fresh Vegetables"
+    }
+  ],
+  "audio": {
+    "voice_id": "nqjdE3SY6EzSAFVCxO3s",
+    "voice_name": "Glenn",
+    "model_id": "eleven_multilingual_v2",
+    "output_format": "mp3_44100_128",
+    "duration_seconds": 714,
+    "note": "Generated in 10 chunks under ElevenLabs' 10,000 character request limit due to article length, then concatenated with ffmpeg into a single re-encoded mp3. Title is spoken at the start of the audio."
+  }
+}
