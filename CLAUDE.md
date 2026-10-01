@@ -133,6 +133,7 @@ Reuse these before creating new components:
 | `MoreMenu` | `@/components/MoreMenu` | ⋯ button with actions — system menu on iOS (SwiftUI Menu, fixed order) & Android (Expo UI MenuView), ActionsSheet on web. Items show in the same order everywhere. `size` small (36, default) / regular (48) |
 | `FadingScrollView` | `@/components/FadingScrollView` | ScrollView for bottom sheets: top edge blurs and fades content once scrolled (ProgressiveBlur). `fadeColor` for non-white sheets |
 | `ActionsSheet` | `@/components/ActionsSheet` | Titled bottom sheet of action rows (RecipeActionsSheet layout) |
+| `AlertCard` | `@/components/AlertCard` | Figma alert (3190:5985): `tone` warning / caution / info, label pill + bold message |
 | `Button` | `@/components/Button` | primary / outline / ghost button variants |
 | `MenuModal` | `@/components/MenuModal` | Slide-out navigation drawer |
 

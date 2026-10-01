@@ -7,9 +7,9 @@
  * web) holds Eating now / Edit meal / Remove from plan. Changing the day
  * or time is done through Edit meal.
  *
- * The line under the title carries what the meal card may have to cut:
- * item count, day and time, the user's key numbers (same as MealBlock)
- * and, for an allergy hit, the reason.
+ * Below the title: an alert saying why the meal is amber or red (when it
+ * is), the meal's items, and the Nutrition panel with the full numbers
+ * the meal card has to leave out.
  *
  * Tapping an item calls onOpenItem; the planner opens the product (or
  * recipe) page and brings this sheet back when the user comes back.
@@ -21,8 +21,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
 import { useSheetAnimation } from '@/lib/useSheetAnimation';
 import { useToast } from '@/lib/toastContext';
-import { deleteMeal, normaliseTime, relativeDayLabel, setMealEaten, sumNutrition } from '@/lib/mealPlan';
-import { formatMetric, type MealImpact, type MealMetric } from '@/lib/mealDanger';
+import { deleteMeal, mealNutritionSummary, normaliseTime, relativeDayLabel, setMealEaten } from '@/lib/mealPlan';
+import type { MealImpact } from '@/lib/mealDanger';
+import { AlertCard } from '@/components/AlertCard';
+import { NutritionPanel } from '@/components/NutritionPanel';
 import { MoreMenu } from '@/components/MoreMenu';
 import type { MoreMenuAction } from '@/components/moreMenuTypes';
 import { MealItemRow } from '@/components/MealItemRow';
@@ -51,8 +53,6 @@ interface Props {
   onOpenItem: (item: MealPlanEntry) => void;
   /** How the meal sits with the user (useMealPlanImpact). */
   impact?: MealImpact;
-  /** The numbers that matter to the user, as on the meal card. */
-  metrics?: MealMetric[];
 }
 
 export function MealActionsSheet({
@@ -63,7 +63,6 @@ export function MealActionsSheet({
   onEdit,
   onOpenItem,
   impact,
-  metrics = ['kcal', 'carbs_g'],
 }: Props) {
   const { rendered, backdropOpacity, sheetTranslateY } = useSheetAnimation(visible);
   const { showToast } = useToast();
@@ -104,12 +103,7 @@ export function MealActionsSheet({
 
   const itemCount = meal.items.length;
   const eaten = Boolean(meal.eaten_at);
-  const totals = sumNutrition(meal.items);
-  const details = [
-    `${itemCount} ${itemCount === 1 ? 'item' : 'items'}`,
-    `${relativeDayLabel(meal.plan_date)} at ${normaliseTime(meal.meal_time)}`,
-    ...metrics.map((m) => (totals[m] != null ? formatMetric(m, totals[m]!) : null)),
-  ].filter((d): d is string => Boolean(d));
+  const nutrition = mealNutritionSummary(meal.items);
 
   const menuActions: MoreMenuAction[] = [
     {
@@ -172,17 +166,13 @@ export function MealActionsSheet({
                     {meal.name}
                   </Text>
                   <View style={styles.metaRow}>
-                    {details.map((d) => (
-                      <Text key={d} style={styles.meta}>
-                        {d}
-                      </Text>
-                    ))}
-                  </View>
-                  {impact?.reason ? (
-                    <Text style={[styles.meta, impact.level === 'avoid' ? styles.reasonAvoid : styles.reasonCaution]}>
-                      {impact.reason}
+                    <Text style={styles.meta}>
+                      {itemCount} {itemCount === 1 ? 'item' : 'items'}
                     </Text>
-                  ) : null}
+                    <Text style={styles.meta}>
+                      {relativeDayLabel(meal.plan_date)} at {normaliseTime(meal.meal_time)}
+                    </Text>
+                  </View>
                 </View>
                 <MoreMenu
                   size="regular"
@@ -194,13 +184,30 @@ export function MealActionsSheet({
               </View>
 
               <FadingScrollView
-                style={{ maxHeight: windowHeight * 0.6 }}
-                contentContainerStyle={styles.items}
+                style={{ maxHeight: windowHeight * 0.7 }}
+                contentContainerStyle={styles.scrollBody}
                 showsVerticalScrollIndicator={false}
               >
-                {meal.items.map((item) => (
-                  <MealItemRow key={item.id} item={item} onPress={() => onOpenItem(item)} />
-                ))}
+                {impact?.explanation ? (
+                  <AlertCard
+                    tone={impact.level === 'avoid' ? 'warning' : 'caution'}
+                    message={impact.explanation}
+                  />
+                ) : null}
+
+                <View style={styles.items}>
+                  {meal.items.map((item) => (
+                    <MealItemRow key={item.id} item={item} onPress={() => onOpenItem(item)} />
+                  ))}
+                </View>
+
+                <NutritionPanel
+                  title="Nutrition"
+                  subtitle="These values come from everything in this meal."
+                  perServing={nutrition.perServing}
+                  per100={nutrition.per100}
+                  grade={nutrition.grade}
+                />
               </FadingScrollView>
             </View>
           </SafeAreaView>
@@ -250,8 +257,7 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     letterSpacing: -0.48,
   },
-  // Wraps onto a second line when the numbers don't fit beside the time.
-  metaRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', columnGap: 16 },
+  metaRow: { flexDirection: 'row', alignItems: 'baseline', gap: 16 },
   meta: {
     fontSize: 16,
     lineHeight: 27,
@@ -259,7 +265,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_300Light',
     color: Colors.secondary,
   },
-  reasonAvoid: { color: Colors.status.negative, fontFamily: 'Figtree_700Bold', fontWeight: '700' },
-  reasonCaution: { color: '#c2581c', fontFamily: 'Figtree_700Bold', fontWeight: '700' },
+  scrollBody: { gap: 24, paddingBottom: 8 },
   items: { gap: 8 },
 });

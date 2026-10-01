@@ -32,6 +32,30 @@ export interface MealImpact {
   /** Short reason for the card, e.g. "Contains peanuts". Only set for
    *  allergy hits — the colour carries the rest. */
   reason: string | null;
+  /** Why the meal is amber or red, as a sentence for the meal view's
+   *  alert, e.g. "It's high in carbs and likely to spike blood sugar." */
+  explanation: string | null;
+}
+
+/** How each insight reads when it's what makes a meal amber or red.
+ *  Fibre and protein are inverted — a poor score means too little. */
+const INSIGHT_PHRASE: Partial<Record<InsightKey, string>> = {
+  glycemic: 'likely to spike blood sugar',
+  sodium: 'high in salt',
+  sugar: 'high in sugar',
+  saturatedFat: 'high in saturated fat',
+  fiber: 'low in fibre',
+  protein: 'low in protein',
+  calorie: 'high in calories',
+  digestiveLoad: 'heavy to digest',
+  carbLoad: 'high in carbs',
+  additives: 'heavy on additives',
+};
+/** At most this many reasons go in the sentence. */
+const MAX_REASONS = 2;
+
+function joinReasons(parts: string[]): string {
+  return parts.length <= 1 ? parts.join('') : `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`;
 }
 
 /** Weighted average at or above these marks moves the card up a state. */
@@ -134,11 +158,19 @@ export function scoreMeal(
   const self = ingredients.length > 0 ? computeHouseholdImpact(ingredients, profile, [])[0] : null;
   if (self?.status === 'avoid') {
     const allergyReason = self.reasons.find((r) => r.startsWith('Contains')) ?? null;
-    return { level: 'avoid', reason: allergyReason ? humanise(allergyReason) : null };
+    const reason = allergyReason ? humanise(allergyReason) : null;
+    return {
+      level: 'avoid',
+      reason,
+      explanation: reason
+        ? `${reason}, which is on your allergy list.`
+        : 'It contains something on your allergy list.',
+    };
   }
 
   // Insight average.
   let level: MealDangerLevel = 'planned';
+  const offenders: { key: InsightKey; score: number }[] = [];
   const portions = mealPortions(meal, recipeIngredients, recipeServings);
   if (portions.length > 0 && tags.length > 0) {
     const insights = getActiveInsights(conditions, allergies, preferences, blendPer100g(portions), INSIGHT_DEFS, Infinity);
@@ -150,6 +182,8 @@ export function scoreMeal(
       const w = tagWeight(tags, def.key);
       weighted += points * w;
       weights += w;
+      // Orange and red results are what pull the meal down.
+      if (points >= 2) offenders.push({ key: def.key, score: points * w });
     }
     if (weights > 0) {
       const avg = weighted / weights;
@@ -158,7 +192,17 @@ export function scoreMeal(
   }
 
   if (self?.status === 'caution' && level === 'planned') level = 'caution';
-  return level === 'planned' ? null : { level, reason: null };
+  if (level === 'planned') return null;
+
+  // The worst one or two insights, then any diet or condition clash.
+  const phrases = offenders
+    .sort((a, b) => b.score - a.score)
+    .map((o) => INSIGHT_PHRASE[o.key])
+    .filter((p): p is string => Boolean(p))
+    .slice(0, MAX_REASONS);
+  const clashes = (self?.reasons ?? []).map((r) => `${humanise(r)}.`);
+  const sentences = [phrases.length ? `It's ${joinReasons(phrases)}.` : null, ...clashes].filter(Boolean);
+  return { level, reason: null, explanation: sentences.length ? sentences.join(' ') : null };
 }
 
 function tagWeight(tags: string[], key: InsightKey): number {

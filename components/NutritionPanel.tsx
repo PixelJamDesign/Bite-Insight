@@ -12,16 +12,8 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Colors, Radius, Spacing } from '@/constants/theme';
 import { NUTRISCORE_COLORS, NUTRISCORE_VERDICT, type NutriscoreGrade } from '@/lib/nutriscore';
 
-export interface NutritionValues {
-  kcal: number;
-  fat: number;
-  satFat: number;
-  carbs: number;
-  sugars: number;
-  fiber: number;
-  protein: number;
-  salt: number;
-}
+import type { NutritionValues } from '@/lib/types';
+export type { NutritionValues };
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 type SvgIcon = React.FC<{ width?: number; height?: number }>;
