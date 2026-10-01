@@ -48,6 +48,8 @@ import type { Meal } from '@/lib/types';
 
 type Mode = 'actions' | 'move' | 'copy';
 
+const MIN_HEIGHT_RATIO = 0.5;
+
 interface Props {
   visible: boolean;
   /** The meal being acted on. May go null while the sheet animates out
@@ -207,7 +209,9 @@ export function MealActionsSheet({ visible, meal: mealProp, onClose, onChanged, 
           <TouchableOpacity style={StyleSheet.absoluteFill} onPress={onClose} activeOpacity={1} />
         </Animated.View>
         <Animated.View style={{ transform: [{ translateY: sheetTranslateY }] }}>
-          <SafeAreaView style={styles.sheet} edges={['bottom']}>
+          {/* At least half the screen (the iOS "medium" sheet height), so a
+              one-item meal doesn't open as a sliver. Content stays at the top. */}
+          <SafeAreaView style={[styles.sheet, { minHeight: windowHeight * MIN_HEIGHT_RATIO }]} edges={['bottom']}>
             <View style={styles.handle} />
 
             <View style={styles.closeRow}>
