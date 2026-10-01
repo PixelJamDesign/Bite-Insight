@@ -1,8 +1,6 @@
 /**
- * MoreMenu — a ⋯ Small Icon Button that offers a list of actions.
- *
- * Android & web: opens an ActionsSheet. iOS uses the system pull-down
- * menu instead — see MoreMenu.ios.tsx. Both take the same `actions`.
+ * MoreMenu (web) — a ⋯ Small Icon Button that opens an ActionsSheet.
+ * iOS and Android use the system menu instead — see MoreMenu.native.tsx.
  */
 import { useState } from 'react';
 import { IconButton } from '@/components/IconButton';

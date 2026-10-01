@@ -58,13 +58,14 @@ export function MealBlock({
     : null;
 
   return (
-    <TouchableOpacity
-      style={[styles.block, eaten && styles.blockEaten, style]}
-      onPress={onPress}
-      activeOpacity={0.8}
-      accessibilityLabel={`${meal.name}, ${detail}${eaten ? ', eaten' : ''}`}
-    >
+    <View style={[styles.block, eaten && styles.blockEaten, style]}>
       <View style={[styles.accent, accent]} />
+      <TouchableOpacity
+        style={styles.blockTap}
+        onPress={onPress}
+        activeOpacity={0.8}
+        accessibilityLabel={`${meal.name}, ${detail}${eaten ? ', eaten' : ''}`}
+      >
       <View style={styles.blockText}>
         <Text style={styles.blockName} numberOfLines={1}>
           {meal.name}
@@ -74,8 +75,11 @@ export function MealBlock({
         </Text>
       </View>
       {eaten && <EatenTickIcon width={20} height={20} />}
-      {trailing}
     </TouchableOpacity>
+    {/* Outside the card's tap area so its own taps (e.g. a native menu)
+        aren't swallowed by the card. */}
+    {trailing}
+    </View>
   );
 }
 
@@ -89,6 +93,14 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     paddingLeft: 16,
     paddingRight: 12,
+  },
+  // Fills the block (minus any trailing control) so the whole card stays tappable.
+  blockTap: {
+    flex: 1,
+    alignSelf: 'stretch',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   blockEaten: {
     backgroundColor: 'rgba(0, 200, 179, 0.1)',

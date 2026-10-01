@@ -1044,8 +1044,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Colors.primary,
   },
+  // Height instead of vertical padding, so the card's tap area (inside
+  // MealBlock) reaches its top and bottom edges.
   mealBlock: {
-    paddingVertical: 16,
+    minHeight: 72,
     paddingRight: 16,
   },
   mealEmpty: {

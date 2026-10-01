@@ -125,7 +125,7 @@ Reuse these before creating new components:
 | `MealBlock` | `@/components/MealBlock` | A planned meal (planner timeline, dashboard list) |
 | `MealTotalsList` | `@/components/MealTotalsList` | Stack of nutrition total rows with food icons |
 | `IconButton` | `@/components/IconButton` | Figma Icon Button: `size` regular (48) / small (36), `variant` onTeal / onWhite, optional `badge` |
-| `MoreMenu` | `@/components/MoreMenu` | ⋯ button with actions — native iOS pull-down menu, ActionsSheet on Android/web |
+| `MoreMenu` | `@/components/MoreMenu` | ⋯ button with actions — native menu on iOS & Android (Expo UI MenuView), ActionsSheet on web |
 | `ActionsSheet` | `@/components/ActionsSheet` | Titled bottom sheet of action rows (RecipeActionsSheet layout) |
 | `Button` | `@/components/Button` | primary / outline / ghost button variants |
 | `MenuModal` | `@/components/MenuModal` | Slide-out navigation drawer |
