@@ -1048,7 +1048,7 @@ const styles = StyleSheet.create({
   // Height instead of vertical padding, so the card's tap area (inside
   // MealBlock) reaches its top and bottom edges.
   mealBlock: {
-    minHeight: 72,
+    height: 80, // Meal Block, Figma 5844:9149
     paddingRight: 16,
   },
   mealEmpty: {

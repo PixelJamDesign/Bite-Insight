@@ -1,7 +1,8 @@
 /**
  * MealBlock — a planned meal, per the Figma "Meal Plan/Meal Block"
- * component (node 5844:9149). Used on the meal planner timeline and in
- * the dashboard's meal plan list.
+ * component (node 5844:9149), 80px tall. Used on the meal planner
+ * timeline (one hour = 80px there) and in the dashboard's meal plan list.
+ * The height comes from the caller's style.
  *
  * States, judged for the signed-in user (lib/mealDanger.ts): Planned
  * (teal bar), Caution (orange bar) and Avoid (red bar — a poor fit on

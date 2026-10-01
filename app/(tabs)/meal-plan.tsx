@@ -68,7 +68,9 @@ import AddIcon from '@/assets/icons/meal-plan/add.svg';
 const DATE_KEY_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 // ── Timeline geometry ────────────────────────────────────────────────────────
-const HOUR_HEIGHT = 70;
+// Matches the Meal Block's 80px height (Figma 5844:9149), so a meal spans
+// exactly one hour and meals an hour apart don't overlap.
+const HOUR_HEIGHT = 80;
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 /** Width of the hour-label gutter on the left. */
 const GUTTER = 52;
