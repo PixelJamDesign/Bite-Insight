@@ -192,9 +192,10 @@ CRITICAL: Each row is INDIVIDUALLY styled — do NOT wrap in a shared card conta
 ### Scroll-under-header effect (frosted glass)
 One effect everywhere content scrolls behind a header, bar or pinned section:
 frosted glass — the content stays visible, blurred and tinted with the
-header's colour, softening out over a 32px edge, and only once something is
-actually under it. Material values live in `components/progressiveBlurShared.ts`
-(`FROST_TINT`, `FROST_BLUR_INTENSITY`, `FROST_BLUR_PX`).
+header's colour, easing out over a 32px edge (a true progressive blur, from
+`@sbaiahmed1/react-native-blur`), and only once something is actually under it.
+Material values live in `components/frostMaterial.ts` (`FROST_TINT`,
+`FROST_BLUR_RADIUS`). Expo Go can't load the native blur, so it shows the tint only.
 ```tsx
 // Header floating over the content (absolute): frost fills the header area
 <FrostedHeader scrollY={scrollY} color="#ffffff" style={{ top: 0, height: headerHeight }} />
@@ -207,7 +208,7 @@ const edge = useScrollEdge();
 </View>
 ```
 ScreenLayout (`HeaderScrollView`/`HeaderFlatList`), the menu and `FadingScrollView` already include it.
-Android has no backdrop blur here, so it's a stronger tint there.
+Native blur means a dev build: after adding or upgrading native packages, rebuild it.
 
 ### Tab Bar Active Pill
 ```ts
