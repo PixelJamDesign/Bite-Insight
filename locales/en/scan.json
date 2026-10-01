@@ -6,6 +6,8 @@
     "cta": "Help add this product",
     "title": "Add this product",
     "subtitle": "Add what you can. Even one photo helps. It goes to Open Food Facts, so the next person who scans it gets the details too.",
+    "improveTitle": "Improve this product",
+    "improveSubtitle": "Fix anything that's missing or wrong. Your changes go to Open Food Facts, so everyone who scans it sees the better version.",
     "barcode": "Barcode: {{code}}",
     "detailsTitle": "Product details",
     "addFrontPhoto": "Add front photo",

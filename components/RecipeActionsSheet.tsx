@@ -84,7 +84,7 @@ interface ViewerProps extends BaseProps {
 type Props = OwnerProps | ViewerProps;
 
 // ── Icon tile tints (Figma-sourced) ─────────────────────────────────────
-const SPRING_WATER = '#e2f1ee';
+export const SPRING_WATER = '#e2f1ee';
 const DESTRUCTIVE_TINT = 'rgba(255, 47, 97, 0.1)';
 
 export function RecipeActionsSheet(props: Props) {
@@ -287,7 +287,7 @@ function ViewerRows({
 
 type SvgComponent = React.FC<{ width?: number; height?: number }>;
 
-function ActionRow({
+export function ActionRow({
   IconSvg,
   iconSize,
   tint,

@@ -54,6 +54,9 @@ import {
 import type { IngredientNode } from '@/lib/ingredientsCleaner';
 import { safeBack } from '@/lib/safeBack';
 import { AddToRecipeSheet } from '@/components/AddToRecipeSheet';
+import { AddToMealPlanSheet } from '@/components/AddToMealPlanSheet';
+import { ProductActionsSheet } from '@/components/ProductActionsSheet';
+import { ProductMoreMenu } from '@/components/ProductMoreMenu';
 import { buildProductSnapshot } from '@/lib/recipes';
 
 /** Coerce a value to number, falling back to a query-param source */
@@ -707,8 +710,15 @@ export default function ScanResultScreen() {
   const { t: tpo } = useTranslation('profileOptions');
   const { showReviewPrompt, recheckAfterScan, dismissReviewPrompt, completeReviewPrompt } = useReviewPrompt();
 
-  // Add-to-recipe sheet state
+  // Product "more" menu and the sheets it opens
+  const [actionsOpen, setActionsOpen] = useState(false);
   const [addToRecipeOpen, setAddToRecipeOpen] = useState(false);
+  const [addToPlanOpen, setAddToPlanOpen] = useState(false);
+  /** Opens the next sheet once the actions sheet (or the iOS menu) has
+   *  finished closing — iOS freezes if one Modal opens over another. */
+  function afterActionsClose(open: () => void) {
+    setTimeout(open, 350);
+  }
 
   // Page-level entrance/exit animation
   const { opacity: pageOpacity, translateX: pageTranslateX, animateExit: pageExit } = usePageTransition();
@@ -1870,6 +1880,41 @@ export default function ScanResultScreen() {
     );
   }
 
+  // The product as saved into recipes and meal plans.
+  const productSnapshot = buildProductSnapshot({
+    product_name: String(fetched?.productName || p.productName || t('product.unknownName')),
+    brand: (fetched?.brand || (typeof p.brand === 'string' ? p.brand : null)) || null,
+    image_url: (fetched?.imageUrl || (typeof p.imageUrl === 'string' ? p.imageUrl : null)) || null,
+    nutriscore_grade: ((fetched?.nutriscoreGrade as string | undefined) || (typeof p.nutriscoreGrade === 'string' ? p.nutriscoreGrade : null)) || null,
+    nutriments: {
+      energy_kcal: toNum(fetched?.energyKcal, p.energyKcal),
+      fat_g: toNum(fetched?.fat, p.fat),
+      saturated_fat_g: toNum(fetched?.saturatedFat, p.saturatedFat),
+      carbs_g: toNum(fetched?.carbs, p.carbs),
+      sugars_g: toNum(fetched?.sugars, p.sugars),
+      fiber_g: toNum(fetched?.fiber, p.fiber),
+      protein_g: toNum(fetched?.proteins, p.proteins),
+      salt_g: toNum(fetched?.salt, p.salt),
+    },
+    allergens: (
+      (fetched?.allergens as string[] | undefined) ??
+      (typeof p.allergens === 'string' ? p.allergens.split(',').filter(Boolean) : [])
+    ),
+    ingredients: [],
+    // Raw ingredient text — buildProductSnapshot parses it into
+    // structured entries *and* persists it on the snapshot so the
+    // family impact sheet can surface flagged ingredient matches.
+    ingredients_text: ingredientsText || null,
+  });
+  const productBarcode = typeof p.barcode === 'string' ? p.barcode : null;
+  // Only link the scan when we were given a real scans.id.
+  const productScanId =
+    typeof p.scanId === 'string' && /^[0-9a-f-]{36}$/i.test(p.scanId) ? p.scanId : null;
+  function openImproveDetails() {
+    if (!productBarcode) return;
+    router.push({ pathname: '/contribute-product', params: { barcode: productBarcode, mode: 'improve' } });
+  }
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {/* Invisible text to measure the widest rating label at the user's font scale */}
@@ -1883,20 +1928,18 @@ export default function ScanResultScreen() {
       <Animated.View style={{ flex: 1, opacity: pageOpacity, transform: [{ translateX: pageTranslateX }] }}>
       {/* ── Sticky Header (back, product info, nutri-score, tabs) ── */}
       <View style={styles.stickyHeader}>
-        {/* Back button + Add-to-recipe */}
+        {/* Back button + product actions menu */}
         <View style={styles.backRow}>
           <TouchableOpacity style={styles.backBtn} onPress={handleBack} activeOpacity={0.7}>
             <BigBackIcon width={32} height={32} />
           </TouchableOpacity>
           {session?.user?.id && (
-            <TouchableOpacity
-              style={styles.addToRecipeBtn}
-              onPress={() => setAddToRecipeOpen(true)}
-              activeOpacity={0.7}
-              hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
-            >
-              <Ionicons name="add" size={24} color={Colors.primary} />
-            </TouchableOpacity>
+            <ProductMoreMenu
+              onOpenSheet={() => setActionsOpen(true)}
+              onAddToMealPlan={() => afterActionsClose(() => setAddToPlanOpen(true))}
+              onAddToRecipe={() => afterActionsClose(() => setAddToRecipeOpen(true))}
+              onImproveDetails={openImproveDetails}
+            />
           )}
         </View>
 
@@ -3341,36 +3384,26 @@ export default function ScanResultScreen() {
         userProfile={profile}
       />
 
-      {/* ── Add to recipe sheet ── */}
+      {/* ── Product actions menu + the sheets it opens ── */}
+      <ProductActionsSheet
+        visible={actionsOpen}
+        onClose={() => setActionsOpen(false)}
+        onAddToMealPlan={() => afterActionsClose(() => setAddToPlanOpen(true))}
+        onAddToRecipe={() => afterActionsClose(() => setAddToRecipeOpen(true))}
+        onImproveDetails={openImproveDetails}
+      />
+
+      <AddToMealPlanSheet
+        visible={addToPlanOpen}
+        onClose={() => setAddToPlanOpen(false)}
+        product={{ snapshot: productSnapshot, barcode: productBarcode, scanId: productScanId }}
+      />
+
       <AddToRecipeSheet
         visible={addToRecipeOpen}
         onClose={() => setAddToRecipeOpen(false)}
-        barcode={typeof p.barcode === 'string' ? p.barcode : null}
-        snapshot={buildProductSnapshot({
-          product_name: String(fetched?.productName || p.productName || t('product.unknownName')),
-          brand: (fetched?.brand || (typeof p.brand === 'string' ? p.brand : null)) || null,
-          image_url: (fetched?.imageUrl || (typeof p.imageUrl === 'string' ? p.imageUrl : null)) || null,
-          nutriscore_grade: ((fetched?.nutriscoreGrade as string | undefined) || (typeof p.nutriscoreGrade === 'string' ? p.nutriscoreGrade : null)) || null,
-          nutriments: {
-            energy_kcal: toNum(fetched?.energyKcal, p.energyKcal),
-            fat_g: toNum(fetched?.fat, p.fat),
-            saturated_fat_g: toNum(fetched?.saturatedFat, p.saturatedFat),
-            carbs_g: toNum(fetched?.carbs, p.carbs),
-            sugars_g: toNum(fetched?.sugars, p.sugars),
-            fiber_g: toNum(fetched?.fiber, p.fiber),
-            protein_g: toNum(fetched?.proteins, p.proteins),
-            salt_g: toNum(fetched?.salt, p.salt),
-          },
-          allergens: (
-            (fetched?.allergens as string[] | undefined) ??
-            (typeof p.allergens === 'string' ? p.allergens.split(',').filter(Boolean) : [])
-          ),
-          ingredients: [],
-          // Raw ingredient text — buildProductSnapshot parses it into
-          // structured entries *and* persists it on the snapshot so the
-          // family impact sheet can surface flagged ingredient matches.
-          ingredients_text: ingredientsText || null,
-        })}
+        barcode={productBarcode}
+        snapshot={productSnapshot}
       />
 
       {/* ── Flagged ingredient detail sheet ── */}
@@ -3463,16 +3496,6 @@ const styles = StyleSheet.create({
   backBtn: {
     width: 32,
     height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addToRecipeBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.surface.tertiary,
-    borderWidth: 1,
-    borderColor: Colors.stroke.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },

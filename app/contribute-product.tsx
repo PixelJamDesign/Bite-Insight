@@ -2,6 +2,11 @@
  * Contribute product — full-screen "Help add this product" flow for Open Food
  * Facts, shown from the scan "product not found" state.
  *
+ * With ?mode=improve (the product actions menu's "Improve item details"),
+ * the form opens pre-filled with what Open Food Facts already has, so the
+ * user corrects it rather than starting from blank. Only filled-in fields
+ * are sent, so nothing already on OFF gets wiped.
+ *
  * Mirrors the Recipe Builder design (app/recipes/new.tsx): front photo as the
  * hero on a teal wash with a floating back button, a rounded white body that
  * overlaps the hero, and a sticky Cancel / Submit footer.
@@ -14,7 +19,7 @@
  * Submits to the `off-contribute` edge function, which performs the
  * authenticated write — the OFF account password never reaches the client.
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -38,6 +43,7 @@ import { TextField } from '@/components/TextField';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/lib/toastContext';
 import { getOffContributorId } from '@/lib/offContributorId';
+import { OFF_HEADERS, OFF_URL } from '@/lib/openFoodFacts';
 import ArrowLeftIcon from '@/assets/icons/recipe-header/arrow-left.svg';
 
 const HERO_HEIGHT = 300;
@@ -124,8 +130,9 @@ export default function ContributeProductScreen() {
   const { t } = useTranslation('scan');
   const { showToast } = useToast();
   const insets = useSafeAreaInsets();
-  const params = useLocalSearchParams<{ barcode?: string }>();
+  const params = useLocalSearchParams<{ barcode?: string; mode?: string }>();
   const barcode = typeof params.barcode === 'string' ? params.barcode : null;
+  const improving = params.mode === 'improve';
 
   const [tab, setTab] = useState<Tab>('details');
   const [name, setName] = useState('');
@@ -143,6 +150,46 @@ export default function ContributeProductScreen() {
   }
   const [images, setImages] = useState<Partial<Record<PhotoField, string>>>({});
   const [submitting, setSubmitting] = useState(false);
+
+  // Improve mode: start from what Open Food Facts already has.
+  useEffect(() => {
+    if (!improving || !barcode) return;
+    let cancelled = false;
+    const fields = 'product_name,brands,quantity,categories,ingredients_text,allergens_tags,traces_tags,nutriments';
+    fetch(`${OFF_URL}/api/v2/product/${barcode}.json?fields=${fields}`, { headers: OFF_HEADERS })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        const prod = json?.product;
+        if (cancelled || !prod) return;
+        if (prod.product_name) setName(String(prod.product_name));
+        if (prod.brands) setBrands(String(prod.brands));
+        if (prod.quantity) setQuantity(String(prod.quantity));
+        if (prod.categories) setCategories(String(prod.categories));
+        if (prod.ingredients_text) {
+          setIngredients(splitIngredients(String(prod.ingredients_text)).map(cleanIngredient).filter(Boolean));
+        }
+        // en:sesame-seeds → "sesame seeds", matching the ALLERGENS list
+        const fromTags = (tags: unknown) =>
+          (Array.isArray(tags) ? tags : [])
+            .map((tag: string) => String(tag).replace(/^[a-z]{2}:/, '').replace(/-/g, ' '))
+            .filter((off: string) => ALLERGENS.some((a) => a.off === off));
+        setAllergens(fromTags(prod.allergens_tags));
+        setTraces(fromTags(prod.traces_tags));
+        const n = prod.nutriments ?? {};
+        const values: Record<string, string> = {};
+        for (const { id } of NUTRIENTS) {
+          const v = n[`${id}_100g`];
+          if (v != null && v !== '') values[id] = String(v);
+        }
+        setNutriments(values);
+      })
+      .catch(() => {
+        // Leave the form blank — the user can still fill it in.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [improving, barcode]);
 
   const hasSomething =
     name.trim() || brands.trim() || quantity.trim() || categories.trim() ||
@@ -318,8 +365,12 @@ export default function ContributeProductScreen() {
           {/* ── Body ──────────────────────────────────────────────────── */}
           <View style={styles.body}>
             <View style={styles.titleBlock}>
-              <Text style={styles.pageTitle}>{t('contribute.title')}</Text>
-              <Text style={styles.subtitle}>{t('contribute.subtitle')}</Text>
+              <Text style={styles.pageTitle}>
+                {t(improving ? 'contribute.improveTitle' : 'contribute.title')}
+              </Text>
+              <Text style={styles.subtitle}>
+                {t(improving ? 'contribute.improveSubtitle' : 'contribute.subtitle')}
+              </Text>
               {barcode ? <Text style={styles.barcode}>{t('contribute.barcode', { code: barcode })}</Text> : null}
             </View>
 

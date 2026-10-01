@@ -1,7 +1,10 @@
 /**
- * AddToMealPlanSheet — plans a recipe as a meal of its own: pick a day,
- * a meal preset (which sets the time) and how many servings.
- * Opened from the recipe detail screen's actions.
+ * AddToMealPlanSheet — plans a recipe or a product as a meal of its own:
+ * pick a day, a meal preset (which sets the time) and how much — servings
+ * for a recipe, a portion (g, ml, items…) for a product.
+ * Opened from the recipe detail actions and the scanned product's menu.
+ * The product portion picker is a step inside this sheet, not a second
+ * Modal (iOS double-modal freeze).
  *
  * Free accounts can only add to today; other days open the Plus upsell.
  */
@@ -11,6 +14,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Colors, Radius } from '@/constants/theme';
+import { MenuArrowLeftIcon } from '@/components/MenuIcons';
+import { QuantityPickerBody } from '@/components/QuantityPickerSheet';
 import { useSheetAnimation } from '@/lib/useSheetAnimation';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/lib/toastContext';
@@ -20,20 +25,27 @@ import {
   MEAL_PRESETS,
   dayAtTimeLabel,
   defaultMealName,
+  draftItemFromProduct,
   draftItemFromRecipe,
   nowRoundedTime,
+  portionLabel,
   saveMeal,
   timeToMinutes,
   toDateKey,
 } from '@/lib/mealPlan';
 import { MealDayPicker } from '@/components/MealDayPicker';
-import type { Recipe } from '@/lib/types';
+import type { ProductSnapshot, QuantityUnit, Recipe } from '@/lib/types';
 
-interface Props {
+export interface PlannableProduct {
+  snapshot: ProductSnapshot;
+  barcode?: string | null;
+  scanId?: string | null;
+}
+
+type Props = {
   visible: boolean;
   onClose: () => void;
-  recipe: Recipe;
-}
+} & ({ recipe: Recipe; product?: never } | { product: PlannableProduct; recipe?: never });
 
 const SERVINGS_STEP = 0.5;
 
@@ -45,7 +57,7 @@ function presetForNow(): string {
   ).time;
 }
 
-export function AddToMealPlanSheet({ visible, onClose, recipe }: Props) {
+export function AddToMealPlanSheet({ visible, onClose, recipe, product }: Props) {
   const { rendered, backdropOpacity, sheetTranslateY } = useSheetAnimation(visible);
   const { session } = useAuth();
   const { showToast } = useToast();
@@ -55,6 +67,11 @@ export function AddToMealPlanSheet({ visible, onClose, recipe }: Props) {
   const [dateKey, setDateKey] = useState(toDateKey(new Date()));
   const [time, setTime] = useState(presetForNow());
   const [servings, setServings] = useState(1);
+  const [quantity, setQuantity] = useState<{ value: number; unit: QuantityUnit }>({
+    value: 100,
+    unit: 'g',
+  });
+  const [step, setStep] = useState<'main' | 'portion'>('main');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -62,6 +79,8 @@ export function AddToMealPlanSheet({ visible, onClose, recipe }: Props) {
     setDateKey(toDateKey(new Date()));
     setTime(presetForNow());
     setServings(1);
+    setQuantity({ value: 100, unit: 'g' });
+    setStep('main');
     setBusy(false);
   }, [visible]);
 
@@ -73,7 +92,17 @@ export function AddToMealPlanSheet({ visible, onClose, recipe }: Props) {
       dateKey,
       time,
       name: defaultMealName(time),
-      items: [draftItemFromRecipe(recipe, servings)],
+      items: [
+        recipe
+          ? draftItemFromRecipe(recipe, servings)
+          : draftItemFromProduct({
+              barcode: product.barcode,
+              scan_id: product.scanId,
+              quantity_value: quantity.value,
+              quantity_unit: quantity.unit,
+              product_snapshot: product.snapshot,
+            }),
+      ],
     });
     setBusy(false);
     if (!mealId) {
@@ -102,16 +131,45 @@ export function AddToMealPlanSheet({ visible, onClose, recipe }: Props) {
             <View style={styles.handle} />
 
             <View style={styles.closeRow}>
+              {step === 'portion' ? (
+                <TouchableOpacity
+                  style={styles.backLink}
+                  onPress={() => setStep('main')}
+                  hitSlop={12}
+                  activeOpacity={0.7}
+                >
+                  <MenuArrowLeftIcon color={Colors.secondary} size={16} />
+                  <Text style={styles.backLinkText}>Back</Text>
+                </TouchableOpacity>
+              ) : (
+                <View />
+              )}
               <TouchableOpacity style={styles.closeBtn} onPress={onClose} hitSlop={12} activeOpacity={0.7}>
                 <Ionicons name="close" size={22} color={Colors.primary} />
               </TouchableOpacity>
             </View>
 
+            {step === 'portion' && product ? (
+              <View style={styles.body}>
+                <QuantityPickerBody
+                  visible
+                  title="How much?"
+                  value={quantity.value}
+                  unit={quantity.unit}
+                  saveLabel="Done"
+                  onClose={() => setStep('main')}
+                  onSave={(value, unit) => {
+                    setQuantity({ value, unit });
+                    setStep('main');
+                  }}
+                />
+              </View>
+            ) : (
             <View style={styles.body}>
               <View style={styles.titleBlock}>
                 <Text style={styles.title}>Add to meal plan</Text>
                 <Text style={styles.subtitle} numberOfLines={1}>
-                  {recipe.name}
+                  {recipe ? recipe.name : product.snapshot.product_name}
                 </Text>
               </View>
 
@@ -129,7 +187,30 @@ export function AddToMealPlanSheet({ visible, onClose, recipe }: Props) {
                 onChangePreset={setTime}
               />
 
-              {/* Servings stepper — same controls as QuantityPickerSheet */}
+              {/* Product: portion pill opens the picker step */}
+              {product && (
+                <TouchableOpacity
+                  style={styles.servingsRow}
+                  onPress={() => setStep('portion')}
+                  activeOpacity={0.75}
+                  accessibilityLabel={`Change how much, ${portionLabel({ kind: 'product', servings: 1, quantity_value: quantity.value, quantity_unit: quantity.unit })}`}
+                >
+                  <Text style={styles.servingsLabel}>How much</Text>
+                  <View style={styles.portionPill}>
+                    <Text style={styles.portionPillText}>
+                      {portionLabel({
+                        kind: 'product',
+                        servings: 1,
+                        quantity_value: quantity.value,
+                        quantity_unit: quantity.unit,
+                      })}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              )}
+
+              {/* Recipe: servings stepper — same controls as QuantityPickerSheet */}
+              {recipe && (
               <View style={styles.servingsRow}>
                 <Text style={styles.servingsLabel}>Servings</Text>
                 <View style={styles.stepper}>
@@ -155,6 +236,7 @@ export function AddToMealPlanSheet({ visible, onClose, recipe }: Props) {
                   </TouchableOpacity>
                 </View>
               </View>
+              )}
 
               <TouchableOpacity
                 style={[styles.saveBtn, busy && styles.saveBtnBusy]}
@@ -165,6 +247,7 @@ export function AddToMealPlanSheet({ visible, onClose, recipe }: Props) {
                 <Text style={styles.saveBtnText}>Add to plan</Text>
               </TouchableOpacity>
             </View>
+            )}
           </SafeAreaView>
         </Animated.View>
       </View>
@@ -193,7 +276,37 @@ const styles = StyleSheet.create({
     borderRadius: 93,
     backgroundColor: '#d9d9d9',
   },
-  closeRow: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 16 },
+  closeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  backLink: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  backLinkText: {
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.secondary,
+  },
+  // Same pill as the meal builder's item portion
+  portionPill: {
+    backgroundColor: '#e4f1ef',
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minWidth: 52,
+    alignItems: 'center',
+  },
+  portionPillText: {
+    fontSize: 13,
+    lineHeight: 16,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.26,
+  },
   closeBtn: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
   body: { gap: 24, marginTop: 8 },
   titleBlock: { gap: 4 },
