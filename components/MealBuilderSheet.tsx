@@ -77,11 +77,11 @@ type Step = 'main' | 'add' | 'time' | 'portion';
 // Step change, in three beats that don't overlap: the old step fades out,
 // then the sheet eases to its new height (the handle rides the top edge),
 // then the new step fades in.
-const FADE_OUT_MS = 180;
-const RESIZE_MS = 340;
-const FADE_IN_MS = 240;
+const FADE_OUT_MS = 240;
+const RESIZE_MS = 440;
+const FADE_IN_MS = 320;
 /** Any other size change (keyboard, adding an item) just eases to fit. */
-const SETTLE_MS = 260;
+const SETTLE_MS = 300;
 /** If the new step is the same height there's no layout event to wait
  *  for, so fade back in after this. */
 const LAYOUT_WAIT_MS = 120;
