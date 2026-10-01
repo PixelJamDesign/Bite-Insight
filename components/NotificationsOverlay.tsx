@@ -31,6 +31,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { DismissibleRow } from '@/components/DismissibleRow';
 import Svg, { Path } from 'react-native-svg';
 import { Colors, Spacing, Radius, Shadows } from '@/constants/theme';
+import { IconButton } from '@/components/IconButton';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/lib/toastContext';
 import { useNotifications, type InboxNotification } from '@/lib/notificationsContext';
@@ -524,9 +525,12 @@ export function NotificationsOverlay() {
         pointerEvents="box-none"
       >
         <Logo width={141} height={36} />
-        <TouchableOpacity style={styles.closeBtn} onPress={hide} activeOpacity={0.8}>
-          <Ionicons name="close" size={24} color={Colors.primary} />
-        </TouchableOpacity>
+        <IconButton
+          icon={<Ionicons name="close" size={24} color={Colors.primary} />}
+          onPress={hide}
+          hitSlop={0}
+          accessibilityLabel="Close notifications"
+        />
       </View>
     </Animated.View>
   );
@@ -565,17 +569,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 16,
     zIndex: 10,
-  },
-  closeBtn: {
-    width: 48,
-    height: 48,
-    backgroundColor: Colors.surface.tertiary,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.stroke.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Shadows.level3,
   },
   // ── Title block ──
   // No horizontal padding here — listContent already applies 24 px,

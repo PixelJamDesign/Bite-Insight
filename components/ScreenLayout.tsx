@@ -12,8 +12,9 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useRouter } from 'expo-router';
-import { Colors, Shadows } from '@/constants/theme';
+import { Colors } from '@/constants/theme';
 import { MenuModal } from '@/components/MenuModal';
+import { IconButton } from '@/components/IconButton';
 import Logo from '@/assets/images/logo.svg';
 
 interface ScreenLayoutProps {
@@ -151,18 +152,13 @@ export function ScreenLayout({ title, subtitle, headerExtension, children }: Scr
               ))}
           </View>
         )}
-        <TouchableOpacity
-          style={styles.menuBtn}
+        <IconButton
+          icon={<Ionicons name={menuOpen ? 'close' : 'menu-outline'} size={24} color={Colors.primary} />}
+          variant={menuOpen ? 'onWhite' : 'onTeal'}
           onPress={menuOpen ? closeMenu : openMenu}
-          activeOpacity={0.8}
+          hitSlop={0}
           accessibilityLabel={menuOpen ? 'Close menu' : 'Open menu'}
-        >
-          <Ionicons
-            name={menuOpen ? 'close' : 'menu-outline'}
-            size={24}
-            color={Colors.primary}
-          />
-        </TouchableOpacity>
+        />
       </View>
     </SafeAreaView>
   );
@@ -242,16 +238,5 @@ const styles = StyleSheet.create({
   },
   headerBarMenu: {
     backgroundColor: '#fff',
-  },
-  menuBtn: {
-    width: 48,
-    height: 48,
-    backgroundColor: Colors.surface.tertiary,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.stroke.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Shadows.level3,
   },
 });

@@ -8,6 +8,7 @@ import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import type { BottomTabBarProps } from "expo-router/js-tabs";
 import { Colors } from '@/constants/theme';
+import { IconButton } from '@/components/IconButton';
 import { useAuth } from '@/lib/auth';
 import { DashboardIcon, RecipesIcon, HistoryIcon, ScannerIcon } from '@/components/TabIcons';
 import { useCachedAvatar } from '@/lib/useCachedAvatar';
@@ -204,9 +205,13 @@ function MenuOverlay() {
       {/* Header sits on top of the scroll content */}
       <View style={[styles.menuHeader, { paddingTop: insets.top + 24 }]}>
         <Logo width={141} height={36} />
-        <TouchableOpacity style={styles.menuCloseBtn} onPress={closeMenu} activeOpacity={0.8}>
-          <Ionicons name="close" size={24} color={Colors.primary} />
-        </TouchableOpacity>
+        <IconButton
+          icon={<Ionicons name="close" size={24} color={Colors.primary} />}
+          variant="onWhite"
+          onPress={closeMenu}
+          hitSlop={0}
+          accessibilityLabel="Close menu"
+        />
       </View>
     </Animated.View>
   );
@@ -315,16 +320,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 16,
     backgroundColor: '#fff',
-  },
-  menuCloseBtn: {
-    width: 48,
-    height: 48,
-    backgroundColor: Colors.surface.tertiary,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.stroke.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });
 

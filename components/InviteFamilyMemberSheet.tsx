@@ -31,6 +31,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
+import { IconButton } from '@/components/IconButton';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/lib/toastContext';
 import { familyInviteShareContent } from '@/lib/familyInviteShare';
@@ -137,9 +138,14 @@ export function InviteFamilyMemberSheet({
         pointerEvents="box-none"
       >
         <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }], paddingBottom: insets.bottom + 24 }]}>
-          <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.8}>
-            <Ionicons name="close" size={20} color={Colors.primary} />
-          </TouchableOpacity>
+          <IconButton
+            size="small"
+            variant="onWhite"
+            icon={<Ionicons name="close" size={20} color={Colors.primary} />}
+            onPress={onClose}
+            accessibilityLabel="Close"
+            style={styles.closeBtn}
+          />
 
           <View style={styles.titleBlock}>
             <Text style={styles.title}>
@@ -226,16 +232,11 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 16,
     overflow: 'hidden',
   },
+  // Placement only — look comes from IconButton (small, on white)
   closeBtn: {
     position: 'absolute',
     top: 20,
     right: 20,
-    width: 40,
-    height: 40,
-    backgroundColor: Colors.surface.tertiary,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
     zIndex: 10,
   },
   titleBlock: { paddingTop: 28, paddingHorizontal: 24, paddingBottom: 16, gap: 4 },

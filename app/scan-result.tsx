@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import {
   View,
   Text,
@@ -54,7 +54,9 @@ import {
 import type { IngredientNode } from '@/lib/ingredientsCleaner';
 import { safeBack } from '@/lib/safeBack';
 import { AddToRecipeSheet } from '@/components/AddToRecipeSheet';
-import { AddToMealPlanSheet } from '@/components/AddToMealPlanSheet';
+import { MealBuilderSheet } from '@/components/MealBuilderSheet';
+import { useDraftMeal } from '@/lib/draftMealContext';
+import { draftItemFromProduct, nowRoundedTime, toDateKey } from '@/lib/mealPlan';
 import { ProductActionsSheet } from '@/components/ProductActionsSheet';
 import { ProductMoreMenu } from '@/components/ProductMoreMenu';
 import { buildProductSnapshot } from '@/lib/recipes';
@@ -713,7 +715,23 @@ export default function ScanResultScreen() {
   // Product "more" menu and the sheets it opens
   const [actionsOpen, setActionsOpen] = useState(false);
   const [addToRecipeOpen, setAddToRecipeOpen] = useState(false);
-  const [addToPlanOpen, setAddToPlanOpen] = useState(false);
+  // "Add to meal plan" opens the planner's own Plan a meal drawer with
+  // this product already in it.
+  const draftMeal = useDraftMeal();
+  const [builderOpen, setBuilderOpen] = useState(false);
+  // The drawer hides itself while a picker screen (search, scanner,
+  // recipe list) adds another item; bring it back when we're in front again.
+  const builderHiddenRef = useRef(false);
+  const hasDraftRef = useRef(false);
+  hasDraftRef.current = draftMeal.draft !== null;
+  useFocusEffect(
+    useCallback(() => {
+      if (builderHiddenRef.current && hasDraftRef.current) {
+        builderHiddenRef.current = false;
+        setBuilderOpen(true);
+      }
+    }, []),
+  );
   /** Opens the next sheet once the actions sheet (or the iOS menu) has
    *  finished closing — iOS freezes if one Modal opens over another. */
   function afterActionsClose(open: () => void) {
@@ -863,6 +881,9 @@ export default function ScanResultScreen() {
 
   const [activeTab, _setActiveTab] = useState<Tab>('overview');
   const contentScrollRef = useRef<ScrollView>(null);
+  // Content runs under the home indicator; the scroll's bottom padding
+  // keeps the last row clear of it (no hard clip at the safe-area line).
+  const insets = useSafeAreaInsets();
   const setActiveTab = (tab: Tab) => {
     contentScrollRef.current?.scrollTo({ y: 0, animated: false });
     _setActiveTab(tab);
@@ -1910,13 +1931,26 @@ export default function ScanResultScreen() {
   // Only link the scan when we were given a real scans.id.
   const productScanId =
     typeof p.scanId === 'string' && /^[0-9a-f-]{36}$/i.test(p.scanId) ? p.scanId : null;
+  function planThisProduct() {
+    draftMeal.startNew(toDateKey(new Date()), nowRoundedTime());
+    draftMeal.addItem(
+      draftItemFromProduct({
+        barcode: productBarcode,
+        scan_id: productScanId,
+        quantity_value: 100,
+        quantity_unit: 'g',
+        product_snapshot: productSnapshot,
+      }),
+    );
+    setBuilderOpen(true);
+  }
   function openImproveDetails() {
     if (!productBarcode) return;
     router.push({ pathname: '/contribute-product', params: { barcode: productBarcode, mode: 'improve' } });
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       {/* Invisible text to measure the widest rating label at the user's font scale */}
       <Text
         style={styles.ratingMeasure}
@@ -1936,7 +1970,7 @@ export default function ScanResultScreen() {
           {session?.user?.id && (
             <ProductMoreMenu
               onOpenSheet={() => setActionsOpen(true)}
-              onAddToMealPlan={() => afterActionsClose(() => setAddToPlanOpen(true))}
+              onAddToMealPlan={() => afterActionsClose(planThisProduct)}
               onAddToRecipe={() => afterActionsClose(() => setAddToRecipeOpen(true))}
               onImproveDetails={openImproveDetails}
             />
@@ -2081,7 +2115,7 @@ export default function ScanResultScreen() {
         <ScrollView
           ref={contentScrollRef}
           style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: 56 + insets.bottom }]}
           showsVerticalScrollIndicator={false}
         >
         {/* ══════════════════════════════════════════════════════
@@ -3388,15 +3422,21 @@ export default function ScanResultScreen() {
       <ProductActionsSheet
         visible={actionsOpen}
         onClose={() => setActionsOpen(false)}
-        onAddToMealPlan={() => afterActionsClose(() => setAddToPlanOpen(true))}
+        onAddToMealPlan={() => afterActionsClose(planThisProduct)}
         onAddToRecipe={() => afterActionsClose(() => setAddToRecipeOpen(true))}
         onImproveDetails={openImproveDetails}
       />
 
-      <AddToMealPlanSheet
-        visible={addToPlanOpen}
-        onClose={() => setAddToPlanOpen(false)}
-        product={{ snapshot: productSnapshot, barcode: productBarcode, scanId: productScanId }}
+      <MealBuilderSheet
+        visible={builderOpen}
+        onHide={() => {
+          builderHiddenRef.current = true;
+          setBuilderOpen(false);
+        }}
+        onDone={() => {
+          builderHiddenRef.current = false;
+          setBuilderOpen(false);
+        }}
       />
 
       <AddToRecipeSheet

@@ -36,6 +36,7 @@ import { UpsellPanel } from '@/components/UpsellPanel';
 import { PlusBadge } from '@/components/PlusBadge';
 import { CameraIcon } from '@/components/MenuIcons';
 import { MealBlock } from '@/components/MealBlock';
+import { IconButton } from '@/components/IconButton';
 import { listMeals, toDateKey } from '@/lib/mealPlan';
 import { useMealPlanImpact } from '@/lib/useMealPlan';
 import { NotificationBell } from '@/components/NotificationBell';
@@ -525,16 +526,14 @@ export default function HomeDashboard() {
                   )}
                 </Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.mealAddBtn}
+              <IconButton
+                size="small"
+                icon={<AddSmallIcon width={20} height={20} />}
                 onPress={() =>
                   router.push({ pathname: '/meal-plan', params: { date: toDateKey(new Date()), add: '1' } } as any)
                 }
-                activeOpacity={0.8}
                 accessibilityLabel={t('mealPlanAdd')}
-              >
-                <AddSmallIcon width={20} height={20} />
-              </TouchableOpacity>
+              />
             </View>
 
             {todayMeals.length === 0 ? (
@@ -695,13 +694,13 @@ export default function HomeDashboard() {
         </TouchableOpacity>
         <View style={styles.headerActions}>
           <NotificationBell />
-          <TouchableOpacity
-            style={styles.menuBtn}
+          <IconButton
+            icon={<Ionicons name={menuOpen ? 'close' : 'menu-outline'} size={24} color={Colors.primary} />}
+            variant={menuOpen ? 'onWhite' : 'onTeal'}
             onPress={menuOpen ? closeMenu : openMenu}
-            activeOpacity={0.8}
-          >
-            <Ionicons name={menuOpen ? 'close' : 'menu-outline'} size={24} color={Colors.primary} />
-          </TouchableOpacity>
+            hitSlop={0}
+            accessibilityLabel={menuOpen ? 'Close menu' : 'Open menu'}
+          />
         </View>
       </View>
       {/* ── Flag Reason Sheet ── */}
@@ -766,17 +765,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-  },
-  menuBtn: {
-    width: 48,
-    height: 48,
-    backgroundColor: Colors.surface.tertiary,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.stroke.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Shadows.level3,
   },
   scroll: {
     flex: 1,
@@ -937,17 +925,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_700Bold',
     fontWeight: '700',
     color: Colors.primary,
-  },
-  mealAddBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: Colors.surface.tertiary,
-    borderWidth: 1,
-    borderColor: Colors.stroke.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Shadows.level3,
   },
   mealBlock: {
     paddingVertical: 16,

@@ -39,6 +39,7 @@ import { MealActionsSheet } from '@/components/MealActionsSheet';
 import { MealBuilderSheet } from '@/components/MealBuilderSheet';
 import { MealTotalsList } from '@/components/MealTotalsList';
 import { MealBlock } from '@/components/MealBlock';
+import { IconButton } from '@/components/IconButton';
 import { ProgressiveBlur } from '@/components/ProgressiveBlur';
 import { useFadeIn } from '@/lib/useFadeIn';
 import { useFocusFadeIn } from '@/lib/useFocusFadeIn';
@@ -346,15 +347,12 @@ export default function MealPlanScreen() {
       <View style={styles.weekGroup}>
         {/* Week row */}
         <View style={styles.weekRow}>
-          <TouchableOpacity
-            style={styles.weekArrow}
+          <IconButton
+            size="small"
+            icon={<ChevronLeftIcon width={20} height={20} />}
             onPress={() => shiftWeek(-1)}
-            activeOpacity={0.7}
-            hitSlop={8}
             accessibilityLabel="Previous week"
-          >
-            <ChevronLeftIcon width={20} height={20} />
-          </TouchableOpacity>
+          />
           <TouchableOpacity
             style={styles.weekLabel}
             onPress={() => setSelectedKey(todayKey)}
@@ -366,15 +364,12 @@ export default function MealPlanScreen() {
             <Text style={styles.weekText}> - </Text>
             <OrdinalDate date={weekEnd} textStyle={styles.weekText} suffixStyle={styles.weekSuffix} />
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.weekArrow}
+          <IconButton
+            size="small"
+            icon={<ChevronRightIcon width={20} height={20} />}
             onPress={() => shiftWeek(1)}
-            activeOpacity={0.7}
-            hitSlop={8}
             accessibilityLabel="Next week"
-          >
-            <ChevronRightIcon width={20} height={20} />
-          </TouchableOpacity>
+          />
         </View>
 
         {/* Day strip — one cell per day of the selected week */}
@@ -533,14 +528,13 @@ export default function MealPlanScreen() {
       </Animated.View>
 
       {/* Plan a meal */}
-      <TouchableOpacity
-        style={styles.addBtn}
+      <IconButton
+        icon={<AddIcon width={24} height={24} />}
         onPress={() => startMeal(isToday ? nowRoundedTime() : '12:00')}
-        activeOpacity={0.8}
         accessibilityLabel="Plan a meal"
-      >
-        <AddIcon width={24} height={24} />
-      </TouchableOpacity>
+        hitSlop={0}
+        style={styles.addBtn}
+      />
 
       {/* Totals open: blur the timeline and + button behind the card.
           Tapping the blur closes it. Android gets a soft tint instead. */}
@@ -598,17 +592,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-  },
-  weekArrow: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: Colors.surface.tertiary,
-    borderWidth: 1,
-    borderColor: Colors.stroke.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Shadows.level3,
   },
   weekLabel: {
     flex: 1,
@@ -857,19 +840,10 @@ const styles = StyleSheet.create({
     backgroundColor: NOW_COLOUR,
   },
 
-  // Floating + button
+  // Floating + button — position only; look comes from IconButton
   addBtn: {
     position: 'absolute',
     right: 22,
     bottom: 122,
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    backgroundColor: Colors.surface.tertiary,
-    borderWidth: 1,
-    borderColor: Colors.stroke.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Shadows.level3,
   },
 });

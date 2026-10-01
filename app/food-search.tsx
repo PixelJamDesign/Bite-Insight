@@ -26,6 +26,7 @@ import { QuantityPickerSheet } from '@/components/QuantityPickerSheet';
 import type { ProductSnapshot, QuantityUnit } from '@/lib/types';
 import { useTranslation } from 'react-i18next';
 import { Colors, Shadows, Spacing, Radius } from '@/constants/theme';
+import { IconButton } from '@/components/IconButton';
 import { ActionSearchIcon, ActionChevronDownIcon, ActionCheckIcon, ActionClearIcon, MenuArrowLeftIcon, MenuChevronRightIcon } from '@/components/MenuIcons';
 import { TextField } from '@/components/TextField';
 import { Ionicons } from '@expo/vector-icons';
@@ -950,13 +951,12 @@ export default function FoodSearchScreen() {
         <TouchableOpacity onPress={() => router.push('/(tabs)/dashboard' as any)} activeOpacity={0.7} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
           <Logo width={141} height={36} />
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.menuBtn}
+        <IconButton
+          icon={<Ionicons name={menuOpen ? 'close' : 'menu-outline'} size={24} color={Colors.primary} />}
           onPress={menuOpen ? closeMenu : openMenu}
-          activeOpacity={0.8}
-        >
-          <Ionicons name={menuOpen ? 'close' : 'menu-outline'} size={24} color={Colors.primary} />
-        </TouchableOpacity>
+          hitSlop={0}
+          accessibilityLabel={menuOpen ? 'Close menu' : 'Open menu'}
+        />
       </View>
 
       {/* Fixed header — stays outside FlatList so TextInput doesn't remount */}
@@ -1124,9 +1124,12 @@ export default function FoodSearchScreen() {
           <MenuModal onClose={closeMenu} onNavigate={closeMenuInstant} />
           <View style={[styles.menuHeader, { paddingTop: insets.top + Spacing.m }]}>
             <Logo width={141} height={36} />
-            <TouchableOpacity style={styles.menuBtn} onPress={closeMenu} activeOpacity={0.8}>
-              <Ionicons name="close" size={24} color={Colors.primary} />
-            </TouchableOpacity>
+            <IconButton
+              icon={<Ionicons name="close" size={24} color={Colors.primary} />}
+              onPress={closeMenu}
+              hitSlop={0}
+              accessibilityLabel="Close menu"
+            />
           </View>
         </Animated.View>
       )}
@@ -1146,17 +1149,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.m,
     paddingTop: Spacing.m,
-  },
-  menuBtn: {
-    width: 48,
-    height: 48,
-    backgroundColor: Colors.surface.tertiary,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.stroke.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Shadows.level3,
   },
   listContent: {
     paddingHorizontal: Spacing.m,

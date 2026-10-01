@@ -5,7 +5,7 @@
  * parent passes `onOpenSheet`). iOS uses the system pull-down menu
  * instead — see ProductMoreMenu.ios.tsx.
  */
-import { IconButtonSmall } from '@/components/IconButtonSmall';
+import { IconButton } from '@/components/IconButton';
 import MoreIcon from '@/assets/icons/more.svg';
 
 export interface ProductMoreMenuProps {
@@ -18,7 +18,8 @@ export interface ProductMoreMenuProps {
 
 export function ProductMoreMenu({ onOpenSheet }: ProductMoreMenuProps) {
   return (
-    <IconButtonSmall
+    <IconButton
+      size="small"
       icon={<MoreIcon width={20} height={20} />}
       onPress={onOpenSheet}
       accessibilityLabel="Product actions"

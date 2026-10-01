@@ -14,12 +14,15 @@ import {
 } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import ChevronLeftIcon from '@/assets/icons/meal-plan/chevron-left.svg';
+import ChevronRightIcon from '@/assets/icons/meal-plan/chevron-right.svg';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { Colors, Shadows, Spacing } from '@/constants/theme';
 import { sentenceCase } from '@/lib/text';
 import { ScreenLayout } from '@/components/ScreenLayout';
+import { IconButton } from '@/components/IconButton';
 import { useTabBarSlide } from '@/lib/tabBarContext';
 import { NoImagePlaceholder } from '@/components/NoImagePlaceholder';
 import { LottieLoader } from '@/components/LottieLoader';
@@ -205,24 +208,24 @@ function CalendarPicker({
     <View style={styles.calCard}>
       {/* Month navigation */}
       <View style={styles.calHeader}>
-        <TouchableOpacity style={styles.calNavBtn} onPress={prevMonth} activeOpacity={0.7}>
-          <Ionicons name="chevron-back" size={16} color={Colors.primary} />
-        </TouchableOpacity>
+        <IconButton
+          size="small"
+          variant="onWhite"
+          icon={<ChevronLeftIcon width={20} height={20} />}
+          onPress={prevMonth}
+          accessibilityLabel="Previous month"
+        />
         <Text style={styles.calMonthTitle}>
           {MONTH_FULL[calMonth]} {calYear}
         </Text>
-        <TouchableOpacity
-          style={[styles.calNavBtn, isAtCurrentMonth && styles.calNavBtnDisabled]}
+        <IconButton
+          size="small"
+          variant="onWhite"
+          icon={<ChevronRightIcon width={20} height={20} />}
           onPress={nextMonth}
-          activeOpacity={0.7}
           disabled={isAtCurrentMonth}
-        >
-          <Ionicons
-            name="chevron-forward"
-            size={16}
-            color={isAtCurrentMonth ? 'rgba(2,52,50,0.2)' : Colors.primary}
-          />
-        </TouchableOpacity>
+          accessibilityLabel="Next month"
+        />
       </View>
 
       {/* Day-of-week headers */}
@@ -654,18 +657,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     height: 36,
     marginBottom: 16,
-  },
-  calNavBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 16,
-    backgroundColor: Colors.surface.tertiary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  calNavBtnDisabled: {
-    backgroundColor: 'rgba(241,248,247,0.4)',
-    opacity: 0.3,
   },
   calMonthTitle: {
     fontSize: 16,

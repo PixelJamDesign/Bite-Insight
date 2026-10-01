@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { Colors } from '@/constants/theme';
+import { IconButton } from '@/components/IconButton';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { useActiveFamily } from '@/lib/activeFamilyContext';
@@ -206,13 +207,14 @@ export function FamilySwitcherSheet({
         ]}
       >
         {/* Close button */}
-        <TouchableOpacity
-          style={styles.closeBtn}
+        <IconButton
+          size="small"
+          variant="onWhite"
+          icon={<Ionicons name="close" size={20} color={Colors.primary} />}
           onPress={onClose}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="close" size={20} color={Colors.primary} />
-        </TouchableOpacity>
+          accessibilityLabel="Close"
+          style={styles.closeBtn}
+        />
 
         {/* Title */}
         <View style={styles.titleBlock}>
@@ -355,16 +357,11 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 16,
     overflow: 'hidden',
   },
+  // Placement only — look comes from IconButton (small, on white)
   closeBtn: {
     position: 'absolute',
     top: 20,
     right: 20,
-    width: 40,
-    height: 40,
-    backgroundColor: Colors.surface.tertiary,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
     zIndex: 10,
   },
   titleBlock: {
