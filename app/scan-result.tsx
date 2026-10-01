@@ -1024,7 +1024,10 @@ export default function ScanResultScreen() {
       });
   }, [session]);
 
-  // Fetch active family member profile when switching
+  // Fetch active family member profile when switching. Through
+  // get_family_members() so a linked member is scored on their own
+  // account and a managed one on what was entered, matching My Family
+  // and the switcher.
   useEffect(() => {
     if (!activeFamilyId) {
       setActiveFamilyProfile(null);
@@ -1032,14 +1035,15 @@ export default function ScanResultScreen() {
     }
     // Clear stale profile immediately so the UI doesn't flash old data
     setActiveFamilyProfile(null);
-    supabase
-      .from('family_profiles')
-      .select('*')
-      .eq('id', activeFamilyId)
-      .single()
-      .then(({ data }) => {
-        setActiveFamilyProfile(data ? (data as FamilyProfile) : null);
-      });
+    let cancelled = false;
+    supabase.rpc('get_family_members').then(({ data }) => {
+      if (cancelled) return;
+      const member = ((data ?? []) as FamilyProfile[]).find((m) => m.id === activeFamilyId);
+      setActiveFamilyProfile(member ?? null);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [activeFamilyId]);
 
   // Fetch from OFF only when macros (carbs etc.) weren't passed via route params.

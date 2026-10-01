@@ -102,15 +102,15 @@ export function FamilySwitcherSheet({
   const [familyProfiles, setFamilyProfiles] = useState<FamilyProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch family profiles when sheet opens
+  // Fetch family profiles when sheet opens. Same source as My Family:
+  // get_family_members() shows a linked member as their own account (name,
+  // photo, conditions, allergies…) and a managed member as entered, and is
+  // already ordered by sort_order.
   useEffect(() => {
     if (visible && session?.user) {
       setLoading(true);
       supabase
-        .from('family_profiles')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .order('sort_order', { ascending: true })
+        .rpc('get_family_members')
         .then(({ data }) => {
           setFamilyProfiles((data as FamilyProfile[]) ?? []);
           setLoading(false);
