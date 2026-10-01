@@ -1,12 +1,11 @@
 {
   "mealPlanHeading": "Piano pasti",
-  "mealPlanSubtitleNone": "Non hai niente in programma per oggi",
   "mealPlanSubtitle_one": "Hai <b>{{count}} pasto</b> pianificato per oggi",
   "mealPlanSubtitle_other": "Hai <b>{{count}} pasti</b> pianificati per oggi",
   "mealPlanAdd": "Pianifica un pasto",
   "mealPlanSeeAll": "Vedi tutti i {{count}} pasti",
-  "mealPlanEmptyTitle": "Pianifica un pasto per oggi",
-  "mealPlanEmptySubtitle": "Aggiungi una ricetta o un prodotto scansionato",
+  "mealPlanEmptyTitle": "Nessun pasto in programma",
+  "mealPlanEmptySubtitle": "Aggiungi il tuo primo pasto di oggi",
   "ingredientQuestion": "Ti piacciono questi ingredienti?",
   "ingredientSubtitle": "Dicci quali ingredienti funzionano per te e quali no.",
   "completionTitle": "Hai azzeccato l'elenco degli ingredienti che ti piacciono e che non ti piacciono!",
@@ -18,9 +17,8 @@
   "setupMessage": "Aggiungi il tuo URL Supabase e la chiave anon al file .env, quindi riavvia l'app.\n\nImpostazioni → API nella dashboard di Supabase.",
   "fallbackInitials": "??",
   "scannedHeading": "Prodotti scansionati",
-  "scannedSubtitleNone": "Ancora nessuna scansione oggi",
   "scannedSubtitle_one": "Oggi hai scansionato <b>{{count}} prodotto</b>",
   "scannedSubtitle_other": "Oggi hai scansionato <b>{{count}} prodotti</b>",
-  "scannedEmptyTitle": "Scansiona il tuo primo prodotto",
-  "scannedEmptySubtitle": "Inquadra un codice a barre per scoprire cosa significa per te"
+  "scannedEmptyTitle": "Nessun prodotto scansionato",
+  "scannedEmptySubtitle": "Scansiona il tuo primo prodotto di oggi"
 }

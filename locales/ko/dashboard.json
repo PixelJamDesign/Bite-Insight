@@ -1,11 +1,10 @@
 {
   "mealPlanHeading": "식단 계획",
-  "mealPlanSubtitleNone": "오늘 계획한 식사가 없어요",
   "mealPlanSubtitle_other": "오늘 <b>{{count}}끼</b>를 계획했어요",
   "mealPlanAdd": "식사 계획하기",
   "mealPlanSeeAll": "식사 {{count}}개 모두 보기",
-  "mealPlanEmptyTitle": "오늘의 식사 계획하기",
-  "mealPlanEmptySubtitle": "레시피나 스캔한 제품을 추가하세요",
+  "mealPlanEmptyTitle": "계획된 식사가 없어요",
+  "mealPlanEmptySubtitle": "오늘 첫 식사를 추가해 보세요",
   "ingredientQuestion": "이 재료가 마음에 드시나요?",
   "ingredientSubtitle": "어떤 성분이 당신에게 효과가 있고 어떤 성분이 효과가 없는지 알려주세요.",
   "completionTitle": "좋아하는 재료와 싫어하는 재료의 목록을 작성했습니다!",
@@ -17,8 +16,7 @@
   "setupMessage": "Supabase URL과 익명 키를 .env 파일에 추가한 다음 앱을 다시 시작하세요.\n\n설정 → Supabase 대시보드의 API.",
   "fallbackInitials": "??",
   "scannedHeading": "스캔한 제품",
-  "scannedSubtitleNone": "오늘은 아직 스캔한 제품이 없어요",
   "scannedSubtitle_other": "오늘 <b>{{count}}개</b>를 스캔했어요",
-  "scannedEmptyTitle": "첫 제품을 스캔해 보세요",
-  "scannedEmptySubtitle": "바코드에 카메라를 대면 나에게 어떤 의미인지 알 수 있어요"
+  "scannedEmptyTitle": "스캔한 제품이 없어요",
+  "scannedEmptySubtitle": "오늘 첫 제품을 스캔해 보세요"
 }

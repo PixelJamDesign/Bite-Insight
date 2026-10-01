@@ -1,12 +1,11 @@
 {
   "mealPlanHeading": "Maaltijdplan",
-  "mealPlanSubtitleNone": "Je hebt nog niets gepland voor vandaag",
   "mealPlanSubtitle_one": "Je hebt <b>{{count}} maaltijd</b> gepland voor vandaag",
   "mealPlanSubtitle_other": "Je hebt <b>{{count}} maaltijden</b> gepland voor vandaag",
   "mealPlanAdd": "Plan een maaltijd",
   "mealPlanSeeAll": "Alle {{count}} maaltijden bekijken",
-  "mealPlanEmptyTitle": "Plan een maaltijd voor vandaag",
-  "mealPlanEmptySubtitle": "Voeg een recept of een gescand product toe",
+  "mealPlanEmptyTitle": "Geen maaltijden gepland",
+  "mealPlanEmptySubtitle": "Voeg je eerste maaltijd van vandaag toe",
   "ingredientQuestion": "Vind jij deze ingrediënten lekker?",
   "ingredientSubtitle": "Vertel ons welke ingrediënten voor u werken en welke niet.",
   "completionTitle": "Je hebt je lijst met ingrediënten die je wel en niet lekker vindt, helemaal gehaald!",
@@ -18,9 +17,8 @@
   "setupMessage": "Voeg uw Supabase-URL en anon-sleutel toe aan het .env-bestand en start de app opnieuw.\n\nInstellingen → API in uw Supabase dashboard.",
   "fallbackInitials": "??",
   "scannedHeading": "Gescande producten",
-  "scannedSubtitleNone": "Vandaag nog niets gescand",
   "scannedSubtitle_one": "Je hebt vandaag <b>{{count}} product</b> gescand",
   "scannedSubtitle_other": "Je hebt vandaag <b>{{count}} producten</b> gescand",
-  "scannedEmptyTitle": "Scan je eerste product",
-  "scannedEmptySubtitle": "Richt je camera op een barcode en zie wat het voor jou betekent"
+  "scannedEmptyTitle": "Geen gescande producten",
+  "scannedEmptySubtitle": "Scan je eerste product van vandaag"
 }

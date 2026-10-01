@@ -1,12 +1,11 @@
 {
   "mealPlanHeading": "Plan de comidas",
-  "mealPlanSubtitleNone": "No tienes nada planificado para hoy",
   "mealPlanSubtitle_one": "Tienes <b>{{count}} comida</b> planificada para hoy",
   "mealPlanSubtitle_other": "Tienes <b>{{count}} comidas</b> planificadas para hoy",
   "mealPlanAdd": "Planificar una comida",
   "mealPlanSeeAll": "Ver las {{count}} comidas",
-  "mealPlanEmptyTitle": "Planifica una comida para hoy",
-  "mealPlanEmptySubtitle": "Añade una receta o un producto escaneado",
+  "mealPlanEmptyTitle": "No hay comidas en el plan",
+  "mealPlanEmptySubtitle": "Añade tu primera comida de hoy",
   "ingredientQuestion": "¿Te gustan estos ingredientes?",
   "ingredientSubtitle": "Cuéntanos qué ingredientes te funcionan y cuáles no.",
   "completionTitle": "¡Has logrado tu lista de ingredientes que te gustan y que no te gustan!",
@@ -18,9 +17,8 @@
   "setupMessage": "Agregue su URL de Supabase y su clave anónima al archivo .env, luego reinicie la aplicación.\n\nConfiguración → API en su panel de Supabase.",
   "fallbackInitials": "??",
   "scannedHeading": "Productos escaneados",
-  "scannedSubtitleNone": "Aún no has escaneado nada hoy",
   "scannedSubtitle_one": "Hoy has escaneado <b>{{count}} producto</b>",
   "scannedSubtitle_other": "Hoy has escaneado <b>{{count}} productos</b>",
-  "scannedEmptyTitle": "Escanea tu primer producto",
-  "scannedEmptySubtitle": "Apunta la cámara a un código de barras para ver qué significa para ti"
+  "scannedEmptyTitle": "No hay productos escaneados",
+  "scannedEmptySubtitle": "Escanea tu primer producto del día"
 }

@@ -1,12 +1,11 @@
 {
   "mealPlanHeading": "Plano de refeições",
-  "mealPlanSubtitleNone": "Não tem nada planeado para hoje",
   "mealPlanSubtitle_one": "Tem <b>{{count}} refeição</b> planeada para hoje",
   "mealPlanSubtitle_other": "Tem <b>{{count}} refeições</b> planeadas para hoje",
   "mealPlanAdd": "Planear uma refeição",
   "mealPlanSeeAll": "Ver as {{count}} refeições",
-  "mealPlanEmptyTitle": "Planeie uma refeição para hoje",
-  "mealPlanEmptySubtitle": "Adicione uma receita ou um produto digitalizado",
+  "mealPlanEmptyTitle": "Sem refeições no plano",
+  "mealPlanEmptySubtitle": "Adicione a sua primeira refeição de hoje",
   "ingredientQuestion": "Você gosta desses ingredientes?",
   "ingredientSubtitle": "Diga-nos quais ingredientes funcionam para você e quais não.",
   "completionTitle": "Você acertou em cheio sua lista de ingredientes que você gosta e não gosta!",
@@ -18,9 +17,8 @@
   "setupMessage": "Adicione seu URL Supabase e chave anônima ao arquivo .env e reinicie o aplicativo.\n\nConfigurações → API em seu painel Supabase.",
   "fallbackInitials": "??",
   "scannedHeading": "Produtos digitalizados",
-  "scannedSubtitleNone": "Ainda não digitalizou nada hoje",
   "scannedSubtitle_one": "Hoje digitalizou <b>{{count}} produto</b>",
   "scannedSubtitle_other": "Hoje digitalizou <b>{{count}} produtos</b>",
-  "scannedEmptyTitle": "Digitalize o seu primeiro produto",
-  "scannedEmptySubtitle": "Aponte a câmara para um código de barras para ver o que significa para si"
+  "scannedEmptyTitle": "Sem produtos digitalizados",
+  "scannedEmptySubtitle": "Digitalize o seu primeiro produto do dia"
 }

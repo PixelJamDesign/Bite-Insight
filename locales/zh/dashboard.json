@@ -1,11 +1,10 @@
 {
   "mealPlanHeading": "餐食计划",
-  "mealPlanSubtitleNone": "今天还没有计划",
   "mealPlanSubtitle_other": "今天计划了<b>{{count}} 餐</b>",
   "mealPlanAdd": "规划一餐",
   "mealPlanSeeAll": "查看全部 {{count}} 餐",
-  "mealPlanEmptyTitle": "规划今天的一餐",
-  "mealPlanEmptySubtitle": "添加食谱或已扫描的产品",
+  "mealPlanEmptyTitle": "计划中还没有餐食",
+  "mealPlanEmptySubtitle": "添加今天的第一餐",
   "ingredientQuestion": "你喜欢这些成分吗？",
   "ingredientSubtitle": "告诉我们哪些成分适合您，哪些成分不适合您。",
   "completionTitle": "您已经列出了您喜欢和不喜欢的成分清单！",
@@ -17,8 +16,7 @@
   "setupMessage": "将您的 Supabase URL 和匿名密钥添加到 .env 文件中，然后重新启动应用程序。\n\nSupabase 仪表板中的设置 → API。",
   "fallbackInitials": "??",
   "scannedHeading": "已扫描商品",
-  "scannedSubtitleNone": "今天还没有扫描",
   "scannedSubtitle_other": "今天已扫描<b>{{count}}件</b>商品",
-  "scannedEmptyTitle": "扫描你的第一件商品",
-  "scannedEmptySubtitle": "将相机对准条形码，看看它对你意味着什么"
+  "scannedEmptyTitle": "没有已扫描的商品",
+  "scannedEmptySubtitle": "扫描今天的第一件商品"
 }

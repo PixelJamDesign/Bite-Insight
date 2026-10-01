@@ -37,6 +37,7 @@ import { PlusBadge } from '@/components/PlusBadge';
 import { CameraIcon } from '@/components/MenuIcons';
 import { MealBlock } from '@/components/MealBlock';
 import { ScanCard } from '@/components/ScanCard';
+import { DashboardEmptyCard } from '@/components/DashboardEmptyCard';
 import { openScanResult } from '@/lib/openScan';
 import { IconButton } from '@/components/IconButton';
 import { deleteMeal, listMeals, setMealEaten, toDateKey } from '@/lib/mealPlan';
@@ -67,7 +68,9 @@ import AddIcon from '../../assets/icons/meal-plan/add.svg';
 
 /** Meals listed on the dashboard before it hands over to the planner. */
 const DASHBOARD_MEAL_LIMIT = 4;
-/** How many of the latest scans the Scanned items section shows. */
+const EMPTY_MEAL_PLAN = require('../../assets/images/dashboard/empty-meal-plan.png');
+const EMPTY_SCANS = require('../../assets/images/dashboard/empty-scans.png');
+/** How many of today's scans the Scanned items section shows. */
 const DASHBOARD_SCAN_LIMIT = 4;
 
 /**
@@ -288,7 +291,8 @@ export default function HomeDashboard() {
 
   useFocusEffect(useCallback(() => { fetchData(); }, [fetchData]));
 
-  // Latest scans for the Scanned items section, plus how many were today.
+  // Today's scans for the Scanned items section (the latest few), plus how
+  // many there were.
   const [recentScans, setRecentScans] = useState<Scan[]>([]);
   const [scansToday, setScansToday] = useState(0);
   const loadRecentScans = useCallback(async () => {
@@ -301,6 +305,7 @@ export default function HomeDashboard() {
         .from('scans')
         .select('*')
         .eq('user_id', userId)
+        .gte('scanned_at', startOfToday.toISOString())
         .order('scanned_at', { ascending: false })
         .limit(DASHBOARD_SCAN_LIMIT),
       supabase
@@ -645,16 +650,12 @@ export default function HomeDashboard() {
                 <Text style={styles.sectionTitle}>{t('mealPlanHeading')}</Text>
                 {/* "You have **4 meals** planned for today" */}
                 <Text style={styles.sectionSub}>
-                  {todayMeals.length === 0 ? (
-                    t('mealPlanSubtitleNone')
-                  ) : (
-                    <Trans
-                      t={t}
-                      i18nKey="mealPlanSubtitle"
-                      count={todayMeals.length}
-                      components={{ b: <Text style={styles.sectionSubBold} /> }}
-                    />
-                  )}
+                  <Trans
+                    t={t}
+                    i18nKey="mealPlanSubtitle"
+                    count={todayMeals.length}
+                    components={{ b: <Text style={styles.sectionSubBold} /> }}
+                  />
                 </Text>
               </TouchableOpacity>
               <IconButton
@@ -667,16 +668,15 @@ export default function HomeDashboard() {
             </View>
 
             {todayMeals.length === 0 ? (
-              <TouchableOpacity
-                style={styles.mealEmpty}
+              <DashboardEmptyCard
+                image={EMPTY_MEAL_PLAN}
+                imageStyle={{ width: 56.4, height: 51, top: 3, left: 3 }}
+                title={t('mealPlanEmptyTitle')}
+                subtitle={t('mealPlanEmptySubtitle')}
                 onPress={() =>
                   router.push({ pathname: '/meal-plan', params: { date: toDateKey(new Date()), add: '1' } } as any)
                 }
-                activeOpacity={0.8}
-              >
-                <Text style={styles.mealEmptyTitle}>{t('mealPlanEmptyTitle')}</Text>
-                <Text style={styles.mealEmptySub}>{t('mealPlanEmptySubtitle')}</Text>
-              </TouchableOpacity>
+              />
             ) : (
               <>
                 {todayMeals.slice(0, DASHBOARD_MEAL_LIMIT).map((meal) => (
@@ -723,29 +723,24 @@ export default function HomeDashboard() {
               >
                 <Text style={styles.sectionTitle}>{t('scannedHeading')}</Text>
                 <Text style={styles.sectionSub}>
-                  {scansToday === 0 ? (
-                    t('scannedSubtitleNone')
-                  ) : (
-                    <Trans
-                      t={t}
-                      i18nKey="scannedSubtitle"
-                      count={scansToday}
-                      components={{ b: <Text style={styles.sectionSubBold} /> }}
-                    />
-                  )}
+                  <Trans
+                    t={t}
+                    i18nKey="scannedSubtitle"
+                    count={scansToday}
+                    components={{ b: <Text style={styles.sectionSubBold} /> }}
+                  />
                 </Text>
               </TouchableOpacity>
             </View>
 
             {recentScans.length === 0 ? (
-              <TouchableOpacity
-                style={styles.mealEmpty}
+              <DashboardEmptyCard
+                image={EMPTY_SCANS}
+                imageStyle={{ width: 61, height: 45, top: 9, left: 1 }}
+                title={t('scannedEmptyTitle')}
+                subtitle={t('scannedEmptySubtitle')}
                 onPress={() => router.push('/(tabs)/scanner' as any)}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.mealEmptyTitle}>{t('scannedEmptyTitle')}</Text>
-                <Text style={styles.mealEmptySub}>{t('scannedEmptySubtitle')}</Text>
-              </TouchableOpacity>
+              />
             ) : (
               recentScans.map((scan) => (
                 <ScanCard key={scan.id} scan={scan} onPress={() => openScanResult(scan)} />
@@ -1130,27 +1125,6 @@ const styles = StyleSheet.create({
   mealBlock: {
     height: 80, // Meal Block, Figma 5844:9149
     paddingRight: 16,
-  },
-  mealEmpty: {
-    backgroundColor: Colors.surface.secondary,
-    borderRadius: 8,
-    padding: 16,
-    gap: 2,
-  },
-  mealEmptyTitle: {
-    fontSize: 16,
-    lineHeight: 20,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
-  },
-  mealEmptySub: {
-    fontSize: 14,
-    lineHeight: 21,
-    fontWeight: '300',
-    fontFamily: 'Figtree_300Light',
-    color: Colors.secondary,
-    letterSpacing: -0.14,
   },
   mealMore: {
     alignSelf: 'flex-start',

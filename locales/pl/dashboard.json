@@ -1,14 +1,13 @@
 {
   "mealPlanHeading": "Plan posiłków",
-  "mealPlanSubtitleNone": "Nie masz nic zaplanowanego na dziś",
   "mealPlanSubtitle_one": "Masz <b>{{count}} posiłek</b> zaplanowany na dziś",
   "mealPlanSubtitle_few": "Masz <b>{{count}} posiłki</b> zaplanowane na dziś",
   "mealPlanSubtitle_many": "Masz <b>{{count}} posiłków</b> zaplanowanych na dziś",
   "mealPlanSubtitle_other": "Masz <b>{{count}} posiłku</b> zaplanowanego na dziś",
   "mealPlanAdd": "Zaplanuj posiłek",
   "mealPlanSeeAll": "Zobacz wszystkie posiłki ({{count}})",
-  "mealPlanEmptyTitle": "Zaplanuj posiłek na dziś",
-  "mealPlanEmptySubtitle": "Dodaj przepis lub zeskanowany produkt",
+  "mealPlanEmptyTitle": "Brak posiłków w planie",
+  "mealPlanEmptySubtitle": "Dodaj swój pierwszy posiłek na dziś",
   "ingredientQuestion": "Czy podobają Ci się te składniki?",
   "ingredientSubtitle": "Powiedz nam, które składniki działają na Ciebie, a które nie.",
   "completionTitle": "Udało Ci się stworzyć listę składników, które lubisz i których nie lubisz!",
@@ -20,11 +19,10 @@
   "setupMessage": "Dodaj adres URL Supabase i klucz anon do pliku .env, a następnie uruchom ponownie aplikację.\n\nUstawienia → API w panelu kontrolnym Supabase.",
   "fallbackInitials": "??",
   "scannedHeading": "Zeskanowane produkty",
-  "scannedSubtitleNone": "Dziś jeszcze nic nie zeskanowano",
   "scannedSubtitle_one": "Dziś zeskanowano <b>{{count}} produkt</b>",
   "scannedSubtitle_few": "Dziś zeskanowano <b>{{count}} produkty</b>",
   "scannedSubtitle_many": "Dziś zeskanowano <b>{{count}} produktów</b>",
   "scannedSubtitle_other": "Dziś zeskanowano <b>{{count}} produktu</b>",
-  "scannedEmptyTitle": "Zeskanuj swój pierwszy produkt",
-  "scannedEmptySubtitle": "Skieruj aparat na kod kreskowy, by zobaczyć, co oznacza dla ciebie"
+  "scannedEmptyTitle": "Brak zeskanowanych produktów",
+  "scannedEmptySubtitle": "Zeskanuj swój pierwszy produkt dzisiaj"
 }

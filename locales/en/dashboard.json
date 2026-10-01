@@ -1,12 +1,11 @@
 {
   "mealPlanHeading": "Meal plan",
-  "mealPlanSubtitleNone": "You have nothing planned for today",
   "mealPlanSubtitle_one": "You have <b>{{count}} meal</b> planned for today",
   "mealPlanSubtitle_other": "You have <b>{{count}} meals</b> planned for today",
   "mealPlanAdd": "Plan a meal",
   "mealPlanSeeAll": "See all {{count}} meals",
-  "mealPlanEmptyTitle": "Plan a meal for today",
-  "mealPlanEmptySubtitle": "Add a recipe or something you've scanned",
+  "mealPlanEmptyTitle": "No meals in the planner",
+  "mealPlanEmptySubtitle": "Add your first meal today",
   "ingredientQuestion": "Do you like these ingredients?",
   "ingredientSubtitle": "Tell us which ingredients work for you and which don't.",
   "completionTitle": "You've nailed your list of ingredients you like and dislike!",
@@ -18,9 +17,8 @@
   "setupMessage": "Add your Supabase URL and anon key to the .env file, then restart the app.\n\nSettings → API in your Supabase dashboard.",
   "fallbackInitials": "??",
   "scannedHeading": "Scanned items",
-  "scannedSubtitleNone": "Nothing scanned today yet",
   "scannedSubtitle_one": "You've scanned <b>{{count}} item</b> today",
   "scannedSubtitle_other": "You've scanned <b>{{count}} items</b> today",
-  "scannedEmptyTitle": "Scan your first product",
-  "scannedEmptySubtitle": "Point your camera at a barcode to see what it means for you"
+  "scannedEmptyTitle": "No scanned items to show",
+  "scannedEmptySubtitle": "Scan your first item of the day"
 }

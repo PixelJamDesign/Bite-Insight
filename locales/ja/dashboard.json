@@ -1,11 +1,10 @@
 {
   "mealPlanHeading": "食事プラン",
-  "mealPlanSubtitleNone": "今日の予定はまだありません",
   "mealPlanSubtitle_other": "今日は<b>{{count}}食</b>を予定しています",
   "mealPlanAdd": "食事を計画する",
   "mealPlanSeeAll": "{{count}}件の食事をすべて見る",
-  "mealPlanEmptyTitle": "今日の食事を計画する",
-  "mealPlanEmptySubtitle": "レシピまたはスキャンした商品を追加",
+  "mealPlanEmptyTitle": "予定された食事はありません",
+  "mealPlanEmptySubtitle": "今日の最初の食事を追加しましょう",
   "ingredientQuestion": "これらの食材は好きですか？",
   "ingredientSubtitle": "どの成分があなたにとって効果的で、どの成分が効果的でないのか教えてください。",
   "completionTitle": "好きな食材と嫌いな食材のリストが完成しました。",
@@ -17,8 +16,7 @@
   "setupMessage": "Supabase URL と anon キーを .env ファイルに追加し、アプリを再起動します。\n\nSupabase ダッシュボードの [設定] → [API] をクリックします。",
   "fallbackInitials": "??",
   "scannedHeading": "スキャンした商品",
-  "scannedSubtitleNone": "今日はまだスキャンしていません",
   "scannedSubtitle_other": "今日は<b>{{count}}件</b>スキャンしました",
-  "scannedEmptyTitle": "最初の商品をスキャン",
-  "scannedEmptySubtitle": "バーコードにカメラを向けて、あなたにとっての意味を確認しましょう"
+  "scannedEmptyTitle": "スキャンした商品はありません",
+  "scannedEmptySubtitle": "今日最初の商品をスキャンしましょう"
 }

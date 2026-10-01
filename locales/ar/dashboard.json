@@ -1,6 +1,5 @@
 {
   "mealPlanHeading": "خطة الوجبات",
-  "mealPlanSubtitleNone": "لا توجد وجبات مخطط لها اليوم",
   "mealPlanSubtitle_zero": "لا توجد وجبات مخطط لها اليوم",
   "mealPlanSubtitle_one": "لديك <b>وجبة واحدة</b> مخطط لها اليوم",
   "mealPlanSubtitle_two": "لديك <b>وجبتان</b> مخطط لهما اليوم",
@@ -9,8 +8,8 @@
   "mealPlanSubtitle_other": "لديك <b>{{count}} وجبة</b> مخطط لها اليوم",
   "mealPlanAdd": "خطّط لوجبة",
   "mealPlanSeeAll": "عرض كل الوجبات ({{count}})",
-  "mealPlanEmptyTitle": "خطّط لوجبة اليوم",
-  "mealPlanEmptySubtitle": "أضف وصفة أو منتجًا قمت بمسحه",
+  "mealPlanEmptyTitle": "لا توجد وجبات في الخطة",
+  "mealPlanEmptySubtitle": "أضف أول وجبة لك اليوم",
   "ingredientQuestion": "هل تحب هذه المكونات؟",
   "ingredientSubtitle": "أخبرنا ما هي المكونات التي تناسبك والتي لا تناسبك.",
   "completionTitle": "لقد قمت بإعداد قائمة المكونات التي تحبها والتي لا تحبها!",
@@ -22,13 +21,12 @@
   "setupMessage": "أضف عنوان URL الخاص بـ Supabase ومفتاح Anon إلى ملف .env، ثم أعد تشغيل التطبيق.\n\nالإعدادات → API في لوحة تحكم Supabase.",
   "fallbackInitials": "؟؟",
   "scannedHeading": "المنتجات الممسوحة",
-  "scannedSubtitleNone": "لم تمسح أي منتج اليوم بعد",
   "scannedSubtitle_zero": "لم تمسح أي منتج اليوم بعد",
   "scannedSubtitle_one": "مسحت <b>منتجًا واحدًا</b> اليوم",
   "scannedSubtitle_two": "مسحت <b>منتجين</b> اليوم",
   "scannedSubtitle_few": "مسحت <b>{{count}} منتجات</b> اليوم",
   "scannedSubtitle_many": "مسحت <b>{{count}} منتجًا</b> اليوم",
   "scannedSubtitle_other": "مسحت <b>{{count}} منتج</b> اليوم",
-  "scannedEmptyTitle": "امسح أول منتج لك",
-  "scannedEmptySubtitle": "وجّه الكاميرا إلى رمز شريطي لترى ما يعنيه لك"
+  "scannedEmptyTitle": "لا توجد منتجات ممسوحة",
+  "scannedEmptySubtitle": "امسح أول منتج لك اليوم"
 }
