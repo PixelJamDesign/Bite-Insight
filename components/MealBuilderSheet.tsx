@@ -6,7 +6,7 @@
  *   Time card
  *   Items, each with its portion
  *   Nutrition (NutritionPanel)
- *   Save as a recipe (Plus only)
+ *   Save as a recipe (Plus only; hidden when the meal is one recipe)
  *   Discard / Save footer
  *
  * The add-source list, the time picker and the portion picker are steps
@@ -194,6 +194,9 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
   const portionItem = d.items.find((i) => i.key === portionKey) ?? null;
   const resolvedName = d.name.trim();
   const canSave = d.items.length > 0 && resolvedName.length > 0 && !saving;
+  // A meal that's just one recipe is already in the recipe book.
+  const alreadyARecipe = d.items.length === 1 && d.items[0].kind === 'recipe';
+  const wantsRecipe = saveAsRecipe && isPlus && !alreadyARecipe;
 
   function finish(saved: boolean) {
     const dateKey = d!.dateKey;
@@ -262,14 +265,14 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
     }
 
     let recipeSaved = false;
-    if (saveAsRecipe && isPlus) {
+    if (wantsRecipe) {
       recipeSaved = Boolean(await saveItemsAsRecipe(userId, resolvedName, d!.items));
     }
 
     const when = dayAtTimeLabel(d!.dateKey, d!.time);
     setSaving(false);
     finish(true);
-    if (saveAsRecipe && isPlus && !recipeSaved) {
+    if (wantsRecipe && !recipeSaved) {
       showToast({
         message: 'Meal saved, but we could not add it to your recipe book.',
         variant: 'error',
@@ -520,14 +523,16 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
                       />
                     )}
 
-                    {/* ── Save as a recipe (Plus) ─────────────────────── */}
-                    <CheckboxCard
-                      checked={saveAsRecipe}
-                      onPress={handleToggleSaveAsRecipe}
-                      title="Save as a recipe"
-                      supportingText="Put this meal in your recipe book for future use."
-                      trailing={!isPlus ? <PlusBadge size="small" /> : null}
-                    />
+                    {/* ── Save as a recipe (Plus) — not for a single recipe ── */}
+                    {!alreadyARecipe && (
+                      <CheckboxCard
+                        checked={saveAsRecipe}
+                        onPress={handleToggleSaveAsRecipe}
+                        title="Save as a recipe"
+                        supportingText="Put this meal in your recipe book for future use."
+                        trailing={!isPlus ? <PlusBadge size="small" /> : null}
+                      />
+                    )}
                   </ScrollView>
 
                   {/* ── Footer ──────────────────────────────────────── */}
