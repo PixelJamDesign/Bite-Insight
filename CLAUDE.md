@@ -128,7 +128,7 @@ Reuse these before creating new components:
 | `MealItemRow` | `@/components/MealItemRow` | One recipe/product in a meal: image, brand, name, portion pill (Plan a meal sheet, meal view) |
 | `MealTimeCard` | `@/components/MealTimeCard` | "Time / When do you plan to eat?" card with the time box; opens the time picker (Plan a meal) |
 | `ScanCard` | `@/components/ScanCard` | A scanned product: image, brand, 18px name, Nutri-score pill, chevron (history list, dashboard Scanned items). Open with `openScanResult` from `@/lib/openScan` |
-| `MealTotalsList` | `@/components/MealTotalsList` | Stack of nutrition total rows with food icons |
+| `MealTotalsList` | `@/components/MealTotalsList` | A `MealNutrition` total as the shared `NutritionRows` stack (planner day totals) |
 | `IconButton` | `@/components/IconButton` | Figma Icon Button: `size` regular (48) / small (36), `variant` onTeal / onWhite, optional `badge` |
 | `MoreMenu` | `@/components/MoreMenu` | ⋯ button with actions — system menu on iOS (SwiftUI Menu, fixed order) & Android (Expo UI MenuView), ActionsSheet on web. Items show in the same order everywhere. `size` small (36, default) / regular (48) |
 | `FadingScrollView` | `@/components/FadingScrollView` | ScrollView for bottom sheets: no hard edges — top blurs and fades once scrolled, bottom fades while there is more below. `fadeColor` for non-white sheets |

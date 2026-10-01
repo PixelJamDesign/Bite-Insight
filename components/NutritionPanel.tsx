@@ -78,9 +78,7 @@ export function NutritionPanel({
   noData,
 }: Props) {
   const [mode, setMode] = useState<Mode>('serving');
-  const [showAll, setShowAll] = useState(false);
   const values = mode === 'per100' && per100 ? per100 : perServing;
-  const netCarbs = values.carbs == null ? null : Math.max(0, values.carbs - (values.fiber ?? 0));
 
   if (noData) {
     return (
@@ -105,21 +103,6 @@ export function NutritionPanel({
   const gradeColor = grade ? NUTRISCORE_COLORS[grade] : '#aad4cd';
   const verdict = grade ? NUTRISCORE_VERDICT[grade] : '—';
 
-  const grams = (v: number | null) => (v == null ? '–' : `${formatGrams(v)}g`);
-  const ROWS: Record<NutrientRowKey, { Icon: SvgIcon; label: string; value: string }> = {
-    kcal: { Icon: FOOD_ICONS.calories, label: 'Calories', value: values.kcal == null ? '–' : formatKcal(values.kcal) },
-    fat: { Icon: FOOD_ICONS.fat, label: 'Fat', value: grams(values.fat) },
-    satFat: { Icon: FOOD_ICONS.satFat, label: 'Saturated Fat', value: grams(values.satFat) },
-    carbs: { Icon: FOOD_ICONS.carbs, label: 'Carbohydrates', value: grams(values.carbs) },
-    sugars: { Icon: FOOD_ICONS.sugars, label: 'Sugars', value: grams(values.sugars) },
-    fiber: { Icon: FOOD_ICONS.fiber, label: 'Fiber', value: grams(values.fiber) },
-    netCarbs: { Icon: FOOD_ICONS.netCarbs, label: 'Net Carbs', value: grams(netCarbs) },
-    protein: { Icon: FOOD_ICONS.protein, label: 'Protein', value: grams(values.protein) },
-    salt: { Icon: FOOD_ICONS.salt, label: 'Salt', value: grams(values.salt) },
-  };
-  const focused = focusRows && focusRows.length < ROW_ORDER.length ? focusRows : null;
-  const shownKeys = focused && !showAll ? ROW_ORDER.filter((k) => focused.includes(k)) : ROW_ORDER;
-  const rows = shownKeys.map((k) => ROWS[k]);
 
   return (
     <View style={styles.section}>
@@ -140,26 +123,8 @@ export function NutritionPanel({
           <Text style={styles.emptyText}>{emptyText}</Text>
         </View>
       ) : (
-        <View style={styles.rows}>
-          {rows.map(({ Icon, label, value }) => (
-            <View key={label} style={styles.row}>
-              <View style={styles.iconWrap}>
-                <Icon width={24} height={24} />
-              </View>
-              <Text style={styles.label}>{label}</Text>
-              <Text style={styles.value}>{value}</Text>
-            </View>
-          ))}
-        </View>
+        <NutritionRows values={values} focusRows={focusRows} />
       )}
-
-      {!empty && focused ? (
-        <Button
-          variant="outline"
-          label={showAll ? 'Show fewer values' : 'See full nutritional values'}
-          onPress={() => setShowAll((v) => !v)}
-        />
-      ) : null}
 
       <View style={styles.nutriBlock}>
         <Text style={styles.h5}>Estimated Nutri-score</Text>
@@ -188,6 +153,57 @@ export function NutritionPanel({
           </View>
         </View>
       </View>
+    </View>
+  );
+}
+
+/**
+ * NutritionRows — the macro stack on its own: one tinted card per
+ * nutrient, in a fixed order, "–" for anything missing. With `focusRows`,
+ * only those show until "See full nutritional values" opens the rest.
+ * Used by NutritionPanel and the meal planner's day totals.
+ */
+export function NutritionRows({ values, focusRows }: { values: NutritionValues; focusRows?: NutrientRowKey[] }) {
+  const [showAll, setShowAll] = useState(false);
+  const netCarbs = values.carbs == null ? null : Math.max(0, values.carbs - (values.fiber ?? 0));
+  const grams = (v: number | null) => (v == null ? '–' : `${formatGrams(v)}g`);
+  const ROWS: Record<NutrientRowKey, { Icon: SvgIcon; label: string; value: string }> = {
+    kcal: { Icon: FOOD_ICONS.calories, label: 'Calories', value: values.kcal == null ? '–' : formatKcal(values.kcal) },
+    fat: { Icon: FOOD_ICONS.fat, label: 'Fat', value: grams(values.fat) },
+    satFat: { Icon: FOOD_ICONS.satFat, label: 'Saturated Fat', value: grams(values.satFat) },
+    carbs: { Icon: FOOD_ICONS.carbs, label: 'Carbohydrates', value: grams(values.carbs) },
+    sugars: { Icon: FOOD_ICONS.sugars, label: 'Sugars', value: grams(values.sugars) },
+    fiber: { Icon: FOOD_ICONS.fiber, label: 'Fiber', value: grams(values.fiber) },
+    netCarbs: { Icon: FOOD_ICONS.netCarbs, label: 'Net Carbs', value: grams(netCarbs) },
+    protein: { Icon: FOOD_ICONS.protein, label: 'Protein', value: grams(values.protein) },
+    salt: { Icon: FOOD_ICONS.salt, label: 'Salt', value: grams(values.salt) },
+  };
+  const focused = focusRows && focusRows.length < ROW_ORDER.length ? focusRows : null;
+  const shownKeys = focused && !showAll ? ROW_ORDER.filter((k) => focused.includes(k)) : ROW_ORDER;
+
+  return (
+    <View style={styles.rowsBlock}>
+      <View style={styles.rows}>
+        {shownKeys.map((k) => {
+          const { Icon, label, value } = ROWS[k];
+          return (
+            <View key={k} style={styles.row}>
+              <View style={styles.iconWrap}>
+                <Icon width={24} height={24} />
+              </View>
+              <Text style={styles.label}>{label}</Text>
+              <Text style={styles.value}>{value}</Text>
+            </View>
+          );
+        })}
+      </View>
+      {focused ? (
+        <Button
+          variant="outline"
+          label={showAll ? 'Show fewer values' : 'See full nutritional values'}
+          onPress={() => setShowAll((v) => !v)}
+        />
+      ) : null}
     </View>
   );
 }
@@ -282,6 +298,7 @@ const styles = StyleSheet.create({
   },
   modeTabTextActive: { color: Colors.primary },
 
+  rowsBlock: { gap: 16 },
   rows: { gap: 4 },
   row: {
     backgroundColor: '#f5fbfb',
