@@ -24,6 +24,7 @@ import { Colors, Spacing, Radius, Shadows } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { PlusBadge } from '@/components/PlusBadge';
+import { FrostedHeader, useScrollEdge } from '@/components/HeaderEdge';
 import { MenuNotificationsIcon } from '@/components/MenuIcons';
 
 // ── Constants ───────────────────────────────────────────────────────────────
@@ -168,6 +169,7 @@ export default function WhatsNewScreen() {
   const { session } = useAuth();
   const { t: tc } = useTranslation('common');
   const insets = useSafeAreaInsets();
+  const topEdge = useScrollEdge();
 
   const [firstName, setFirstName] = useState<string>('');
 
@@ -196,11 +198,14 @@ export default function WhatsNewScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.safe} edges={['bottom']}>
+      {/* Runs up under the status bar, which frosts over as content passes */}
       <ScrollView
+        {...topEdge.scrollProps}
         style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + Spacing.xl }]}
         showsVerticalScrollIndicator={false}
+        scrollIndicatorInsets={{ top: insets.top }}
       >
         {/* ── Greeting ── */}
         <Text style={styles.greetingLight}>{greeting}</Text>
@@ -292,6 +297,8 @@ export default function WhatsNewScreen() {
           </TouchableOpacity>
         </View>
       </View>
+
+      <FrostedHeader scrollY={topEdge.scrollY} style={{ top: 0, height: insets.top }} />
     </SafeAreaView>
   );
 }
@@ -308,7 +315,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: Spacing.m,
-    paddingTop: Spacing.xl,
   },
 
   // ── Greeting ──────────────────────────────────────────────────────────────
