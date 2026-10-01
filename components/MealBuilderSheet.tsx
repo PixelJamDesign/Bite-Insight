@@ -254,7 +254,7 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
                       activeOpacity={0.7}
                       accessibilityLabel="Back"
                     >
-                      <MenuArrowLeftIcon color={Colors.primary} size={24} />
+                      <MenuArrowLeftIcon color={Colors.primary} size={16} />
                     </TouchableOpacity>
                   </Reanimated.View>
                 ) : (
