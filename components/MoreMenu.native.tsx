@@ -12,7 +12,8 @@ import { View } from 'react-native';
 import MenuView from '@expo/ui/community/menu';
 import { IconButton } from '@/components/IconButton';
 import type { MoreMenuProps } from '@/components/moreMenuTypes';
-import MoreIcon from '@/assets/icons/more.svg';
+import { Ionicons } from '@expo/vector-icons';
+import { Colors } from '@/constants/theme';
 
 const MENU_DISMISS_MS = 250;
 
@@ -38,7 +39,7 @@ export function MoreMenu({ actions, title, variant = 'onTeal', size = 'small', a
       <IconButton
         size={size}
         variant={variant}
-        icon={<MoreIcon width={size === 'small' ? 20 : 24} height={size === 'small' ? 20 : 24} />}
+        icon={<Ionicons name="ellipsis-horizontal" size={size === 'small' ? 20 : 24} color={Colors.primary} />}
       />
       </View>
     </MenuView>

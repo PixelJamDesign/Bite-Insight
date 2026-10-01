@@ -6,7 +6,8 @@ import { useState } from 'react';
 import { IconButton } from '@/components/IconButton';
 import { ActionsSheet } from '@/components/ActionsSheet';
 import type { MoreMenuProps } from '@/components/moreMenuTypes';
-import MoreIcon from '@/assets/icons/more.svg';
+import { Ionicons } from '@expo/vector-icons';
+import { Colors } from '@/constants/theme';
 
 export function MoreMenu({ actions, title, variant = 'onTeal', size = 'small', accessibilityLabel }: MoreMenuProps) {
   const [open, setOpen] = useState(false);
@@ -15,7 +16,7 @@ export function MoreMenu({ actions, title, variant = 'onTeal', size = 'small', a
       <IconButton
         size={size}
         variant={variant}
-        icon={<MoreIcon width={size === 'small' ? 20 : 24} height={size === 'small' ? 20 : 24} />}
+        icon={<Ionicons name="ellipsis-horizontal" size={size === 'small' ? 20 : 24} color={Colors.primary} />}
         onPress={() => setOpen(true)}
         accessibilityLabel={accessibilityLabel ?? 'More actions'}
       />

@@ -13,7 +13,8 @@ import { Button, Host, Menu, RNHostView, Section } from '@expo/ui/swift-ui';
 import { accessibilityLabel as a11yLabel, menuOrder } from '@expo/ui/swift-ui/modifiers';
 import { IconButton } from '@/components/IconButton';
 import type { MoreMenuProps } from '@/components/moreMenuTypes';
-import MoreIcon from '@/assets/icons/more.svg';
+import { Ionicons } from '@expo/vector-icons';
+import { Colors } from '@/constants/theme';
 
 /** Lets the menu finish closing before an action presents a Modal. */
 const MENU_DISMISS_MS = 250;
@@ -40,7 +41,7 @@ export function MoreMenu({ actions, title, variant = 'onTeal', size = 'small', a
             <IconButton
               size={size}
               variant={variant}
-              icon={<MoreIcon width={iconSize} height={iconSize} />}
+              icon={<Ionicons name="ellipsis-horizontal" size={iconSize} color={Colors.primary} />}
             />
           </RNHostView>
         }
