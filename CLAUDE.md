@@ -121,7 +121,7 @@ Reuse these before creating new components:
 | `IngredientRow` | `@/components/IngredientRow` | Like/dislike/flag ingredient list items |
 | `StatPanel` | `@/components/StatPanel` | Stat cards (no longer on the dashboard) |
 | `DailyInsightCard` | `@/components/DailyInsightCard` | Daily insight cards on home screen |
-| `ScreenLayout` | `@/components/ScreenLayout` | Every screen after the dashboard: title (+ optional `subtitle`) in the header |
+| `ScreenLayout` | `@/components/ScreenLayout` | Every screen after the dashboard: back + menu buttons, large title (+ optional `subtitle`) that collapses into the button row on scroll, iOS style (Figma Header Nav 5856:30586). Use `HeaderScrollView` / `HeaderFlatList` for the main list so it scrolls under the header and drives the collapse; `headerExtension` pins under it. Mixed-weight subtitles: pass `(compact) => …` with `subtitleStyles(compact)` |
 | `MealBlock` | `@/components/MealBlock` | A planned meal (planner timeline, dashboard list). Pass `impact` and `metrics` from `useMealPlanImpact` — colour and detail numbers are per user (`lib/mealDanger.ts`) |
 | `NutritionPanel` | `@/components/NutritionPanel` | Nutrition block: Per serving / Per 100g tabs, macro stack, Estimated Nutri-score. `focusRows` (from `useNutritionRows`) shows only what matters to the user + "See full nutritional values"; `notice` / `noData` for missing data (see `lib/mealNutritionCopy`) |
 | `CheckboxCard` | `@/components/CheckboxCard` | Figma "Checkbox": tinted card with checkbox, title and supporting text |

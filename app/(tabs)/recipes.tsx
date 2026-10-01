@@ -24,7 +24,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Colors, Spacing, Radius, Shadows, Typography } from '@/constants/theme';
-import { ScreenLayout } from '@/components/ScreenLayout';
+import { ScreenLayout, HeaderFlatList } from '@/components/ScreenLayout';
 import { LottieLoader } from '@/components/LottieLoader';
 import { PlusBadge } from '@/components/PlusBadge';
 import { MenuMealPlanIcon } from '@/components/MenuIcons';
@@ -219,7 +219,7 @@ export default function RecipesScreen() {
           ) : community.recipes.length === 0 ? (
             <CommunityEmpty bottomSpace={tabBarClearance} />
           ) : (
-            <FlatList
+            <HeaderFlatList
               data={community.recipes}
               key={`community-${numColumns}`}
               keyExtractor={(r) => r.id}
@@ -253,7 +253,7 @@ export default function RecipesScreen() {
         ) : isEmpty ? (
           <EmptyState bottomSpace={contentBottomPadding} />
         ) : (
-          <FlatList
+          <HeaderFlatList
             data={recipes}
             key={`my-${numColumns}`}
             keyExtractor={(r) => r.id}

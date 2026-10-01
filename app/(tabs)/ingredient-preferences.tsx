@@ -23,7 +23,7 @@ import { supabase, getIngredientImageUrl } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { Colors, Shadows } from '@/constants/theme';
-import { ScreenLayout, screenSubtitleStyles } from '@/components/ScreenLayout';
+import { ScreenLayout, HeaderScrollView, subtitleStyles } from '@/components/ScreenLayout';
 import { MenuLikedIcon, MenuDislikedIcon, MenuFlaggedIcon, ActionSearchIcon, ActionClearIcon, ActionPenIcon } from '@/components/MenuIcons';
 import { TextField } from '@/components/TextField';
 import { IngredientDetailModal } from '@/components/IngredientDetailModal';
@@ -508,16 +508,16 @@ export default function IngredientPreferencesScreen() {
     <>
     <ScreenLayout
       title={PAGE_TITLES[activeTab]}
-      subtitle={
+      subtitle={(compact) => (
         // "Currently you like 12 ingredients"
-        <Text style={screenSubtitleStyles.light}>
+        <Text style={subtitleStyles(compact).light} numberOfLines={compact ? 1 : undefined}>
           {t('preferences.subtitle.currently')}
           {COUNT_VERBS[activeTab]}{' '}
-          <Text style={screenSubtitleStyles.bold}>
+          <Text style={subtitleStyles(compact).bold}>
             {t('preferences.subtitle.ingredient', { count })}
           </Text>
         </Text>
-      }
+      )}
       headerExtension={headerExtension}
     >
       {activeTab === 'flagged' && !isPlus ? (
@@ -554,7 +554,7 @@ export default function IngredientPreferencesScreen() {
       ) : (
         // ── Ingredient list ──────────────────────────────────────────────────
         <Animated.View style={[styles.listOuter, { opacity: fadeContent.opacity, transform: [{ translateY: fadeContent.translateY }] }]}>
-          <ScrollView
+          <HeaderScrollView
             style={styles.scroll}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
@@ -610,7 +610,7 @@ export default function IngredientPreferencesScreen() {
                 )}
               </TouchableOpacity>
             ))}
-          </ScrollView>
+          </HeaderScrollView>
 
           {/* Footer — edit mode only */}
           {editMode && (

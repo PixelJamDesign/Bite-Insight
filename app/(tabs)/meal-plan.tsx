@@ -33,14 +33,13 @@ import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Colors, Shadows } from '@/constants/theme';
-import { ScreenLayout } from '@/components/ScreenLayout';
+import { ScreenLayout, HeaderScrollView, useScreenHeader } from '@/components/ScreenLayout';
 import { LottieLoader } from '@/components/LottieLoader';
 import { MealActionsSheet } from '@/components/MealActionsSheet';
 import { MealBuilderSheet } from '@/components/MealBuilderSheet';
 import { MealTotalsList } from '@/components/MealTotalsList';
 import { MealBlock } from '@/components/MealBlock';
 import { IconButton } from '@/components/IconButton';
-import { ProgressiveBlur } from '@/components/ProgressiveBlur';
 import { useFadeIn } from '@/lib/useFadeIn';
 import { useFocusFadeIn } from '@/lib/useFocusFadeIn';
 import { useSubscription } from '@/lib/subscriptionContext';
@@ -197,6 +196,8 @@ export default function MealPlanScreen() {
   /** Closed height of the count card, held while it floats open. */
   const [countCardHeight, setCountCardHeight] = useState<number | null>(null);
   const timelineRef = useRef<ScrollView>(null);
+  /** How far the header collapses, read from ScreenLayout. */
+  const collapseDistance = useRef(0);
 
   /** Free accounts plan today only; anything else is the Plus upsell. */
   const selectDay = useCallback(
@@ -279,7 +280,10 @@ export default function MealPlanScreen() {
       focusMinutes ??
       (isToday ? currentMinutes : firstMealMinutes ?? DEFAULT_SCROLL_HOUR * 60 + 60);
     const top = Math.max(0, ((anchor - 60) / 60) * HOUR_HEIGHT);
-    timelineRef.current.scrollTo({ y: top, animated: Boolean(focusMeal) });
+    // Past the top of the day the large title has scrolled away, so the
+    // timeline starts that much higher under the header.
+    const y = top > 0 ? top + collapseDistance.current : 0;
+    timelineRef.current.scrollTo({ y, animated: Boolean(focusMeal) });
     pendingScroll.current = false;
     // Used once — a later visit to the tab goes back to the current time.
     if (focusMealId) router.setParams({ focus: undefined } as never);
@@ -504,6 +508,7 @@ export default function MealPlanScreen() {
       subtitle="Plan what you'll eat this week"
       headerExtension={headerExtension}
     >
+      <HeaderDistance into={collapseDistance} />
       <Animated.View
         style={{ flex: 1, opacity: focusAnim.opacity, transform: [{ translateY: focusAnim.translateY }] }}
       >
@@ -525,7 +530,7 @@ export default function MealPlanScreen() {
               </TouchableOpacity>
             </View>
           ) : (
-            <ScrollView
+            <HeaderScrollView
               ref={timelineRef}
               onLayout={positionTimeline}
               contentContainerStyle={styles.timelineContent}
@@ -586,11 +591,8 @@ export default function MealPlanScreen() {
                   ))}
                 </View>
               </View>
-            </ScrollView>
+            </HeaderScrollView>
           )}
-
-          {/* The day softens into the page as it scrolls up to the count card */}
-          {!loading && !error && <ProgressiveBlur height={TIMELINE_TOP} />}
         </Animated.View>
       </Animated.View>
 
@@ -641,6 +643,12 @@ export default function MealPlanScreen() {
       />
     </ScreenLayout>
   );
+}
+
+/** Keeps the header's collapse distance in a ref for the timeline scroll. */
+function HeaderDistance({ into }: { into: { current: number } }) {
+  into.current = useScreenHeader().collapseDistance;
+  return null;
 }
 
 // ── Styles ───────────────────────────────────────────────────────────────────

@@ -20,7 +20,7 @@ import { useSubscription } from '@/lib/subscriptionContext';
 import { useUpsellSheet } from '@/lib/upsellSheetContext';
 import { Colors } from '@/constants/theme';
 import { usePageTransition } from '@/lib/usePageTransition';
-import { ScreenLayout, screenSubtitleStyles } from '@/components/ScreenLayout';
+import { ScreenLayout, HeaderScrollView, subtitleStyles } from '@/components/ScreenLayout';
 import { ActionSearchIcon, ActionPenIcon } from '@/components/MenuIcons';
 import { CachedAvatar } from '@/components/CachedAvatar';
 import { InviteFamilyMemberSheet } from '@/components/InviteFamilyMemberSheet';
@@ -409,14 +409,14 @@ export default function FamilyMembersScreen() {
     <Animated.View style={{ flex: 1, opacity: pageOpacity, transform: [{ translateX: pageTranslateX }] }}>
       <ScreenLayout
         title="My Family"
-        subtitle={
-          <Text style={screenSubtitleStyles.light}>
+        subtitle={(compact) => (
+          <Text style={subtitleStyles(compact).light} numberOfLines={compact ? 1 : undefined}>
             You have{' '}
-            <Text style={screenSubtitleStyles.bold}>
+            <Text style={subtitleStyles(compact).bold}>
               {count} family {count === 1 ? 'member' : 'members'}
             </Text>
           </Text>
-        }
+        )}
         headerExtension={headerExtension}
       >
         {loading ? (
@@ -495,7 +495,7 @@ export default function FamilyMembersScreen() {
         ) : (
           /* ── Normal mode — static list ── */
           <View style={styles.listOuter}>
-            <ScrollView
+            <HeaderScrollView
               style={styles.scroll}
               contentContainerStyle={styles.scrollContent}
               showsVerticalScrollIndicator={false}
@@ -509,7 +509,7 @@ export default function FamilyMembersScreen() {
                   {pendingProfiles.map(renderPendingRow)}
                 </>
               )}
-            </ScrollView>
+            </HeaderScrollView>
 
             {/* Add button — inside ScreenLayout so the menu overlay covers it */}
             {!editMode && (

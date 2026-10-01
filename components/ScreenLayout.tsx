@@ -1,4 +1,17 @@
-import { useState, useRef, ReactNode } from 'react';
+import {
+  createContext,
+  cloneElement,
+  isValidElement,
+  useCallback,
+  useContext,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactElement,
+  type ReactNode,
+  type Ref,
+} from 'react';
 import {
   View,
   Text,
@@ -6,49 +19,102 @@ import {
   TouchableOpacity,
   Animated,
   Platform,
+  type FlatList,
+  type FlatListProps,
   type LayoutChangeEvent,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+  type ScrollView,
+  type ScrollViewProps,
+  type StyleProp,
+  type ViewStyle,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useRouter } from 'expo-router';
 import { Colors } from '@/constants/theme';
 import { MenuModal } from '@/components/MenuModal';
 import { IconButton } from '@/components/IconButton';
+import { MenuArrowLeftIcon } from '@/components/MenuIcons';
+import { ProgressiveBlur } from '@/components/ProgressiveBlur';
 import Logo from '@/assets/images/logo.svg';
+
+/** A subtitle, or a function that builds it for the large or compact header. */
+type Subtitle = ReactNode | ((compact: boolean) => ReactNode);
 
 interface ScreenLayoutProps {
   /** Page title, shown in the header */
   title: string;
   /**
-   * Optional supporting line under the title. A string is styled for you;
-   * pass a <Text> (with nested bold <Text>) for mixed weights.
+   * Optional supporting line under the title. A string is styled for you.
+   * For mixed weights pass a function returning a <Text> built from
+   * `subtitleStyles(compact)`, so the collapsed header gets the small size.
    */
-  subtitle?: ReactNode;
-  /** Optional slot between the header and children — e.g. date tabs (not scrollable) */
+  subtitle?: Subtitle;
+  /** Controls pinned under the title (date tabs, filters, etc.). They scroll
+   *  up with the title, then stay put once the header has collapsed. */
   headerExtension?: ReactNode;
+  /** Back button action. Defaults to going back, or to the dashboard. */
+  onBack?: () => void;
   children: ReactNode;
+}
+
+// Figma "Header Nav" (5856:30586): 48px buttons, 16 below them, and the
+// large title stack another 16 above whatever follows.
+const NAV_TOP_GAP = 24;
+const BUTTON = 48;
+const NAV_BOTTOM_GAP = 16;
+const TITLE_BOTTOM_GAP = 16;
+/** Blur and fade band under the pinned header. */
+const FADE_HEIGHT = 32;
+
+interface ScreenHeaderContextValue {
+  /** Scroll offset of the screen's main list. */
+  scrollY: Animated.Value;
+  /** Space the list needs at the top to clear the expanded header. */
+  insetTop: number;
+  /** How far the list scrolls before the large title has gone. */
+  collapseDistance: number;
+  /** Marks a list as owning the inset while it's mounted. */
+  register: () => () => void;
+}
+
+const ScreenHeaderContext = createContext<ScreenHeaderContextValue | null>(null);
+
+/** The header's scroll state, for lists that can't use HeaderScrollView. */
+export function useScreenHeader(): ScreenHeaderContextValue {
+  const ctx = useContext(ScreenHeaderContext);
+  if (!ctx) throw new Error('useScreenHeader must be used inside ScreenLayout');
+  return ctx;
 }
 
 /**
  * ScreenLayout — shared page template for every screen after the dashboard.
  *
- * Follows the Figma "Masthead (with Title)" component (Header Nav/No,
- * node 5856:30586). The dashboard keeps the logo masthead; everything
- * else puts the page title in the header:
+ * Follows the Figma "Header Nav" component (5856:30586) and the Meal
+ * Planner / Meal Planner (Scrolled) frames, and behaves like an iOS large
+ * title:
  *
- *   • Gradient header: title (H3) + optional subtitle, menu button
- *   • Optional headerExtension slot (date tabs, filters, etc.)
- *   • Flex-1 content area for the screen's main list/content
- *   • Menu overlay with slide-in animation (same as Dashboard). While the
- *     menu is open the header shows the logo, as it does on the dashboard.
+ *   • A fixed row: back button, menu button.
+ *   • Under it the large title (24px) + subtitle, then headerExtension.
+ *   • As the list scrolls, the title slides up under the button row at
+ *     the list's own speed and a compact title (18px + 14px subtitle)
+ *     fades in between the buttons. headerExtension then stays pinned.
+ *
+ * The list has to be a HeaderScrollView or HeaderFlatList (or use
+ * useScreenHeader) for the header to collapse: they pad their content to
+ * start below the header and report their scroll. Anything else (loading
+ * and empty states) is placed below the expanded header automatically.
+ *
+ * The menu overlay slides in as on the dashboard; while it's open the
+ * header shows the logo.
  *
  * Usage:
  *   <ScreenLayout title="Scan History" subtitle="Everything you've scanned">
- *     <FlatList ... />
+ *     <HeaderFlatList ... />
  *   </ScreenLayout>
  */
-export function ScreenLayout({ title, subtitle, headerExtension, children }: ScreenLayoutProps) {
+export function ScreenLayout({ title, subtitle, headerExtension, onBack, children }: ScreenLayoutProps) {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const router = useRouter();
@@ -57,19 +123,75 @@ export function ScreenLayout({ title, subtitle, headerExtension, children }: Scr
   const [menuVisible, setMenuVisible] = useState(false);
   const menuAnim = useRef(new Animated.Value(0)).current;
 
-  // Header height drives where the content starts. Estimated up front
-  // (insets.top + 24 top padding + title row + 16 bottom padding), then
-  // measured, since the subtitle is optional and may wrap.
-  const headerTop = insets.top + 24;
-  const [headerHeight, setHeaderHeight] = useState(
-    headerTop + (subtitle ? 57 : 48) + 16,
+  const navTop = insets.top + NAV_TOP_GAP;
+  const navHeight = navTop + BUTTON + NAV_BOTTOM_GAP;
+
+  // Measured, since the subtitle is optional and the title may wrap.
+  const [titleHeight, setTitleHeight] = useState(subtitle != null ? 57 + TITLE_BOTTOM_GAP : 30 + TITLE_BOTTOM_GAP);
+  const [extensionHeight, setExtensionHeight] = useState(0);
+  const insetTop = titleHeight + extensionHeight;
+
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const [listCount, setListCount] = useState(0);
+  const register = useCallback(() => {
+    scrollY.setValue(0);
+    setListCount((n) => n + 1);
+    return () => {
+      setListCount((n) => n - 1);
+      scrollY.setValue(0);
+    };
+  }, [scrollY]);
+
+  const context = useMemo(
+    () => ({ scrollY, insetTop, collapseDistance: titleHeight, register }),
+    [scrollY, insetTop, titleHeight, register],
   );
-  function onHeaderLayout(e: LayoutChangeEvent) {
-    // Only the closed header sets the height — the menu's logo header is
-    // a different size and must not shift the page behind it.
-    if (menuOpen) return;
+
+  // The title and pinned controls move 1:1 with the list until the title
+  // has gone, and follow the iOS overscroll down.
+  const T = titleHeight;
+  const stackShift = scrollY.interpolate({
+    inputRange: [-1, 0, T, T + 1],
+    outputRange: [1, 0, -T, -T],
+    extrapolateLeft: 'extend',
+    extrapolateRight: 'clamp',
+  });
+  const largeOpacity = scrollY.interpolate({
+    inputRange: [0, T * 0.5],
+    outputRange: [1, 0],
+    extrapolate: 'clamp',
+  });
+  const compactOpacity = scrollY.interpolate({
+    inputRange: [T * 0.6, T],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
+  // The fade only shows once something is scrolling under it, so the
+  // first row isn't softened at rest.
+  const fadeOpacity = scrollY.interpolate({
+    inputRange: [0, 16],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
+  const compactShift = scrollY.interpolate({
+    inputRange: [T * 0.6, T],
+    outputRange: [6, 0],
+    extrapolate: 'clamp',
+  });
+
+  function onTitleLayout(e: LayoutChangeEvent) {
     const h = Math.round(e.nativeEvent.layout.height);
-    if (h !== headerHeight) setHeaderHeight(h);
+    if (h > 0 && h !== titleHeight) setTitleHeight(h);
+  }
+  function onExtensionLayout(e: LayoutChangeEvent) {
+    const h = Math.round(e.nativeEvent.layout.height);
+    if (h !== extensionHeight) setExtensionHeight(h);
+  }
+
+  function goBack() {
+    if (onBack) return onBack();
+    if (router.canGoBack()) router.back();
+    else router.replace('/(tabs)/dashboard' as never);
   }
 
   function openMenu() {
@@ -96,73 +218,174 @@ export function ScreenLayout({ title, subtitle, headerExtension, children }: Scr
     (navigation as any).setOptions({ tabBarStyle: undefined });
   }
 
-  return (
-    <SafeAreaView style={[styles.safeArea, Platform.OS === 'android' && { paddingBottom: insets.bottom }]} edges={[]}>
-      {/* ── Main content column ─────────────────────────────────────────── */}
-      <View style={[styles.column, { paddingTop: headerHeight }]}>
-        {/* Optional page-specific header (date tabs, filters, etc.) */}
-        {headerExtension}
+  const renderSubtitle = (compact: boolean) => {
+    if (subtitle == null) return null;
+    if (typeof subtitle === 'function') return subtitle(compact);
+    if (typeof subtitle === 'string') {
+      return (
+        <Text style={compact ? styles.compactSubtitle : styles.subtitleText} numberOfLines={compact ? 1 : undefined}>
+          {subtitle}
+        </Text>
+      );
+    }
+    return subtitle;
+  };
 
-        {/* Main content area — FlatList / ScrollView / etc. */}
-        <View style={styles.contentArea}>
+  return (
+    <ScreenHeaderContext.Provider value={context}>
+      <SafeAreaView style={[styles.safeArea, Platform.OS === 'android' && { paddingBottom: insets.bottom }]} edges={[]}>
+        {/* ── Content: under the header. A HeaderScrollView pads itself;
+            anything else is placed below the expanded header. ── */}
+        <View style={[styles.contentArea, { top: navHeight, paddingTop: listCount > 0 ? 0 : insetTop }]}>
           {children}
         </View>
-      </View>
 
-      {/* ── Gradient fade (non-interactive, masks content behind header) ── */}
-      {!menuVisible && (
-        <LinearGradient
-          colors={[Colors.background, Colors.background, 'rgba(226,241,238,0)']}
-          locations={[0, 0.82, 1]}
-          style={[styles.gradientFade, { height: headerHeight }]}
-          pointerEvents="none"
-        />
-      )}
-
-      {/* ── Menu overlay ─────────────────────────────────────────────────── */}
-      {menuVisible && (
-        <Animated.View style={[styles.menuOverlay, { opacity: menuAnim }]}>
-          <MenuModal onClose={closeMenu} onNavigate={closeMenuInstant} />
-        </Animated.View>
-      )}
-
-      {/* ── Header bar (title or logo + menu button, always on top) ─────── */}
-      <View
-        style={[styles.headerBar, menuOpen && styles.headerBarMenu, { paddingTop: headerTop }]}
-        onLayout={onHeaderLayout}
-      >
-        {menuOpen ? (
-          <TouchableOpacity
-            onPress={() => router.push('/(tabs)/dashboard' as any)}
-            activeOpacity={0.7}
-            hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
-          >
-            <Logo width={141} height={36} />
-          </TouchableOpacity>
-        ) : (
-          <View style={styles.headerStack}>
+        {/* ── Large title + pinned controls ── */}
+        <Animated.View style={[styles.stack, { top: navHeight, transform: [{ translateY: stackShift }] }]}>
+          {/* First, so the pinned controls (e.g. a card that opens over
+              the list) draw over the fade. */}
+          <Animated.View style={[styles.stackFade, { opacity: fadeOpacity }]} pointerEvents="none">
+            <ProgressiveBlur height={FADE_HEIGHT} />
+          </Animated.View>
+          <Animated.View style={[styles.largeTitle, { opacity: largeOpacity }]} onLayout={onTitleLayout}>
             <Text style={styles.titleText} numberOfLines={2} accessibilityRole="header">
               {title}
             </Text>
-            {subtitle != null &&
-              (typeof subtitle === 'string' ? (
-                <Text style={styles.subtitleText}>{subtitle}</Text>
-              ) : (
-                subtitle
-              ))}
-          </View>
+            {renderSubtitle(false)}
+          </Animated.View>
+          <View onLayout={onExtensionLayout}>{headerExtension}</View>
+        </Animated.View>
+
+        {/* ── Menu overlay ── */}
+        {menuVisible && (
+          <Animated.View style={[styles.menuOverlay, { opacity: menuAnim }]}>
+            <MenuModal onClose={closeMenu} onNavigate={closeMenuInstant} />
+          </Animated.View>
         )}
-        <IconButton
-          icon={<Ionicons name={menuOpen ? 'close' : 'menu-outline'} size={24} color={Colors.primary} />}
-          variant={menuOpen ? 'onWhite' : 'onTeal'}
-          onPress={menuOpen ? closeMenu : openMenu}
-          hitSlop={0}
-          accessibilityLabel={menuOpen ? 'Close menu' : 'Open menu'}
-        />
-      </View>
-    </SafeAreaView>
+
+        {/* ── Button row (always on top) ── */}
+        <View style={[styles.navBar, menuOpen && styles.navBarMenu, { paddingTop: navTop }]}>
+          {menuOpen ? (
+            <TouchableOpacity
+              style={styles.logo}
+              onPress={() => router.push('/(tabs)/dashboard' as any)}
+              activeOpacity={0.7}
+              hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
+            >
+              <Logo width={141} height={36} />
+            </TouchableOpacity>
+          ) : (
+            <>
+              <IconButton
+                icon={<MenuArrowLeftIcon color={Colors.primary} size={16} />}
+                onPress={goBack}
+                hitSlop={0}
+                accessibilityLabel="Back"
+              />
+              <Animated.View
+                style={[styles.compactStack, { opacity: compactOpacity, transform: [{ translateY: compactShift }] }]}
+                pointerEvents="none"
+                accessibilityElementsHidden
+                importantForAccessibility="no-hide-descendants"
+              >
+                <Text style={styles.compactTitle} numberOfLines={1}>
+                  {title}
+                </Text>
+                {renderSubtitle(true)}
+              </Animated.View>
+            </>
+          )}
+          <IconButton
+            icon={<Ionicons name={menuOpen ? 'close' : 'menu-outline'} size={24} color={Colors.primary} />}
+            variant={menuOpen ? 'onWhite' : 'onTeal'}
+            onPress={menuOpen ? closeMenu : openMenu}
+            hitSlop={0}
+            accessibilityLabel={menuOpen ? 'Close menu' : 'Open menu'}
+          />
+        </View>
+      </SafeAreaView>
+    </ScreenHeaderContext.Provider>
   );
 }
+
+// ─── Lists that drive the header ───────────────────────────────────────────
+
+type ScrollHandler = (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
+
+/** Registers the list and returns its scroll handler and padding. */
+function useHeaderList(onScroll?: ScrollHandler | null) {
+  const { scrollY, insetTop, register } = useScreenHeader();
+  useLayoutEffect(() => register(), [register]);
+  const handler = useMemo(
+    () =>
+      Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+        useNativeDriver: true,
+        listener: onScroll ?? undefined,
+      }),
+    [scrollY, onScroll],
+  );
+  return { insetTop, handler };
+}
+
+/** Adds the header inset to whatever top padding the content already has. */
+function padTop(style: StyleProp<ViewStyle>, inset: number): StyleProp<ViewStyle> {
+  const flat = StyleSheet.flatten(style) ?? {};
+  const own = flat.paddingTop ?? flat.paddingVertical ?? flat.padding ?? 0;
+  return [style, { paddingTop: (typeof own === 'number' ? own : 0) + inset }];
+}
+
+/** Android draws the pull-to-refresh spinner at the top of the list,
+ *  under the header, unless it's offset. iOS shows it in the overscroll. */
+const spinnerOffset = (inset: number) => (Platform.OS === 'android' ? inset : undefined);
+
+/** ScrollView for a ScreenLayout screen: scrolls under the header and collapses it. */
+export function HeaderScrollView({
+  ref,
+  contentContainerStyle,
+  onScroll,
+  refreshControl,
+  ...rest
+}: ScrollViewProps & { ref?: Ref<ScrollView> }) {
+  const { insetTop, handler } = useHeaderList(onScroll);
+  return (
+    <Animated.ScrollView
+      ref={ref as any}
+      {...rest}
+      onScroll={handler}
+      scrollEventThrottle={16}
+      contentContainerStyle={padTop(contentContainerStyle, insetTop)}
+      scrollIndicatorInsets={{ top: insetTop }}
+      refreshControl={
+        isValidElement(refreshControl)
+          ? cloneElement(refreshControl as ReactElement<any>, { progressViewOffset: spinnerOffset(insetTop) })
+          : refreshControl
+      }
+    />
+  );
+}
+
+/** FlatList for a ScreenLayout screen: scrolls under the header and collapses it. */
+export function HeaderFlatList<T>({
+  ref,
+  contentContainerStyle,
+  onScroll,
+  ...rest
+}: FlatListProps<T> & { ref?: Ref<FlatList<T>> }) {
+  const { insetTop, handler } = useHeaderList(onScroll);
+  return (
+    <Animated.FlatList
+      ref={ref as any}
+      {...(rest as any)}
+      onScroll={handler}
+      scrollEventThrottle={16}
+      contentContainerStyle={padTop(contentContainerStyle, insetTop)}
+      scrollIndicatorInsets={{ top: insetTop }}
+      progressViewOffset={spinnerOffset(insetTop)}
+    />
+  );
+}
+
+// ─── Subtitle styles ───────────────────────────────────────────────────────
 
 /** Subtitle text styles, for screens that build a mixed-weight subtitle. */
 export const screenSubtitleStyles = StyleSheet.create({
@@ -183,18 +406,58 @@ export const screenSubtitleStyles = StyleSheet.create({
   },
 });
 
+/** The same, sized for the collapsed header (14px). */
+export const screenSubtitleCompactStyles = StyleSheet.create({
+  light: {
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
+    color: Colors.secondary,
+    letterSpacing: -0.14,
+  },
+  bold: {
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.28,
+  },
+});
+
+/** Subtitle styles for the large (false) or collapsed (true) header. */
+export const subtitleStyles = (compact: boolean) =>
+  compact ? screenSubtitleCompactStyles : screenSubtitleStyles;
+
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: Colors.background,
   },
-  column: {
-    flex: 1,
+  contentArea: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
-  headerStack: {
-    flex: 1,
-    minWidth: 0,
-    justifyContent: 'center',
+  stack: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    backgroundColor: Colors.background,
+    zIndex: 5,
+  },
+  stackFade: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    height: FADE_HEIGHT,
+  },
+  largeTitle: {
+    paddingHorizontal: 24,
+    paddingBottom: TITLE_BOTTOM_GAP,
   },
   titleText: {
     fontSize: 24,
@@ -205,16 +468,19 @@ const styles = StyleSheet.create({
     lineHeight: 30,
   },
   subtitleText: screenSubtitleStyles.light,
-  contentArea: {
+  compactStack: {
     flex: 1,
+    minWidth: 0,
+    justifyContent: 'center',
   },
-  gradientFade: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 15,
+  compactTitle: {
+    fontSize: 18,
+    lineHeight: 20,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
   },
+  compactSubtitle: screenSubtitleCompactStyles.light,
   menuOverlay: {
     position: 'absolute',
     top: 0,
@@ -223,20 +489,24 @@ const styles = StyleSheet.create({
     bottom: 0,
     zIndex: 10,
   },
-  headerBar: {
+  navBar: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     gap: 16,
     paddingHorizontal: 24,
-    paddingBottom: 16,
+    paddingBottom: NAV_BOTTOM_GAP,
+    backgroundColor: Colors.background,
     zIndex: 20,
   },
-  headerBarMenu: {
+  navBarMenu: {
     backgroundColor: '#fff',
+    justifyContent: 'space-between',
+  },
+  logo: {
+    flex: 1,
   },
 });
