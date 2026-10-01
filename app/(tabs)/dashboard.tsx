@@ -649,7 +649,8 @@ export default function HomeDashboard() {
                   <MealBlock
                     key={meal.id}
                     meal={meal}
-                    impact={todayImpact[meal.id]}
+                    impact={todayImpact.byMeal[meal.id]}
+                    metrics={todayImpact.metrics}
                     trailing={
                       <MoreMenu
                         variant={meal.eaten_at ? 'outline' : 'onWhite'}

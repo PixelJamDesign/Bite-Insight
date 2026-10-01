@@ -122,7 +122,7 @@ Reuse these before creating new components:
 | `StatPanel` | `@/components/StatPanel` | Stat cards (no longer on the dashboard) |
 | `DailyInsightCard` | `@/components/DailyInsightCard` | Daily insight cards on home screen |
 | `ScreenLayout` | `@/components/ScreenLayout` | Every screen after the dashboard: title (+ optional `subtitle`) in the header |
-| `MealBlock` | `@/components/MealBlock` | A planned meal (planner timeline, dashboard list) |
+| `MealBlock` | `@/components/MealBlock` | A planned meal (planner timeline, dashboard list). Pass `impact` and `metrics` from `useMealPlanImpact` — colour and detail numbers are per user (`lib/mealDanger.ts`) |
 | `MealTotalsList` | `@/components/MealTotalsList` | Stack of nutrition total rows with food icons |
 | `IconButton` | `@/components/IconButton` | Figma Icon Button: `size` regular (48) / small (36), `variant` onTeal / onWhite, optional `badge` |
 | `MoreMenu` | `@/components/MoreMenu` | ⋯ button with actions — native menu on iOS & Android (Expo UI MenuView), ActionsSheet on web |

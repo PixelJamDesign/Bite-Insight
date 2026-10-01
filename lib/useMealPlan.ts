@@ -11,9 +11,8 @@ import { useFocusEffect } from 'expo-router';
 import { supabase } from './supabase';
 import { useAuth } from './auth';
 import { addDays, listMeals, toDateKey } from './mealPlan';
-import { fetchHousehold, type Household } from './householdMembers';
-import { computeHouseholdImpact } from './householdImpact';
-import type { Meal, RecipeIngredient } from './types';
+import { cardMetricsFor, scoreMeal, type MealImpact, type MealMetric } from './mealDanger';
+import type { Meal, RecipeIngredient, UserProfile } from './types';
 
 export interface UseMealPlanWeekResult {
   meals: Meal[];
@@ -99,37 +98,46 @@ export function useMealPlanWeek(weekStart: Date): UseMealPlanWeekResult {
   return { meals, byDate, loading, error, refresh: load };
 }
 
-// ── useMealPlanImpact — who in the household should watch each meal ──────────
+// ── useMealPlanImpact — how each meal sits with the signed-in user ───────────
 
-export interface MealImpact {
-  /** Names of members for whom the meal hits an allergy. */
-  avoid: string[];
-  /** Names of members with a dietary or condition conflict. */
-  caution: string[];
+export type { MealImpact, MealMetric } from './mealDanger';
+
+export interface MealPlanImpact {
+  /** Meal id → danger. Meals that are fine for the user are absent. */
+  byMeal: Record<string, MealImpact>;
+  /** The numbers to show on each card, picked from the user's profile. */
+  metrics: MealMetric[];
 }
 
 /**
- * Runs the same household check the recipe detail screen uses against
- * every planned meal. Returns a map of meal id → flagged member names;
- * meals that are fine for everyone are absent.
+ * Scores every planned meal against the signed-in user's own profile (not
+ * the household) — see lib/mealDanger.ts for how.
  */
-export function useMealPlanImpact(meals: Meal[]): Record<string, MealImpact> {
+export function useMealPlanImpact(meals: Meal[]): MealPlanImpact {
   const { session } = useAuth();
   const userId = session?.user?.id;
 
-  const [household, setHousehold] = useState<Household | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [recipeIngredients, setRecipeIngredients] = useState<Record<string, RecipeIngredient[]>>({});
+  const [recipeServings, setRecipeServings] = useState<Record<string, number>>({});
 
-  useEffect(() => {
-    if (!userId) return;
-    let cancelled = false;
-    fetchHousehold(userId).then((h) => {
-      if (!cancelled) setHousehold(h);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [userId]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!userId) return;
+      let cancelled = false;
+      supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
+        .then(({ data }) => {
+          if (!cancelled && data) setProfile(data as UserProfile);
+        });
+      return () => {
+        cancelled = true;
+      };
+    }, [userId]),
+  );
 
   // Stable key so we only refetch ingredients when the set of recipes changes.
   const recipeIdsKey = useMemo(
@@ -147,58 +155,43 @@ export function useMealPlanImpact(meals: Meal[]): Record<string, MealImpact> {
   useEffect(() => {
     if (!recipeIdsKey) {
       setRecipeIngredients({});
+      setRecipeServings({});
       return;
     }
     let cancelled = false;
-    supabase
-      .from('recipe_ingredients')
-      .select('*')
-      .in('recipe_id', recipeIdsKey.split(','))
-      .then(({ data }) => {
-        if (cancelled || !data) return;
-        const grouped: Record<string, RecipeIngredient[]> = {};
-        for (const row of data as RecipeIngredient[]) {
-          (grouped[row.recipe_id] ??= []).push(row);
-        }
-        setRecipeIngredients(grouped);
-      });
+    const ids = recipeIdsKey.split(',');
+    Promise.all([
+      supabase.from('recipe_ingredients').select('*').in('recipe_id', ids),
+      supabase.from('recipes').select('id, servings').in('id', ids),
+    ]).then(([ingRes, recipeRes]) => {
+      if (cancelled) return;
+      const grouped: Record<string, RecipeIngredient[]> = {};
+      for (const row of (ingRes.data ?? []) as RecipeIngredient[]) {
+        (grouped[row.recipe_id] ??= []).push(row);
+      }
+      const servings: Record<string, number> = {};
+      for (const row of (recipeRes.data ?? []) as { id: string; servings: number }[]) {
+        servings[row.id] = row.servings;
+      }
+      setRecipeIngredients(grouped);
+      setRecipeServings(servings);
+    });
     return () => {
       cancelled = true;
     };
   }, [recipeIdsKey]);
 
-  return useMemo(() => {
+  const metrics = useMemo(() => cardMetricsFor(profile), [profile]);
+
+  const byMeal = useMemo(() => {
     const out: Record<string, MealImpact> = {};
-    if (!household) return out;
-
+    if (!profile) return out;
     for (const meal of meals) {
-      // Everything in the meal is checked together, as one ingredient list.
-      const ingredients: RecipeIngredient[] = [];
-      for (const item of meal.items) {
-        if (item.kind === 'recipe' && item.recipe_id) {
-          ingredients.push(...(recipeIngredients[item.recipe_id] ?? []));
-        } else if (item.product_snapshot) {
-          ingredients.push({
-            id: item.id,
-            recipe_id: '',
-            position: 0,
-            barcode: item.barcode,
-            scan_id: item.scan_id,
-            quantity_value: Number(item.quantity_value ?? 100),
-            quantity_unit: item.quantity_unit ?? 'g',
-            quantity_display: null,
-            product_snapshot: item.product_snapshot,
-            created_at: item.created_at,
-          });
-        }
-      }
-      if (ingredients.length === 0) continue;
-
-      const rows = computeHouseholdImpact(ingredients, household.self, household.family);
-      const avoid = rows.filter((r) => r.status === 'avoid').map((r) => r.name);
-      const caution = rows.filter((r) => r.status === 'caution').map((r) => r.name);
-      if (avoid.length > 0 || caution.length > 0) out[meal.id] = { avoid, caution };
+      const impact = scoreMeal(meal, profile, recipeIngredients, recipeServings);
+      if (impact) out[meal.id] = impact;
     }
     return out;
-  }, [meals, household, recipeIngredients]);
+  }, [meals, profile, recipeIngredients, recipeServings]);
+
+  return { byMeal, metrics };
 }

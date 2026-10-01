@@ -3,27 +3,36 @@
  * component (node 5844:9149). Used on the meal planner timeline and in
  * the dashboard's meal plan list.
  *
- * States: Planned (teal bar), Caution (orange bar — someone in the
- * household should check it), Avoid (red bar — hits an allergy) and Eaten
- * (node 5844:9128): tinted card with a 36px teal strip and white tick down
- * the left edge in place of the bar.
+ * States, judged for the signed-in user (lib/mealDanger.ts): Planned
+ * (teal bar), Caution (orange bar) and Avoid (red bar — a poor fit on
+ * average, or it hits one of their allergies). Eaten (node 5844:9128) is
+ * a tinted card with a 2px teal border and a 36px teal strip with a white
+ * tick down the left edge in place of the bar.
+ *
+ * The detail line shows the numbers that matter to the user's profile,
+ * e.g. kcal and sat fat for weight loss, carbs and protein for keto.
  */
 import { View, Text, StyleSheet, TouchableOpacity, type StyleProp, type ViewStyle } from 'react-native';
 import { Colors } from '@/constants/theme';
 import { sumNutrition } from '@/lib/mealPlan';
-import type { MealImpact } from '@/lib/useMealPlan';
+import { formatMetric, type MealImpact, type MealMetric } from '@/lib/mealDanger';
 import type { Meal } from '@/lib/types';
 import EatenTickIcon from '@/assets/icons/meal-plan/eaten-strip-tick.svg';
+
+const DEFAULT_METRICS: MealMetric[] = ['kcal', 'carbs_g'];
 
 export function MealBlock({
   meal,
   impact,
+  metrics = DEFAULT_METRICS,
   onPress,
   style,
   trailing,
 }: {
   meal: Meal;
   impact?: MealImpact;
+  /** Which totals to show, most important first (useMealPlanImpact). */
+  metrics?: MealMetric[];
   onPress: () => void;
   /** Sizing from the caller — the timeline fixes the height, lists let it hug. */
   style?: StyleProp<ViewStyle>;
@@ -31,33 +40,19 @@ export function MealBlock({
    *  meal, use the outline IconButton variant — the card is tinted. */
   trailing?: React.ReactNode;
 }) {
-  const carbs = sumNutrition(meal.items).carbs_g;
+  const totals = sumNutrition(meal.items);
   const eaten = Boolean(meal.eaten_at);
+  const itemCount = `${meal.items.length} ${meal.items.length === 1 ? 'item' : 'items'}`;
 
-  // Allergy hits outrank dietary/condition cautions.
-  const flagged = impact ? (impact.avoid.length > 0 ? impact.avoid : impact.caution) : [];
-  const flagIsAvoid = Boolean(impact && impact.avoid.length > 0);
-  const flagLabel =
-    flagged.length === 0
-      ? null
-      : `${flagIsAvoid ? 'Not for' : 'Check for'} ${flagged[0]}${
-          flagged.length > 1 ? ` +${flagged.length - 1}` : ''
-        }`;
+  const values = metrics
+    .map((m) => (totals[m] != null ? formatMetric(m, totals[m]!) : null))
+    .filter(Boolean);
 
-  const detail = [
-    meal.meal_time,
-    `${meal.items.length} ${meal.items.length === 1 ? 'item' : 'items'}`,
-    carbs != null ? `${Math.round(carbs)} g carbs` : null,
-    flagLabel,
-  ]
-    .filter(Boolean)
-    .join(' · ');
+  // An allergy reason replaces the item count — it's the thing to see.
+  const detail = [meal.meal_time, impact?.reason ?? itemCount, ...values].filter(Boolean).join(' · ');
 
-  const accent = flagLabel
-    ? flagIsAvoid
-      ? styles.accentAvoid
-      : styles.accentCaution
-    : null;
+  const accent =
+    impact?.level === 'avoid' ? styles.accentAvoid : impact?.level === 'caution' ? styles.accentCaution : null;
 
   return (
     <View style={[styles.block, eaten && styles.blockEaten, style]}>
@@ -72,7 +67,9 @@ export function MealBlock({
         style={styles.blockTap}
         onPress={onPress}
         activeOpacity={0.8}
-        accessibilityLabel={`${meal.name}, ${detail}${eaten ? ', eaten' : ''}`}
+        accessibilityLabel={`${meal.name}, ${detail}${eaten ? ', eaten' : ''}${
+          impact?.level === 'avoid' ? ', best avoided' : impact?.level === 'caution' ? ', worth checking' : ''
+        }`}
       >
       <View style={styles.blockText}>
         <Text style={styles.blockName} numberOfLines={1}>
@@ -109,9 +106,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
+  // Figma draws the 2px border outside the card; here it sits inside, so
+  // the padding gives back those 2px to keep the text lined up.
   blockEaten: {
     backgroundColor: '#e4f1ef', // Figma surface/tertiary
-    paddingLeft: 48,
+    borderWidth: 2,
+    borderColor: Colors.secondary,
+    paddingLeft: 46,
+    paddingRight: 14,
   },
   eatenStrip: {
     position: 'absolute',

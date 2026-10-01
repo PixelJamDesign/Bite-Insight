@@ -511,7 +511,8 @@ export default function MealPlanScreen() {
                     >
                       <MealBlock
                         meal={meal}
-                        impact={impact[meal.id]}
+                        impact={impact.byMeal[meal.id]}
+                        metrics={impact.metrics}
                         onPress={() => setActiveMealId(meal.id)}
                         style={styles.blockFill}
                       />

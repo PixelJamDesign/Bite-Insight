@@ -346,7 +346,7 @@ export const INSIGHT_WEIGHTS: Record<string, Partial<Record<InsightKey, number>>
   hypertension:      { sodium: 10 },
   ckd:               { sodium: 10, protein: 8, saturatedFat: 5 },
   pcos:              { sugar: 10, glycemic: 9, carbLoad: 7 },
-  keto:              { carbLoad: 10, glycemic: 8, sugar: 7 },
+  keto:              { carbLoad: 10, glycemic: 8, sugar: 7, protein: 6 },
   ibs:               { digestiveLoad: 10, fiber: 9, additives: 7 },
   crohns:            { digestiveLoad: 10, fiber: 9 },
   uc:                { digestiveLoad: 10, fiber: 9 },
