@@ -4,7 +4,8 @@
  * name, and the portion in a pill.
  *
  * Used by the Plan a meal sheet (portion pill opens the portion picker,
- * with a remove control after it) and the meal view (read-only).
+ * with a remove control after it) and the meal view (whole row opens the
+ * product or recipe).
  */
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,19 +23,27 @@ interface Props {
     quantity_unit: QuantityUnit | null;
     product_snapshot: { brand: string | null } | null;
   };
+  /** Makes the whole row a button, e.g. to open the product. */
+  onPress?: () => void;
   /** Makes the portion pill a button. */
   onPortionPress?: () => void;
   /** Extra control after the pill, e.g. a remove button. */
   trailing?: React.ReactNode;
 }
 
-export function MealItemRow({ item, onPortionPress, trailing }: Props) {
+export function MealItemRow({ item, onPress, onPortionPress, trailing }: Props) {
   const portion = portionLabel(item);
   const brand = item.kind === 'recipe' ? 'Recipe' : item.product_snapshot?.brand || 'Product';
   const pill = <Text style={styles.pillText}>{portion}</Text>;
 
+  const Row = onPress ? TouchableOpacity : View;
   return (
-    <View style={styles.row}>
+    <Row
+      style={styles.row}
+      {...(onPress
+        ? { onPress, activeOpacity: 0.85, accessibilityRole: 'button' as const, accessibilityLabel: `${item.title}, ${portion}` }
+        : {})}
+    >
       <View style={styles.thumb}>
         {item.image_url ? (
           <Image source={{ uri: item.image_url }} style={styles.thumbImage} resizeMode="cover" />
@@ -66,7 +75,7 @@ export function MealItemRow({ item, onPortionPress, trailing }: Props) {
         <View style={styles.pill}>{pill}</View>
       )}
       {trailing}
-    </View>
+    </Row>
   );
 }
 

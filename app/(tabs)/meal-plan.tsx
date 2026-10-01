@@ -59,7 +59,8 @@ import {
   toDateKey,
   weekDateKeys,
 } from '@/lib/mealPlan';
-import type { Meal } from '@/lib/types';
+import type { Meal, MealPlanEntry } from '@/lib/types';
+import { scanResultParamsFromSnapshot } from '@/lib/recipes';
 import ChevronLeftIcon from '@/assets/icons/meal-plan/chevron-left.svg';
 import ChevronRightIcon from '@/assets/icons/meal-plan/chevron-right.svg';
 import ChevronDownIcon from '@/assets/icons/meal-plan/chevron-down.svg';
@@ -85,6 +86,8 @@ const LANE_GAP = 5;
 const DEFAULT_SCROLL_HOUR = 7;
 /** "Now" marker colour from the design (not a theme token yet). */
 const NOW_COLOUR = '#00c8b3';
+/** useSheetAnimation's exit (200ms) plus a little slack. */
+const SHEET_EXIT_MS = 250;
 
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -300,9 +303,32 @@ export default function MealPlanScreen() {
   // draft changes while the planner is already in front.
   const hasDraftRef = useRef(false);
   hasDraftRef.current = draftMeal.draft !== null;
+  // Items in the meal view open their product (or recipe) page. The
+  // sheet steps aside while that's up and comes back on the way back.
+  const reopenMealIdRef = useRef<string | null>(null);
+  function openMealItem(item: MealPlanEntry) {
+    reopenMealIdRef.current = activeMealId;
+    setActiveMealId(null);
+    // Push once the sheet has slid away, or its Modal covers the new page.
+    setTimeout(() => {
+      if (item.kind === 'recipe' && item.recipe_id) {
+        router.push(`/recipes/${item.recipe_id}` as never);
+      } else if (item.product_snapshot) {
+        router.push({
+          pathname: '/scan-result',
+          params: scanResultParamsFromSnapshot(item.product_snapshot, item.barcode),
+        });
+      }
+    }, SHEET_EXIT_MS);
+  }
+
   useFocusEffect(
     useCallback(() => {
       if (hasDraftRef.current) setBuilderOpen(true);
+      if (reopenMealIdRef.current) {
+        setActiveMealId(reopenMealIdRef.current);
+        reopenMealIdRef.current = null;
+      }
     }, []),
   );
 
@@ -570,6 +596,7 @@ export default function MealPlanScreen() {
         onClose={() => setActiveMealId(null)}
         onChanged={refresh}
         onEdit={editMeal}
+        onOpenItem={openMealItem}
       />
     </ScreenLayout>
   );

@@ -6,6 +6,9 @@
  * The ⋯ button (MoreMenu — the system menu on iOS and Android, a sheet on
  * web) holds Eating now / Edit meal / Remove from plan. Changing the day
  * or time is done through Edit meal.
+ *
+ * Tapping an item calls onOpenItem; the planner opens the product (or
+ * recipe) page and brings this sheet back when the user comes back.
  */
 import { useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, Animated, useWindowDimensions } from 'react-native';
@@ -23,7 +26,7 @@ import EditIcon from '@/assets/icons/recipe-actions/edit.svg';
 import TrashIcon from '@/assets/icons/recipe-actions/trash.svg';
 import TickIcon from '@/assets/icons/recipe-actions/tick.svg';
 import UndoIcon from '@/assets/icons/recipe-actions/undo.svg';
-import type { Meal } from '@/lib/types';
+import type { Meal, MealPlanEntry } from '@/lib/types';
 
 /** At least half the screen (the iOS "medium" sheet height), so a
  *  one-item meal doesn't open as a sliver. */
@@ -39,9 +42,11 @@ interface Props {
   onChanged: () => void;
   /** Opens the builder on this meal. */
   onEdit: (meal: Meal) => void;
+  /** An item was tapped — show its product or recipe page. */
+  onOpenItem: (item: MealPlanEntry) => void;
 }
 
-export function MealActionsSheet({ visible, meal: mealProp, onClose, onChanged, onEdit }: Props) {
+export function MealActionsSheet({ visible, meal: mealProp, onClose, onChanged, onEdit, onOpenItem }: Props) {
   const { rendered, backdropOpacity, sheetTranslateY } = useSheetAnimation(visible);
   const { showToast } = useToast();
   const { height: windowHeight } = useWindowDimensions();
@@ -166,7 +171,7 @@ export function MealActionsSheet({ visible, meal: mealProp, onClose, onChanged, 
                 showsVerticalScrollIndicator={false}
               >
                 {meal.items.map((item) => (
-                  <MealItemRow key={item.id} item={item} />
+                  <MealItemRow key={item.id} item={item} onPress={() => onOpenItem(item)} />
                 ))}
               </FadingScrollView>
             </View>
