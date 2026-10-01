@@ -1,9 +1,9 @@
 /**
- * MoreMenu (iOS & Android) — the ⋯ Small Icon Button opens the system's
- * own menu, anchored to the button: the iOS pull-down menu (Liquid Glass
- * on iOS 26) and Android's dropdown menu. Built on Expo UI's MenuView.
+ * MoreMenu (Android) — the ⋯ Small Icon Button opens the system's
+ * own dropdown menu, anchored to the button. Built on Expo UI's MenuView.
  *
- * Web uses MoreMenu.tsx (an ActionsSheet) instead.
+ * Used on Android only — iOS has MoreMenu.ios.tsx (fixed item order), web
+ * uses MoreMenu.tsx (an ActionsSheet).
  *
  * Actions run after a short pause so the menu has gone before anything
  * presents a Modal.
