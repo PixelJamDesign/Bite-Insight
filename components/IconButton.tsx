@@ -11,6 +11,8 @@
  *             in Figma), 1px white border, Elevation (On Tint) Level 3
  *   onWhite — on white cards and sheets: white fill, 1px #aad4cd border,
  *             no shadow
+ *   outline — On White with its fill turned off, for tinted cards such as
+ *             an eaten meal (node 5909:13814)
  *
  * Optional `badge` shows the red count (e.g. unread notifications), sat
  * inside the top-right corner.
@@ -30,7 +32,7 @@ import {
 import { Colors, Shadows } from '@/constants/theme';
 
 export type IconButtonSize = 'regular' | 'small';
-export type IconButtonVariant = 'onTeal' | 'onWhite';
+export type IconButtonVariant = 'onTeal' | 'onWhite' | 'outline';
 
 interface Props {
   /** Icon element — 24px for regular, 20px for small. */
@@ -64,7 +66,7 @@ export function IconButton({
   const shell = [
     styles.base,
     size === 'regular' ? styles.regular : styles.small,
-    variant === 'onTeal' ? styles.onTeal : styles.onWhite,
+    variant === 'onTeal' ? styles.onTeal : variant === 'outline' ? styles.outline : styles.onWhite,
     disabled && styles.disabled,
     style,
   ];
@@ -125,6 +127,10 @@ const styles = StyleSheet.create({
   },
   onWhite: {
     backgroundColor: Colors.surface.secondary,
+    borderColor: '#aad4cd',
+  },
+  outline: {
+    backgroundColor: 'transparent',
     borderColor: '#aad4cd',
   },
   disabled: {

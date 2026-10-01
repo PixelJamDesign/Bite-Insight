@@ -652,7 +652,7 @@ export default function HomeDashboard() {
                     impact={todayImpact[meal.id]}
                     trailing={
                       <MoreMenu
-                        variant="onWhite"
+                        variant={meal.eaten_at ? 'outline' : 'onWhite'}
                         title={meal.name}
                         accessibilityLabel={`Actions for ${meal.name}`}
                         actions={mealActions(meal)}
