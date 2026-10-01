@@ -597,6 +597,8 @@ export default function MealPlanScreen() {
         onChanged={refresh}
         onEdit={editMeal}
         onOpenItem={openMealItem}
+        impact={activeMeal ? impact.byMeal[activeMeal.id] : undefined}
+        metrics={impact.metrics}
       />
     </ScreenLayout>
   );
