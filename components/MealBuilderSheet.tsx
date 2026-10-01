@@ -586,7 +586,7 @@ const styles = StyleSheet.create({
   body: {
     paddingHorizontal: 24,
     paddingTop: 8,
-    paddingBottom: 24,
+    paddingBottom: 32,
     gap: 32,
   },
   titleBlock: { gap: 4 },

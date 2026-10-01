@@ -1,12 +1,15 @@
 /**
- * FadingScrollView — a ScrollView whose top edge blurs and fades content
- * away once it has scrolled up past it, with no hard clip.
+ * FadingScrollView — a ScrollView whose edges never hard-clip: the top
+ * blurs and fades content away once it has scrolled up past it, and the
+ * bottom fades while there's more below.
  *
  *   - A mask fades the content to clear right at the top edge. The fade's
  *     depth follows the scroll offset (up to FADE_HEIGHT), so at rest
  *     nothing is faded and, once scrolled, the edge is always soft.
  *   - ProgressiveBlur sits over the same band, easing in over the first
  *     FADE_HEIGHT px, so what's leaving also blurs.
+ *   - A second mask does the same at the bottom, its depth following how
+ *     much content is left below (none once you reach the end).
  *
  * Drop-in for ScrollView in bottom sheets: `style` goes on an outer
  * wrapper (so flex / maxHeight rules still apply) and every other prop
@@ -27,7 +30,16 @@ export interface FadingScrollViewProps extends ScrollViewProps {
 }
 
 export const FadingScrollView = forwardRef<ScrollView, FadingScrollViewProps>(function FadingScrollView(
-  { style, fadeColor = '#ffffff', onScroll, scrollEventThrottle = 16, children, ...rest },
+  {
+    style,
+    fadeColor = '#ffffff',
+    onScroll,
+    onLayout,
+    onContentSizeChange,
+    scrollEventThrottle = 16,
+    children,
+    ...rest
+  },
   ref,
 ) {
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -39,6 +51,17 @@ export const FadingScrollView = forwardRef<ScrollView, FadingScrollViewProps>(fu
   // Slides the mask's fade band down from just above the edge, so its
   // depth matches how far the content has gone under.
   const maskShift = Animated.subtract(clampedY, FADE_HEIGHT);
+  // How far the content can still scroll — its height minus the view's.
+  const sizes = useRef({ content: 0, view: 0 });
+  const maxScroll = useRef(new Animated.Value(0)).current;
+  const updateMaxScroll = () =>
+    maxScroll.setValue(Math.max(0, sizes.current.content - sizes.current.view));
+  const bottomDepth = Animated.subtract(maxScroll, scrollY).interpolate({
+    inputRange: [0, FADE_HEIGHT],
+    outputRange: [0, FADE_HEIGHT],
+    extrapolate: 'clamp',
+  });
+  const bottomShift = Animated.multiply(bottomDepth, -1);
   const blurOpacity = scrollY.interpolate({
     inputRange: [0, FADE_HEIGHT],
     outputRange: [0, 1],
@@ -56,18 +79,38 @@ export const FadingScrollView = forwardRef<ScrollView, FadingScrollViewProps>(fu
           </Animated.View>
         }
       >
-        <Animated.ScrollView
-          ref={ref}
+        <MaskedView
           style={styles.fill}
-          scrollEventThrottle={scrollEventThrottle}
-          onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
-            useNativeDriver: true,
-            listener: onScroll,
-          })}
-          {...rest}
+          maskElement={
+            <Animated.View style={[styles.maskBottom, { transform: [{ translateY: bottomShift }] }]}>
+              <View style={styles.maskSolid} />
+              <LinearGradient colors={['#000', 'rgba(0,0,0,0)']} style={styles.maskFade} />
+            </Animated.View>
+          }
         >
-          {children}
-        </Animated.ScrollView>
+          <Animated.ScrollView
+            ref={ref}
+            style={styles.fill}
+            scrollEventThrottle={scrollEventThrottle}
+            onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+              useNativeDriver: true,
+              listener: onScroll,
+            })}
+            onLayout={(e) => {
+              sizes.current.view = e.nativeEvent.layout.height;
+              updateMaxScroll();
+              onLayout?.(e);
+            }}
+            onContentSizeChange={(w, h) => {
+              sizes.current.content = h;
+              updateMaxScroll();
+              onContentSizeChange?.(w, h);
+            }}
+            {...rest}
+          >
+            {children}
+          </Animated.ScrollView>
+        </MaskedView>
       </MaskedView>
       <Animated.View style={[styles.blur, { opacity: blurOpacity }]} pointerEvents="none">
         <ProgressiveBlur height={FADE_HEIGHT} color={fadeColor} />
@@ -85,6 +128,9 @@ const styles = StyleSheet.create({
   // the bottom.
   mask: { position: 'absolute', top: 0, left: 0, right: 0, bottom: -FADE_HEIGHT },
   maskFade: { height: FADE_HEIGHT },
+  // Same idea at the bottom: the fade sits just below the view until there's
+  // content under the edge, then slides up into it.
+  maskBottom: { position: 'absolute', top: 0, left: 0, right: 0, bottom: -FADE_HEIGHT },
   maskSolid: { flex: 1, backgroundColor: '#000' },
   blur: {
     position: 'absolute',

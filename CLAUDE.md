@@ -131,7 +131,7 @@ Reuse these before creating new components:
 | `MealTotalsList` | `@/components/MealTotalsList` | Stack of nutrition total rows with food icons |
 | `IconButton` | `@/components/IconButton` | Figma Icon Button: `size` regular (48) / small (36), `variant` onTeal / onWhite, optional `badge` |
 | `MoreMenu` | `@/components/MoreMenu` | ⋯ button with actions — system menu on iOS (SwiftUI Menu, fixed order) & Android (Expo UI MenuView), ActionsSheet on web. Items show in the same order everywhere. `size` small (36, default) / regular (48) |
-| `FadingScrollView` | `@/components/FadingScrollView` | ScrollView for bottom sheets: top edge blurs and fades content once scrolled (ProgressiveBlur). `fadeColor` for non-white sheets |
+| `FadingScrollView` | `@/components/FadingScrollView` | ScrollView for bottom sheets: no hard edges — top blurs and fades once scrolled, bottom fades while there is more below. `fadeColor` for non-white sheets |
 | `ActionsSheet` | `@/components/ActionsSheet` | Titled bottom sheet of action rows (RecipeActionsSheet layout) |
 | `AlertCard` | `@/components/AlertCard` | Figma alert (3190:5985): `tone` warning / caution / info, label pill + bold message |
 | `ImageViewer` | `@/components/ImageViewer` | Full-screen white view that fades in, photo shown whole, white Icon Button close top right. Pair with thumbnails that fill (crop) their box |

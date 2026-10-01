@@ -1,7 +1,8 @@
 /**
  * FadingScrollView (web) — same behaviour as FadingScrollView.tsx, with a
- * CSS mask on the scroll element instead of MaskedView. The mask's fade
- * depth follows the scroll offset, so there's never a hard edge.
+ * CSS mask on the scroll element instead of MaskedView. The top fade
+ * follows the scroll offset and the bottom fade the content left below,
+ * so neither edge is ever hard.
  */
 import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
 import {
@@ -17,13 +18,23 @@ import type { FadingScrollViewProps } from './FadingScrollView';
 
 const FADE_HEIGHT = 32;
 
-function maskFor(offset: number): string {
-  const depth = Math.max(0, Math.min(offset, FADE_HEIGHT));
-  return `linear-gradient(to bottom, transparent 0px, #000 ${depth}px)`;
+function maskFor(offset: number, remaining: number): string {
+  const top = Math.max(0, Math.min(offset, FADE_HEIGHT));
+  const bottom = Math.max(0, Math.min(remaining, FADE_HEIGHT));
+  return `linear-gradient(to bottom, transparent 0px, #000 ${top}px, #000 calc(100% - ${bottom}px), transparent 100%)`;
 }
 
 export const FadingScrollView = forwardRef<ScrollView, FadingScrollViewProps>(function FadingScrollView(
-  { style, fadeColor = '#ffffff', onScroll, scrollEventThrottle = 16, children, ...rest },
+  {
+    style,
+    fadeColor = '#ffffff',
+    onScroll,
+    onLayout,
+    onContentSizeChange,
+    scrollEventThrottle = 16,
+    children,
+    ...rest
+  },
   ref,
 ) {
   const scrollRef = useRef<ScrollView>(null);
@@ -34,7 +45,7 @@ export const FadingScrollView = forwardRef<ScrollView, FadingScrollViewProps>(fu
     const node = (scrollRef.current as unknown as { getScrollableNode?: () => HTMLElement })
       ?.getScrollableNode?.();
     if (!node) return;
-    const mask = maskFor(offset);
+    const mask = maskFor(offset, node.scrollHeight - node.clientHeight - offset);
     node.style.maskImage = mask;
     node.style.setProperty('-webkit-mask-image', mask);
   }, []);
@@ -46,6 +57,13 @@ export const FadingScrollView = forwardRef<ScrollView, FadingScrollViewProps>(fu
     onScroll?.(e);
   };
 
+  // Re-check the bottom fade when the content or the view changes size.
+  const remask = () => {
+    const node = (scrollRef.current as unknown as { getScrollableNode?: () => HTMLElement })
+      ?.getScrollableNode?.();
+    applyMask(node?.scrollTop ?? 0);
+  };
+
   return (
     <View style={[styles.wrap, style]}>
       <ScrollView
@@ -53,6 +71,14 @@ export const FadingScrollView = forwardRef<ScrollView, FadingScrollViewProps>(fu
         style={styles.fill}
         scrollEventThrottle={scrollEventThrottle}
         onScroll={handleScroll}
+        onLayout={(e) => {
+          remask();
+          onLayout?.(e);
+        }}
+        onContentSizeChange={(w, h) => {
+          remask();
+          onContentSizeChange?.(w, h);
+        }}
         {...rest}
       >
         {children}

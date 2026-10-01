@@ -275,6 +275,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_300Light',
     color: Colors.secondary,
   },
-  scrollBody: { gap: 24, paddingBottom: 8 },
+  // Room under the last block, so it doesn't sit on the home indicator.
+  scrollBody: { gap: 24, paddingBottom: 32 },
   items: { gap: 8 },
 });
