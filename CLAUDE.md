@@ -295,6 +295,7 @@ Before starting any v1.6.0 work, read the relevant feature spec file first.
 |---|---|---|
 | Cancer health condition | `FEATURE-cancer-condition.md` | Ready to implement |
 | Cystic Fibrosis condition | `FEATURE-cystic-fibrosis-condition.md` | Ready to implement |
+| Guardian control for children's accounts | `FEATURE-guardian-control.md` | Ready to implement (v2.1.0) |
 
 Each spec file contains: research summary, all code blocks pre-written in the exact format of the target files, a subtype design, conflict rules, localisation keys, copy guidelines, and a testing checklist. Implement by reading the spec and applying each section to the listed files in order.
 
