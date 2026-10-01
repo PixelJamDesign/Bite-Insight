@@ -57,8 +57,10 @@ import { AddToRecipeSheet } from '@/components/AddToRecipeSheet';
 import { MealBuilderSheet } from '@/components/MealBuilderSheet';
 import { useDraftMeal } from '@/lib/draftMealContext';
 import { draftItemFromProduct, nowRoundedTime, toDateKey } from '@/lib/mealPlan';
-import { ProductActionsSheet } from '@/components/ProductActionsSheet';
-import { ProductMoreMenu } from '@/components/ProductMoreMenu';
+import { MoreMenu } from '@/components/MoreMenu';
+import MealPlanActionIcon from '@/assets/icons/recipe-actions/meal-plan.svg';
+import RecipeActionIcon from '@/assets/icons/recipe-actions/recipe.svg';
+import EditActionIcon from '@/assets/icons/recipe-actions/edit.svg';
 import { buildProductSnapshot } from '@/lib/recipes';
 
 /** Coerce a value to number, falling back to a query-param source */
@@ -712,8 +714,7 @@ export default function ScanResultScreen() {
   const { t: tpo } = useTranslation('profileOptions');
   const { showReviewPrompt, recheckAfterScan, dismissReviewPrompt, completeReviewPrompt } = useReviewPrompt();
 
-  // Product "more" menu and the sheets it opens
-  const [actionsOpen, setActionsOpen] = useState(false);
+  // Sheets opened from the product's ⋯ menu
   const [addToRecipeOpen, setAddToRecipeOpen] = useState(false);
   // "Add to meal plan" opens the planner's own Plan a meal drawer with
   // this product already in it.
@@ -732,11 +733,6 @@ export default function ScanResultScreen() {
       }
     }, []),
   );
-  /** Opens the next sheet once the actions sheet (or the iOS menu) has
-   *  finished closing — iOS freezes if one Modal opens over another. */
-  function afterActionsClose(open: () => void) {
-    setTimeout(open, 350);
-  }
 
   // Page-level entrance/exit animation
   const { opacity: pageOpacity, translateX: pageTranslateX, animateExit: pageExit } = usePageTransition();
@@ -1968,11 +1964,36 @@ export default function ScanResultScreen() {
             <BigBackIcon width={32} height={32} />
           </TouchableOpacity>
           {session?.user?.id && (
-            <ProductMoreMenu
-              onOpenSheet={() => setActionsOpen(true)}
-              onAddToMealPlan={() => afterActionsClose(planThisProduct)}
-              onAddToRecipe={() => afterActionsClose(() => setAddToRecipeOpen(true))}
-              onImproveDetails={openImproveDetails}
+            <MoreMenu
+              title="Product actions"
+              accessibilityLabel="Product actions"
+              actions={[
+                {
+                  key: 'plan',
+                  label: 'Add to meal plan',
+                  subtitle: 'Choose how much, then a day and a time',
+                  systemImage: 'calendar.badge.plus',
+                  Icon: MealPlanActionIcon,
+                  onPress: planThisProduct,
+                },
+                {
+                  key: 'recipe',
+                  label: 'Add to recipe',
+                  subtitle: "Use it in a new recipe or one you've already made",
+                  systemImage: 'fork.knife',
+                  Icon: RecipeActionIcon,
+                  onPress: () => setAddToRecipeOpen(true),
+                },
+                {
+                  key: 'improve',
+                  label: 'Improve item details',
+                  subtitle: 'Something missing or wrong? Fix it on Open Food Facts for everyone',
+                  systemImage: 'square.and.pencil',
+                  Icon: EditActionIcon,
+                  iconSize: 20,
+                  onPress: openImproveDetails,
+                },
+              ]}
             />
           )}
         </View>
@@ -3419,14 +3440,6 @@ export default function ScanResultScreen() {
       />
 
       {/* ── Product actions menu + the sheets it opens ── */}
-      <ProductActionsSheet
-        visible={actionsOpen}
-        onClose={() => setActionsOpen(false)}
-        onAddToMealPlan={() => afterActionsClose(planThisProduct)}
-        onAddToRecipe={() => afterActionsClose(() => setAddToRecipeOpen(true))}
-        onImproveDetails={openImproveDetails}
-      />
-
       <MealBuilderSheet
         visible={builderOpen}
         onHide={() => {

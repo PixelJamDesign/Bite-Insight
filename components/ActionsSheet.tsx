@@ -1,12 +1,11 @@
 /**
- * ProductActionsSheet — the "more" menu on a scanned product.
- * Same layout as RecipeActionsSheet (and reuses its ActionRow):
- *   • Add to meal plan
- *   • Add to recipe
- *   • Improve item details (edit the Open Food Facts entry)
+ * ActionsSheet — a titled bottom sheet of action rows, in the
+ * RecipeActionsSheet layout (and reusing its ActionRow). It's what a
+ * MoreMenu opens on Android and web; iOS uses the system menu instead.
  *
- * Each row closes this sheet first; the parent opens the next sheet after
- * a short delay so two Modals never overlap (iOS double-modal freeze).
+ * Picking a row closes the sheet first and runs the action once it has
+ * gone, so an action that opens another Modal never stacks on this one
+ * (iOS double-modal freeze).
  */
 import { View, Text, StyleSheet, TouchableOpacity, Modal, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,31 +13,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
 import { useSheetAnimation } from '@/lib/useSheetAnimation';
 import { ActionRow, SPRING_WATER } from '@/components/RecipeActionsSheet';
-import MealPlanIcon from '@/assets/icons/recipe-actions/meal-plan.svg';
-import RecipeIcon from '@/assets/icons/recipe-actions/recipe.svg';
-import EditIcon from '@/assets/icons/recipe-actions/edit.svg';
+import type { MoreMenuAction } from '@/components/moreMenuTypes';
+
+const DESTRUCTIVE_TINT = 'rgba(255, 47, 97, 0.1)';
+/** Time for this sheet's exit animation before the action runs. */
+const CLOSE_DELAY_MS = 350;
 
 interface Props {
   visible: boolean;
   onClose: () => void;
-  onAddToMealPlan: () => void;
-  onAddToRecipe: () => void;
-  onImproveDetails: () => void;
+  title: string;
+  actions: MoreMenuAction[];
 }
 
-export function ProductActionsSheet({
-  visible,
-  onClose,
-  onAddToMealPlan,
-  onAddToRecipe,
-  onImproveDetails,
-}: Props) {
+export function ActionsSheet({ visible, onClose, title, actions }: Props) {
   const { rendered, backdropOpacity, sheetTranslateY } = useSheetAnimation(visible);
-
-  function pick(action: () => void) {
-    onClose();
-    action();
-  }
 
   return (
     <Modal visible={rendered} transparent animationType="none" onRequestClose={onClose}>
@@ -63,33 +52,24 @@ export function ProductActionsSheet({
             </View>
 
             <View style={styles.body}>
-              <Text style={styles.title}>Product actions</Text>
-
+              <Text style={styles.title} numberOfLines={2}>
+                {title}
+              </Text>
               <View style={styles.rows}>
-                <ActionRow
-                  IconSvg={MealPlanIcon}
-                  iconSize={22}
-                  tint={SPRING_WATER}
-                  title="Add to meal plan"
-                  subtitle="Choose how much, then a day and a time"
-                  onPress={() => pick(onAddToMealPlan)}
-                />
-                <ActionRow
-                  IconSvg={RecipeIcon}
-                  iconSize={22}
-                  tint={SPRING_WATER}
-                  title="Add to recipe"
-                  subtitle="Use it in a new recipe or one you've already made"
-                  onPress={() => pick(onAddToRecipe)}
-                />
-                <ActionRow
-                  IconSvg={EditIcon}
-                  iconSize={20}
-                  tint={SPRING_WATER}
-                  title="Improve item details"
-                  subtitle="Something missing or wrong? Fix it on Open Food Facts for everyone"
-                  onPress={() => pick(onImproveDetails)}
-                />
+                {actions.map((a) => (
+                  <ActionRow
+                    key={a.key}
+                    IconSvg={a.Icon}
+                    iconSize={a.iconSize ?? 22}
+                    tint={a.destructive ? DESTRUCTIVE_TINT : SPRING_WATER}
+                    title={a.label}
+                    subtitle={a.subtitle ?? ''}
+                    onPress={() => {
+                      onClose();
+                      setTimeout(a.onPress, CLOSE_DELAY_MS);
+                    }}
+                  />
+                ))}
               </View>
             </View>
           </SafeAreaView>

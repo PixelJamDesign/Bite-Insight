@@ -19,12 +19,15 @@ export function MealBlock({
   impact,
   onPress,
   style,
+  trailing,
 }: {
   meal: Meal;
   impact?: MealImpact;
   onPress: () => void;
   /** Sizing from the caller — the timeline fixes the height, lists let it hug. */
   style?: StyleProp<ViewStyle>;
+  /** Extra control on the right, e.g. the dashboard's ⋯ menu. */
+  trailing?: React.ReactNode;
 }) {
   const carbs = sumNutrition(meal.items).carbs_g;
   const eaten = Boolean(meal.eaten_at);
@@ -71,6 +74,7 @@ export function MealBlock({
         </Text>
       </View>
       {eaten && <EatenTickIcon width={20} height={20} />}
+      {trailing}
     </TouchableOpacity>
   );
 }

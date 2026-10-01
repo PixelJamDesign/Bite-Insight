@@ -37,7 +37,17 @@ import { PlusBadge } from '@/components/PlusBadge';
 import { CameraIcon } from '@/components/MenuIcons';
 import { MealBlock } from '@/components/MealBlock';
 import { IconButton } from '@/components/IconButton';
-import { listMeals, toDateKey } from '@/lib/mealPlan';
+import { deleteMeal, listMeals, setMealEaten, toDateKey } from '@/lib/mealPlan';
+import { useDraftMeal } from '@/lib/draftMealContext';
+import { useToast } from '@/lib/toastContext';
+import { MealBuilderSheet } from '@/components/MealBuilderSheet';
+import { MoreMenu } from '@/components/MoreMenu';
+import type { MoreMenuAction } from '@/components/moreMenuTypes';
+import MealPlanActionIcon from '../../assets/icons/recipe-actions/meal-plan.svg';
+import TickActionIcon from '../../assets/icons/recipe-actions/tick.svg';
+import UndoActionIcon from '../../assets/icons/recipe-actions/undo.svg';
+import EditActionIcon from '../../assets/icons/recipe-actions/edit.svg';
+import TrashActionIcon from '../../assets/icons/recipe-actions/trash.svg';
 import { useMealPlanImpact } from '@/lib/useMealPlan';
 import { NotificationBell } from '@/components/NotificationBell';
 import { FlagReasonSheet } from '@/components/FlagReasonSheet';
@@ -277,18 +287,104 @@ export default function HomeDashboard() {
   // Today's meal plan for the dashboard card. Loaded on its own so a
   // failure here never holds up the rest of the dashboard.
   const [todayMeals, setTodayMeals] = useState<Meal[]>([]);
+  const loadTodayMeals = useCallback(async () => {
+    const userId = session?.user?.id;
+    if (!userId) return;
+    const key = toDateKey(new Date());
+    try {
+      setTodayMeals(await listMeals(userId, key, key));
+    } catch {
+      // Keep what's showing; the next focus tries again.
+    }
+  }, [session?.user?.id]);
   useFocusEffect(
     useCallback(() => {
-      const userId = session?.user?.id;
-      if (!userId) return;
-      let cancelled = false;
-      const key = toDateKey(new Date());
-      listMeals(userId, key, key)
-        .then((rows) => { if (!cancelled) setTodayMeals(rows); })
-        .catch(() => {});
-      return () => { cancelled = true; };
-    }, [session?.user?.id]),
+      loadTodayMeals();
+    }, [loadTodayMeals]),
   );
+
+  // ⋯ menu on each meal. "Edit this meal" opens the planner's Plan a meal
+  // drawer here; it hides itself while a picker screen adds an item and
+  // comes back when the dashboard is in front again.
+  const draftMeal = useDraftMeal();
+  const { showToast } = useToast();
+  const [builderOpen, setBuilderOpen] = useState(false);
+  const builderHiddenRef = useRef(false);
+  const hasDraftRef = useRef(false);
+  hasDraftRef.current = draftMeal.draft !== null;
+  useFocusEffect(
+    useCallback(() => {
+      if (builderHiddenRef.current && hasDraftRef.current) {
+        builderHiddenRef.current = false;
+        setBuilderOpen(true);
+      }
+    }, []),
+  );
+
+  function openInPlanner() {
+    router.push({ pathname: '/meal-plan', params: { date: toDateKey(new Date()) } } as any);
+  }
+
+  async function toggleEaten(meal: Meal) {
+    const ok = await setMealEaten(meal.id, !meal.eaten_at);
+    if (ok) loadTodayMeals();
+    else showToast({ message: 'Could not update this meal. Please try again.', variant: 'error' });
+  }
+
+  function editMeal(meal: Meal) {
+    draftMeal.startEdit(meal);
+    setBuilderOpen(true);
+  }
+
+  async function removeMeal(meal: Meal) {
+    const ok = await deleteMeal(meal.id);
+    if (ok) {
+      loadTodayMeals();
+      showToast({ message: `Removed "${meal.name}" from your plan`, variant: 'info' });
+    } else {
+      showToast({ message: 'Could not remove this meal. Please try again.', variant: 'error' });
+    }
+  }
+
+  function mealActions(meal: Meal): MoreMenuAction[] {
+    const eaten = Boolean(meal.eaten_at);
+    return [
+      {
+        key: 'view',
+        label: 'View in meal plan',
+        subtitle: 'See it on today\'s timeline',
+        systemImage: 'calendar',
+        Icon: MealPlanActionIcon,
+        onPress: openInPlanner,
+      },
+      {
+        key: 'eaten',
+        label: eaten ? 'Mark as not eaten' : 'I have eaten this',
+        subtitle: eaten ? 'Put it back to planned' : 'Tick it off with the time you ate it',
+        systemImage: eaten ? 'arrow.uturn.backward' : 'checkmark.circle',
+        Icon: eaten ? UndoActionIcon : TickActionIcon,
+        onPress: () => toggleEaten(meal),
+      },
+      {
+        key: 'edit',
+        label: 'Edit this meal',
+        subtitle: 'Change the time, items or portions',
+        systemImage: 'pencil',
+        Icon: EditActionIcon,
+        iconSize: 20,
+        onPress: () => editMeal(meal),
+      },
+      {
+        key: 'remove',
+        label: 'Remove from plan',
+        subtitle: 'Takes this meal off today',
+        systemImage: 'trash',
+        Icon: TrashActionIcon,
+        destructive: true,
+        onPress: () => removeMeal(meal),
+      },
+    ];
+  }
   // Household flags for each meal, so the blocks match the planner.
   const todayImpact = useMealPlanImpact(todayMeals);
 
@@ -554,6 +650,14 @@ export default function HomeDashboard() {
                     key={meal.id}
                     meal={meal}
                     impact={todayImpact[meal.id]}
+                    trailing={
+                      <MoreMenu
+                        variant="onWhite"
+                        title={meal.name}
+                        accessibilityLabel={`Actions for ${meal.name}`}
+                        actions={mealActions(meal)}
+                      />
+                    }
                     onPress={() => router.push('/meal-plan' as any)}
                     style={styles.mealBlock}
                   />
@@ -703,6 +807,20 @@ export default function HomeDashboard() {
           />
         </View>
       </View>
+      {/* ── Plan a meal drawer (Edit this meal) ── */}
+      <MealBuilderSheet
+        visible={builderOpen}
+        onHide={() => {
+          builderHiddenRef.current = true;
+          setBuilderOpen(false);
+        }}
+        onDone={({ saved }) => {
+          builderHiddenRef.current = false;
+          setBuilderOpen(false);
+          if (saved) loadTodayMeals();
+        }}
+      />
+
       {/* ── Flag Reason Sheet ── */}
       <FlagReasonSheet
         visible={!!flagReasonTarget}
