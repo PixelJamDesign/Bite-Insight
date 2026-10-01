@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   View,
@@ -22,6 +22,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { ConfirmSheet } from './ConfirmSheet';
 import { PolicySheet } from './PolicySheet';
 import { PlusBadge } from './PlusBadge';
+import { IconButton } from './IconButton';
+import Logo from '@/assets/images/logo.svg';
 import {
   MenuDashboardIcon,
   MenuIngredientsIcon,
@@ -87,6 +89,72 @@ import {
 
 type MenuScreen = 'main' | 'ingredients' | 'account' | 'settings' | 'security' | 'mydata' | 'password' | 'offlinedb' | 'help' | 'marketing';
 
+/** Where each sub-page's back button goes. */
+const PARENT_SCREEN: Record<Exclude<MenuScreen, 'main'>, MenuScreen> = {
+  ingredients: 'main',
+  account: 'main',
+  settings: 'main',
+  security: 'settings',
+  mydata: 'settings',
+  offlinedb: 'settings',
+  help: 'settings',
+  marketing: 'settings',
+  password: 'security',
+};
+
+// ─── Menu bar: logo on the main menu, back button on sub-pages ─────────────
+// The bar itself belongs to whichever screen opened the menu (dashboard,
+// ScreenLayout, food search), so the open sub-page is shared through a
+// tiny store. Only one menu is ever open.
+
+let menuBack: (() => void) | null = null;
+const menuBackListeners = new Set<() => void>();
+function setMenuBack(back: (() => void) | null) {
+  menuBack = back;
+  menuBackListeners.forEach((l) => l());
+}
+function subscribeMenuBack(l: () => void) {
+  menuBackListeners.add(l);
+  return () => menuBackListeners.delete(l);
+}
+const getMenuBack = () => menuBack;
+
+/**
+ * Leading slot of the bar shown while the menu is open: the logo on the
+ * main menu, the Header Nav back button on a sub-page (Settings, Account…),
+ * the same as every other titled page.
+ */
+export function MenuBarLeading({ onLogoPress }: { onLogoPress: () => void }) {
+  const back = useSyncExternalStore(subscribeMenuBack, getMenuBack, getMenuBack);
+  const fade = useRef(new Animated.Value(1)).current;
+  const hasBack = back !== null;
+  useEffect(() => {
+    fade.setValue(0);
+    Animated.timing(fade, { toValue: 1, duration: 200, easing: Easing.out(Easing.quad), useNativeDriver: true }).start();
+  }, [hasBack, fade]);
+  return (
+    <Animated.View style={[menuBarStyles.leading, { opacity: fade }]}>
+      {back ? (
+        <IconButton
+          icon={<MenuArrowLeftIcon color={Colors.primary} size={16} />}
+          variant="onWhite"
+          onPress={back}
+          hitSlop={0}
+          accessibilityLabel="Back"
+        />
+      ) : (
+        <TouchableOpacity onPress={onLogoPress} activeOpacity={0.7} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+          <Logo width={141} height={36} />
+        </TouchableOpacity>
+      )}
+    </Animated.View>
+  );
+}
+
+const menuBarStyles = StyleSheet.create({
+  leading: { minHeight: 48, justifyContent: 'center' },
+});
+
 // ─── Shared sub-components ────────────────────────────────────────────────────
 
 interface NavItemProps {
@@ -148,10 +216,6 @@ function IngredientsScreen({ goBack, onGo }: { goBack: () => void; onGo: (route:
   return (
     <>
       <View style={styles.subHeader}>
-        <TouchableOpacity style={styles.backBtn} onPress={goBack} activeOpacity={0.7}>
-          <MenuArrowLeftIcon color={Colors.secondary} size={16} />
-          <Text style={styles.backText}>{tc('buttons.back')}</Text>
-        </TouchableOpacity>
         <Text style={styles.subTitle}>{t('ingredients.title')}</Text>
       </View>
       <View style={styles.navList}>
@@ -172,10 +236,6 @@ function AccountScreen({ goBack, onGo, onNavigate }: { goBack: () => void; onGo:
   return (
     <>
       <View style={styles.subHeader}>
-        <TouchableOpacity style={styles.backBtn} onPress={goBack} activeOpacity={0.7}>
-          <MenuArrowLeftIcon color={Colors.secondary} size={16} />
-          <Text style={styles.backText}>{tc('buttons.back')}</Text>
-        </TouchableOpacity>
         <Text style={styles.subTitle}>{t('account.title')}</Text>
       </View>
       <View style={styles.navList}>
@@ -199,10 +259,6 @@ function SettingsScreen({ goBack, onNavigate, onOpenPolicy, onGo }: { goBack: ()
   return (
     <>
       <View style={styles.subHeader}>
-        <TouchableOpacity style={styles.backBtn} onPress={goBack} activeOpacity={0.7}>
-          <MenuArrowLeftIcon color={Colors.secondary} size={16} />
-          <Text style={styles.backText}>{tc('buttons.back')}</Text>
-        </TouchableOpacity>
         <Text style={styles.subTitle}>{t('settings.title')}</Text>
       </View>
       <View style={styles.navList}>
@@ -234,10 +290,6 @@ function HelpSupportScreen({ goBack, onGo }: { goBack: () => void; onGo: (route:
   return (
     <>
       <View style={styles.subHeader}>
-        <TouchableOpacity style={styles.backBtn} onPress={goBack} activeOpacity={0.7}>
-          <MenuArrowLeftIcon color={Colors.secondary} size={16} />
-          <Text style={styles.backText}>{tc('buttons.back')}</Text>
-        </TouchableOpacity>
         <Text style={styles.subTitle}>{t('help.title')}</Text>
       </View>
       <View style={styles.navList}>
@@ -284,10 +336,6 @@ function SecurityScreen({ goBack, onNavigate }: { goBack: () => void; onNavigate
   return (
     <>
       <View style={styles.subHeader}>
-        <TouchableOpacity style={styles.backBtn} onPress={goBack} activeOpacity={0.7}>
-          <MenuArrowLeftIcon color={Colors.secondary} size={16} />
-          <Text style={styles.backText}>{tc('buttons.back')}</Text>
-        </TouchableOpacity>
         <Text style={styles.subTitle}>{t('security.title')}</Text>
       </View>
       <View style={styles.navList}>
@@ -428,10 +476,6 @@ function MarketingPreferencesScreen({ goBack }: { goBack: () => void }) {
   return (
     <>
       <View style={styles.subHeader}>
-        <TouchableOpacity style={styles.backBtn} onPress={goBack} activeOpacity={0.7}>
-          <MenuArrowLeftIcon color={Colors.secondary} size={16} />
-          <Text style={styles.backText}>{tc('buttons.back')}</Text>
-        </TouchableOpacity>
         <Text style={styles.subTitle}>{t('marketingPreferences.title')}</Text>
       </View>
       <View style={styles.navList}>
@@ -635,10 +679,6 @@ function MyDataScreen({ goBack }: { goBack: () => void }) {
   return (
     <>
       <View style={styles.subHeader}>
-        <TouchableOpacity style={styles.backBtn} onPress={goBack} activeOpacity={0.7}>
-          <MenuArrowLeftIcon color={Colors.secondary} size={16} />
-          <Text style={styles.backText}>{tc('buttons.back')}</Text>
-        </TouchableOpacity>
         <View style={myDataStyles.titleRow}>
           <Text style={styles.subTitle}>{t('myData.title')}</Text>
           {stats.joinedAt ? (
@@ -988,10 +1028,6 @@ function OfflineDatabaseScreen({ goBack }: { goBack: () => void }) {
   return (
     <>
       <View style={styles.subHeader}>
-        <TouchableOpacity style={styles.backBtn} onPress={goBack} activeOpacity={0.7}>
-          <MenuArrowLeftIcon color={Colors.secondary} size={16} />
-          <Text style={styles.backText}>{tc('buttons.back')}</Text>
-        </TouchableOpacity>
         <Text style={styles.subTitle}>{t('offlineDb.title')}</Text>
       </View>
 
@@ -1434,10 +1470,6 @@ function ChangePasswordScreen({ goBack }: { goBack: () => void }) {
   return (
     <>
       <View style={styles.subHeader}>
-        <TouchableOpacity style={styles.backBtn} onPress={goBack} activeOpacity={0.7}>
-          <MenuArrowLeftIcon color={Colors.secondary} size={16} />
-          <Text style={styles.backText}>{tc('buttons.back')}</Text>
-        </TouchableOpacity>
         <Text style={styles.subTitle}>{t('password.title')}</Text>
       </View>
 
@@ -1737,9 +1769,17 @@ export function MenuModal({ onClose, onNavigate }: MenuModalProps) {
   const bFade = useRef(new Animated.Value(0)).current;
 
   const animTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
+
+  // The bar goes back to the logo whenever the menu goes away.
+  useEffect(() => () => setMenuBack(null), []);
 
   function navigate(newScreen: MenuScreen, isBack = false) {
     if (isAnimating) return;
+    // Through the ref: the bar keeps this function, and navigate reads
+    // the slot state of the render it came from.
+    setMenuBack(newScreen === 'main' ? null : () => navigateRef.current(PARENT_SCREEN[newScreen], true));
     const dir = isBack ? -1 : 1;
     const slideDistance = width * 0.22;
     setSlotState(prev => ({ ...prev, isAnimating: true }));
@@ -1815,6 +1855,7 @@ export function MenuModal({ onClose, onNavigate }: MenuModalProps) {
     setSlotState({ frontIsA: true, isAnimating: false });
     setSlotAScreen('main');
     setSlotBScreen('main');
+    setMenuBack(null);
     onClose();
   }
 
@@ -1829,6 +1870,7 @@ export function MenuModal({ onClose, onNavigate }: MenuModalProps) {
     setSlotState({ frontIsA: true, isAnimating: false });
     setSlotAScreen('main');
     setSlotBScreen('main');
+    setMenuBack(null);
     onNavigate();
     transitionTo(route);
   }
@@ -1998,18 +2040,6 @@ const styles = StyleSheet.create({
   subHeader: {
     gap: 12,
     paddingTop: 16,
-  },
-  backBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  backText: {
-    fontSize: 16,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.secondary,
-    letterSpacing: -0.32,
   },
   subTitle: {
     fontSize: 24,

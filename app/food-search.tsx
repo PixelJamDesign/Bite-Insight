@@ -33,7 +33,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMenu } from '@/lib/menuContext';
 import Logo from '../assets/images/logo.svg';
 import { NoImagePlaceholder } from '@/components/NoImagePlaceholder';
-import { MenuModal } from '@/components/MenuModal';
+import { MenuModal, MenuBarLeading } from '@/components/MenuModal';
 import { LottieLoader } from '@/components/LottieLoader';
 import { sentenceCase } from '@/lib/text';
 import { safeBack } from '@/lib/safeBack';
@@ -1123,7 +1123,7 @@ export default function FoodSearchScreen() {
         <Animated.View style={[StyleSheet.absoluteFill, styles.menuOverlay, { opacity: menuAnim }]}>
           <MenuModal onClose={closeMenu} onNavigate={closeMenuInstant} />
           <View style={[styles.menuHeader, { paddingTop: insets.top + Spacing.m }]}>
-            <Logo width={141} height={36} />
+            <MenuBarLeading onLogoPress={() => { closeMenuInstant(); router.push('/(tabs)/dashboard' as any); }} />
             <IconButton
               icon={<Ionicons name="close" size={24} color={Colors.primary} />}
               onPress={closeMenu}

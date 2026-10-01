@@ -14,9 +14,8 @@ import { DashboardIcon, RecipesIcon, MealPlanIcon, ScannerIcon } from '@/compone
 import { useCachedAvatar } from '@/lib/useCachedAvatar';
 import { TabBarSlideProvider, useTabBarSlide } from '@/lib/tabBarContext';
 import { useMenu } from '@/lib/menuContext';
-import { MenuModal } from '@/components/MenuModal';
+import { MenuModal, MenuBarLeading } from '@/components/MenuModal';
 import { NotificationsOverlay } from '@/components/NotificationsOverlay';
-import Logo from '../../assets/images/logo.svg';
 
 function getInitials(name: string | null | undefined): string {
   if (!name) return '??';
@@ -210,7 +209,8 @@ function MenuOverlay() {
       <MenuModal onClose={closeMenu} onNavigate={closeMenuInstant} />
       {/* Header sits on top of the scroll content */}
       <View style={[styles.menuHeader, { paddingTop: insets.top + 24 }]}>
-        <Logo width={141} height={36} />
+        {/* Opened from the dashboard, so the logo just closes the menu */}
+        <MenuBarLeading onLogoPress={closeMenu} />
         <IconButton
           icon={<Ionicons name="close" size={24} color={Colors.primary} />}
           variant="onWhite"

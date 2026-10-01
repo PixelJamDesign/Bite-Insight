@@ -33,11 +33,10 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRouter } from 'expo-router';
 import { Colors } from '@/constants/theme';
-import { MenuModal } from '@/components/MenuModal';
+import { MenuModal, MenuBarLeading } from '@/components/MenuModal';
 import { IconButton } from '@/components/IconButton';
 import { MenuArrowLeftIcon } from '@/components/MenuIcons';
 import { ProgressiveBlur } from '@/components/ProgressiveBlur';
-import Logo from '@/assets/images/logo.svg';
 
 /** A subtitle, or a function that builds it for the large or compact header. */
 type Subtitle = ReactNode | ((compact: boolean) => ReactNode);
@@ -266,14 +265,9 @@ export function ScreenLayout({ title, subtitle, headerExtension, onBack, childre
         {/* ── Button row (always on top) ── */}
         <View style={[styles.navBar, menuOpen && styles.navBarMenu, { paddingTop: navTop }]}>
           {menuOpen ? (
-            <TouchableOpacity
-              style={styles.logo}
-              onPress={() => router.push('/(tabs)/dashboard' as any)}
-              activeOpacity={0.7}
-              hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
-            >
-              <Logo width={141} height={36} />
-            </TouchableOpacity>
+            <View style={styles.logo}>
+              <MenuBarLeading onLogoPress={() => router.push('/(tabs)/dashboard' as any)} />
+            </View>
           ) : (
             <>
               <IconButton
