@@ -22,11 +22,10 @@ import {
   TouchableOpacity,
   TextInput,
   Modal,
-  Platform,
-  KeyboardAvoidingView,
   Animated,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useKeyboardHeight } from '@/lib/useKeyboardHeight';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Radius } from '@/constants/theme';
 import {
@@ -264,6 +263,8 @@ export function QuantityPickerBody({
 export function QuantityPickerSheet(props: Props) {
   const { visible, onClose } = props;
   const { rendered, backdropOpacity, sheetTranslateY } = useSheetAnimation(visible);
+  const insets = useSafeAreaInsets();
+  const keyboardHeight = useKeyboardHeight();
 
   return (
     <Modal visible={rendered} transparent animationType="none" onRequestClose={onClose}>
@@ -271,12 +272,15 @@ export function QuantityPickerSheet(props: Props) {
         <Animated.View style={[styles.backdropTint, { opacity: backdropOpacity }]}>
           <TouchableOpacity style={StyleSheet.absoluteFill} onPress={onClose} activeOpacity={1} />
         </Animated.View>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        <View
           style={{ width: '100%' }}
         >
           <Animated.View style={{ transform: [{ translateY: sheetTranslateY }] }}>
-          <SafeAreaView style={styles.sheet} edges={['bottom']}>
+          {/* Grows over the keyboard instead of being lifted above it. */}
+          <SafeAreaView
+            style={[styles.sheet, keyboardHeight > 0 && { paddingBottom: keyboardHeight - insets.bottom + 16 }]}
+            edges={['bottom']}
+          >
             {/* Handle */}
             <View style={styles.handle} />
 
@@ -295,7 +299,7 @@ export function QuantityPickerSheet(props: Props) {
             <QuantityPickerBody {...props} />
           </SafeAreaView>
           </Animated.View>
-        </KeyboardAvoidingView>
+        </View>
       </View>
     </Modal>
   );

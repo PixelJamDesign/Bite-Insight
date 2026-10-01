@@ -13,6 +13,9 @@
  * inside this one sheet rather than sheets of their own: a second Modal
  * on top of an open one freezes iOS (see app/recipes/pick-scan.tsx).
  *
+ * Moving between steps fades the old one out, resizes the sheet to fit the
+ * next, and fades that one in (Figma "Add to Meal Plan", 5912:15662).
+ *
  * Search, scan and the recipe / scan-history pickers are full screens.
  * To reach them the sheet hides itself (onHide) and the planner reopens
  * it when it regains focus. The meal itself lives in DraftMealProvider,
@@ -29,12 +32,12 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
-  KeyboardAvoidingView,
   Modal,
   Animated,
   useWindowDimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import Reanimated, { FadeIn, FadeOut, LayoutAnimationConfig, LinearTransition } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Colors, Radius } from '@/constants/theme';
@@ -45,6 +48,7 @@ import { AddIngredientOptions, type AddSource } from '@/components/AddIngredient
 import { QuantityPickerBody } from '@/components/QuantityPickerSheet';
 import { MealTimeBody } from '@/components/MealTimeSheet';
 import { useSheetAnimation } from '@/lib/useSheetAnimation';
+import { useKeyboardHeight } from '@/lib/useKeyboardHeight';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/lib/toastContext';
 import { useSubscription } from '@/lib/subscriptionContext';
@@ -63,6 +67,14 @@ import { MealTotalsList } from '@/components/MealTotalsList';
 
 type Step = 'main' | 'add' | 'time' | 'portion';
 
+// Step change: the old step fades out while the sheet starts resizing,
+// then the new one fades in once the old one has gone.
+const FADE_OUT_MS = 140;
+const RESIZE_MS = 280;
+const stepExit = FadeOut.duration(FADE_OUT_MS);
+const stepEnter = FadeIn.duration(200).delay(FADE_OUT_MS);
+const sheetResize = LinearTransition.duration(RESIZE_MS);
+
 interface Props {
   visible: boolean;
   /** Hide the sheet but keep the draft — used while a picker screen is
@@ -75,6 +87,8 @@ interface Props {
 export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
   const { rendered, backdropOpacity, sheetTranslateY } = useSheetAnimation(visible);
   const { height: windowHeight } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const keyboardHeight = useKeyboardHeight();
   const { session } = useAuth();
   const { showToast } = useToast();
   const { isPlus } = useSubscription();
@@ -210,28 +224,39 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
             activeOpacity={1}
           />
         </Animated.View>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={{ width: '100%' }}
-        >
+        {/* The sheet grows over the keyboard (useKeyboardHeight) rather
+            than being lifted above it with a gap underneath. */}
+        <View style={{ width: '100%' }}>
           <Animated.View style={{ transform: [{ translateY: sheetTranslateY }] }}>
+            {/* The white card animates its size; the content inside swaps
+                straight away, so the card clips it while it resizes. */}
+            <Reanimated.View layout={sheetResize} style={styles.sheet}>
+            <LayoutAnimationConfig skipEntering skipExiting>
             <SafeAreaView
-              style={[styles.sheet, { maxHeight: windowHeight * 0.92 }]}
+              style={[
+                styles.sheetInner,
+                { maxHeight: windowHeight * 0.92 },
+                // SafeAreaView adds the home-indicator inset on top; that
+                // sits under the keyboard, so take it back out.
+                keyboardHeight > 0 && { paddingBottom: keyboardHeight - insets.bottom + 16 },
+              ]}
               edges={['bottom']}
             >
               <View style={styles.handle} />
 
               <View style={styles.closeRow}>
                 {step !== 'main' ? (
-                  <TouchableOpacity
-                    style={styles.backLink}
-                    onPress={() => setStep('main')}
-                    hitSlop={12}
-                    activeOpacity={0.7}
-                  >
-                    <MenuArrowLeftIcon color={Colors.secondary} size={16} />
-                    <Text style={styles.backLinkText}>Back</Text>
-                  </TouchableOpacity>
+                  <Reanimated.View key="back" entering={stepEnter} exiting={stepExit}>
+                    <TouchableOpacity
+                      style={styles.closeBtn}
+                      onPress={() => setStep('main')}
+                      hitSlop={12}
+                      activeOpacity={0.7}
+                      accessibilityLabel="Back"
+                    >
+                      <MenuArrowLeftIcon color={Colors.primary} size={24} />
+                    </TouchableOpacity>
+                  </Reanimated.View>
                 ) : (
                   <View />
                 )}
@@ -247,14 +272,14 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
               </View>
 
               {step === 'add' && (
-                <View style={styles.stepBody}>
+                <Reanimated.View key="add" entering={stepEnter} exiting={stepExit} style={styles.stepBody}>
                   <Text style={styles.title}>Add to meal</Text>
                   <AddIngredientOptions onPick={handleAddSourceSelected} includeRecipes />
-                </View>
+                </Reanimated.View>
               )}
 
               {step === 'time' && (
-                <View style={styles.stepPad}>
+                <Reanimated.View key="time" entering={stepEnter} exiting={stepExit} style={styles.stepPad}>
                   <MealTimeBody
                     visible
                     value={d.time}
@@ -263,11 +288,11 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
                       setStep('main');
                     }}
                   />
-                </View>
+                </Reanimated.View>
               )}
 
               {step === 'portion' && portionItem && (
-                <View style={styles.stepPad}>
+                <Reanimated.View key="portion" entering={stepEnter} exiting={stepExit} style={styles.stepPad}>
                   <QuantityPickerBody
                     visible
                     title={portionItem.kind === 'recipe' ? 'How many servings?' : 'How much?'}
@@ -289,11 +314,11 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
                       setStep('main');
                     }}
                   />
-                </View>
+                </Reanimated.View>
               )}
 
               {step === 'main' && (
-                <>
+                <Reanimated.View key="main" entering={stepEnter} exiting={stepExit} style={styles.mainStep}>
                   <ScrollView
                     style={styles.scroll}
                     contentContainerStyle={styles.body}
@@ -471,11 +496,13 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
                       )}
                     </TouchableOpacity>
                   </View>
-                </>
+                </Reanimated.View>
               )}
             </SafeAreaView>
+            </LayoutAnimationConfig>
+            </Reanimated.View>
           </Animated.View>
-        </KeyboardAvoidingView>
+        </View>
       </View>
     </Modal>
   );
@@ -493,9 +520,14 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface.secondary,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
+    overflow: 'hidden',
+  },
+  sheetInner: {
     paddingTop: 7,
     paddingBottom: 24,
   },
+  // Lets the main step's ScrollView shrink under the sheet's maxHeight.
+  mainStep: { flexShrink: 1 },
   handle: {
     alignSelf: 'center',
     width: 110,
@@ -511,14 +543,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   closeBtn: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
-  backLink: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  backLinkText: {
-    fontSize: 16,
-    lineHeight: 24,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.secondary,
-  },
 
   // Steps other than the main form
   stepPad: { paddingHorizontal: 24, marginTop: 8 },

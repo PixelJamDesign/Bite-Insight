@@ -10,13 +10,12 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
   Alert,
   Animated,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useKeyboardHeight } from '@/lib/useKeyboardHeight';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Radius, Shadows, Typography } from '@/constants/theme';
 import { useSheetAnimation } from '@/lib/useSheetAnimation';
@@ -42,6 +41,8 @@ export function StepEditorSheet({
 }: Props) {
   const [text, setText] = useState(initialText);
   const { rendered, backdropOpacity, sheetTranslateY } = useSheetAnimation(visible);
+  const insets = useSafeAreaInsets();
+  const keyboardHeight = useKeyboardHeight();
 
   // Reset the text when the sheet opens for a different step
   useEffect(() => {
@@ -80,12 +81,15 @@ export function StepEditorSheet({
         <Animated.View style={[styles.backdropTint, { opacity: backdropOpacity }]}>
           <TouchableOpacity style={StyleSheet.absoluteFill} onPress={onClose} activeOpacity={1} />
         </Animated.View>
-        <KeyboardAvoidingView
+        <View
           style={styles.keyboardWrap}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           <Animated.View style={{ transform: [{ translateY: sheetTranslateY }] }}>
-          <SafeAreaView style={styles.sheet} edges={['bottom']}>
+          {/* Grows over the keyboard instead of being lifted above it. */}
+          <SafeAreaView
+            style={[styles.sheet, keyboardHeight > 0 && { paddingBottom: keyboardHeight - insets.bottom + 16 }]}
+            edges={['bottom']}
+          >
             <View style={styles.handle} />
             <View style={styles.header}>
               <Text style={styles.title}>Step {stepNumber}</Text>
@@ -132,7 +136,7 @@ export function StepEditorSheet({
             </View>
           </SafeAreaView>
           </Animated.View>
-        </KeyboardAvoidingView>
+        </View>
       </View>
     </Modal>
   );

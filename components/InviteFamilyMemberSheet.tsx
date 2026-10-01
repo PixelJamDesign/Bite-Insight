@@ -25,10 +25,9 @@ import {
   Share,
   ActivityIndicator,
   Dimensions,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useKeyboardHeight } from '@/lib/useKeyboardHeight';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
 import { IconButton } from '@/components/IconButton';
@@ -51,6 +50,8 @@ export function InviteFamilyMemberSheet({
   member: { id: string; name: string } | null;
 }) {
   const insets = useSafeAreaInsets();
+  // iOS: the sheet grows over the keyboard instead of being lifted above it.
+  const keyboardHeight = useKeyboardHeight();
   const { showToast } = useToast();
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
@@ -132,12 +133,11 @@ export function InviteFamilyMemberSheet({
         <TouchableOpacity style={StyleSheet.absoluteFill} onPress={onClose} activeOpacity={1} />
       </Animated.View>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      <View
         style={styles.kav}
         pointerEvents="box-none"
       >
-        <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }], paddingBottom: insets.bottom + 24 }]}>
+        <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }], paddingBottom: (keyboardHeight || insets.bottom) + 24 }]}>
           <IconButton
             size="small"
             variant="onWhite"
@@ -218,7 +218,7 @@ export function InviteFamilyMemberSheet({
             )}
           </View>
         </Animated.View>
-      </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }

@@ -14,6 +14,7 @@ import {
   Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useKeyboardHeight } from '@/lib/useKeyboardHeight';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
@@ -46,6 +47,8 @@ export function FlagReasonSheet({
   const { t: tc } = useTranslation('common');
   const { t: tpo } = useTranslation('profileOptions');
   const insets = useSafeAreaInsets();
+  // iOS: the sheet grows over the keyboard instead of being lifted above it.
+  const keyboardHeight = useKeyboardHeight();
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
   const hasShownRef = useRef(false);
@@ -157,7 +160,7 @@ export function FlagReasonSheet({
 
       {/* Sheet */}
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? undefined : 'height'}
         style={styles.keyboardWrap}
         pointerEvents="box-none"
       >
@@ -166,7 +169,7 @@ export function FlagReasonSheet({
             styles.sheet,
             {
               transform: [{ translateY: slideAnim }],
-              paddingBottom: insets.bottom + 24,
+              paddingBottom: (keyboardHeight || insets.bottom) + 24,
               maxHeight: SCREEN_HEIGHT * 0.88,
             },
           ]}

@@ -14,6 +14,7 @@ import {
   Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useKeyboardHeight } from '@/lib/useKeyboardHeight';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
 
@@ -44,6 +45,8 @@ export function ConfirmSheet({
   loading = false,
 }: ConfirmSheetProps) {
   const insets = useSafeAreaInsets();
+  // iOS: the sheet grows over the keyboard instead of being lifted above it.
+  const keyboardHeight = useKeyboardHeight();
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
   const hasShownRef = useRef(false);
@@ -116,7 +119,7 @@ export function ConfirmSheet({
 
       {/* Sheet */}
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? undefined : 'height'}
         style={styles.keyboardWrap}
         pointerEvents="box-none"
       >
@@ -125,7 +128,7 @@ export function ConfirmSheet({
             styles.sheet,
             {
               transform: [{ translateY: slideAnim }],
-              paddingBottom: insets.bottom + 32,
+              paddingBottom: (keyboardHeight || insets.bottom) + 32,
             },
           ]}
         >
