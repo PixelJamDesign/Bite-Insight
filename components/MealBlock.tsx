@@ -6,7 +6,7 @@
  * States, judged for the signed-in user (lib/mealDanger.ts): Planned
  * (teal bar), Caution (orange bar) and Avoid (red bar — a poor fit on
  * average, or it hits one of their allergies). Eaten (node 5844:9128) is
- * a tinted card with a 2px teal border and a 36px teal strip with a white
+ * a tinted card with a 1px teal border and a 36px teal strip with a white
  * tick down the left edge in place of the bar.
  *
  * The detail line shows the numbers that matter to the user's profile,
@@ -106,14 +106,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  // Figma draws the 2px border outside the card; here it sits inside, so
-  // the padding gives back those 2px to keep the text lined up.
+  // Figma draws the 1px border outside the card; here it sits inside, so
+  // the padding gives back that 1px to keep the text lined up.
   blockEaten: {
     backgroundColor: '#e4f1ef', // Figma surface/tertiary
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: Colors.secondary,
-    paddingLeft: 46,
-    paddingRight: 14,
+    paddingLeft: 47,
+    paddingRight: 15,
   },
   eatenStrip: {
     position: 'absolute',

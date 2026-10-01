@@ -11,6 +11,7 @@
 import { supabase } from './supabase';
 import { computeNutriscore } from './nutriscore';
 import { getCachedProduct } from './productCache';
+import { OFF_HEADERS, OFF_URL } from './openFoodFacts';
 import type { CachedProduct } from './productCache';
 import type {
   Recipe,
@@ -625,19 +626,23 @@ function parseIngredientText(text: string): ProductSnapshot['ingredients'] {
 
 /**
  * Async snapshot builder from a Scan — looks up the product cache so we
- * populate nutrition data. Falls back to a bare snapshot (no nutrition)
- * if the cache has no entry. Use this from the recipe builder.
+ * populate nutrition data. When the cache has no entry (always the case on
+ * web, and on a phone for products scanned elsewhere) or no nutrition, it
+ * asks Open Food Facts. Only falls back to a bare snapshot if both fail.
+ * Use this from the recipe and meal builders.
  */
 export async function snapshotFromScanAsync(scan: Scan): Promise<ProductSnapshot> {
   try {
     const cached = await getCachedProduct(scan.barcode);
-    if (cached) {
+    if (cached && cached.energyKcal != null) {
       return snapshotFromCached(cached, scan.ingredients);
     }
   } catch (e) {
     console.warn('[recipes] snapshotFromScanAsync cache lookup failed:', e);
   }
-  // Fallback — no cache hit, minimal snapshot
+  const fromOff = await snapshotFromOff(scan);
+  if (fromOff) return fromOff;
+  // Fallback — nothing anywhere, minimal snapshot
   return {
     product_name: scan.product_name,
     brand: scan.brand,
@@ -652,6 +657,42 @@ export async function snapshotFromScanAsync(scan: Scan): Promise<ProductSnapshot
       dietary_tags: i.dietary_tags,
     })),
   };
+}
+
+/** Snapshot from a live Open Food Facts lookup, keeping the product's own
+ *  name, image and structured ingredients. Null if OFF doesn't know it. */
+export async function snapshotFromOff(
+  scan: Pick<Scan, 'barcode' | 'product_name' | 'brand' | 'image_url' | 'nutriscore_grade'> & {
+    ingredients?: Scan['ingredients'];
+  },
+): Promise<ProductSnapshot | null> {
+  if (!scan.barcode) return null;
+  try {
+    const res = await fetch(`${OFF_URL}/api/v0/product/${scan.barcode}.json?lc=en`, {
+      headers: OFF_HEADERS,
+    });
+    const data = await res.json();
+    if (data.status !== 1 || !data.product) return null;
+    const op = data.product;
+    return buildProductSnapshot({
+      product_name: scan.product_name || op.product_name || '',
+      brand: scan.brand ?? op.brands ?? null,
+      image_url: scan.image_url ?? op.image_front_url ?? null,
+      nutriscore_grade: scan.nutriscore_grade ?? op.nutriscore_grade ?? null,
+      nutriments: op.nutriments ?? null,
+      allergens: (op.allergens_tags ?? []) as string[],
+      ingredients: (scan.ingredients ?? []).map((i) => ({
+        id: i.id,
+        name: i.name,
+        is_flagged: i.is_flagged,
+        dietary_tags: i.dietary_tags,
+      })),
+      ingredients_text: op.ingredients_text_en || op.ingredients_text || null,
+    });
+  } catch (e) {
+    console.warn('[recipes] Open Food Facts lookup failed:', e);
+    return null;
+  }
 }
 
 /**

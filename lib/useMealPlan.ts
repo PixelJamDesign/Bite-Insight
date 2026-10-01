@@ -6,13 +6,14 @@
  *   const { meals, byDate, loading, error, refresh } = useMealPlanWeek(weekStart);
  *   const impact = useMealPlanImpact(meals);
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { supabase } from './supabase';
 import { useAuth } from './auth';
-import { addDays, listMeals, toDateKey } from './mealPlan';
+import { addDays, listMeals, productNutrition, toDateKey } from './mealPlan';
+import { snapshotFromOff } from './recipes';
 import { cardMetricsFor, scoreMeal, type MealImpact, type MealMetric } from './mealDanger';
-import type { Meal, RecipeIngredient, UserProfile } from './types';
+import type { Meal, MealPlanEntry, RecipeIngredient, UserProfile } from './types';
 
 export interface UseMealPlanWeekResult {
   meals: Meal[];
@@ -181,6 +182,8 @@ export function useMealPlanImpact(meals: Meal[]): MealPlanImpact {
     };
   }, [recipeIdsKey]);
 
+  useRepairMissingNutrition(meals);
+
   const metrics = useMemo(() => cardMetricsFor(profile), [profile]);
 
   const byMeal = useMemo(() => {
@@ -194,4 +197,60 @@ export function useMealPlanImpact(meals: Meal[]): MealPlanImpact {
   }, [meals, profile, recipeIngredients, recipeServings]);
 
   return { byMeal, metrics };
+}
+
+// ── Nutrition repair ─────────────────────────────────────────────────────────
+
+function hasNoNutrition(item: MealPlanEntry): boolean {
+  const per100 = item.product_snapshot?.nutrition_per_100g ?? {};
+  return Object.values(per100).every((v) => v == null);
+}
+
+/**
+ * Products added from scan history used to be saved with no nutrition when
+ * the phone's product cache missed. Look each one up on Open Food Facts
+ * once and save it back, so the meal can be scored and totalled. The
+ * planner's realtime feed (or the next focus) picks up the change.
+ */
+function useRepairMissingNutrition(meals: Meal[]) {
+  const tried = useRef(new Set<string>());
+
+  useEffect(() => {
+    const broken = meals
+      .flatMap((m) => m.items)
+      .filter((i) => i.kind === 'product' && i.barcode && i.product_snapshot && hasNoNutrition(i))
+      .filter((i) => !tried.current.has(i.id));
+    for (const item of broken) {
+      tried.current.add(item.id);
+      const snap = item.product_snapshot!;
+      snapshotFromOff({
+        barcode: item.barcode!,
+        product_name: snap.product_name,
+        brand: snap.brand,
+        image_url: snap.image_url,
+        nutriscore_grade: snap.nutriscore_grade,
+      }).then((fresh) => {
+        if (!fresh || Object.values(fresh.nutrition_per_100g).every((v) => v == null)) return;
+        // Keep what was saved (ingredients, allergens) and fill in the gaps.
+        const product_snapshot = {
+          ...snap,
+          nutrition_per_100g: fresh.nutrition_per_100g,
+          allergens: snap.allergens?.length ? snap.allergens : fresh.allergens,
+          ingredients_text: snap.ingredients_text ?? fresh.ingredients_text,
+        };
+        const nutrition = productNutrition(
+          product_snapshot,
+          Number(item.quantity_value ?? 100),
+          item.quantity_unit ?? 'g',
+        );
+        return supabase
+          .from('meal_plan_entries')
+          .update({ product_snapshot, nutrition })
+          .eq('id', item.id)
+          .then(({ error }) => {
+            if (error) console.warn('[useMealPlan] nutrition repair failed:', error.message);
+          });
+      });
+    }
+  }, [meals]);
 }
