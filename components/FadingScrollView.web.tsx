@@ -1,0 +1,77 @@
+/**
+ * FadingScrollView (web) — same behaviour as FadingScrollView.tsx, with a
+ * CSS mask on the scroll element instead of MaskedView. The mask's fade
+ * depth follows the scroll offset, so there's never a hard edge.
+ */
+import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
+import {
+  View,
+  Animated,
+  StyleSheet,
+  ScrollView,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+} from 'react-native';
+import { ProgressiveBlur } from '@/components/ProgressiveBlur';
+import type { FadingScrollViewProps } from './FadingScrollView';
+
+const FADE_HEIGHT = 32;
+
+function maskFor(offset: number): string {
+  const depth = Math.max(0, Math.min(offset, FADE_HEIGHT));
+  return `linear-gradient(to bottom, transparent 0px, #000 ${depth}px)`;
+}
+
+export const FadingScrollView = forwardRef<ScrollView, FadingScrollViewProps>(function FadingScrollView(
+  { style, fadeColor = '#ffffff', onScroll, scrollEventThrottle = 16, children, ...rest },
+  ref,
+) {
+  const scrollRef = useRef<ScrollView>(null);
+  useImperativeHandle(ref, () => scrollRef.current as ScrollView);
+  const blurOpacity = useRef(new Animated.Value(0)).current;
+
+  const applyMask = useCallback((offset: number) => {
+    const node = (scrollRef.current as unknown as { getScrollableNode?: () => HTMLElement })
+      ?.getScrollableNode?.();
+    if (!node) return;
+    const mask = maskFor(offset);
+    node.style.maskImage = mask;
+    node.style.setProperty('-webkit-mask-image', mask);
+  }, []);
+
+  const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const y = e.nativeEvent.contentOffset.y;
+    applyMask(y);
+    blurOpacity.setValue(Math.max(0, Math.min(y / FADE_HEIGHT, 1)));
+    onScroll?.(e);
+  };
+
+  return (
+    <View style={[styles.wrap, style]}>
+      <ScrollView
+        ref={scrollRef}
+        style={styles.fill}
+        scrollEventThrottle={scrollEventThrottle}
+        onScroll={handleScroll}
+        {...rest}
+      >
+        {children}
+      </ScrollView>
+      <Animated.View style={[styles.blur, { opacity: blurOpacity }]} pointerEvents="none">
+        <ProgressiveBlur height={FADE_HEIGHT} color={fadeColor} />
+      </Animated.View>
+    </View>
+  );
+});
+
+const styles = StyleSheet.create({
+  wrap: { flexGrow: 1, flexShrink: 1 },
+  fill: { flexGrow: 1, flexShrink: 1 },
+  blur: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: FADE_HEIGHT,
+  },
+});
