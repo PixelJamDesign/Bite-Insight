@@ -1970,6 +1970,7 @@ export default function ScanResultScreen() {
             <MoreMenu
               title="Product actions"
               accessibilityLabel="Product actions"
+              variant="onWhite"
               actions={[
                 {
                   key: 'plan',
@@ -3565,7 +3566,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.s,
     paddingTop: Spacing.l,
-    paddingBottom: 2,
+    paddingBottom: Spacing.m,
   },
   backBtn: {
     width: 32,
