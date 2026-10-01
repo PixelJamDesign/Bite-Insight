@@ -2,10 +2,10 @@
  * MealBuilderSheet — create / edit one planned meal, as a tall bottom
  * sheet over the planner.
  *
- *   Meal name (optional — named from the time if left blank)
+ *   Meal name (required)
  *   Time card
  *   Items, each with its portion
- *   Meal totals
+ *   Nutrition (NutritionPanel)
  *   Save as a recipe (Plus only)
  *   Discard / Save footer
  *
@@ -61,16 +61,21 @@ import { useToast } from '@/lib/toastContext';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { useUpsellSheet } from '@/lib/upsellSheetContext';
 import { useDraftMeal } from '@/lib/draftMealContext';
+import type { MealItemDraft } from '@/lib/types';
 import {
   dayAtTimeLabel,
-  defaultMealName,
   portionLabel,
   relativeDayLabel,
   saveItemsAsRecipe,
   saveMeal,
   sumNutrition,
 } from '@/lib/mealPlan';
-import { MealTotalsList } from '@/components/MealTotalsList';
+import { NutritionPanel, type NutritionValues } from '@/components/NutritionPanel';
+import { IconButton } from '@/components/IconButton';
+import { CheckboxCard } from '@/components/CheckboxCard';
+import { computeNutriscore, type NutriscoreGrade } from '@/lib/nutriscore';
+import { quantityToGrams } from '@/lib/recipes';
+import AddIcon from '@/assets/icons/meal-plan/add.svg';
 
 type Step = 'main' | 'add' | 'time' | 'portion';
 
@@ -181,14 +186,14 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
     setSaving(false);
   }, [d?.editingMealId, d?.dateKey]);
 
-  const totals = useMemo(() => sumNutrition(d?.items ?? []), [d?.items]);
+  const nutrition = useMemo(() => mealNutrition(d?.items ?? []), [d?.items]);
 
   if (!d) return null;
 
   const isEditing = Boolean(d.editingMealId);
   const portionItem = d.items.find((i) => i.key === portionKey) ?? null;
-  const canSave = d.items.length > 0 && !saving;
-  const resolvedName = d.name.trim() || defaultMealName(d.time);
+  const resolvedName = d.name.trim();
+  const canSave = d.items.length > 0 && resolvedName.length > 0 && !saving;
 
   function finish(saved: boolean) {
     const dateKey = d!.dateKey;
@@ -402,7 +407,8 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
                         <TextField
                           value={d.name}
                           onChangeText={draftMeal.setName}
-                          placeholder={defaultMealName(d.time)}
+                          placeholder="Like ‘Garlic & Herb Chicken Salad’?"
+                          required
                           returnKeyType="done"
                         />
                       </View>
@@ -414,10 +420,10 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
                       >
                         <View style={styles.inlineCardLeft}>
                           <Text style={styles.h5}>Time</Text>
-                          <Text style={styles.bodySmall}>When do you plan to eat?</Text>
+                          <Text style={styles.caption}>When do you plan to eat?</Text>
                         </View>
-                        <View style={styles.pill}>
-                          <Text style={styles.pillText}>{d.time}</Text>
+                        <View style={styles.timeBox}>
+                          <Text style={styles.timeBoxText}>{d.time}</Text>
                         </View>
                       </TouchableOpacity>
                     </View>
@@ -426,22 +432,20 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
                     <View style={styles.section}>
                       <View style={styles.sectionHeaderRow}>
                         <View style={styles.sectionHeaderText}>
-                          <Text style={styles.h4}>What you're eating</Text>
+                          <Text style={styles.h4}>What are you eating?</Text>
                           <View style={styles.countRow}>
-                            <Text style={styles.bodySmall}>This meal has</Text>
+                            <Text style={styles.caption}>This meal has</Text>
                             <Text style={styles.countBold}>
                               {d.items.length} {d.items.length === 1 ? 'item' : 'items'}
                             </Text>
                           </View>
                         </View>
-                        <TouchableOpacity
-                          style={styles.squareAddBtn}
+                        <IconButton
+                          variant="onWhite"
+                          icon={<AddIcon width={24} height={24} />}
                           onPress={() => goTo('add')}
-                          activeOpacity={0.85}
                           accessibilityLabel="Add an item"
-                        >
-                          <Ionicons name="add" size={24} color="#fff" />
-                        </TouchableOpacity>
+                        />
                       </View>
 
                       {d.items.length === 0 ? (
@@ -450,7 +454,7 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
                           onPress={() => goTo('add')}
                           activeOpacity={0.85}
                         >
-                          <Text style={styles.emptyCardText}>Add a recipe or a product</Text>
+                          <Text style={styles.emptyCardText}>Add a recipe or product</Text>
                         </TouchableOpacity>
                       ) : (
                         <View style={styles.itemList}>
@@ -505,36 +509,25 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
                       )}
                     </View>
 
-                    {/* ── Totals ──────────────────────────────────────── */}
+                    {/* ── Nutrition ───────────────────────────────────── */}
                     {d.items.length > 0 && (
-                      <View style={styles.section}>
-                        <View style={styles.sectionHeaderText}>
-                          <Text style={styles.h4}>Meal totals</Text>
-                          <Text style={styles.bodySmall}>Everything above, added up.</Text>
-                        </View>
-                        <MealTotalsList totals={totals} />
-                      </View>
+                      <NutritionPanel
+                        title="Nutrition"
+                        subtitle="These values come from everything you’ve added to this meal."
+                        perServing={nutrition.perServing}
+                        per100={nutrition.per100}
+                        grade={nutrition.grade}
+                      />
                     )}
 
                     {/* ── Save as a recipe (Plus) ─────────────────────── */}
-                    <TouchableOpacity
-                      style={styles.inlineCard}
+                    <CheckboxCard
+                      checked={saveAsRecipe}
                       onPress={handleToggleSaveAsRecipe}
-                      activeOpacity={0.85}
-                      accessibilityRole="checkbox"
-                      accessibilityState={{ checked: saveAsRecipe }}
-                    >
-                      <View style={[styles.checkbox, saveAsRecipe && styles.checkboxChecked]}>
-                        {saveAsRecipe && <Ionicons name="checkmark" size={16} color="#fff" />}
-                      </View>
-                      <View style={styles.inlineCardLeft}>
-                        <Text style={styles.h5}>Save as a recipe</Text>
-                        <Text style={styles.bodySmall}>
-                          Keep this meal in your recipe book to plan again.
-                        </Text>
-                      </View>
-                      {!isPlus && <PlusBadge size="small" />}
-                    </TouchableOpacity>
+                      title="Save as a recipe"
+                      supportingText="Put this meal in your recipe book for future use."
+                      trailing={!isPlus ? <PlusBadge size="small" /> : null}
+                    />
                   </ScrollView>
 
                   {/* ── Footer ──────────────────────────────────────── */}
@@ -556,7 +549,7 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
                         <ActivityIndicator color="#fff" />
                       ) : (
                         <Text style={styles.saveBtnText}>
-                          {isEditing ? 'Save changes' : 'Save meal'}
+                          {isEditing ? 'Save changes' : 'Add to meal plan'}
                         </Text>
                       )}
                     </TouchableOpacity>
@@ -570,6 +563,60 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
       </View>
     </Modal>
   );
+}
+
+// ── Nutrition for the panel ─────────────────────────────────────────────────
+
+/** "Per serving" is the meal as planned. Per 100g needs the meal's weight,
+ *  which only products give us — recipes don't store theirs — so it's
+ *  left out (null) once a recipe is in the meal. */
+function mealNutrition(items: MealItemDraft[]): {
+  perServing: NutritionValues;
+  per100: NutritionValues | null;
+  grade: NutriscoreGrade | null;
+} {
+  const t = sumNutrition(items);
+  const perServing: NutritionValues = {
+    kcal: t.kcal ?? 0,
+    fat: t.fat_g ?? 0,
+    satFat: t.sat_fat_g ?? 0,
+    carbs: t.carbs_g ?? 0,
+    sugars: t.sugars_g ?? 0,
+    fiber: t.fiber_g ?? 0,
+    protein: t.protein_g ?? 0,
+    salt: t.salt_g ?? 0,
+  };
+
+  const allProducts = items.length > 0 && items.every((i) => i.kind === 'product');
+  const grams = allProducts
+    ? items.reduce((sum, i) => sum + quantityToGrams(Number(i.quantity_value ?? 100), i.quantity_unit ?? 'g'), 0)
+    : 0;
+  if (grams <= 0) {
+    // Nothing to work a score out from — a lone recipe keeps its own.
+    const lone = items.length === 1 ? (items[0].nutriscore_grade as NutriscoreGrade | null) : null;
+    return { perServing, per100: null, grade: lone };
+  }
+
+  const f = 100 / grams;
+  const per100: NutritionValues = {
+    kcal: perServing.kcal * f,
+    fat: perServing.fat * f,
+    satFat: perServing.satFat * f,
+    carbs: perServing.carbs * f,
+    sugars: perServing.sugars * f,
+    fiber: perServing.fiber * f,
+    protein: perServing.protein * f,
+    salt: perServing.salt * f,
+  };
+  const grade = computeNutriscore({
+    energy_kcal_100g: t.kcal == null ? undefined : per100.kcal,
+    sat_fat_g_100g: t.sat_fat_g == null ? undefined : per100.satFat,
+    sugars_g_100g: t.sugars_g == null ? undefined : per100.sugars,
+    salt_g_100g: t.salt_g == null ? undefined : per100.salt,
+    fiber_g_100g: per100.fiber,
+    protein_g_100g: per100.protein,
+  });
+  return { perServing, per100, grade };
 }
 
 // Sheet chrome matches the other sheets; section, card, row and footer
@@ -670,14 +717,6 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     letterSpacing: 0,
   },
-  squareAddBtn: {
-    width: 52,
-    height: 52,
-    borderRadius: Radius.l,
-    backgroundColor: Colors.secondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
 
   inlineCard: {
     backgroundColor: '#f5fbfb',
@@ -690,22 +729,35 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   inlineCardLeft: { flex: 1, gap: 4 },
-  pill: {
-    backgroundColor: '#e4f1ef',
-    borderRadius: 999,
-    paddingHorizontal: 12,
+  // Figma time "Tab": white, teal stroke, 109 wide
+  timeBox: {
+    width: 109,
+    backgroundColor: Colors.surface.secondary,
+    borderWidth: 1,
+    borderColor: '#aad4cd',
+    borderRadius: 12,
+    paddingHorizontal: 16,
     paddingVertical: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 52,
   },
-  pillText: {
-    fontSize: 16,
-    lineHeight: 20,
+  timeBoxText: {
+    fontSize: 20,
+    lineHeight: 26,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
+    color: Colors.secondary,
+    letterSpacing: -0.5,
     fontVariant: ['tabular-nums'],
+  },
+  // Body Small — the supporting lines under card and section titles
+  caption: {
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
+    color: Colors.secondary,
+    letterSpacing: -0.14,
   },
 
   emptyCard: {
@@ -794,20 +846,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: '#aad4cd',
-    backgroundColor: Colors.surface.secondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxChecked: {
-    backgroundColor: Colors.secondary,
-    borderColor: Colors.secondary,
-  },
 
   footer: {
     flexDirection: 'row',

@@ -42,11 +42,8 @@ import { formatQuantity } from '@/constants/quantityUnits';
 import { Colors, Spacing, Radius, Shadows } from '@/constants/theme';
 import { TextField } from '@/components/TextField';
 import { LottieLoader } from '@/components/LottieLoader';
-import {
-  NUTRISCORE_COLORS,
-  NUTRISCORE_VERDICT,
-  type NutriscoreGrade,
-} from '@/lib/nutriscore';
+import type { NutriscoreGrade } from '@/lib/nutriscore';
+import { NutritionPanel, scaleNutritionValues } from '@/components/NutritionPanel';
 import { ActionPenIcon } from '@/components/MenuIcons';
 import ArrowLeftIcon from '@/assets/icons/recipe-header/arrow-left.svg';
 import GalleryAddIcon from '@/assets/icons/recipe-header/gallery-add.svg';
@@ -58,23 +55,6 @@ import { safeBack } from '@/lib/safeBack';
 
 const HERO_HEIGHT = 300;
 
-const GRADES: NutriscoreGrade[] = ['a', 'b', 'c', 'd', 'e'];
-
-// Food icon assets — match Figma macro stack (SVG React components)
-type SvgIcon = React.FC<{ width?: number; height?: number }>;
-const FOOD_ICONS: Record<string, SvgIcon> = {
-  calories: require('@/assets/icons/food/calories.svg').default,
-  fat: require('@/assets/icons/food/fat.svg').default,
-  satFat: require('@/assets/icons/food/sat-fat.svg').default,
-  carbs: require('@/assets/icons/food/carbs.svg').default,
-  sugars: require('@/assets/icons/food/sugars.svg').default,
-  fiber: require('@/assets/icons/food/fiber.svg').default,
-  netCarbs: require('@/assets/icons/food/net-carbs.svg').default,
-  protein: require('@/assets/icons/food/protein.svg').default,
-  salt: require('@/assets/icons/food/salt.svg').default,
-};
-
-type NutritionMode = 'serving' | 'per100';
 
 const TIME_STEP_MIN = 5;
 
@@ -212,7 +192,6 @@ export default function RecipeBuilderScreen() {
   const [addSheetOpen, setAddSheetOpen] = useState(false);
   const [quantityEditing, setQuantityEditing] = useState<string | null>(null);
   const [uploadingCover, setUploadingCover] = useState(false);
-  const [nutritionMode, setNutritionMode] = useState<NutritionMode>('serving');
   const [stepEditorIndex, setStepEditorIndex] = useState<number | null>(null);
   // Which time field is currently being picked via the wheel sheet
   // (null = sheet closed). Holds the field key so we know which
@@ -471,9 +450,6 @@ export default function RecipeBuilderScreen() {
   };
   const per100Factor =
     draft.totalWeightG > 0 ? (d.servings * 100) / draft.totalWeightG : 0;
-  const scaleVal = (n: number) =>
-    nutritionMode === 'serving' ? n : n * per100Factor;
-  const netCarbs = Math.max(0, perServing.carbs - perServing.fiber);
 
   const showNutrition = d.ingredients.length > 0;
 
@@ -487,8 +463,6 @@ export default function RecipeBuilderScreen() {
       : d.method.length + 1;
 
   const nutriGrade = (draft.nutriscore as NutriscoreGrade | null) ?? null;
-  const nutriColor = nutriGrade ? NUTRISCORE_COLORS[nutriGrade] : '#aad4cd';
-  const nutriVerdict = nutriGrade ? NUTRISCORE_VERDICT[nutriGrade] : '—';
 
   return (
     <View style={styles.safe}>
@@ -634,138 +608,15 @@ export default function RecipeBuilderScreen() {
             </View>
 
             {/* ── Live Nutrition ──────────────────────────────────────── */}
-            <View style={styles.section}>
-              <View style={styles.sectionTitleBlock}>
-                <Text style={styles.h4}>Live Nutrition</Text>
-                <Text style={styles.bodySmall}>
-                  These nutrition values come from the ingredients you added to your recipe.
-                </Text>
-              </View>
-
-              {/* Per serving / Per 100g pill tabs */}
-              <View style={styles.modeTabs}>
-                <TouchableOpacity
-                  onPress={() => setNutritionMode('serving')}
-                  activeOpacity={0.85}
-                  style={[
-                    styles.modeTab,
-                    nutritionMode === 'serving' && styles.modeTabActive,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.modeTabText,
-                      nutritionMode === 'serving' && styles.modeTabTextActive,
-                    ]}
-                  >
-                    Per serving
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => setNutritionMode('per100')}
-                  activeOpacity={0.85}
-                  style={[
-                    styles.modeTab,
-                    nutritionMode === 'per100' && styles.modeTabActive,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.modeTabText,
-                      nutritionMode === 'per100' && styles.modeTabTextActive,
-                    ]}
-                  >
-                    Per 100g
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Nutrition rows */}
-              {showNutrition ? (
-                <View style={styles.nutritionRows}>
-                  <NutritionRow
-                    Icon={FOOD_ICONS.calories}
-                    label="Calories"
-                    value={formatKcal(scaleVal(perServing.kcal))}
-                  />
-                  <NutritionRow
-                    Icon={FOOD_ICONS.fat}
-                    label="Fat"
-                    value={`${formatGrams(scaleVal(perServing.fat))}g`}
-                  />
-                  <NutritionRow
-                    Icon={FOOD_ICONS.satFat}
-                    label="Saturated Fat"
-                    value={`${formatGrams(scaleVal(perServing.satFat))}g`}
-                  />
-                  <NutritionRow
-                    Icon={FOOD_ICONS.carbs}
-                    label="Carbohydrates"
-                    value={`${formatGrams(scaleVal(perServing.carbs))}g`}
-                  />
-                  <NutritionRow
-                    Icon={FOOD_ICONS.sugars}
-                    label="Sugars"
-                    value={`${formatGrams(scaleVal(perServing.sugars))}g`}
-                  />
-                  <NutritionRow
-                    Icon={FOOD_ICONS.fiber}
-                    label="Fiber"
-                    value={`${formatGrams(scaleVal(perServing.fiber))}g`}
-                  />
-                  <NutritionRow
-                    Icon={FOOD_ICONS.netCarbs}
-                    label="Net Carbs"
-                    value={`${formatGrams(scaleVal(netCarbs))}g`}
-                  />
-                  <NutritionRow
-                    Icon={FOOD_ICONS.protein}
-                    label="Protein"
-                    value={`${formatGrams(scaleVal(perServing.protein))}g`}
-                  />
-                  <NutritionRow
-                    Icon={FOOD_ICONS.salt}
-                    label="Salt"
-                    value={`${formatGrams(scaleVal(perServing.salt))}g`}
-                  />
-                </View>
-              ) : (
-                <View style={styles.nutritionEmpty}>
-                  <Text style={styles.nutritionEmptyText}>
-                    Add ingredients to see live nutrition.
-                  </Text>
-                </View>
-              )}
-
-              {/* Estimated Nutri-score */}
-              <View style={styles.nutriBlock}>
-                <Text style={styles.h5}>Estimated Nutri-score</Text>
-                <View style={styles.nutriCard}>
-                  <View style={[styles.verdictPill, { backgroundColor: nutriColor }]}>
-                    <Text style={styles.verdictText}>{nutriVerdict}</Text>
-                  </View>
-                  <View style={styles.scaleRow}>
-                    {GRADES.map((g) => {
-                      const isActive = g === nutriGrade;
-                      return (
-                        <View
-                          key={g}
-                          style={[
-                            styles.gradePill,
-                            { backgroundColor: NUTRISCORE_COLORS[g] },
-                            isActive ? styles.gradePillActive : styles.gradePillInactive,
-                            // E in Figma has no white border
-                            g === 'e' && !isActive ? { borderWidth: 0 } : null,
-                          ]}
-                        >
-                          <Text style={styles.gradeText}>{g.toUpperCase()}</Text>
-                        </View>
-                      );
-                    })}
-                  </View>
-                </View>
-              </View>
-            </View>
+            <NutritionPanel
+              title="Live Nutrition"
+              subtitle="These nutrition values come from the ingredients you added to your recipe."
+              perServing={perServing}
+              per100={per100Factor > 0 ? scaleNutritionValues(perServing, per100Factor) : null}
+              grade={nutriGrade}
+              empty={!showNutrition}
+              emptyText="Add ingredients to see live nutrition."
+            />
 
             {/* ── Ingredients ─────────────────────────────────────────── */}
             <View style={styles.section}>
@@ -1070,40 +921,6 @@ export default function RecipeBuilderScreen() {
   );
 }
 
-// ─── Small presentational pieces ─────────────────────────────────────────────
-function NutritionRow({
-  Icon,
-  label,
-  value,
-}: {
-  Icon: SvgIcon;
-  label: string;
-  value: string;
-}) {
-  return (
-    <View style={styles.nRow}>
-      <View style={styles.nIconWrap}>
-        <Icon width={24} height={24} />
-      </View>
-      <Text style={styles.nLabel}>{label}</Text>
-      <Text style={styles.nValue}>{value}</Text>
-    </View>
-  );
-}
-
-// ─── Formatting helpers ─────────────────────────────────────────────────────
-function formatGrams(n: number): string {
-  if (!Number.isFinite(n)) return '0';
-  if (n >= 10) return String(Math.round(n));
-  return String(Math.round(n * 10) / 10);
-}
-
-function formatKcal(kcal: number): string {
-  if (!Number.isFinite(kcal)) return '0 kcal';
-  const kj = Math.round(kcal * 4.184);
-  return `${kj} kJ (${Math.round(kcal)} kcal)`;
-}
-
 // ─── Styles ─────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.surface.secondary },
@@ -1285,146 +1102,8 @@ const styles = StyleSheet.create({
   },
 
   // Per-serving / Per-100g pill tabs
-  modeTabs: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  modeTab: {
-    height: 30,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  modeTabActive: {
-    backgroundColor: '#e4f1ef',
-    borderColor: '#aad4cd',
-  },
-  modeTabText: {
-    fontSize: 16,
-    lineHeight: 17.6,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.secondary,
-    letterSpacing: -0.32,
-  },
-  modeTabTextActive: {
-    color: Colors.primary,
-  },
 
-  // Nutrition rows
-  nutritionRows: { gap: 4 },
-  nRow: {
-    backgroundColor: '#f5fbfb',
-    borderWidth: 1,
-    borderColor: '#aad4cd',
-    borderRadius: Radius.m,
-    paddingLeft: 8,
-    paddingRight: 16,
-    paddingVertical: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  nIconWrap: {
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  nIcon: { width: 24, height: 24 },
-  nLabel: {
-    flex: 1,
-    fontSize: 16,
-    lineHeight: 20,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
-  },
-  nValue: {
-    fontSize: 16,
-    lineHeight: 20,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
-    textAlign: 'center',
-  },
-  nutritionEmpty: {
-    backgroundColor: '#f5fbfb',
-    borderRadius: Radius.m,
-    borderWidth: 1,
-    borderColor: '#aad4cd',
-    paddingVertical: Spacing.m,
-    alignItems: 'center',
-  },
-  nutritionEmptyText: {
-    fontSize: 14,
-    fontWeight: '300',
-    fontFamily: 'Figtree_300Light',
-    color: Colors.secondary,
-    letterSpacing: -0.14,
-  },
 
-  // Nutri-score block
-  nutriBlock: { gap: 8 },
-  nutriCard: {
-    backgroundColor: '#f5fbfb',
-    borderWidth: 1,
-    borderColor: '#aad4cd',
-    borderRadius: Radius.m,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  verdictPill: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 999,
-  },
-  verdictText: {
-    fontSize: 14,
-    lineHeight: 17,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: '#fff',
-    letterSpacing: -0.28,
-    textShadowColor: 'rgba(0,0,0,0.29)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
-  },
-  scaleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    height: 30,
-  },
-  gradePill: {
-    width: 24,
-    height: 30,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#fff',
-  },
-  gradePillActive: {},
-  gradePillInactive: { opacity: 0.15 },
-  gradeText: {
-    fontSize: 16,
-    lineHeight: 20,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: '#fff',
-    textAlign: 'center',
-    textShadowColor: 'rgba(0,0,0,0.29)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
-  },
 
   // 52px teal square + button
   squareAddBtn: {
