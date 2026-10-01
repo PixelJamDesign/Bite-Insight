@@ -102,11 +102,21 @@ export function QuantityPickerBody({
   const [valueWidth, setValueWidth] = useState<number | null>(null);
   const step = servingsMode ? SERVINGS_STEP : meta.step;
 
+  // 0 or an empty field can't be saved — say so instead of closing.
+  const [showError, setShowError] = useState(false);
+  const valid = Number.isFinite(localValue) && localValue > 0;
+  useEffect(() => {
+    if (valid) setShowError(false);
+  }, [valid]);
+  useEffect(() => {
+    if (visible) setShowError(false);
+  }, [visible]);
+
   function handleSave() {
-    if (Number.isFinite(localValue) && localValue > 0) {
+    if (valid) {
       onSave(localValue, localUnit);
     } else {
-      onClose();
+      setShowError(true);
     }
   }
 
@@ -157,7 +167,7 @@ export function QuantityPickerBody({
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={styles.valueCard}
+                  style={[styles.valueCard, showError && styles.valueCardError]}
                   activeOpacity={0.85}
                   onPress={() => {
                     // Tapping anywhere on the card focuses the input.
@@ -238,6 +248,11 @@ export function QuantityPickerBody({
                   <Ionicons name="add" size={16} color={Colors.secondary} />
                 </TouchableOpacity>
               </View>
+              {showError && (
+                <Text style={styles.errorText} accessibilityRole="alert">
+                  Enter an amount above 0
+                </Text>
+              )}
 
               {/* Unit of measurement */}
               {!servingsMode && (
@@ -438,6 +453,18 @@ const styles = StyleSheet.create({
     color: Colors.secondary,
     letterSpacing: -0.5,
     includeFontPadding: false,
+  },
+
+  valueCardError: { borderColor: Colors.status.negative },
+  errorText: {
+    marginTop: -8,
+    fontSize: 14,
+    lineHeight: 17,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.status.negative,
+    letterSpacing: -0.28,
+    textAlign: 'center',
   },
 
   // Unit of measurement section

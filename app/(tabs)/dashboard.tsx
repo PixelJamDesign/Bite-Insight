@@ -355,8 +355,9 @@ export default function HomeDashboard() {
     }, []),
   );
 
-  function openInPlanner() {
-    router.push({ pathname: '/meal-plan', params: { date: toDateKey(new Date()) } } as any);
+  /** Opens the planner on today, scrolled to this meal. */
+  function openInPlanner(meal: Meal) {
+    router.push({ pathname: '/meal-plan', params: { date: toDateKey(new Date()), focus: meal.id } } as any);
   }
 
   async function toggleEaten(meal: Meal) {
@@ -389,7 +390,7 @@ export default function HomeDashboard() {
         subtitle: 'See it on today\'s timeline',
         systemImage: 'calendar',
         Icon: MealPlanActionIcon,
-        onPress: openInPlanner,
+        onPress: () => openInPlanner(meal),
       },
       {
         key: 'eaten',
@@ -692,7 +693,7 @@ export default function HomeDashboard() {
                         actions={mealActions(meal)}
                       />
                     }
-                    onPress={() => router.push('/meal-plan' as any)}
+                    onPress={() => openInPlanner(meal)}
                     style={styles.mealBlock}
                   />
                 ))}

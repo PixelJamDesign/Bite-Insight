@@ -181,7 +181,7 @@ function OrdinalDate({
 }
 
 export default function MealPlanScreen() {
-  const params = useLocalSearchParams<{ date?: string; add?: string }>();
+  const params = useLocalSearchParams<{ date?: string; add?: string; focus?: string }>();
   const { isPlus } = useSubscription();
   const { showUpsell } = useUpsellSheet();
   const draftMeal = useDraftMeal();
@@ -257,8 +257,14 @@ export default function MealPlanScreen() {
     setTotalsOpen(false);
   }, [selectedKey]);
 
-  // Open each day at something useful: an hour before the first meal,
-  // else an hour before now (today), else breakfast time.
+  // Where the timeline opens:
+  //   ?focus=<meal id> (a meal tapped on the dashboard) — that meal
+  //   today — the current time
+  //   any other day — its first meal, else breakfast time
+  // Each sits an hour below the top so there's context above it.
+  const focusMealId = typeof params.focus === 'string' ? params.focus : null;
+  const focusMeal = focusMealId ? dayMeals.find((m) => m.id === focusMealId) ?? null : null;
+  const focusMinutes = focusMeal ? timeToMinutes(focusMeal.meal_time) : null;
   const firstMealMinutes = dayMeals.length > 0 ? timeToMinutes(dayMeals[0].meal_time) : null;
   // `pendingScroll` is true until the timeline has been positioned for
   // the current day; the ScrollView's onLayout does the actual scroll,
@@ -266,18 +272,22 @@ export default function MealPlanScreen() {
   const pendingScroll = useRef(true);
   const positionTimeline = useCallback(() => {
     if (!pendingScroll.current || !timelineRef.current) return;
-    const anchor = firstMealMinutes ?? (isToday ? nowMinutes : DEFAULT_SCROLL_HOUR * 60 + 60);
+    // Wait for the focused meal to load rather than settle somewhere else.
+    if (focusMealId && !focusMeal) return;
+    const currentMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+    const anchor =
+      focusMinutes ??
+      (isToday ? currentMinutes : firstMealMinutes ?? DEFAULT_SCROLL_HOUR * 60 + 60);
     const top = Math.max(0, ((anchor - 60) / 60) * HOUR_HEIGHT);
-    timelineRef.current.scrollTo({ y: top, animated: false });
+    timelineRef.current.scrollTo({ y: top, animated: Boolean(focusMeal) });
     pendingScroll.current = false;
-    // nowMinutes is read, not depended on — re-running each minute would
-    // yank the scroll position.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [firstMealMinutes, isToday]);
+    // Used once — a later visit to the tab goes back to the current time.
+    if (focusMealId) router.setParams({ focus: undefined } as never);
+  }, [focusMealId, focusMeal, focusMinutes, firstMealMinutes, isToday]);
 
   useEffect(() => {
     pendingScroll.current = true;
-  }, [selectedKey]);
+  }, [selectedKey, focusMealId]);
 
   useEffect(() => {
     if (loading) return;
@@ -285,6 +295,17 @@ export default function MealPlanScreen() {
     const id = setTimeout(positionTimeline, 0);
     return () => clearTimeout(id);
   }, [selectedKey, loading, positionTimeline]);
+
+  // Coming to the tab (not back from a product page or a picker, which
+  // should land where the user left off): today opens on the current time.
+  useFocusEffect(
+    useCallback(() => {
+      if (reopenMealIdRef.current || hasDraftRef.current) return;
+      pendingScroll.current = true;
+      const id = setTimeout(positionTimeline, 0);
+      return () => clearTimeout(id);
+    }, [positionTimeline]),
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
