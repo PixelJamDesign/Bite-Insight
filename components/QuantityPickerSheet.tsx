@@ -18,6 +18,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
+  Platform,
   StyleSheet,
   TouchableOpacity,
   TextInput,
@@ -91,6 +92,14 @@ export function QuantityPickerBody({
   }, [visible, value, unit]);
 
   const meta = unitMeta(localUnit);
+  const shownValue = editingValue
+    ? valueText
+    : servingsMode
+      ? String(localValue)
+      : formatQuantityValue(localValue, localUnit);
+  // Web inputs default to ~20 characters wide, which pushed the value and
+  // unit off centre. Size the field to the text instead (native already does).
+  const [valueWidth, setValueWidth] = useState<number | null>(null);
   const step = servingsMode ? SERVINGS_STEP : meta.step;
 
   function handleSave() {
@@ -158,16 +167,22 @@ export function QuantityPickerBody({
                     valueInputRef.current?.focus();
                   }}
                 >
+                  {Platform.OS === 'web' && (
+                    <Text
+                      style={[styles.valueInput, styles.valueMeasure]}
+                      onLayout={(e) => setValueWidth(Math.ceil(e.nativeEvent.layout.width) + 2)}
+                      aria-hidden
+                    >
+                      {shownValue || '0'}
+                    </Text>
+                  )}
                   <TextInput
                     ref={valueInputRef}
-                    style={styles.valueInput}
-                    value={
-                      editingValue
-                        ? valueText
-                        : servingsMode
-                          ? String(localValue)
-                          : formatQuantityValue(localValue, localUnit)
-                    }
+                    style={[
+                      styles.valueInput,
+                      Platform.OS === 'web' && valueWidth != null && { width: valueWidth },
+                    ]}
+                    value={shownValue}
                     onFocus={() => {
                       setEditingValue(true);
                       // Seed the field with the current numeric value
@@ -414,6 +429,8 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     padding: 0,
   },
+  // Off-screen copy of the value, measured to size the web input.
+  valueMeasure: { position: 'absolute', opacity: 0, left: -9999 },
   valueUnit: {
     fontSize: 20,
     fontWeight: '700',
