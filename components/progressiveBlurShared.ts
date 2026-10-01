@@ -8,5 +8,7 @@ export interface ProgressiveBlurProps {
 }
 
 /** Page colour fading to clear. */
-export const FADE_COLORS = [Colors.background, 'rgba(226,241,238,0.6)', 'rgba(226,241,238,0)'] as const;
-export const FADE_LOCATIONS = [0, 0.45, 1] as const;
+// Stays mostly opaque over the top 40% — where the iOS blur (and its
+// material tint) is strongest — then clears.
+export const FADE_COLORS = [Colors.background, 'rgba(226,241,238,0.75)', 'rgba(226,241,238,0)'] as const;
+export const FADE_LOCATIONS = [0, 0.4, 1] as const;

@@ -20,21 +20,30 @@ export function ProgressiveBlur({ height, intensity = 24 }: ProgressiveBlurProps
     <View style={[styles.wrap, { height }]} pointerEvents="none">
       {Platform.OS === 'ios' && (
         <MaskedView
-          style={StyleSheet.absoluteFill}
+          style={[StyleSheet.absoluteFill, styles.blurLayer]}
           maskElement={
             <LinearGradient
               colors={['#000', 'rgba(0,0,0,0)']}
+              // Gone by 60% down, so the blur only shows where the page
+              // colour (below) still mostly covers it.
+              locations={[0, 0.6]}
               style={StyleSheet.absoluteFill}
             />
           }
         >
-          <BlurView intensity={intensity} tint="default" style={StyleSheet.absoluteFill} />
+          {/* Every iOS blur adds a material tint; the ultra-thin light one
+              adds the least (the default reads as grey on our teal). */}
+          <BlurView
+            intensity={intensity}
+            tint="systemUltraThinMaterialLight"
+            style={StyleSheet.absoluteFill}
+          />
         </MaskedView>
       )}
       <LinearGradient
         colors={FADE_COLORS}
         locations={FADE_LOCATIONS}
-        style={StyleSheet.absoluteFill}
+        style={[StyleSheet.absoluteFill, styles.colourLayer]}
       />
     </View>
   );
@@ -47,4 +56,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
   },
+  // Explicit order: the page colour always sits over the blur.
+  blurLayer: { zIndex: 0 },
+  colourLayer: { zIndex: 1 },
 });
