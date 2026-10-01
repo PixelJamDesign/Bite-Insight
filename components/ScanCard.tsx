@@ -36,7 +36,7 @@ export function ScanCard({ scan, onPress }: { scan: Scan; onPress: () => void })
         .join(', ')}
     >
       {scan.image_url ? (
-        <Image source={{ uri: scan.image_url }} style={styles.image} resizeMode="contain" />
+        <Image source={{ uri: scan.image_url }} style={styles.image} resizeMode="cover" />
       ) : (
         <View style={[styles.image, styles.imagePlaceholder]}>
           <NoImagePlaceholder />
