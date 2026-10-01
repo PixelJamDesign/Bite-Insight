@@ -21,7 +21,6 @@
   "scannedSubtitleNone": "Rien de scanné aujourd'hui",
   "scannedSubtitle_one": "Vous avez scanné <b>{{count}} produit</b> aujourd'hui",
   "scannedSubtitle_other": "Vous avez scanné <b>{{count}} produits</b> aujourd'hui",
-  "scannedAdd": "Scanner un produit",
   "scannedEmptyTitle": "Scannez votre premier produit",
   "scannedEmptySubtitle": "Pointez la caméra vers un code-barres pour voir ce qu’il signifie pour vous"
 }

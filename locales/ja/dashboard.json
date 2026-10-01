@@ -19,7 +19,6 @@
   "scannedHeading": "スキャンした商品",
   "scannedSubtitleNone": "今日はまだスキャンしていません",
   "scannedSubtitle_other": "今日は<b>{{count}}件</b>スキャンしました",
-  "scannedAdd": "商品をスキャン",
   "scannedEmptyTitle": "最初の商品をスキャン",
   "scannedEmptySubtitle": "バーコードにカメラを向けて、あなたにとっての意味を確認しましょう"
 }

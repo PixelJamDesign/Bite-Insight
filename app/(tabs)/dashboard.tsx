@@ -734,11 +734,6 @@ export default function HomeDashboard() {
                   )}
                 </Text>
               </TouchableOpacity>
-              <IconButton
-                icon={<AddIcon width={24} height={24} />}
-                onPress={() => router.push('/(tabs)/scanner' as any)}
-                accessibilityLabel={t('scannedAdd')}
-              />
             </View>
 
             {recentScans.length === 0 ? (

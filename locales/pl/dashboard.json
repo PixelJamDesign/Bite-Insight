@@ -25,7 +25,6 @@
   "scannedSubtitle_few": "Dziś zeskanowano <b>{{count}} produkty</b>",
   "scannedSubtitle_many": "Dziś zeskanowano <b>{{count}} produktów</b>",
   "scannedSubtitle_other": "Dziś zeskanowano <b>{{count}} produktu</b>",
-  "scannedAdd": "Zeskanuj produkt",
   "scannedEmptyTitle": "Zeskanuj swój pierwszy produkt",
   "scannedEmptySubtitle": "Skieruj aparat na kod kreskowy, by zobaczyć, co oznacza dla ciebie"
 }

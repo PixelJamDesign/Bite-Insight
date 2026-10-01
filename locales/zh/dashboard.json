@@ -19,7 +19,6 @@
   "scannedHeading": "已扫描商品",
   "scannedSubtitleNone": "今天还没有扫描",
   "scannedSubtitle_other": "今天已扫描<b>{{count}}件</b>商品",
-  "scannedAdd": "扫描商品",
   "scannedEmptyTitle": "扫描你的第一件商品",
   "scannedEmptySubtitle": "将相机对准条形码，看看它对你意味着什么"
 }

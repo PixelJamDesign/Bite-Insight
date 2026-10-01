@@ -21,7 +21,6 @@
   "scannedSubtitleNone": "Vandaag nog niets gescand",
   "scannedSubtitle_one": "Je hebt vandaag <b>{{count}} product</b> gescand",
   "scannedSubtitle_other": "Je hebt vandaag <b>{{count}} producten</b> gescand",
-  "scannedAdd": "Product scannen",
   "scannedEmptyTitle": "Scan je eerste product",
   "scannedEmptySubtitle": "Richt je camera op een barcode en zie wat het voor jou betekent"
 }

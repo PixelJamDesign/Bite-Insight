@@ -19,7 +19,6 @@
   "scannedHeading": "스캔한 제품",
   "scannedSubtitleNone": "오늘은 아직 스캔한 제품이 없어요",
   "scannedSubtitle_other": "오늘 <b>{{count}}개</b>를 스캔했어요",
-  "scannedAdd": "제품 스캔",
   "scannedEmptyTitle": "첫 제품을 스캔해 보세요",
   "scannedEmptySubtitle": "바코드에 카메라를 대면 나에게 어떤 의미인지 알 수 있어요"
 }

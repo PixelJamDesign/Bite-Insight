@@ -21,7 +21,6 @@
   "scannedSubtitleNone": "Ainda não digitalizou nada hoje",
   "scannedSubtitle_one": "Hoje digitalizou <b>{{count}} produto</b>",
   "scannedSubtitle_other": "Hoje digitalizou <b>{{count}} produtos</b>",
-  "scannedAdd": "Digitalizar um produto",
   "scannedEmptyTitle": "Digitalize o seu primeiro produto",
   "scannedEmptySubtitle": "Aponte a câmara para um código de barras para ver o que significa para si"
 }

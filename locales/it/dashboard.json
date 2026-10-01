@@ -21,7 +21,6 @@
   "scannedSubtitleNone": "Ancora nessuna scansione oggi",
   "scannedSubtitle_one": "Oggi hai scansionato <b>{{count}} prodotto</b>",
   "scannedSubtitle_other": "Oggi hai scansionato <b>{{count}} prodotti</b>",
-  "scannedAdd": "Scansiona un prodotto",
   "scannedEmptyTitle": "Scansiona il tuo primo prodotto",
   "scannedEmptySubtitle": "Inquadra un codice a barre per scoprire cosa significa per te"
 }

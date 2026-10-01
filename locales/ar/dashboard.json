@@ -29,7 +29,6 @@
   "scannedSubtitle_few": "مسحت <b>{{count}} منتجات</b> اليوم",
   "scannedSubtitle_many": "مسحت <b>{{count}} منتجًا</b> اليوم",
   "scannedSubtitle_other": "مسحت <b>{{count}} منتج</b> اليوم",
-  "scannedAdd": "امسح منتجًا",
   "scannedEmptyTitle": "امسح أول منتج لك",
   "scannedEmptySubtitle": "وجّه الكاميرا إلى رمز شريطي لترى ما يعنيه لك"
 }
