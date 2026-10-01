@@ -13,8 +13,8 @@
  * inside this one sheet rather than sheets of their own: a second Modal
  * on top of an open one freezes iOS (see app/recipes/pick-scan.tsx).
  *
- * Moving between steps fades the old one out, resizes the sheet to fit the
- * next, and fades that one in (Figma "Add to Meal Plan", 5912:15662).
+ * Moving between steps fades the old one out, then resizes the sheet to fit
+ * the next, then fades that one in (Figma "Add to Meal Plan", 5912:15662).
  *
  * Search, scan and the recipe / scan-history pickers are full screens.
  * To reach them the sheet hides itself (onHide) and the planner reopens
@@ -35,9 +35,16 @@ import {
   Modal,
   Animated,
   useWindowDimensions,
+  type LayoutChangeEvent,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import Reanimated, { FadeIn, FadeOut, LayoutAnimationConfig, LinearTransition } from 'react-native-reanimated';
+import Reanimated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withTiming,
+} from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Colors, Radius } from '@/constants/theme';
@@ -67,13 +74,17 @@ import { MealTotalsList } from '@/components/MealTotalsList';
 
 type Step = 'main' | 'add' | 'time' | 'portion';
 
-// Step change: the old step fades out while the sheet starts resizing,
-// then the new one fades in once the old one has gone.
-const FADE_OUT_MS = 140;
-const RESIZE_MS = 280;
-const stepExit = FadeOut.duration(FADE_OUT_MS);
-const stepEnter = FadeIn.duration(200).delay(FADE_OUT_MS);
-const sheetResize = LinearTransition.duration(RESIZE_MS);
+// Step change, in three beats that don't overlap: the old step fades out,
+// then the sheet eases to its new height (the handle rides the top edge),
+// then the new step fades in.
+const FADE_OUT_MS = 180;
+const RESIZE_MS = 340;
+const FADE_IN_MS = 240;
+/** Any other size change (keyboard, adding an item) just eases to fit. */
+const SETTLE_MS = 260;
+/** If the new step is the same height there's no layout event to wait
+ *  for, so fade back in after this. */
+const LAYOUT_WAIT_MS = 120;
 
 interface Props {
   visible: boolean;
@@ -105,9 +116,63 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
   const [saveAsRecipe, setSaveAsRecipe] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // ── Step transitions ───────────────────────────────────────────────────
+  // The white card's height follows its content's measured height through
+  // a shared value, so it can ease instead of jumping.
+  const contentOpacity = useSharedValue(1);
+  const cardHeight = useSharedValue(-1);
+  const transition = useRef<'idle' | 'fading' | 'resizing'>('idle');
+  const firstLayout = useRef(true);
+
+  const cardStyle = useAnimatedStyle(() =>
+    cardHeight.value < 0 ? {} : { height: cardHeight.value },
+  );
+  const contentStyle = useAnimatedStyle(() => ({ opacity: contentOpacity.value }));
+  const backStyle = useAnimatedStyle(() => ({ opacity: contentOpacity.value }));
+
+  function goTo(next: Step) {
+    if (transition.current !== 'idle') return;
+    transition.current = 'fading';
+    contentOpacity.value = withTiming(0, { duration: FADE_OUT_MS, easing: Easing.in(Easing.quad) });
+    setTimeout(() => {
+      transition.current = 'resizing';
+      setStep(next);
+      setTimeout(() => {
+        if (transition.current === 'resizing') fadeIn(0);
+      }, LAYOUT_WAIT_MS);
+    }, FADE_OUT_MS);
+  }
+
+  function fadeIn(delay: number) {
+    transition.current = 'idle';
+    contentOpacity.value = withDelay(
+      delay,
+      withTiming(1, { duration: FADE_IN_MS, easing: Easing.out(Easing.quad) }),
+    );
+  }
+
+  function handleContentLayout(e: LayoutChangeEvent) {
+    const h = e.nativeEvent.layout.height;
+    if (firstLayout.current) {
+      firstLayout.current = false;
+      cardHeight.value = h;
+      return;
+    }
+    if (transition.current === 'resizing') {
+      cardHeight.value = withTiming(h, { duration: RESIZE_MS, easing: Easing.inOut(Easing.cubic) });
+      fadeIn(RESIZE_MS);
+    } else {
+      cardHeight.value = withTiming(h, { duration: SETTLE_MS, easing: Easing.out(Easing.cubic) });
+    }
+  }
+
   // Always come back to the main step when the sheet (re)opens.
   useEffect(() => {
-    if (visible) setStep('main');
+    if (!visible) return;
+    setStep('main');
+    transition.current = 'idle';
+    contentOpacity.value = 1;
+    firstLayout.current = true;
   }, [visible]);
 
   // A fresh meal starts with the checkbox off.
@@ -228,10 +293,9 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
             than being lifted above it with a gap underneath. */}
         <View style={{ width: '100%' }}>
           <Animated.View style={{ transform: [{ translateY: sheetTranslateY }] }}>
-            {/* The white card animates its size; the content inside swaps
-                straight away, so the card clips it while it resizes. */}
-            <Reanimated.View layout={sheetResize} style={styles.sheet}>
-            <LayoutAnimationConfig skipEntering skipExiting>
+            {/* The white card's height is driven by cardHeight; the content
+                inside keeps its natural size and the card clips it. */}
+            <Reanimated.View style={[styles.sheet, cardStyle]}>
             <SafeAreaView
               style={[
                 styles.sheetInner,
@@ -241,15 +305,16 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
                 keyboardHeight > 0 && { paddingBottom: keyboardHeight - insets.bottom + 16 },
               ]}
               edges={['bottom']}
+              onLayout={handleContentLayout}
             >
               <View style={styles.handle} />
 
               <View style={styles.closeRow}>
                 {step !== 'main' ? (
-                  <Reanimated.View key="back" entering={stepEnter} exiting={stepExit}>
+                  <Reanimated.View style={backStyle}>
                     <TouchableOpacity
                       style={styles.closeBtn}
-                      onPress={() => setStep('main')}
+                      onPress={() => goTo('main')}
                       hitSlop={12}
                       activeOpacity={0.7}
                       accessibilityLabel="Back"
@@ -272,27 +337,27 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
               </View>
 
               {step === 'add' && (
-                <Reanimated.View key="add" entering={stepEnter} exiting={stepExit} style={styles.stepBody}>
+                <Reanimated.View style={[styles.stepBody, contentStyle]}>
                   <Text style={styles.title}>Add to meal</Text>
                   <AddIngredientOptions onPick={handleAddSourceSelected} includeRecipes />
                 </Reanimated.View>
               )}
 
               {step === 'time' && (
-                <Reanimated.View key="time" entering={stepEnter} exiting={stepExit} style={styles.stepPad}>
+                <Reanimated.View style={[styles.stepPad, contentStyle]}>
                   <MealTimeBody
                     visible
                     value={d.time}
                     onSave={(time) => {
                       draftMeal.setTime(time);
-                      setStep('main');
+                      goTo('main');
                     }}
                   />
                 </Reanimated.View>
               )}
 
               {step === 'portion' && portionItem && (
-                <Reanimated.View key="portion" entering={stepEnter} exiting={stepExit} style={styles.stepPad}>
+                <Reanimated.View style={[styles.stepPad, contentStyle]}>
                   <QuantityPickerBody
                     visible
                     title={portionItem.kind === 'recipe' ? 'How many servings?' : 'How much?'}
@@ -303,7 +368,7 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
                         : portionItem.quantity_value ?? 100
                     }
                     unit={portionItem.quantity_unit ?? 'g'}
-                    onClose={() => setStep('main')}
+                    onClose={() => goTo('main')}
                     onSave={(value, unit) => {
                       draftMeal.updatePortion(
                         portionItem.key,
@@ -311,14 +376,14 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
                           ? { servings: value }
                           : { quantity_value: value, quantity_unit: unit },
                       );
-                      setStep('main');
+                      goTo('main');
                     }}
                   />
                 </Reanimated.View>
               )}
 
               {step === 'main' && (
-                <Reanimated.View key="main" entering={stepEnter} exiting={stepExit} style={styles.mainStep}>
+                <Reanimated.View style={[styles.mainStep, contentStyle]}>
                   <ScrollView
                     style={styles.scroll}
                     contentContainerStyle={styles.body}
@@ -344,7 +409,7 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
 
                       <TouchableOpacity
                         style={styles.inlineCard}
-                        onPress={() => setStep('time')}
+                        onPress={() => goTo('time')}
                         activeOpacity={0.85}
                       >
                         <View style={styles.inlineCardLeft}>
@@ -371,7 +436,7 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
                         </View>
                         <TouchableOpacity
                           style={styles.squareAddBtn}
-                          onPress={() => setStep('add')}
+                          onPress={() => goTo('add')}
                           activeOpacity={0.85}
                           accessibilityLabel="Add an item"
                         >
@@ -382,7 +447,7 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
                       {d.items.length === 0 ? (
                         <TouchableOpacity
                           style={styles.emptyCard}
-                          onPress={() => setStep('add')}
+                          onPress={() => goTo('add')}
                           activeOpacity={0.85}
                         >
                           <Text style={styles.emptyCardText}>Add a recipe or a product</Text>
@@ -419,7 +484,7 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
                                 style={styles.itemQty}
                                 onPress={() => {
                                   setPortionKey(item.key);
-                                  setStep('portion');
+                                  goTo('portion');
                                 }}
                                 activeOpacity={0.75}
                                 accessibilityLabel={`Change portion, ${portionLabel(item)}`}
@@ -499,7 +564,6 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
                 </Reanimated.View>
               )}
             </SafeAreaView>
-            </LayoutAnimationConfig>
             </Reanimated.View>
           </Animated.View>
         </View>
