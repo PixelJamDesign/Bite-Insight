@@ -63,7 +63,7 @@ import RecipeActionIcon from '@/assets/icons/recipe-actions/recipe.svg';
 import EditActionIcon from '@/assets/icons/recipe-actions/edit.svg';
 import { buildProductSnapshot } from '@/lib/recipes';
 import { ImageViewer } from '@/components/ImageViewer';
-import { HeaderEdge, HEADER_EDGE_AT_TOP, useScrollEdge } from '@/components/HeaderEdge';
+import { FrostedHeader, useScrollEdge } from '@/components/HeaderEdge';
 
 /** Coerce a value to number, falling back to a query-param source */
 function toNum(primary: unknown, fallback: unknown): number | undefined {
@@ -882,6 +882,8 @@ export default function ScanResultScreen() {
   const [activeTab, _setActiveTab] = useState<Tab>('overview');
   const contentScrollRef = useRef<ScrollView>(null);
   const contentEdge = useScrollEdge();
+  // Measured: the header floats over the content, which starts below it.
+  const [headerHeight, setHeaderHeight] = useState(360);
   // Content runs under the home indicator; the scroll's bottom padding
   // keeps the last row clear of it (no hard clip at the safe-area line).
   const insets = useSafeAreaInsets();
@@ -1951,7 +1953,7 @@ export default function ScanResultScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={[]}>
       {/* Invisible text to measure the widest rating label at the user's font scale */}
       <Text
         style={styles.ratingMeasure}
@@ -1961,8 +1963,22 @@ export default function ScanResultScreen() {
         Moderate
       </Text>
       <Animated.View style={{ flex: 1, opacity: pageOpacity, transform: [{ translateX: pageTranslateX }] }}>
-      {/* ── Sticky Header (back, product info, nutri-score, tabs) ── */}
-      <View style={styles.stickyHeader}>
+      {/* ── Frosted glass behind the header once content scrolls under it ── */}
+      <FrostedHeader
+        scrollY={contentEdge.scrollY}
+        color="#ffffff"
+        style={[styles.headerFrost, { top: 0, height: headerHeight }]}
+      />
+
+      {/* ── Sticky Header (back, product info, nutri-score, tabs). Floats
+          over the content, which scrolls up behind it. ── */}
+      <View
+        style={[styles.stickyHeader, { paddingTop: insets.top }]}
+        onLayout={(e) => {
+          const h = Math.round(e.nativeEvent.layout.height);
+          if (h > 0 && h !== headerHeight) setHeaderHeight(h);
+        }}
+      >
         {/* Back button + product actions menu */}
         <View style={styles.backRow}>
           <TouchableOpacity style={styles.backBtn} onPress={handleBack} activeOpacity={0.7}>
@@ -2143,13 +2159,17 @@ export default function ScanResultScreen() {
         </View>
       </View>
 
-      {/* ── Scrollable tab content ── */}
+      {/* ── Scrollable tab content (starts below the header, scrolls under it) ── */}
       <View style={{ flex: 1 }}>
         <ScrollView
           ref={contentScrollRef}
           {...contentEdge.scrollProps}
           style={styles.scroll}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: 56 + insets.bottom }]}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingTop: headerHeight + Spacing.s, paddingBottom: 56 + insets.bottom },
+          ]}
+          scrollIndicatorInsets={{ top: headerHeight }}
           showsVerticalScrollIndicator={false}
         >
         {/* ══════════════════════════════════════════════════════
@@ -3438,7 +3458,6 @@ export default function ScanResultScreen() {
           <Text style={styles.offAttributionText}>{t('attribution.openFoodFacts')}</Text>
         </TouchableOpacity>
         </ScrollView>
-        <HeaderEdge scrollY={contentEdge.scrollY} color="#ffffff" style={HEADER_EDGE_AT_TOP} />
       </View>
 
       <FamilySwitcherSheet
@@ -3538,9 +3557,16 @@ const styles = StyleSheet.create({
     letterSpacing: -0.28,
   },
 
-  // Sticky header (back, product info, nutri-score, tabs)
+  // Sticky header (back, product info, nutri-score, tabs) — floats over
+  // the content; the frost behind it shows once content scrolls under.
   stickyHeader: {
-    backgroundColor: '#fff',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 2,
+  },
+  headerFrost: {
     zIndex: 1,
   },
   stickyContent: {
@@ -3585,7 +3611,6 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   scrollContent: {
     paddingHorizontal: Spacing.m,
-    paddingTop: Spacing.s,
     paddingBottom: 56,
   },
 
