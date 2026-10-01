@@ -145,8 +145,9 @@ const styles = StyleSheet.create({
     minWidth: 0,
     gap: 2,
   },
+  // Heading 5 — 18px since the Figma update
   blockName: {
-    fontSize: 16,
+    fontSize: 18,
     lineHeight: 20,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',

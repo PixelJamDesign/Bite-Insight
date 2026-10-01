@@ -36,6 +36,8 @@ import { UpsellPanel } from '@/components/UpsellPanel';
 import { PlusBadge } from '@/components/PlusBadge';
 import { CameraIcon } from '@/components/MenuIcons';
 import { MealBlock } from '@/components/MealBlock';
+import { ScanCard } from '@/components/ScanCard';
+import { openScanResult } from '@/lib/openScan';
 import { IconButton } from '@/components/IconButton';
 import { deleteMeal, listMeals, setMealEaten, toDateKey } from '@/lib/mealPlan';
 import { useDraftMeal } from '@/lib/draftMealContext';
@@ -59,12 +61,14 @@ import {
   ALLERGY_LEGACY_MAP,
   DIETARY_PREFERENCE_LEGACY_MAP,
 } from '@/constants/profileOptions';
-import type { UserProfile, DailyInsight, Ingredient, UserIngredientPreference, Meal } from '@/lib/types';
+import type { UserProfile, DailyInsight, Ingredient, UserIngredientPreference, Meal, Scan } from '@/lib/types';
 import Logo from '../../assets/images/logo.svg';
 import AddIcon from '../../assets/icons/meal-plan/add.svg';
 
 /** Meals listed on the dashboard before it hands over to the planner. */
 const DASHBOARD_MEAL_LIMIT = 4;
+/** How many of the latest scans the Scanned items section shows. */
+const DASHBOARD_SCAN_LIMIT = 4;
 
 /**
  * Build a reverse map from normalised key → legacy display string(s).
@@ -283,6 +287,36 @@ export default function HomeDashboard() {
   }, [session]);
 
   useFocusEffect(useCallback(() => { fetchData(); }, [fetchData]));
+
+  // Latest scans for the Scanned items section, plus how many were today.
+  const [recentScans, setRecentScans] = useState<Scan[]>([]);
+  const [scansToday, setScansToday] = useState(0);
+  const loadRecentScans = useCallback(async () => {
+    const userId = session?.user?.id;
+    if (!userId) return;
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const [latest, today] = await Promise.all([
+      supabase
+        .from('scans')
+        .select('*')
+        .eq('user_id', userId)
+        .order('scanned_at', { ascending: false })
+        .limit(DASHBOARD_SCAN_LIMIT),
+      supabase
+        .from('scans')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .gte('scanned_at', startOfToday.toISOString()),
+    ]);
+    if (latest.data) setRecentScans(latest.data as Scan[]);
+    if (today.count != null) setScansToday(today.count);
+  }, [session?.user?.id]);
+  useFocusEffect(
+    useCallback(() => {
+      loadRecentScans();
+    }, [loadRecentScans]),
+  );
 
   // Today's meal plan for the dashboard card. Loaded on its own so a
   // failure here never holds up the rest of the dashboard.
@@ -674,6 +708,52 @@ export default function HomeDashboard() {
                   </TouchableOpacity>
                 )}
               </>
+            )}
+          </Animated.View>
+
+          {/* ── Scanned items ── */}
+          <Animated.View style={[styles.mealSection, { opacity: fadeStats.opacity, transform: [{ translateY: fadeStats.translateY }] }]}>
+            <View style={styles.mealHeader}>
+              <TouchableOpacity
+                style={styles.mealHeaderText}
+                onPress={() => router.push('/(tabs)/history' as any)}
+                activeOpacity={0.7}
+                accessibilityRole="link"
+              >
+                <Text style={styles.sectionTitle}>{t('scannedHeading')}</Text>
+                <Text style={styles.sectionSub}>
+                  {scansToday === 0 ? (
+                    t('scannedSubtitleNone')
+                  ) : (
+                    <Trans
+                      t={t}
+                      i18nKey="scannedSubtitle"
+                      count={scansToday}
+                      components={{ b: <Text style={styles.sectionSubBold} /> }}
+                    />
+                  )}
+                </Text>
+              </TouchableOpacity>
+              <IconButton
+                icon={<AddIcon width={24} height={24} />}
+                onPress={() => router.push('/(tabs)/scanner' as any)}
+                accessibilityLabel={t('scannedAdd')}
+              />
+            </View>
+
+            {recentScans.length === 0 ? (
+              <TouchableOpacity
+                style={styles.mealEmpty}
+                onPress={() => router.push('/(tabs)/scanner' as any)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.mealEmptyTitle}>{t('scannedEmptyTitle')}</Text>
+                <Text style={styles.mealEmptySub}>{t('scannedEmptySubtitle')}</Text>
+              </TouchableOpacity>
+            ) : (
+              recentScans.map((scan) => (
+                <ScanCard key={scan.id} scan={scan} onPress={() => openScanResult(scan)} />
+              ))
             )}
           </Animated.View>
 

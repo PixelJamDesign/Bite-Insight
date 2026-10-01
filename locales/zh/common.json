@@ -115,7 +115,8 @@
     "dashboard": "仪表板",
     "recipes": "食谱",
     "scanner": "扫描仪",
-    "history": "历史"
+    "history": "历史",
+    "mealPlan": "餐食计划"
   },
   "updateToast": {
     "title": "有可用更新!",

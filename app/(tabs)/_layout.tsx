@@ -10,7 +10,7 @@ import type { BottomTabBarProps } from "expo-router/js-tabs";
 import { Colors } from '@/constants/theme';
 import { IconButton } from '@/components/IconButton';
 import { useAuth } from '@/lib/auth';
-import { DashboardIcon, RecipesIcon, HistoryIcon, ScannerIcon } from '@/components/TabIcons';
+import { DashboardIcon, RecipesIcon, MealPlanIcon, ScannerIcon } from '@/components/TabIcons';
 import { useCachedAvatar } from '@/lib/useCachedAvatar';
 import { TabBarSlideProvider, useTabBarSlide } from '@/lib/tabBarContext';
 import { useMenu } from '@/lib/menuContext';
@@ -95,7 +95,7 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 
         {state.routes.map((route, index) => {
           // Skip routes that aren't part of the visible tab pill
-          if (!['dashboard', 'recipes', 'scanner', 'history'].includes(route.name)) return null;
+          if (!['dashboard', 'recipes', 'scanner', 'meal-plan'].includes(route.name)) return null;
 
           const isFocused = state.index === index;
           const isScanner = route.name === 'scanner';
@@ -170,7 +170,7 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
               <View style={styles.iconContainer}>
                 {route.name === 'dashboard' && <DashboardIcon color={iconColor} size={24} />}
                 {route.name === 'recipes' && <RecipesIcon color={iconColor} size={24} />}
-                {route.name === 'history' && <HistoryIcon color={iconColor} size={24} />}
+                {route.name === 'meal-plan' && <MealPlanIcon color={iconColor} size={24} />}
               </View>
             </TouchableOpacity>
           );
@@ -336,9 +336,10 @@ export default function TabLayout() {
             <Tabs.Screen name="dashboard" options={{ title: t('tabs.dashboard') }} />
             <Tabs.Screen name="recipes" options={{ title: t('tabs.recipes') }} />
             <Tabs.Screen name="scanner" options={{ title: t('tabs.scanner') }} />
-            <Tabs.Screen name="history" options={{ title: t('tabs.history') }} />
+            <Tabs.Screen name="meal-plan" options={{ title: t('tabs.mealPlan') }} />
+            {/* Scan history: in the menu and the dashboard's Scanned items. */}
+            <Tabs.Screen name="history" options={{ href: null }} />
             <Tabs.Screen name="ingredient-preferences" options={{ href: null }} />
-            <Tabs.Screen name="meal-plan" options={{ href: null }} />
           </Tabs>
           <MenuOverlay />
           <NotificationsOverlay />

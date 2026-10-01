@@ -62,7 +62,7 @@ Heading 1: fontSize:36, lineHeight:44, fontWeight:'700', fontFamily:'Figtree_700
 Heading 2: fontSize:30, lineHeight:36, fontWeight:'700', fontFamily:'Figtree_700Bold', letterSpacing:-0.6
 Heading 3: fontSize:24, lineHeight:30, fontWeight:'700', fontFamily:'Figtree_700Bold', letterSpacing:-0.48
 Heading 4: fontSize:18, lineHeight:24, fontWeight:'700', fontFamily:'Figtree_700Bold', letterSpacing:-0.36
-Heading 5: fontSize:16, lineHeight:20, fontWeight:'700', fontFamily:'Figtree_700Bold', letterSpacing:0
+Heading 5: fontSize:18, lineHeight:20, fontWeight:'700', fontFamily:'Figtree_700Bold', letterSpacing:0  (was 16 — Figma update Oct 2026; card titles use it)
 Heading 6: fontSize:14, lineHeight:17, fontWeight:'700', fontFamily:'Figtree_700Bold', letterSpacing:-0.28
 Body Large: fontSize:18, lineHeight:30, fontWeight:'300', fontFamily:'Figtree_300Light', letterSpacing:-0.5
 Body Regular: fontSize:16, lineHeight:24, fontWeight:'300', fontFamily:'Figtree_300Light', letterSpacing:0
@@ -102,7 +102,7 @@ Use `...Shadows.level4` for cards, `...Shadows.level3` for badges, `...Shadows.l
 | Back button | `MenuArrowLeftIcon` | `@/components/MenuIcons` |
 | Row chevron | `MenuChevronRightIcon` | `@/components/MenuIcons` |
 | Menu navigation items | `MenuDashboardIcon`, `MenuHistoryIcon`, etc. | `@/components/MenuIcons` |
-| Tab bar | `DashboardIcon`, `RecipesIcon`, `HistoryIcon`, `ScannerIcon` | `@/components/TabIcons` |
+| Tab bar | `DashboardIcon`, `RecipesIcon`, `ScannerIcon`, `MealPlanIcon` | `@/components/TabIcons` |
 | Like/dislike/flag in ingredient rows | `MenuLikedIcon`, `MenuDislikedIcon`, `MenuFlaggedIcon` | `@/components/MenuIcons` |
 | Food nutrition icons | Local PNG assets in `assets/icons/food/` | `require(...)` |
 | No custom icon available | `Ionicons` from `@expo/vector-icons` | Only as last resort |
@@ -127,6 +127,7 @@ Reuse these before creating new components:
 | `CheckboxCard` | `@/components/CheckboxCard` | Figma "Checkbox": tinted card with checkbox, title and supporting text |
 | `MealItemRow` | `@/components/MealItemRow` | One recipe/product in a meal: image, brand, name, portion pill (Plan a meal sheet, meal view) |
 | `MealTimeCard` | `@/components/MealTimeCard` | "Time / When do you plan to eat?" card with the time box; opens the time picker (Plan a meal) |
+| `ScanCard` | `@/components/ScanCard` | A scanned product: image, brand, 18px name, Nutri-score pill, chevron (history list, dashboard Scanned items). Open with `openScanResult` from `@/lib/openScan` |
 | `MealTotalsList` | `@/components/MealTotalsList` | Stack of nutrition total rows with food icons |
 | `IconButton` | `@/components/IconButton` | Figma Icon Button: `size` regular (48) / small (36), `variant` onTeal / onWhite, optional `badge` |
 | `MoreMenu` | `@/components/MoreMenu` | ⋯ button with actions — system menu on iOS (SwiftUI Menu, fixed order) & Android (Expo UI MenuView), ActionsSheet on web. Items show in the same order everywhere. `size` small (36, default) / regular (48) |

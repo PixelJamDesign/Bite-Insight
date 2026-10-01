@@ -115,7 +115,8 @@
     "dashboard": "لوحة القيادة",
     "recipes": "وصفات",
     "scanner": "الماسح",
-    "history": "السجل"
+    "history": "السجل",
+    "mealPlan": "خطة الوجبات"
   },
   "updateToast": {
     "title": "تحديث متوفر!",

@@ -16,5 +16,12 @@
   "suitableFor": "Geeignet für:",
   "setupRequired": "Einrichtung erforderlich",
   "setupMessage": "Fügen Sie Ihre Supabase-URL und Ihren Anon-Schlüssel zur .env-Datei hinzu und starten Sie dann die App neu.\n\nEinstellungen → API in Ihrem Supabase-Dashboard.",
-  "fallbackInitials": "??"
+  "fallbackInitials": "??",
+  "scannedHeading": "Gescannte Produkte",
+  "scannedSubtitleNone": "Heute noch nichts gescannt",
+  "scannedSubtitle_one": "Du hast heute <b>{{count}} Produkt</b> gescannt",
+  "scannedSubtitle_other": "Du hast heute <b>{{count}} Produkte</b> gescannt",
+  "scannedAdd": "Produkt scannen",
+  "scannedEmptyTitle": "Scanne dein erstes Produkt",
+  "scannedEmptySubtitle": "Richte die Kamera auf einen Barcode und sieh, was er für dich bedeutet"
 }

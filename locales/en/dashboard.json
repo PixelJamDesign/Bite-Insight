@@ -16,5 +16,12 @@
   "suitableFor": "Suitable for:",
   "setupRequired": "Setup Required",
   "setupMessage": "Add your Supabase URL and anon key to the .env file, then restart the app.\n\nSettings → API in your Supabase dashboard.",
-  "fallbackInitials": "??"
+  "fallbackInitials": "??",
+  "scannedHeading": "Scanned items",
+  "scannedSubtitleNone": "Nothing scanned today yet",
+  "scannedSubtitle_one": "You've scanned <b>{{count}} item</b> today",
+  "scannedSubtitle_other": "You've scanned <b>{{count}} items</b> today",
+  "scannedAdd": "Scan a product",
+  "scannedEmptyTitle": "Scan your first product",
+  "scannedEmptySubtitle": "Point your camera at a barcode to see what it means for you"
 }

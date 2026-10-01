@@ -20,5 +20,16 @@
   "suitableFor": "مناسبة ل:",
   "setupRequired": "الإعداد مطلوب",
   "setupMessage": "أضف عنوان URL الخاص بـ Supabase ومفتاح Anon إلى ملف .env، ثم أعد تشغيل التطبيق.\n\nالإعدادات → API في لوحة تحكم Supabase.",
-  "fallbackInitials": "؟؟"
+  "fallbackInitials": "؟؟",
+  "scannedHeading": "المنتجات الممسوحة",
+  "scannedSubtitleNone": "لم تمسح أي منتج اليوم بعد",
+  "scannedSubtitle_zero": "لم تمسح أي منتج اليوم بعد",
+  "scannedSubtitle_one": "مسحت <b>منتجًا واحدًا</b> اليوم",
+  "scannedSubtitle_two": "مسحت <b>منتجين</b> اليوم",
+  "scannedSubtitle_few": "مسحت <b>{{count}} منتجات</b> اليوم",
+  "scannedSubtitle_many": "مسحت <b>{{count}} منتجًا</b> اليوم",
+  "scannedSubtitle_other": "مسحت <b>{{count}} منتج</b> اليوم",
+  "scannedAdd": "امسح منتجًا",
+  "scannedEmptyTitle": "امسح أول منتج لك",
+  "scannedEmptySubtitle": "وجّه الكاميرا إلى رمز شريطي لترى ما يعنيه لك"
 }

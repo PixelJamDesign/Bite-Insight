@@ -16,5 +16,12 @@
   "suitableFor": "Adecuado para:",
   "setupRequired": "Configuración requerida",
   "setupMessage": "Agregue su URL de Supabase y su clave anónima al archivo .env, luego reinicie la aplicación.\n\nConfiguración → API en su panel de Supabase.",
-  "fallbackInitials": "??"
+  "fallbackInitials": "??",
+  "scannedHeading": "Productos escaneados",
+  "scannedSubtitleNone": "Aún no has escaneado nada hoy",
+  "scannedSubtitle_one": "Hoy has escaneado <b>{{count}} producto</b>",
+  "scannedSubtitle_other": "Hoy has escaneado <b>{{count}} productos</b>",
+  "scannedAdd": "Escanear un producto",
+  "scannedEmptyTitle": "Escanea tu primer producto",
+  "scannedEmptySubtitle": "Apunta la cámara a un código de barras para ver qué significa para ti"
 }

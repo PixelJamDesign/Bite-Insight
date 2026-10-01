@@ -18,5 +18,14 @@
   "suitableFor": "Nadaje się do:",
   "setupRequired": "Wymagana konfiguracja",
   "setupMessage": "Dodaj adres URL Supabase i klucz anon do pliku .env, a następnie uruchom ponownie aplikację.\n\nUstawienia → API w panelu kontrolnym Supabase.",
-  "fallbackInitials": "??"
+  "fallbackInitials": "??",
+  "scannedHeading": "Zeskanowane produkty",
+  "scannedSubtitleNone": "Dziś jeszcze nic nie zeskanowano",
+  "scannedSubtitle_one": "Dziś zeskanowano <b>{{count}} produkt</b>",
+  "scannedSubtitle_few": "Dziś zeskanowano <b>{{count}} produkty</b>",
+  "scannedSubtitle_many": "Dziś zeskanowano <b>{{count}} produktów</b>",
+  "scannedSubtitle_other": "Dziś zeskanowano <b>{{count}} produktu</b>",
+  "scannedAdd": "Zeskanuj produkt",
+  "scannedEmptyTitle": "Zeskanuj swój pierwszy produkt",
+  "scannedEmptySubtitle": "Skieruj aparat na kod kreskowy, by zobaczyć, co oznacza dla ciebie"
 }

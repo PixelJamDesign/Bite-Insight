@@ -1,5 +1,7 @@
 import { useState, useCallback, useRef, useMemo } from 'react';
 import { DismissibleRow } from '@/components/DismissibleRow';
+import { ScanCard } from '@/components/ScanCard';
+import { openScanResult } from '@/lib/openScan';
 import {
   View,
   Text,
@@ -8,11 +10,10 @@ import {
   TouchableOpacity,
   ScrollView,
   RefreshControl,
-  Image,
   Animated,
   useWindowDimensions,
 } from 'react-native';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import ChevronLeftIcon from '@/assets/icons/meal-plan/chevron-left.svg';
 import ChevronRightIcon from '@/assets/icons/meal-plan/chevron-right.svg';
@@ -20,25 +21,13 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { Colors, Shadows, Spacing } from '@/constants/theme';
-import { sentenceCase } from '@/lib/text';
 import { ScreenLayout } from '@/components/ScreenLayout';
 import { IconButton } from '@/components/IconButton';
 import { useTabBarSlide } from '@/lib/tabBarContext';
-import { NoImagePlaceholder } from '@/components/NoImagePlaceholder';
 import { LottieLoader } from '@/components/LottieLoader';
 import type { Scan } from '@/lib/types';
 import { useFadeIn } from '@/lib/useFadeIn';
 import { useFocusFadeIn } from '@/lib/useFocusFadeIn';
-import { getCachedProduct } from '@/lib/productCache';
-
-// ─── Nutriscore colours ────────────────────────────────────────────────────────
-const NUTRISCORE_COLORS: Record<string, string> = {
-  a: '#009a1f',
-  b: '#b8d828',
-  c: '#ffc72d',
-  d: '#ff8736',
-  e: '#ff3f42',
-};
 
 // ─── Date utilities ────────────────────────────────────────────────────────────
 const MONTH_FULL = [
@@ -305,39 +294,14 @@ function CalendarPicker({
   );
 }
 
-// ─── ScanCard ──────────────────────────────────────────────────────────────────
+// ─── Scan row ──────────────────────────────────────────────────────────────────
 // Swipe-to-delete handled by the shared DismissibleRow — same gesture
 // across the inbox + history (short swipe reveals trash, long swipe
-// auto-deletes).
-function ScanCard({ scan, onPress, onDelete }: { scan: Scan; onPress: () => void; onDelete: () => void }) {
-  const grade = scan.nutriscore_grade?.toLowerCase();
-  const gradeColor = grade ? NUTRISCORE_COLORS[grade] : null;
-
+// auto-deletes). The card itself is the shared ScanCard.
+function ScanRow({ scan, onPress, onDelete }: { scan: Scan; onPress: () => void; onDelete: () => void }) {
   return (
     <DismissibleRow onDismiss={onDelete} accessibilityLabel="Delete scan">
-      <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.75}>
-        {scan.image_url ? (
-          <Image source={{ uri: scan.image_url }} style={styles.productImage} resizeMode="contain" />
-        ) : (
-          <View style={[styles.productImage, styles.productImagePlaceholder]}>
-            <NoImagePlaceholder />
-          </View>
-        )}
-        <View style={styles.cardContent}>
-          {scan.brand ? (
-            <Text style={styles.brandName} numberOfLines={1}>{sentenceCase(scan.brand!)}</Text>
-          ) : null}
-          <Text style={styles.productName} numberOfLines={2}>{sentenceCase(scan.product_name)}</Text>
-        </View>
-        {gradeColor ? (
-          <View style={[styles.nutriscoreCircle, { backgroundColor: gradeColor }]}>
-            <Text style={styles.nutriscoreText}>{grade!.toUpperCase()}</Text>
-          </View>
-        ) : null}
-        <View style={styles.chevronBox}>
-          <Ionicons name="chevron-forward" size={14} color={Colors.secondary} />
-        </View>
-      </TouchableOpacity>
+      <ScanCard scan={scan} onPress={onPress} />
     </DismissibleRow>
   );
 }
@@ -347,7 +311,6 @@ export default function HistoryScreen() {
   const { t } = useTranslation('history');
   const { t: tc } = useTranslation('common');
   const { session } = useAuth();
-  const router = useRouter();
   const tabBarSlide = useTabBarSlide();
 
   const [scans, setScans] = useState<Scan[]>([]);
@@ -397,43 +360,8 @@ export default function HistoryScreen() {
     await supabase.from('scans').delete().eq('id', id);
   }
 
-  async function openScan(scan: Scan) {
-    // Check local SQLite cache for full nutrition data — avoids an OFF fetch
-    const cached = await getCachedProduct(scan.barcode);
-    router.push({
-      pathname: '/scan-result',
-      params: {
-        scanId: scan.id,
-        productName: scan.product_name,
-        brand: scan.brand ?? '',
-        imageUrl: scan.image_url ?? '',
-        barcode: scan.barcode,
-        nutriscoreGrade: scan.nutriscore_grade ?? cached?.nutriscoreGrade ?? '',
-        ...(cached ? {
-          quantity: cached.quantity ?? '',
-          energyKcal: cached.energyKcal != null ? String(cached.energyKcal) : '',
-          carbs: cached.carbs != null ? String(cached.carbs) : '',
-          sugars: cached.sugars != null ? String(cached.sugars) : '',
-          fiber: cached.fiber != null ? String(cached.fiber) : '',
-          fat: cached.fat != null ? String(cached.fat) : '',
-          saturatedFat: cached.saturatedFat != null ? String(cached.saturatedFat) : '',
-          proteins: cached.proteins != null ? String(cached.proteins) : '',
-          salt: cached.salt != null ? String(cached.salt) : '',
-          servingSize: cached.servingSize ?? '',
-          energyKcalServing: cached.energyKcalServing != null ? String(cached.energyKcalServing) : '',
-          carbsServing: cached.carbsServing != null ? String(cached.carbsServing) : '',
-          sugarsServing: cached.sugarsServing != null ? String(cached.sugarsServing) : '',
-          fiberServing: cached.fiberServing != null ? String(cached.fiberServing) : '',
-          fatServing: cached.fatServing != null ? String(cached.fatServing) : '',
-          saturatedFatServing: cached.saturatedFatServing != null ? String(cached.saturatedFatServing) : '',
-          proteinsServing: cached.proteinsServing != null ? String(cached.proteinsServing) : '',
-          saltServing: cached.saltServing != null ? String(cached.saltServing) : '',
-          ingredientsText: cached.ingredientsText ?? '',
-          ingredientsJson: cached.ingredientsJson ?? '',
-          offLang: cached.offLang ?? 'en',
-        } : {}),
-      },
-    });
+  function openScan(scan: Scan) {
+    openScanResult(scan);
   }
 
   // ── Date range overlay ──────────────────────────────────────────────────────
@@ -601,7 +529,7 @@ export default function HistoryScreen() {
               data={filteredScans}
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
-                <ScanCard scan={item} onPress={() => openScan(item)} onDelete={() => deleteScan(item.id)} />
+                <ScanRow scan={item} onPress={() => openScan(item)} onDelete={() => deleteScan(item.id)} />
               )}
               contentContainerStyle={styles.list}
               showsVerticalScrollIndicator={false}
@@ -935,70 +863,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     gap: 4,
     paddingBottom: 120,
-  },
-  card: {
-    backgroundColor: Colors.surface.secondary,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#aad4cd',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.s,
-    paddingVertical: Spacing.s,
-    gap: Spacing.s,
-  },
-  productImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    backgroundColor: Colors.surface.tertiary,
-    overflow: 'hidden',
-  },
-  productImagePlaceholder: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardContent: {
-    flex: 1,
-    gap: 2,
-  },
-  brandName: {
-    fontSize: 13,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.secondary,
-    letterSpacing: -0.26,
-    lineHeight: 16,
-  },
-  productName: {
-    fontSize: 18,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
-    letterSpacing: -0.36,
-    lineHeight: 24,
-  },
-  nutriscoreCircle: {
-    width: 24,
-    height: 36,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  nutriscoreText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    lineHeight: 20,
-    textShadowColor: 'rgba(0,0,0,0.29)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
-  },
-  chevronBox: {
-    width: 20,
-    height: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });

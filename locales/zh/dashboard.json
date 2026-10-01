@@ -15,5 +15,11 @@
   "suitableFor": "适合：",
   "setupRequired": "需要设置",
   "setupMessage": "将您的 Supabase URL 和匿名密钥添加到 .env 文件中，然后重新启动应用程序。\n\nSupabase 仪表板中的设置 → API。",
-  "fallbackInitials": "??"
+  "fallbackInitials": "??",
+  "scannedHeading": "已扫描商品",
+  "scannedSubtitleNone": "今天还没有扫描",
+  "scannedSubtitle_other": "今天已扫描<b>{{count}}件</b>商品",
+  "scannedAdd": "扫描商品",
+  "scannedEmptyTitle": "扫描你的第一件商品",
+  "scannedEmptySubtitle": "将相机对准条形码，看看它对你意味着什么"
 }

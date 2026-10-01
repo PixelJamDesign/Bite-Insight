@@ -115,7 +115,8 @@
     "dashboard": "ダッシュボード",
     "recipes": "レシピ",
     "scanner": "スキャナー",
-    "history": "履歴"
+    "history": "履歴",
+    "mealPlan": "食事プラン"
   },
   "updateToast": {
     "title": "アップデートあり!",

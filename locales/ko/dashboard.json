@@ -15,5 +15,11 @@
   "suitableFor": "적합 대상:",
   "setupRequired": "설정 필요",
   "setupMessage": "Supabase URL과 익명 키를 .env 파일에 추가한 다음 앱을 다시 시작하세요.\n\n설정 → Supabase 대시보드의 API.",
-  "fallbackInitials": "??"
+  "fallbackInitials": "??",
+  "scannedHeading": "스캔한 제품",
+  "scannedSubtitleNone": "오늘은 아직 스캔한 제품이 없어요",
+  "scannedSubtitle_other": "오늘 <b>{{count}}개</b>를 스캔했어요",
+  "scannedAdd": "제품 스캔",
+  "scannedEmptyTitle": "첫 제품을 스캔해 보세요",
+  "scannedEmptySubtitle": "바코드에 카메라를 대면 나에게 어떤 의미인지 알 수 있어요"
 }

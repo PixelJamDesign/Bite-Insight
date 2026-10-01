@@ -53,11 +53,11 @@ export function RecipesIcon({ color, size = 24 }: IconProps) {
   );
 }
 
-export function HistoryIcon({ color, size = 24 }: IconProps) {
+export function MealPlanIcon({ color, size = 24 }: IconProps) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 20 20" fill="none">
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path
-        d="M2.33772 4.87053L3.6041 3.60415C7.10111 0.107136 12.7995 0.135772 16.3319 3.66811C19.8642 7.20044 19.8928 12.8989 16.3958 16.3959C12.8988 19.8929 7.20039 19.8642 3.66806 16.3319C1.57584 14.2397 0.712809 11.3876 1.08351 8.68308M2.33772 4.87053L4.88327 4.88332M2.33772 4.87053L2.32493 2.32498M9.99987 5.99992V9.99992L12.4999 12.4999"
+        d="M18 16H16M16 16L14 16M16 16V14M16 16V18M7 4V2.5M17 4V2.5M2.5 9H21.5M10 22H14C17.7712 22 19.6568 22 20.8284 20.8284C22 19.6569 22 17.7712 22 14V12C22 8.22877 22 6.34315 20.8284 5.17158C19.6568 4 17.7712 4 14 4H10C6.22876 4 4.34314 4 3.17157 5.17158C2 6.34315 2 8.22877 2 12V14C2 17.7712 2 19.6569 3.17157 20.8284C4.34314 22 6.22876 22 10 22Z"
         stroke={color}
         strokeWidth={2}
         strokeLinecap="round"
@@ -67,7 +67,6 @@ export function HistoryIcon({ color, size = 24 }: IconProps) {
   );
 }
 
-// Scanner icon — always white frame with accent-coloured bars (fixed colours, not dynamic)
 export function ScannerIcon({ size = 42 }: { size?: number }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 42 42" fill="none">

@@ -16,5 +16,12 @@
   "suitableFor": "Geschikt voor:",
   "setupRequired": "Installatie vereist",
   "setupMessage": "Voeg uw Supabase-URL en anon-sleutel toe aan het .env-bestand en start de app opnieuw.\n\nInstellingen → API in uw Supabase dashboard.",
-  "fallbackInitials": "??"
+  "fallbackInitials": "??",
+  "scannedHeading": "Gescande producten",
+  "scannedSubtitleNone": "Vandaag nog niets gescand",
+  "scannedSubtitle_one": "Je hebt vandaag <b>{{count}} product</b> gescand",
+  "scannedSubtitle_other": "Je hebt vandaag <b>{{count}} producten</b> gescand",
+  "scannedAdd": "Product scannen",
+  "scannedEmptyTitle": "Scan je eerste product",
+  "scannedEmptySubtitle": "Richt je camera op een barcode en zie wat het voor jou betekent"
 }

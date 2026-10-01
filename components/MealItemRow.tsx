@@ -119,8 +119,9 @@ const styles = StyleSheet.create({
     color: Colors.secondary,
     letterSpacing: -0.28,
   },
+  // Heading 5 — 18px since the Figma update
   name: {
-    fontSize: 16,
+    fontSize: 18,
     lineHeight: 20,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',

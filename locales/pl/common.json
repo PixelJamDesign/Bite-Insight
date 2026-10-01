@@ -115,7 +115,8 @@
     "dashboard": "Panel",
     "recipes": "Przepisy",
     "scanner": "Skaner",
-    "history": "Historia"
+    "history": "Historia",
+    "mealPlan": "Plan posiłków"
   },
   "updateToast": {
     "title": "Dostępna aktualizacja!",
