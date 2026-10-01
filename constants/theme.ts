@@ -1,4 +1,4 @@
-import { Platform } from 'react-native';
+import { Platform, type ViewStyle } from 'react-native';
 
 export const Colors = {
   background: '#e2f1ee',
@@ -63,7 +63,7 @@ export const Radius = {
 };
 
 
-// Shadow tokens — iOS only.
+// Shadow tokens — iOS and web; none on Android.
 //
 // React Native 0.76+ on Android (new architecture / Fabric) now
 // renders the iOS-style shadow props (shadowColor/Offset/Opacity/
@@ -78,31 +78,28 @@ export const Radius = {
 // Fix: emit zero shadow props on Android. Cards remain defined by
 // their borders + surface colour. iOS keeps its drop shadows since
 // CALayer shadows on iOS fade cleanly with parent opacity.
-const isIOS = Platform.OS === 'ios';
+//
+// Web gets the same shadows as a CSS boxShadow — the Figma
+// "Elevation (On Tint)" values (offset, blur, colour) map straight
+// across. Without this, web had no shadows at all.
+type ShadowToken = ViewStyle;
+function shadow(y: number, blur: number, opacity: number): ShadowToken {
+  return (
+    Platform.select<ShadowToken>({
+      ios: {
+        shadowColor: 'rgba(68,71,112)',
+        shadowOffset: { width: 0, height: y },
+        shadowOpacity: opacity,
+        shadowRadius: blur,
+      },
+      web: { boxShadow: `0px ${y}px ${blur}px rgba(68,71,112,${opacity})` },
+      default: {},
+    }) ?? {}
+  );
+}
 
 export const Shadows = {
-  level2: isIOS
-    ? {
-        shadowColor: 'rgba(68,71,112)',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-      }
-    : {},
-  level3: isIOS
-    ? {
-        shadowColor: 'rgba(68,71,112)',
-        shadowOffset: { width: 0, height: 12 },
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
-      }
-    : {},
-  level4: isIOS
-    ? {
-        shadowColor: 'rgba(68,71,112)',
-        shadowOffset: { width: 0, height: 24 },
-        shadowOpacity: 0.05,
-        shadowRadius: 24,
-      }
-    : {},
+  level2: shadow(8, 8, 0.2),
+  level3: shadow(12, 12, 0.1),
+  level4: shadow(24, 24, 0.05),
 };
