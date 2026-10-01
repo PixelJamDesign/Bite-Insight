@@ -634,7 +634,7 @@ const styles = StyleSheet.create({
 
   // ── Calendar overlay ─────────────────────────────────────────────────────────
   calOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: Colors.background,
     paddingHorizontal: 24,
     paddingTop: 0,

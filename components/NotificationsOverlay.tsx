@@ -541,7 +541,7 @@ const styles = StyleSheet.create({
     zIndex: 90, // below the menu's 100 so menu wins ties; above content
   },
   background: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: Colors.background,
   },
   // ── Header fade — solid bg fading to transparent so list scrolls

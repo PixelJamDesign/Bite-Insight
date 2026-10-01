@@ -26,8 +26,10 @@ import {
   ScrollView,
   RefreshControl,
   Animated,
+  Pressable,
   Platform,
 } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Colors, Shadows } from '@/constants/theme';
@@ -37,6 +39,7 @@ import { MealActionsSheet } from '@/components/MealActionsSheet';
 import { MealBuilderSheet } from '@/components/MealBuilderSheet';
 import { MealTotalsList } from '@/components/MealTotalsList';
 import { MealBlock } from '@/components/MealBlock';
+import { ProgressiveBlur } from '@/components/ProgressiveBlur';
 import { useFadeIn } from '@/lib/useFadeIn';
 import { useFocusFadeIn } from '@/lib/useFocusFadeIn';
 import { useSubscription } from '@/lib/subscriptionContext';
@@ -60,8 +63,6 @@ import ChevronLeftIcon from '@/assets/icons/meal-plan/chevron-left.svg';
 import ChevronRightIcon from '@/assets/icons/meal-plan/chevron-right.svg';
 import ChevronDownIcon from '@/assets/icons/meal-plan/chevron-down.svg';
 import AddIcon from '@/assets/icons/meal-plan/add.svg';
-import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
 
 const DATE_KEY_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -94,39 +95,6 @@ const DAY_LABELS = ['SUN', 'MON', 'TUE', 'WED', 'THUR', 'FRI', 'SAT'];
  * blur/fade band the day scrolls into at the top.
  */
 const TIMELINE_TOP = 36;
-/** Blur steps for the top band, strongest at the top edge. */
-const FADE_BLUR_STEPS = [24, 16, 10, 5];
-
-/**
- * Progressive blur + fade over the top of the timeline. A single blur
- * can't vary in strength, so the band is split into strips that blur less
- * the further down they sit, and a gradient on top takes the content back
- * to the page colour by the time it reaches the card.
- *
- * Android has no reliable backdrop blur (same call as the tab bar), so it
- * gets the gradient alone.
- */
-function TimelineTopFade() {
-  const stripHeight = TIMELINE_TOP / FADE_BLUR_STEPS.length;
-  return (
-    <View style={styles.topFade} pointerEvents="none">
-      {Platform.OS !== 'android' &&
-        FADE_BLUR_STEPS.map((intensity, i) => (
-          <BlurView
-            key={intensity}
-            intensity={intensity}
-            tint="default"
-            style={[styles.topFadeStrip, { top: i * stripHeight, height: stripHeight }]}
-          />
-        ))}
-      <LinearGradient
-        colors={[Colors.background, 'rgba(226,241,238,0.6)', 'rgba(226,241,238,0)']}
-        locations={[0, 0.45, 1]}
-        style={StyleSheet.absoluteFill}
-      />
-    </View>
-  );
-}
 
 function ordinalSuffix(n: number): string {
   const lastTwo = n % 100;
@@ -220,6 +188,8 @@ export default function MealPlanScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [builderOpen, setBuilderOpen] = useState(false);
   const [totalsOpen, setTotalsOpen] = useState(false);
+  /** Closed height of the count card, held while it floats open. */
+  const [countCardHeight, setCountCardHeight] = useState<number | null>(null);
   const timelineRef = useRef<ScrollView>(null);
 
   /** Free accounts plan today only; anything else is the Plus upsell. */
@@ -430,9 +400,15 @@ export default function MealPlanScreen() {
         </View>
       </View>
 
-      {/* Count card — opens to the day's nutrition totals */}
+      {/* Count card — opens to the day's nutrition totals. Open, it turns
+          white and floats over the timeline (which blurs behind it); the
+          slot keeps the closed height so nothing below moves. */}
+      <View style={[styles.countSlot, countCardHeight != null && { height: countCardHeight }]}>
       <TouchableOpacity
-        style={styles.countCard}
+        style={[styles.countCard, totalsOpen && styles.countCardOpen]}
+        onLayout={(e) => {
+          if (!totalsOpen) setCountCardHeight(Math.round(e.nativeEvent.layout.height));
+        }}
         onPress={() => setTotalsOpen((open) => !open)}
         disabled={!hasMeals}
         activeOpacity={0.8}
@@ -456,6 +432,7 @@ export default function MealPlanScreen() {
         </View>
         {hasMeals && totalsOpen && <MealTotalsList totals={dayTotals} />}
       </TouchableOpacity>
+      </View>
     </View>
   );
 
@@ -551,7 +528,7 @@ export default function MealPlanScreen() {
           )}
 
           {/* The day softens into the page as it scrolls up to the count card */}
-          {!loading && !error && <TimelineTopFade />}
+          {!loading && !error && <ProgressiveBlur height={TIMELINE_TOP} />}
         </Animated.View>
       </Animated.View>
 
@@ -564,6 +541,22 @@ export default function MealPlanScreen() {
       >
         <AddIcon width={24} height={24} />
       </TouchableOpacity>
+
+      {/* Totals open: blur the timeline and + button behind the card.
+          Tapping the blur closes it. Android gets a soft tint instead. */}
+      {totalsOpen && (
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={() => setTotalsOpen(false)}
+          accessibilityLabel="Close totals"
+        >
+          {Platform.OS === 'android' ? (
+            <View style={[StyleSheet.absoluteFill, styles.totalsScrimAndroid]} />
+          ) : (
+            <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFill} />
+          )}
+        </Pressable>
+      )}
 
       <MealBuilderSheet
         visible={builderOpen}
@@ -593,6 +586,10 @@ const styles = StyleSheet.create({
   headerExt: {
     paddingHorizontal: 24,
     gap: 16,
+    // Above the content area, so the open totals card can float over the
+    // timeline and its blur.
+    zIndex: 2,
+    elevation: 2,
   },
   weekGroup: {
     gap: 8,
@@ -682,6 +679,21 @@ const styles = StyleSheet.create({
   },
 
   // ── Count card ────────────────────────────────────────────────────────────────
+  countSlot: {
+    position: 'relative',
+  },
+  // Open: white, lifted, and drawn over the timeline instead of pushing it down.
+  countCardOpen: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: Colors.surface.secondary,
+    ...Shadows.level3,
+  },
+  totalsScrimAndroid: {
+    backgroundColor: 'rgba(226, 241, 238, 0.85)',
+  },
   countCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.4)',
     borderWidth: 1,
@@ -732,18 +744,6 @@ const styles = StyleSheet.create({
   // so the fade band can run right up to the card.
   contentInner: {
     flex: 1,
-  },
-  topFade: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: TIMELINE_TOP,
-  },
-  topFadeStrip: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
   },
 
   // ── Content states ────────────────────────────────────────────────────────────

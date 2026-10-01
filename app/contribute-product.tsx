@@ -455,8 +455,8 @@ const styles = StyleSheet.create({
 
   // Hero
   hero: { width: '100%', height: HERO_HEIGHT, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  heroBgWash: { ...StyleSheet.absoluteFillObject, backgroundColor: '#e2f1ee' },
-  heroImage: { ...StyleSheet.absoluteFillObject, opacity: 0.5 },
+  heroBgWash: { ...StyleSheet.absoluteFill, backgroundColor: '#e2f1ee' },
+  heroImage: { ...StyleSheet.absoluteFill, opacity: 0.5 },
   heroCta: { alignItems: 'center', justifyContent: 'center', gap: 10, opacity: 0.5 },
   heroIconWrap: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   heroCtaText: {

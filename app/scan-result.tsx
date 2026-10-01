@@ -4559,7 +4559,7 @@ const styles = StyleSheet.create({
 
   // ── Review prompt (placeholder — swap for designed full-screen takeover) ──
   reviewOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(2, 52, 50, 0.85)',
     justifyContent: 'center',
     alignItems: 'center',

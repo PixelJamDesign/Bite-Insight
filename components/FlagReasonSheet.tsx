@@ -279,7 +279,7 @@ export function FlagReasonSheet({
 
 const styles = StyleSheet.create({
   backdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(226,241,238,0.8)',
   },
   keyboardWrap: {

@@ -218,8 +218,8 @@ export function InviteFamilyMemberSheet({
 }
 
 const styles = StyleSheet.create({
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.45)' },
-  kav: { ...StyleSheet.absoluteFillObject, justifyContent: 'flex-end' },
+  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(0,0,0,0.45)' },
+  kav: { ...StyleSheet.absoluteFill, justifyContent: 'flex-end' },
   sheet: {
     backgroundColor: '#fff',
     borderTopLeftRadius: 16,

@@ -631,7 +631,7 @@ export default function ScannerScreen() {
         />
 
         {/* Overlay UI — transparent, no dark tint */}
-        <View style={[styles.overlay, StyleSheet.absoluteFillObject]} pointerEvents="box-none">
+        <View style={[styles.overlay, StyleSheet.absoluteFill]} pointerEvents="box-none">
           {/* Scan frame — centered */}
           <View style={styles.frameArea} pointerEvents="none">
             <View style={styles.webFrame}>
@@ -686,7 +686,7 @@ export default function ScannerScreen() {
   return (
     <View style={styles.container}>
       <CameraView
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
         facing="back"
         barcodeScannerSettings={{
           barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128'],
@@ -770,7 +770,7 @@ const styles = StyleSheet.create({
 
   // ── Camera overlay — transparent, no dark tint ────────────────────────────
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     alignItems: 'center',
     justifyContent: 'center',
   },

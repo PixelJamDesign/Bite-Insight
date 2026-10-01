@@ -1118,11 +1118,11 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   heroBgWash: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: '#e2f1ee',
   },
   heroImage: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     opacity: 0.5, // soft-light-ish feel on top of the teal wash
   },
   heroCta: {
@@ -1148,7 +1148,7 @@ const styles = StyleSheet.create({
   },
   // Semi-transparent overlay shown only while a replacement cover is uploading
   heroUploadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0,0,0,0.35)',
     alignItems: 'center',
     justifyContent: 'center',

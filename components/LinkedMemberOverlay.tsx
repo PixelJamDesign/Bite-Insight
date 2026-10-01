@@ -130,7 +130,7 @@ export function LinkedMemberOverlay({
 
 const AVATAR = 120;
 const styles = StyleSheet.create({
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(226,241,238,0.55)' },
+  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(226,241,238,0.55)' },
   center: { flex: 1, justifyContent: 'center', paddingHorizontal: Spacing.m },
   cardWrap: { alignItems: 'center' },
   avatarWrap: {

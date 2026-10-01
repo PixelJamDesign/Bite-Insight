@@ -292,7 +292,7 @@ export function AddToRecipeSheet({ visible, onClose, snapshot, barcode }: Props)
 const styles = StyleSheet.create({
   backdrop: { flex: 1, justifyContent: 'flex-end' },
   backdropTint: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0, 41, 35, 0.55)',
   },
   sheet: {

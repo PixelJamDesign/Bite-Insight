@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
-import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import type { BottomTabBarProps } from "expo-router/js-tabs";
 import { Colors } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { DashboardIcon, RecipesIcon, HistoryIcon, ScannerIcon } from '@/components/TabIcons';
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
     elevation: Platform.OS === 'android' ? 0 : 6,
   },
   blurClip: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     borderRadius: 999,
     overflow: 'hidden',
   },

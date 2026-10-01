@@ -220,7 +220,7 @@ export function SuggestionSheet({ visible, onClose, category }: Props) {
 
 const styles = StyleSheet.create({
   backdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(2, 52, 50, 0.45)',
   },
   centeredWrapper: {
