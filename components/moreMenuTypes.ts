@@ -1,5 +1,5 @@
 import type { SFSymbol } from 'sf-symbols-typescript';
-import type { IconButtonVariant } from '@/components/IconButton';
+import type { IconButtonSize, IconButtonVariant } from '@/components/IconButton';
 
 type SvgComponent = React.FC<{ width?: number; height?: number }>;
 
@@ -25,5 +25,7 @@ export interface MoreMenuProps {
   title: string;
   /** Button variant — onWhite inside white cards. */
   variant?: IconButtonVariant;
+  /** small (36, the default) or regular (48) — e.g. a sheet header. */
+  size?: IconButtonSize;
   accessibilityLabel?: string;
 }

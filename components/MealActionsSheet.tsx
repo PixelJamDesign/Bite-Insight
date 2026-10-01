@@ -1,16 +1,18 @@
 /**
- * MealActionsSheet — bottom sheet opened by tapping a meal on the timeline.
+ * MealActionsSheet — the meal view, opened by tapping a meal on the
+ * timeline (Figma "Tapped Meal View", 5912:15756).
  *
  * Three modes inside one Modal (a second Modal on top of this one would
  * hit the iOS double-modal freeze, see app/recipes/pick-scan.tsx):
- *   • 'actions' — Eating now / Edit meal / Move / Plan this again / Remove
+ *   • 'actions' — the meal: name, item count, day and time, and its items.
+ *                 The ⋯ button (MoreMenu — the system menu on iOS and
+ *                 Android) holds Eating now / Edit / Move / Plan this
+ *                 again / Remove.
  *   • 'move'    — day picker, moves this meal
  *   • 'copy'    — day picker, plans a fresh copy
- *
- * Row styling follows RecipeActionsSheet.
  */
 import { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, Animated, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Radius } from '@/constants/theme';
@@ -25,15 +27,23 @@ import {
   dayAtTimeLabel,
   deleteMeal,
   moveMeal,
+  normaliseTime,
   relativeDayLabel,
   setMealEaten,
   toDateKey,
 } from '@/lib/mealPlan';
 import { MealDayPicker } from '@/components/MealDayPicker';
 import { MenuArrowLeftIcon } from '@/components/MenuIcons';
+import { MoreMenu } from '@/components/MoreMenu';
+import type { MoreMenuAction } from '@/components/moreMenuTypes';
+import { MealItemRow } from '@/components/MealItemRow';
+import { FadingScrollView } from '@/components/FadingScrollView';
 import EditIcon from '@/assets/icons/recipe-actions/edit.svg';
 import DuplicateIcon from '@/assets/icons/recipe-actions/duplicate.svg';
 import TrashIcon from '@/assets/icons/recipe-actions/trash.svg';
+import TickIcon from '@/assets/icons/recipe-actions/tick.svg';
+import UndoIcon from '@/assets/icons/recipe-actions/undo.svg';
+import CalendarIcon from '@/assets/icons/recipe-actions/meal-plan.svg';
 import type { Meal } from '@/lib/types';
 
 type Mode = 'actions' | 'move' | 'copy';
@@ -50,8 +60,6 @@ interface Props {
   onEdit: (meal: Meal) => void;
 }
 
-const SPRING_WATER = '#e2f1ee';
-const DESTRUCTIVE_TINT = 'rgba(255, 47, 97, 0.1)';
 
 export function MealActionsSheet({ visible, meal: mealProp, onClose, onChanged, onEdit }: Props) {
   const { rendered, backdropOpacity, sheetTranslateY } = useSheetAnimation(visible);
@@ -59,6 +67,7 @@ export function MealActionsSheet({ visible, meal: mealProp, onClose, onChanged, 
   const { showToast } = useToast();
   const { isPlus } = useSubscription();
   const { showUpsell } = useUpsellSheet();
+  const { height: windowHeight } = useWindowDimensions();
 
   const lastMeal = useRef<Meal | null>(mealProp);
   if (mealProp) lastMeal.current = mealProp;
@@ -144,6 +153,52 @@ export function MealActionsSheet({ visible, meal: mealProp, onClose, onChanged, 
   }
 
   const itemCount = meal.items.length;
+  const eaten = Boolean(meal.eaten_at);
+
+  const menuActions: MoreMenuAction[] = [
+    {
+      key: 'eaten',
+      label: eaten ? 'Mark as not eaten' : 'Eating now',
+      subtitle: eaten ? 'Put this back to planned' : 'Log this meal with the current time',
+      systemImage: eaten ? 'arrow.uturn.backward' : 'checkmark.circle',
+      Icon: eaten ? UndoIcon : TickIcon,
+      onPress: handleToggleEaten,
+    },
+    {
+      key: 'edit',
+      label: 'Edit meal',
+      subtitle: 'Change the time, items or portions',
+      systemImage: 'pencil',
+      Icon: EditIcon,
+      iconSize: 20,
+      onPress: handleEdit,
+    },
+    {
+      key: 'move',
+      label: 'Move',
+      subtitle: 'Shift it to another day',
+      systemImage: 'calendar',
+      Icon: CalendarIcon,
+      onPress: () => openPicker('move'),
+    },
+    {
+      key: 'copy',
+      label: 'Plan this again',
+      subtitle: 'Add the same meal to another day',
+      systemImage: 'plus.square.on.square',
+      Icon: DuplicateIcon,
+      onPress: () => openPicker('copy'),
+    },
+    {
+      key: 'remove',
+      label: 'Remove from plan',
+      subtitle: 'Takes this meal off the day',
+      systemImage: 'trash',
+      Icon: TrashIcon,
+      destructive: true,
+      onPress: handleRemove,
+    },
+  ];
 
   return (
     <Modal visible={rendered} transparent animationType="none" onRequestClose={onClose}>
@@ -158,136 +213,100 @@ export function MealActionsSheet({ visible, meal: mealProp, onClose, onChanged, 
             <View style={styles.closeRow}>
               {mode !== 'actions' ? (
                 <TouchableOpacity
-                  style={styles.backLink}
+                  style={styles.closeBtn}
                   onPress={() => setMode('actions')}
                   hitSlop={12}
                   activeOpacity={0.7}
+                  accessibilityLabel="Back"
                 >
-                  <MenuArrowLeftIcon color={Colors.secondary} size={16} />
-                  <Text style={styles.backLinkText}>Back</Text>
+                  <MenuArrowLeftIcon color={Colors.primary} size={16} />
                 </TouchableOpacity>
               ) : (
                 <View />
               )}
-              <TouchableOpacity style={styles.closeBtn} onPress={onClose} hitSlop={12} activeOpacity={0.7}>
+              <TouchableOpacity
+                style={styles.closeBtn}
+                onPress={onClose}
+                hitSlop={12}
+                activeOpacity={0.7}
+                accessibilityLabel="Close"
+              >
                 <Ionicons name="close" size={22} color={Colors.primary} />
               </TouchableOpacity>
             </View>
 
-            <View style={styles.body}>
-              <View style={styles.titleBlock}>
-                <Text style={styles.title} numberOfLines={2}>
-                  {mode === 'move' ? 'Move meal' : mode === 'copy' ? 'Plan this again' : meal.name}
-                </Text>
-                <Text style={styles.subtitle} numberOfLines={1}>
-                  {mode === 'actions'
-                    ? `${relativeDayLabel(meal.plan_date)} · ${meal.meal_time} · ${itemCount} ${
-                        itemCount === 1 ? 'item' : 'items'
-                      }`
-                    : `${meal.name} · ${meal.meal_time}`}
-                </Text>
-              </View>
-
-              {mode === 'actions' ? (
-                <View style={styles.rows}>
-                  <ActionRow
-                    icon={
-                      <Ionicons
-                        name={meal.eaten_at ? 'arrow-undo-outline' : 'checkmark'}
-                        size={22}
-                        color={Colors.primary}
-                      />
-                    }
-                    tint={SPRING_WATER}
-                    title={meal.eaten_at ? 'Mark as not eaten' : 'Eating now'}
-                    subtitle={
-                      meal.eaten_at ? 'Put this back to planned' : 'Log this meal with the current time'
-                    }
-                    onPress={handleToggleEaten}
-                  />
-                  <ActionRow
-                    icon={<EditIcon width={20} height={20} />}
-                    tint={SPRING_WATER}
-                    title="Edit meal"
-                    subtitle="Change the time, items or portions"
-                    onPress={handleEdit}
-                  />
-                  <ActionRow
-                    icon={<Ionicons name="calendar-outline" size={22} color={Colors.primary} />}
-                    tint={SPRING_WATER}
-                    title="Move"
-                    subtitle="Shift it to another day"
-                    onPress={() => openPicker('move')}
-                  />
-                  <ActionRow
-                    icon={<DuplicateIcon width={22} height={22} />}
-                    tint={SPRING_WATER}
-                    title="Plan this again"
-                    subtitle="Add the same meal to another day"
-                    onPress={() => openPicker('copy')}
-                  />
-                  <ActionRow
-                    icon={<TrashIcon width={22} height={22} />}
-                    tint={DESTRUCTIVE_TINT}
-                    title="Remove from plan"
-                    subtitle="Takes this meal off the day"
-                    onPress={handleRemove}
+            {mode === 'actions' ? (
+              <View style={styles.body}>
+                <View style={styles.headerRow}>
+                  <View style={styles.headerText}>
+                    <Text style={styles.title} numberOfLines={2}>
+                      {meal.name}
+                    </Text>
+                    <View style={styles.metaRow}>
+                      <Text style={styles.meta}>
+                        {itemCount} {itemCount === 1 ? 'item' : 'items'}
+                      </Text>
+                      <Text style={styles.meta}>
+                        {relativeDayLabel(meal.plan_date)} at {normaliseTime(meal.meal_time)}
+                      </Text>
+                    </View>
+                  </View>
+                  <MoreMenu
+                    size="regular"
+                    variant="onWhite"
+                    title={meal.name}
+                    actions={menuActions}
+                    accessibilityLabel={`Actions for ${meal.name}`}
                   />
                 </View>
-              ) : (
-                <>
-                  <MealDayPicker
-                    dateKey={targetDate}
-                    onChangeDate={setTargetDate}
-                    isPlus={isPlus}
-                    onLocked={() => {
-                      onClose();
-                      // Let this sheet finish closing before the upsell
-                      // Modal opens (iOS double-modal freeze).
-                      setTimeout(showUpsell, 350);
-                    }}
-                  />
-                  <TouchableOpacity
-                    style={[styles.saveBtn, busy && styles.saveBtnBusy]}
-                    onPress={handleConfirmPicker}
-                    disabled={busy}
-                    activeOpacity={0.85}
-                  >
-                    <Text style={styles.saveBtnText}>
-                      {mode === 'move' ? 'Move meal' : 'Add to plan'}
-                    </Text>
-                  </TouchableOpacity>
-                </>
-              )}
-            </View>
+
+                <FadingScrollView
+                  style={{ maxHeight: windowHeight * 0.6 }}
+                  contentContainerStyle={styles.items}
+                  showsVerticalScrollIndicator={false}
+                >
+                  {meal.items.map((item) => (
+                    <MealItemRow key={item.id} item={item} />
+                  ))}
+                </FadingScrollView>
+              </View>
+            ) : (
+              <View style={styles.body}>
+                <View style={styles.titleBlock}>
+                  <Text style={styles.title} numberOfLines={2}>
+                    {mode === 'move' ? 'Move meal' : 'Plan this again'}
+                  </Text>
+                  <Text style={styles.subtitle} numberOfLines={1}>
+                    {`${meal.name} · ${meal.meal_time}`}
+                  </Text>
+                </View>
+                <MealDayPicker
+                  dateKey={targetDate}
+                  onChangeDate={setTargetDate}
+                  isPlus={isPlus}
+                  onLocked={() => {
+                    onClose();
+                    // Let this sheet finish closing before the upsell
+                    // Modal opens (iOS double-modal freeze).
+                    setTimeout(showUpsell, 350);
+                  }}
+                />
+                <TouchableOpacity
+                  style={[styles.saveBtn, busy && styles.saveBtnBusy]}
+                  onPress={handleConfirmPicker}
+                  disabled={busy}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.saveBtnText}>
+                    {mode === 'move' ? 'Move meal' : 'Add to plan'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </SafeAreaView>
         </Animated.View>
       </View>
     </Modal>
-  );
-}
-
-function ActionRow({
-  icon,
-  tint,
-  title,
-  subtitle,
-  onPress,
-}: {
-  icon: React.ReactNode;
-  tint: string;
-  title: string;
-  subtitle: string;
-  onPress: () => void;
-}) {
-  return (
-    <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.85}>
-      <View style={[styles.rowIcon, { backgroundColor: tint }]}>{icon}</View>
-      <View style={styles.rowInfo}>
-        <Text style={styles.rowTitle}>{title}</Text>
-        <Text style={styles.rowSub}>{subtitle}</Text>
-      </View>
-    </TouchableOpacity>
   );
 }
 
@@ -319,15 +338,19 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   closeBtn: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
-  backLink: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  backLinkText: {
+  body: { gap: 16, marginTop: 16 },
+  // Figma "Frame 361": title stack + 48px ⋯ button
+  headerRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  headerText: { flex: 1 },
+  metaRow: { flexDirection: 'row', alignItems: 'baseline', gap: 16 },
+  meta: {
     fontSize: 16,
-    lineHeight: 24,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
+    lineHeight: 27,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
     color: Colors.secondary,
   },
-  body: { gap: 24, marginTop: 8 },
+  items: { gap: 8 },
   titleBlock: { gap: 4 },
   title: {
     fontSize: 24,
@@ -346,42 +369,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.14,
   },
 
-  rows: { gap: 8 },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-    backgroundColor: Colors.surface.secondary,
-    borderWidth: 1,
-    borderColor: '#aad4cd',
-    borderRadius: Radius.m,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  rowIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  rowInfo: { flex: 1, gap: 4 },
-  rowTitle: {
-    fontSize: 16,
-    lineHeight: 17.6,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
-    letterSpacing: -0.32,
-  },
-  rowSub: {
-    fontSize: 14,
-    lineHeight: 21,
-    fontWeight: '300',
-    fontFamily: 'Figtree_300Light',
-    color: Colors.secondary,
-    letterSpacing: -0.14,
-  },
 
   saveBtn: {
     width: '100%',

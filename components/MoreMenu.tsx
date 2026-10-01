@@ -8,14 +8,14 @@ import { ActionsSheet } from '@/components/ActionsSheet';
 import type { MoreMenuProps } from '@/components/moreMenuTypes';
 import MoreIcon from '@/assets/icons/more.svg';
 
-export function MoreMenu({ actions, title, variant = 'onTeal', accessibilityLabel }: MoreMenuProps) {
+export function MoreMenu({ actions, title, variant = 'onTeal', size = 'small', accessibilityLabel }: MoreMenuProps) {
   const [open, setOpen] = useState(false);
   return (
     <>
       <IconButton
-        size="small"
+        size={size}
         variant={variant}
-        icon={<MoreIcon width={20} height={20} />}
+        icon={<MoreIcon width={size === 'small' ? 20 : 24} height={size === 'small' ? 20 : 24} />}
         onPress={() => setOpen(true)}
         accessibilityLabel={accessibilityLabel ?? 'More actions'}
       />

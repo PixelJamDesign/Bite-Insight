@@ -15,7 +15,7 @@ import MoreIcon from '@/assets/icons/more.svg';
 
 const MENU_DISMISS_MS = 250;
 
-export function MoreMenu({ actions, title, variant = 'onTeal', accessibilityLabel }: MoreMenuProps) {
+export function MoreMenu({ actions, title, variant = 'onTeal', size = 'small', accessibilityLabel }: MoreMenuProps) {
   return (
     <MenuView
       title={title}
@@ -32,7 +32,11 @@ export function MoreMenu({ actions, title, variant = 'onTeal', accessibilityLabe
       testID={accessibilityLabel}
     >
       {/* Visual only — the native menu handles the tap. */}
-      <IconButton size="small" variant={variant} icon={<MoreIcon width={20} height={20} />} />
+      <IconButton
+        size={size}
+        variant={variant}
+        icon={<MoreIcon width={size === 'small' ? 20 : 24} height={size === 'small' ? 20 : 24} />}
+      />
     </MenuView>
   );
 }

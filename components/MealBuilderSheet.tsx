@@ -28,7 +28,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Image,
   ActivityIndicator,
   Alert,
   Platform,
@@ -64,7 +63,6 @@ import { useDraftMeal } from '@/lib/draftMealContext';
 import type { MealItemDraft } from '@/lib/types';
 import {
   dayAtTimeLabel,
-  portionLabel,
   relativeDayLabel,
   saveItemsAsRecipe,
   saveMeal,
@@ -73,6 +71,7 @@ import {
 import { NutritionPanel, type NutritionValues } from '@/components/NutritionPanel';
 import { IconButton } from '@/components/IconButton';
 import { CheckboxCard } from '@/components/CheckboxCard';
+import { MealItemRow } from '@/components/MealItemRow';
 import { FadingScrollView } from '@/components/FadingScrollView';
 import { computeNutriscore, type NutriscoreGrade } from '@/lib/nutriscore';
 import { quantityToGrams } from '@/lib/recipes';
@@ -463,51 +462,24 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
                       ) : (
                         <View style={styles.itemList}>
                           {d.items.map((item) => (
-                            <View key={item.key} style={styles.itemRow}>
-                              <View style={styles.itemThumb}>
-                                {item.image_url ? (
-                                  <Image
-                                    source={{ uri: item.image_url }}
-                                    style={styles.itemThumbImage}
-                                    resizeMode="cover"
-                                  />
-                                ) : (
-                                  <View style={styles.itemThumbNoImage}>
-                                    <Ionicons name="image-outline" size={16} color="#aad4cd" />
-                                    <Text style={styles.itemThumbNoImageText}>No image</Text>
-                                  </View>
-                                )}
-                              </View>
-                              <View style={styles.itemInfo}>
-                                <Text style={styles.itemBrand} numberOfLines={1}>
-                                  {item.kind === 'recipe'
-                                    ? 'Recipe'
-                                    : item.product_snapshot?.brand || 'Product'}
-                                </Text>
-                                <Text style={styles.itemName} numberOfLines={2}>
-                                  {item.title}
-                                </Text>
-                              </View>
-                              <TouchableOpacity
-                                style={styles.itemQty}
-                                onPress={() => {
-                                  setPortionKey(item.key);
-                                  goTo('portion');
-                                }}
-                                activeOpacity={0.75}
-                                accessibilityLabel={`Change portion, ${portionLabel(item)}`}
-                              >
-                                <Text style={styles.itemQtyText}>{portionLabel(item)}</Text>
-                              </TouchableOpacity>
-                              <TouchableOpacity
-                                onPress={() => draftMeal.removeItem(item.key)}
-                                activeOpacity={0.7}
-                                hitSlop={8}
-                                accessibilityLabel={`Remove ${item.title}`}
-                              >
-                                <Ionicons name="close" size={18} color={Colors.secondary} />
-                              </TouchableOpacity>
-                            </View>
+                            <MealItemRow
+                              key={item.key}
+                              item={item}
+                              onPortionPress={() => {
+                                setPortionKey(item.key);
+                                goTo('portion');
+                              }}
+                              trailing={
+                                <TouchableOpacity
+                                  onPress={() => draftMeal.removeItem(item.key)}
+                                  activeOpacity={0.7}
+                                  hitSlop={8}
+                                  accessibilityLabel={`Remove ${item.title}`}
+                                >
+                                  <Ionicons name="close" size={18} color={Colors.secondary} />
+                                </TouchableOpacity>
+                              }
+                            />
                           ))}
                         </View>
                       )}
@@ -787,70 +759,6 @@ const styles = StyleSheet.create({
   },
 
   itemList: { gap: 8 },
-  itemRow: {
-    backgroundColor: '#f5fbfb',
-    borderRadius: Radius.m,
-    borderWidth: 1,
-    borderColor: '#aad4cd',
-    minHeight: 76,
-    paddingLeft: 8,
-    paddingRight: 16,
-    paddingVertical: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  itemThumb: {
-    width: 60,
-    height: 60,
-    borderRadius: Radius.m,
-    backgroundColor: '#e2f1ee',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  itemThumbImage: { width: '100%', height: '100%' },
-  itemThumbNoImage: { alignItems: 'center', justifyContent: 'center', gap: 2 },
-  itemThumbNoImageText: {
-    fontSize: 9,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: '#aad4cd',
-  },
-  itemInfo: { flex: 1, justifyContent: 'center', gap: 2 },
-  itemBrand: {
-    fontSize: 13,
-    lineHeight: 16,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.secondary,
-    letterSpacing: -0.26,
-  },
-  itemName: {
-    fontSize: 16,
-    lineHeight: 20,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
-  },
-  itemQty: {
-    backgroundColor: '#e4f1ef',
-    borderRadius: 999,
-    paddingHorizontal: 8,
-    paddingVertical: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: 52,
-  },
-  itemQtyText: {
-    fontSize: 13,
-    lineHeight: 16,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
-    letterSpacing: -0.26,
-    textAlign: 'center',
-  },
 
 
   footer: {

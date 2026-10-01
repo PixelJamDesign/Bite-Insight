@@ -125,9 +125,10 @@ Reuse these before creating new components:
 | `MealBlock` | `@/components/MealBlock` | A planned meal (planner timeline, dashboard list). Pass `impact` and `metrics` from `useMealPlanImpact` — colour and detail numbers are per user (`lib/mealDanger.ts`) |
 | `NutritionPanel` | `@/components/NutritionPanel` | Nutrition block: Per serving / Per 100g tabs, macro stack, Estimated Nutri-score (recipe builder, Plan a meal) |
 | `CheckboxCard` | `@/components/CheckboxCard` | Figma "Checkbox": tinted card with checkbox, title and supporting text |
+| `MealItemRow` | `@/components/MealItemRow` | One recipe/product in a meal: image, brand, name, portion pill (Plan a meal sheet, meal view) |
 | `MealTotalsList` | `@/components/MealTotalsList` | Stack of nutrition total rows with food icons |
 | `IconButton` | `@/components/IconButton` | Figma Icon Button: `size` regular (48) / small (36), `variant` onTeal / onWhite, optional `badge` |
-| `MoreMenu` | `@/components/MoreMenu` | ⋯ button with actions — native menu on iOS & Android (Expo UI MenuView), ActionsSheet on web |
+| `MoreMenu` | `@/components/MoreMenu` | ⋯ button with actions — native menu on iOS & Android (Expo UI MenuView), ActionsSheet on web. `size` small (36, default) / regular (48) |
 | `FadingScrollView` | `@/components/FadingScrollView` | ScrollView for bottom sheets: top edge blurs and fades content once scrolled (ProgressiveBlur). `fadeColor` for non-white sheets |
 | `ActionsSheet` | `@/components/ActionsSheet` | Titled bottom sheet of action rows (RecipeActionsSheet layout) |
 | `Button` | `@/components/Button` | primary / outline / ghost button variants |
