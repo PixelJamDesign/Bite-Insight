@@ -60,6 +60,7 @@ import { supabase } from '@/lib/supabase';
 import { deriveDietaryTags } from '@/lib/dietaryTags';
 import { DietaryTagsRow } from '@/components/DietaryTagsRow';
 import { LottieLoader } from '@/components/LottieLoader';
+import { AddToMealPlanSheet } from '@/components/AddToMealPlanSheet';
 import ArrowLeftIcon from '@/assets/icons/recipe-header/arrow-left.svg';
 import LikeThumbIcon from '@/assets/icons/recipe-header/like-thumb.svg';
 import type {
@@ -104,6 +105,10 @@ export default function RecipeDetailScreen() {
   const { t: tpo } = useTranslation('profileOptions');
   const [nutritionMode, setNutritionMode] = useState<NutritionMode>('serving');
   const [actionsOpen, setActionsOpen] = useState(false);
+  const [planSheetOpen, setPlanSheetOpen] = useState(false);
+  // Opened once the actions sheet has finished closing — two Modals
+  // overlapping freezes iOS.
+  const openPlanSheet = () => setTimeout(() => setPlanSheetOpen(true), 350);
   // Selected member id for the Family impact sheet. null = sheet closed.
   const [impactMemberId, setImpactMemberId] = useState<string | null>(null);
   // Canonical id→name map for every flagged ingredient across every
@@ -785,6 +790,7 @@ export default function RecipeDetailScreen() {
           onDelete={handleDelete}
           onShareWithCommunity={handleShareWithCommunity}
           onShareWithFriend={handleShareWithFriend}
+          onAddToMealPlan={openPlanSheet}
           isShared={currentRecipe.visibility === 'public'}
           isPlus={isPlus}
         />
@@ -796,10 +802,17 @@ export default function RecipeDetailScreen() {
           onSave={handleSaveFromSource}
           onDuplicate={handleDuplicateFromSource}
           onShareWithFriend={handleShareWithFriend}
+          onAddToMealPlan={openPlanSheet}
           onToggleLike={handleToggleLike}
           liked={liked}
         />
       )}
+
+      <AddToMealPlanSheet
+        visible={planSheetOpen}
+        onClose={() => setPlanSheetOpen(false)}
+        recipe={currentRecipe}
+      />
 
       <FamilyImpactSheetForMember
         memberId={impactMemberId}

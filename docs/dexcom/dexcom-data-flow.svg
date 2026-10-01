@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1180" viewBox="0 0 1600 1180" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#023432"/>
+    </marker>
+    <marker id="arrowGrey" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#7a8f8c"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1600" height="1180" fill="#ffffff"/>
+
+  <!-- Title -->
+  <text x="60" y="58" font-size="30" font-weight="700" fill="#023432">Bite Insight × Dexcom: data flow</text>
+  <text x="60" y="92" font-size="18" fill="#00776f">OAuth 2.0 authorisation, token storage and glucose (EGV) retrieval. All traffic over HTTPS (TLS).</text>
+
+  <!-- Lanes -->
+  <rect x="40" y="120" width="440" height="870" rx="16" fill="#f1f8f7" stroke="#aad4cd"/>
+  <rect x="580" y="120" width="440" height="870" rx="16" fill="#f1f8f7" stroke="#aad4cd"/>
+  <rect x="1120" y="120" width="440" height="870" rx="16" fill="#f1f8f7" stroke="#aad4cd"/>
+  <text x="260" y="156" font-size="21" font-weight="700" fill="#023432" text-anchor="middle">User's phone</text>
+  <text x="260" y="180" font-size="16" fill="#00776f" text-anchor="middle">Bite Insight app</text>
+  <text x="800" y="156" font-size="21" font-weight="700" fill="#023432" text-anchor="middle">Bite Insight servers</text>
+  <text x="800" y="180" font-size="16" fill="#00776f" text-anchor="middle">Supabase (EU) · edge functions + database</text>
+  <text x="1340" y="156" font-size="21" font-weight="700" fill="#023432" text-anchor="middle">Dexcom</text>
+  <text x="1340" y="180" font-size="16" fill="#00776f" text-anchor="middle">Dexcom API (sandbox → production)</text>
+
+  <!-- Step 1 -->
+  <rect x="70" y="210" width="380" height="96" rx="10" fill="#fff" stroke="#00776f" stroke-width="2"/>
+  <text x="90" y="240" font-size="17" font-weight="700" fill="#023432">1. User opts in</text>
+  <text x="90" y="264" font-size="15" fill="#023432">Reads what is shared and why, ticks</text>
+  <text x="90" y="286" font-size="15" fill="#023432">explicit consent, taps Connect Dexcom</text>
+
+  <rect x="610" y="210" width="380" height="96" rx="10" fill="#fff" stroke="#00776f" stroke-width="2"/>
+  <text x="630" y="240" font-size="17" font-weight="700" fill="#023432">2. dexcom-oauth-start</text>
+  <text x="630" y="264" font-size="15" fill="#023432">Checks the user is signed in, stores a</text>
+  <text x="630" y="286" font-size="15" fill="#023432">one-time state (10 min), returns login URL</text>
+  <line x1="450" y1="258" x2="608" y2="258" stroke="#023432" stroke-width="2" /><polygon points="608.0,258.0 596.0,252.0 596.0,264.0" fill="#023432"/>
+
+  <!-- Step 3 -->
+  <rect x="1150" y="340" width="380" height="96" rx="10" fill="#fff" stroke="#00776f" stroke-width="2"/>
+  <text x="1170" y="370" font-size="17" font-weight="700" fill="#023432">3. Dexcom sign-in + consent</text>
+  <text x="1170" y="394" font-size="15" fill="#023432">Dexcom-hosted page. The user's Dexcom</text>
+  <text x="1170" y="416" font-size="15" fill="#023432">password never reaches Bite Insight</text>
+  <path d="M260,306 L260,388 L1148,388" fill="none" stroke="#023432" stroke-width="2" /><polygon points="1148.0,388.0 1136.0,382.0 1136.0,394.0" fill="#023432"/>
+  <text x="300" y="378" font-size="14" fill="#00776f">opens Dexcom login in a secure browser session</text>
+
+  <!-- Step 4 -->
+  <rect x="610" y="470" width="380" height="118" rx="10" fill="#fff" stroke="#00776f" stroke-width="2"/>
+  <text x="630" y="500" font-size="17" font-weight="700" fill="#023432">4. dexcom-oauth-callback</text>
+  <text x="630" y="524" font-size="15" fill="#023432">Receives code + state, checks the state</text>
+  <text x="630" y="546" font-size="15" fill="#023432">and deletes it (single use), then swaps the</text>
+  <text x="630" y="568" font-size="15" fill="#023432">code using the client secret (server only)</text>
+  <path d="M1340,436 L1340,500 L992,500" fill="none" stroke="#023432" stroke-width="2" /><polygon points="992.0,500.0 1004.0,506.0 1004.0,494.0" fill="#023432"/>
+  <text x="1010" y="490" font-size="14" fill="#00776f">redirect: code + state</text>
+
+  <rect x="1150" y="530" width="380" height="72" rx="10" fill="#fff" stroke="#00776f" stroke-width="2"/>
+  <text x="1170" y="560" font-size="17" font-weight="700" fill="#023432">Token endpoint</text>
+  <text x="1170" y="584" font-size="15" fill="#023432">/v3/oauth2/token</text>
+  <line x1="990" y1="552" x2="1148" y2="552" stroke="#023432" stroke-width="2" /><polygon points="1148.0,552.0 1136.0,546.0 1136.0,558.0" fill="#023432"/>
+  <line x1="1148" y1="580" x2="992" y2="580" stroke="#023432" stroke-width="2" /><polygon points="992.0,580.0 1004.0,586.0 1004.0,574.0" fill="#023432"/>
+  <text x="1000" y="604" font-size="13" fill="#00776f">access + refresh token</text>
+
+  <!-- Step 5: storage -->
+  <rect x="610" y="630" width="380" height="118" rx="10" fill="#e2f1ee" stroke="#023432" stroke-width="2"/>
+  <text x="630" y="660" font-size="17" font-weight="700" fill="#023432">5. dexcom_connections table</text>
+  <text x="630" y="684" font-size="15" fill="#023432">One row per user: tokens + expiry.</text>
+  <text x="630" y="706" font-size="15" fill="#023432">Server-only (row-level security, no app</text>
+  <text x="630" y="728" font-size="15" fill="#023432">access). Tokens are never sent to the phone</text>
+  <line x1="800" y1="588" x2="800" y2="628" stroke="#023432" stroke-width="2" /><polygon points="800.0,628.0 806.0,616.0 794.0,616.0" fill="#023432"/>
+  <text x="70" y="690" font-size="15" fill="#023432">App is returned to with</text>
+  <text x="70" y="712" font-size="15" fill="#023432">status=connected (no tokens)</text>
+  <path d="M610,700 L452,700" fill="none" stroke="#023432" stroke-width="2" /><polygon points="452.0,700.0 464.0,706.0 464.0,694.0" fill="#023432"/>
+
+  <!-- Step 6: reading glucose -->
+  <rect x="70" y="780" width="380" height="96" rx="10" fill="#fff" stroke="#00776f" stroke-width="2"/>
+  <text x="90" y="810" font-size="17" font-weight="700" fill="#023432">6. User views glucose</text>
+  <text x="90" y="834" font-size="15" fill="#023432">App asks for readings for a time window;</text>
+  <text x="90" y="856" font-size="15" fill="#023432">shows them. Not stored on the phone</text>
+
+  <rect x="610" y="780" width="380" height="96" rx="10" fill="#fff" stroke="#00776f" stroke-width="2"/>
+  <text x="630" y="810" font-size="17" font-weight="700" fill="#023432">dexcom-egvs</text>
+  <text x="630" y="834" font-size="15" fill="#023432">Refreshes the token if needed, requests</text>
+  <text x="630" y="856" font-size="15" fill="#023432">EGVs, returns readings. Not stored</text>
+
+  <rect x="1150" y="780" width="380" height="96" rx="10" fill="#fff" stroke="#00776f" stroke-width="2"/>
+  <text x="1170" y="810" font-size="17" font-weight="700" fill="#023432">EGV endpoint</text>
+  <text x="1170" y="834" font-size="15" fill="#023432">/v3/users/self/egvs</text>
+  <text x="1170" y="856" font-size="15" fill="#023432">(~1 h delay US, ~3 h elsewhere)</text>
+
+  <line x1="450" y1="814" x2="608" y2="814" stroke="#023432" stroke-width="2" /><polygon points="608.0,814.0 596.0,808.0 596.0,820.0" fill="#023432"/>
+  <line x1="608" y1="846" x2="452" y2="846" stroke="#023432" stroke-width="2" /><polygon points="452.0,846.0 464.0,852.0 464.0,840.0" fill="#023432"/>
+  <line x1="990" y1="814" x2="1148" y2="814" stroke="#023432" stroke-width="2" /><polygon points="1148.0,814.0 1136.0,808.0 1136.0,820.0" fill="#023432"/>
+  <line x1="1148" y1="846" x2="992" y2="846" stroke="#023432" stroke-width="2" /><polygon points="992.0,846.0 1004.0,852.0 1004.0,840.0" fill="#023432"/>
+  <line x1="800" y1="748" x2="800" y2="778" stroke="#7a8f8c" stroke-width="2" stroke-dasharray="5 4" /><polygon points="800.0,778.0 806.0,766.0 794.0,766.0" fill="#7a8f8c"/>
+
+  <!-- Step 7: revocation -->
+  <rect x="70" y="900" width="380" height="72" rx="10" fill="#fff" stroke="#c02e30" stroke-width="2"/>
+  <text x="90" y="930" font-size="17" font-weight="700" fill="#023432">7. User revokes</text>
+  <text x="90" y="954" font-size="15" fill="#023432">Taps Disconnect in the app</text>
+  <rect x="610" y="900" width="380" height="72" rx="10" fill="#fff" stroke="#c02e30" stroke-width="2"/>
+  <text x="630" y="930" font-size="17" font-weight="700" fill="#023432">dexcom-disconnect</text>
+  <text x="630" y="954" font-size="15" fill="#023432">Deletes the user's tokens immediately</text>
+  <line x1="450" y1="936" x2="608" y2="936" stroke="#023432" stroke-width="2" /><polygon points="608.0,936.0 596.0,930.0 596.0,942.0" fill="#023432"/>
+  <rect x="1150" y="900" width="380" height="72" rx="10" fill="#fff" stroke="#c02e30" stroke-width="2"/>
+  <text x="1170" y="930" font-size="17" font-weight="700" fill="#023432">Or: revoke in Dexcom account</text>
+  <text x="1170" y="954" font-size="15" fill="#023432">Next refresh fails → tokens deleted</text>
+
+  <!-- Notes -->
+  <text x="60" y="1030" font-size="18" font-weight="700" fill="#023432">Safeguards</text>
+  <text x="60" y="1060" font-size="16" fill="#023432">• Client secret held only as a server-side secret; never shipped in the app.   • Tokens stored server-side only; the app sees connection status, never a token.</text>
+  <text x="60" y="1088" font-size="16" fill="#023432">• State values are random, single use and expire after 10 minutes; the callback only redirects to Bite Insight's own app addresses.</text>
+  <text x="60" y="1116" font-size="16" fill="#023432">• Refresh tokens are single use and replaced on every refresh.   • Glucose readings are fetched on demand and not stored by Bite Insight at present.</text>
+  <text x="60" y="1144" font-size="16" fill="#023432">• Data is used only to show users how their meals affect their glucose. Not sold, not used for advertising.</text>
+</svg>

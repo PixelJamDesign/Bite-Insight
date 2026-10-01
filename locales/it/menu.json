@@ -6,6 +6,7 @@
     "foodScanner": "Scanner alimentare",
     "scanHistory": "Cronologia scansioni",
     "recipes": "Ricette",
+    "mealPlan": "Piano pasti",
     "myAccount": "Il mio conto",
     "settings": "Impostazioni",
     "logOut": "Esci"
@@ -30,6 +31,7 @@
   "settings": {
     "title": "Impostazioni",
     "security": "Sicurezza",
+    "connectedDevices": "Dispositivi collegati",
     "notifications": "Notifiche",
     "helpSupport": "Aiuto e supporto",
     "privacyPolicy": "politica sulla riservatezza",

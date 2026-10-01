@@ -29,6 +29,11 @@ const TAG_LABELS: Record<string, string> = {
   whole30: 'Whole30',
 };
 
+/** Display label for a dietary preference key, or null if it's unknown. */
+export function dietaryTagLabel(tag: string): string | null {
+  return TAG_LABELS[tag] ?? null;
+}
+
 interface DietaryTagProps {
   tag: string;
 }

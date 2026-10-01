@@ -16,15 +16,26 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Radius, Shadows, Typography } from '@/constants/theme';
 import { useSheetAnimation } from '@/lib/useSheetAnimation';
 
-export type AddSource = 'search' | 'scan' | 'history';
+export type AddSource = 'search' | 'scan' | 'history' | 'recipe';
 
 interface Props {
   visible: boolean;
   onClose: () => void;
   onPick: (source: AddSource) => void;
+  /** Sheet heading. Defaults to the recipe builder's "Add ingredient". */
+  title?: string;
+  /** Adds a "Choose a recipe" row above the product sources. Used by
+   *  the meal planner, where a whole recipe can go into a slot. */
+  includeRecipes?: boolean;
 }
 
-export function AddIngredientSheet({ visible, onClose, onPick }: Props) {
+export function AddIngredientSheet({
+  visible,
+  onClose,
+  onPick,
+  title = 'Add ingredient',
+  includeRecipes = false,
+}: Props) {
   const { rendered, backdropOpacity, sheetTranslateY } = useSheetAnimation(visible);
   return (
     <Modal visible={rendered} transparent animationType="none" onRequestClose={onClose}>
@@ -36,36 +47,59 @@ export function AddIngredientSheet({ visible, onClose, onPick }: Props) {
         <SafeAreaView style={styles.sheet} edges={['bottom']}>
           <View style={styles.handle} />
           <View style={styles.header}>
-            <Text style={styles.title}>Add ingredient</Text>
+            <Text style={styles.title}>{title}</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
               <Ionicons name="close" size={22} color={Colors.primary} />
             </TouchableOpacity>
           </View>
 
-          <View style={styles.options}>
-            <Option
-              icon="search"
-              title="Search foods"
-              subtitle="Browse the Open Food Facts database"
-              onPress={() => onPick('search')}
-            />
-            <Option
-              icon="barcode-outline"
-              title="Scan a barcode"
-              subtitle="Use the camera to scan a product"
-              onPress={() => onPick('scan')}
-            />
-            <Option
-              icon="time-outline"
-              title="Add from scan history"
-              subtitle="Pick from your recent scans"
-              onPress={() => onPick('history')}
-            />
+          <View style={styles.optionsPad}>
+            <AddIngredientOptions onPick={onPick} includeRecipes={includeRecipes} />
           </View>
         </SafeAreaView>
         </Animated.View>
       </View>
     </Modal>
+  );
+}
+
+/**
+ * The source rows without the sheet around them, so they can also be
+ * shown as a step inside another sheet (MealBuilderSheet).
+ */
+export function AddIngredientOptions({
+  onPick,
+  includeRecipes = false,
+}: Pick<Props, 'onPick' | 'includeRecipes'>) {
+  return (
+    <View style={styles.options}>
+      {includeRecipes && (
+        <Option
+          icon="restaurant-outline"
+          title="Choose a recipe"
+          subtitle="Pick from your recipe book"
+          onPress={() => onPick('recipe')}
+        />
+      )}
+      <Option
+        icon="search"
+        title="Search foods"
+        subtitle="Browse the Open Food Facts database"
+        onPress={() => onPick('search')}
+      />
+      <Option
+        icon="barcode-outline"
+        title="Scan a barcode"
+        subtitle="Use the camera to scan a product"
+        onPress={() => onPick('scan')}
+      />
+      <Option
+        icon="time-outline"
+        title="Add from scan history"
+        subtitle="Pick from your recent scans"
+        onPress={() => onPick('history')}
+      />
+    </View>
   );
 }
 
@@ -135,9 +169,11 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface.tertiary,
     alignItems: 'center', justifyContent: 'center',
   },
-  options: {
+  optionsPad: {
     paddingHorizontal: Spacing.s,
     paddingBottom: Spacing.m,   // breathing room above the safe-area inset
+  },
+  options: {
     gap: 8,
   },
   row: {

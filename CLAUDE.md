@@ -119,8 +119,11 @@ Reuse these before creating new components:
 |---|---|---|
 | `DietaryTag` | `@/components/DietaryTag` | Dietary preference pill badges |
 | `IngredientRow` | `@/components/IngredientRow` | Like/dislike/flag ingredient list items |
-| `StatPanel` | `@/components/StatPanel` | Dashboard stat cards |
+| `StatPanel` | `@/components/StatPanel` | Stat cards (no longer on the dashboard) |
 | `DailyInsightCard` | `@/components/DailyInsightCard` | Daily insight cards on home screen |
+| `ScreenLayout` | `@/components/ScreenLayout` | Every screen after the dashboard: title (+ optional `subtitle`) in the header |
+| `MealBlock` | `@/components/MealBlock` | A planned meal (planner timeline, dashboard list) |
+| `MealTotalsList` | `@/components/MealTotalsList` | Stack of nutrition total rows with food icons |
 | `Button` | `@/components/Button` | primary / outline / ghost button variants |
 | `MenuModal` | `@/components/MenuModal` | Slide-out navigation drawer |
 

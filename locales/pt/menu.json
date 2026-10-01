@@ -6,6 +6,7 @@
     "foodScanner": "Scanner de alimentos",
     "scanHistory": "Histórico de verificação",
     "recipes": "Receitas",
+    "mealPlan": "Plano de refeições",
     "myAccount": "Minha conta",
     "settings": "Configurações",
     "logOut": "Sair"
@@ -30,6 +31,7 @@
   "settings": {
     "title": "Configurações",
     "security": "Segurança",
+    "connectedDevices": "Dispositivos ligados",
     "notifications": "Notificações",
     "helpSupport": "Ajuda e suporte",
     "privacyPolicy": "política de Privacidade",

@@ -795,7 +795,9 @@ const styles = StyleSheet.create({
 
   // ── Header extension ──────────────────────────────────────────────────────────
   headerExt: {
-    paddingTop: 24,
+    // The header already has 16 below the title; 8 more keeps the old
+    // 24 gap between title and month row.
+    paddingTop: 8,
     // paddingBottom matches the old gap between monthRow and dateTabs so the
     // contentOuter top lands exactly where the date tabs used to start.
     paddingBottom: 16,

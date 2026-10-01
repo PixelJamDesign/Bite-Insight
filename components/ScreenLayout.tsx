@@ -6,39 +6,48 @@ import {
   TouchableOpacity,
   Animated,
   Platform,
+  type LayoutChangeEvent,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useRouter } from 'expo-router';
-import { Colors } from '@/constants/theme';
+import { Colors, Shadows } from '@/constants/theme';
 import { MenuModal } from '@/components/MenuModal';
 import Logo from '@/assets/images/logo.svg';
 
 interface ScreenLayoutProps {
-  /** Page title displayed below the header nav bar */
+  /** Page title, shown in the header */
   title: string;
-  /** Optional slot between title and children — e.g. month row + date tabs (not scrollable) */
+  /**
+   * Optional supporting line under the title. A string is styled for you;
+   * pass a <Text> (with nested bold <Text>) for mixed weights.
+   */
+  subtitle?: ReactNode;
+  /** Optional slot between the header and children — e.g. date tabs (not scrollable) */
   headerExtension?: ReactNode;
   children: ReactNode;
 }
 
 /**
- * ScreenLayout — shared page template for list-style screens.
+ * ScreenLayout — shared page template for every screen after the dashboard.
  *
- * Renders:
- *   • Gradient header nav (logo + animated hamburger menu button)
- *   • Page title (H3, primary colour)
- *   • Optional headerExtension slot (month row, filter tabs, etc.)
+ * Follows the Figma "Masthead (with Title)" component (Header Nav/No,
+ * node 5856:30586). The dashboard keeps the logo masthead; everything
+ * else puts the page title in the header:
+ *
+ *   • Gradient header: title (H3) + optional subtitle, menu button
+ *   • Optional headerExtension slot (date tabs, filters, etc.)
  *   • Flex-1 content area for the screen's main list/content
- *   • Menu overlay with slide-in animation (same as Dashboard)
+ *   • Menu overlay with slide-in animation (same as Dashboard). While the
+ *     menu is open the header shows the logo, as it does on the dashboard.
  *
  * Usage:
- *   <ScreenLayout title="Scan History" headerExtension={<DateTabsRow />}>
+ *   <ScreenLayout title="Scan History" subtitle="Everything you've scanned">
  *     <FlatList ... />
  *   </ScreenLayout>
  */
-export function ScreenLayout({ title, headerExtension, children }: ScreenLayoutProps) {
+export function ScreenLayout({ title, subtitle, headerExtension, children }: ScreenLayoutProps) {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const router = useRouter();
@@ -47,9 +56,20 @@ export function ScreenLayout({ title, headerExtension, children }: ScreenLayoutP
   const [menuVisible, setMenuVisible] = useState(false);
   const menuAnim = useRef(new Animated.Value(0)).current;
 
-  // Total height from screen top to bottom edge of the header bar
-  // insets.top + 24 (paddingTop) + 36 (logo) + 16 (paddingBottom) + 4 (buffer)
-  const navClearance = insets.top + 80;
+  // Header height drives where the content starts. Estimated up front
+  // (insets.top + 24 top padding + title row + 16 bottom padding), then
+  // measured, since the subtitle is optional and may wrap.
+  const headerTop = insets.top + 24;
+  const [headerHeight, setHeaderHeight] = useState(
+    headerTop + (subtitle ? 57 : 48) + 16,
+  );
+  function onHeaderLayout(e: LayoutChangeEvent) {
+    // Only the closed header sets the height — the menu's logo header is
+    // a different size and must not shift the page behind it.
+    if (menuOpen) return;
+    const h = Math.round(e.nativeEvent.layout.height);
+    if (h !== headerHeight) setHeaderHeight(h);
+  }
 
   function openMenu() {
     setMenuVisible(true);
@@ -78,13 +98,8 @@ export function ScreenLayout({ title, headerExtension, children }: ScreenLayoutP
   return (
     <SafeAreaView style={[styles.safeArea, Platform.OS === 'android' && { paddingBottom: insets.bottom }]} edges={[]}>
       {/* ── Main content column ─────────────────────────────────────────── */}
-      <View style={styles.column}>
-        {/* Title sits directly below the gradient header */}
-        <View style={[styles.titleBlock, { paddingTop: navClearance + 20 }]}>
-          <Text style={styles.titleText}>{title}</Text>
-        </View>
-
-        {/* Optional page-specific header (month row, filter tabs, etc.) */}
+      <View style={[styles.column, { paddingTop: headerHeight }]}>
+        {/* Optional page-specific header (date tabs, filters, etc.) */}
         {headerExtension}
 
         {/* Main content area — FlatList / ScrollView / etc. */}
@@ -97,8 +112,8 @@ export function ScreenLayout({ title, headerExtension, children }: ScreenLayoutP
       {!menuVisible && (
         <LinearGradient
           colors={[Colors.background, Colors.background, 'rgba(226,241,238,0)']}
-          locations={[0, 0.6, 1]}
-          style={[styles.gradientFade, { height: navClearance + 28 }]}
+          locations={[0, 0.82, 1]}
+          style={[styles.gradientFade, { height: headerHeight }]}
           pointerEvents="none"
         />
       )}
@@ -110,21 +125,37 @@ export function ScreenLayout({ title, headerExtension, children }: ScreenLayoutP
         </Animated.View>
       )}
 
-      {/* ── Header bar (logo + menu button, always on top) ──────────────── */}
+      {/* ── Header bar (title or logo + menu button, always on top) ─────── */}
       <View
-        style={[
-          styles.headerBar,
-          menuOpen && styles.headerBarMenu,
-          { paddingTop: insets.top + 24 },
-        ]}
+        style={[styles.headerBar, menuOpen && styles.headerBarMenu, { paddingTop: headerTop }]}
+        onLayout={onHeaderLayout}
       >
-        <TouchableOpacity onPress={() => router.push('/(tabs)/dashboard' as any)} activeOpacity={0.7} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-          <Logo width={141} height={36} />
-        </TouchableOpacity>
+        {menuOpen ? (
+          <TouchableOpacity
+            onPress={() => router.push('/(tabs)/dashboard' as any)}
+            activeOpacity={0.7}
+            hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
+          >
+            <Logo width={141} height={36} />
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.headerStack}>
+            <Text style={styles.titleText} numberOfLines={2} accessibilityRole="header">
+              {title}
+            </Text>
+            {subtitle != null &&
+              (typeof subtitle === 'string' ? (
+                <Text style={styles.subtitleText}>{subtitle}</Text>
+              ) : (
+                subtitle
+              ))}
+          </View>
+        )}
         <TouchableOpacity
           style={styles.menuBtn}
           onPress={menuOpen ? closeMenu : openMenu}
           activeOpacity={0.8}
+          accessibilityLabel={menuOpen ? 'Close menu' : 'Open menu'}
         >
           <Ionicons
             name={menuOpen ? 'close' : 'menu-outline'}
@@ -137,6 +168,25 @@ export function ScreenLayout({ title, headerExtension, children }: ScreenLayoutP
   );
 }
 
+/** Subtitle text styles, for screens that build a mixed-weight subtitle. */
+export const screenSubtitleStyles = StyleSheet.create({
+  light: {
+    fontSize: 16,
+    lineHeight: 27,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
+    color: Colors.secondary,
+  },
+  bold: {
+    fontSize: 16,
+    lineHeight: 27,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.32,
+  },
+});
+
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -145,8 +195,10 @@ const styles = StyleSheet.create({
   column: {
     flex: 1,
   },
-  titleBlock: {
-    paddingHorizontal: 24,
+  headerStack: {
+    flex: 1,
+    minWidth: 0,
+    justifyContent: 'center',
   },
   titleText: {
     fontSize: 24,
@@ -156,6 +208,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.48,
     lineHeight: 30,
   },
+  subtitleText: screenSubtitleStyles.light,
   contentArea: {
     flex: 1,
   },
@@ -182,6 +235,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 16,
     paddingHorizontal: 24,
     paddingBottom: 16,
     zIndex: 20,
@@ -198,5 +252,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.stroke.primary,
     alignItems: 'center',
     justifyContent: 'center',
+    ...Shadows.level3,
   },
 });

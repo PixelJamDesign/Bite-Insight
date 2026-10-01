@@ -56,6 +56,14 @@ export function MenuRecipesIcon({ color, size = 22 }: IconProps) {
   );
 }
 
+export function MenuMealPlanIcon({ color, size = 22 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 22 22" fill="none">
+      <Path d="M7 1V4M15 1V4M1 9H21M7.5 14.5L10 17L14.5 12.5M5 3H17C19.2091 3 21 4.79086 21 7V17C21 19.2091 19.2091 21 17 21H5C2.79086 21 1 19.2091 1 17V7C1 4.79086 2.79086 3 5 3Z" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
 export function MenuAccountIcon({ color, size = 22 }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 18.0005 22" fill="none">

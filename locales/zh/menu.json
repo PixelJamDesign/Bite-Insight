@@ -6,6 +6,7 @@
     "foodScanner": "食品扫描仪",
     "scanHistory": "扫描历史记录",
     "recipes": "食谱",
+    "mealPlan": "膳食计划",
     "myAccount": "我的账户",
     "settings": "设置",
     "logOut": "退出"
@@ -30,6 +31,7 @@
   "settings": {
     "title": "设置",
     "security": "安全",
+    "connectedDevices": "已连接设备",
     "notifications": "通知",
     "helpSupport": "帮助与支持",
     "privacyPolicy": "隐私政策",

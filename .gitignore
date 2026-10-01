@@ -23,3 +23,9 @@ google-services/
 
 expo-env.d.ts
 # @end expo-cli
+# symlinked out of the synced folder (see README note)
+node_modules
+ios/Pods
+
+# macOS/Nextcloud resource-fork sidecars
+._*

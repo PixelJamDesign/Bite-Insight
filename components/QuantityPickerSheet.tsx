@@ -47,9 +47,33 @@ interface Props {
   unit: QuantityUnit;
   onClose: () => void;
   onSave: (value: number, unit: QuantityUnit) => void;
+  /** Sheet heading. Defaults to "Quantity". */
+  title?: string;
+  /** Primary button label. Defaults to "Save". */
+  saveLabel?: string;
+  /** Counts recipe servings instead of a weight/volume: the stepper moves
+   *  in halves, the unit chips are hidden, and `unit` is passed straight
+   *  back through onSave. Used by the meal planner. */
+  servingsMode?: boolean;
 }
 
-export function QuantityPickerSheet({ visible, value, unit, onClose, onSave }: Props) {
+const SERVINGS_STEP = 0.5;
+
+/**
+ * The picker's contents without the sheet around it, so it can also be
+ * shown as a step inside another sheet (MealBuilderSheet) — a second
+ * Modal on top of an open one freezes iOS.
+ */
+export function QuantityPickerBody({
+  visible,
+  value,
+  unit,
+  onClose,
+  onSave,
+  title = 'Quantity',
+  saveLabel = 'Save',
+  servingsMode = false,
+}: Props) {
   const [localValue, setLocalValue] = useState<number>(value);
   const [localUnit, setLocalUnit] = useState<QuantityUnit>(unit);
   // Raw text the user is currently typing into the value field.
@@ -58,8 +82,6 @@ export function QuantityPickerSheet({ visible, value, unit, onClose, onSave }: P
   const [valueText, setValueText] = useState<string>('');
   const [editingValue, setEditingValue] = useState(false);
   const valueInputRef = useRef<TextInput>(null);
-  const { rendered, backdropOpacity, sheetTranslateY } = useSheetAnimation(visible);
-
   useEffect(() => {
     if (visible) {
       setLocalValue(value);
@@ -70,6 +92,7 @@ export function QuantityPickerSheet({ visible, value, unit, onClose, onSave }: P
   }, [visible, value, unit]);
 
   const meta = unitMeta(localUnit);
+  const step = servingsMode ? SERVINGS_STEP : meta.step;
 
   function handleSave() {
     if (Number.isFinite(localValue) && localValue > 0) {
@@ -111,41 +134,14 @@ export function QuantityPickerSheet({ visible, value, unit, onClose, onSave }: P
   }
 
   return (
-    <Modal visible={rendered} transparent animationType="none" onRequestClose={onClose}>
-      <View style={styles.backdrop}>
-        <Animated.View style={[styles.backdropTint, { opacity: backdropOpacity }]}>
-          <TouchableOpacity style={StyleSheet.absoluteFill} onPress={onClose} activeOpacity={1} />
-        </Animated.View>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={{ width: '100%' }}
-        >
-          <Animated.View style={{ transform: [{ translateY: sheetTranslateY }] }}>
-          <SafeAreaView style={styles.sheet} edges={['bottom']}>
-            {/* Handle */}
-            <View style={styles.handle} />
-
-            {/* Close (X) — top-right, no background */}
-            <View style={styles.closeRow}>
-              <TouchableOpacity
-                style={styles.closeBtn}
-                onPress={onClose}
-                hitSlop={12}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="close" size={22} color={Colors.primary} />
-              </TouchableOpacity>
-            </View>
-
-            {/* Body */}
             <View style={styles.body}>
-              <Text style={styles.title}>Quantity</Text>
+              <Text style={styles.title}>{title}</Text>
 
               {/* Stepper row */}
               <View style={styles.stepperRow}>
                 <TouchableOpacity
                   style={styles.stepperBtn}
-                  onPress={() => adjust(-meta.step)}
+                  onPress={() => adjust(-step)}
                   activeOpacity={0.7}
                   hitSlop={8}
                 >
@@ -169,7 +165,9 @@ export function QuantityPickerSheet({ visible, value, unit, onClose, onSave }: P
                     value={
                       editingValue
                         ? valueText
-                        : formatQuantityValue(localValue, localUnit)
+                        : servingsMode
+                          ? String(localValue)
+                          : formatQuantityValue(localValue, localUnit)
                     }
                     onFocus={() => {
                       setEditingValue(true);
@@ -210,12 +208,16 @@ export function QuantityPickerSheet({ visible, value, unit, onClose, onSave }: P
                     selectTextOnFocus
                     underlineColorAndroid="transparent"
                   />
-                  <Text style={styles.valueUnit}>{meta.label.toLowerCase()}</Text>
+                  <Text style={styles.valueUnit}>
+                    {servingsMode
+                      ? localValue === 1 ? 'serving' : 'servings'
+                      : meta.label.toLowerCase()}
+                  </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={styles.stepperBtn}
-                  onPress={() => adjust(meta.step)}
+                  onPress={() => adjust(step)}
                   activeOpacity={0.7}
                   hitSlop={8}
                 >
@@ -224,6 +226,7 @@ export function QuantityPickerSheet({ visible, value, unit, onClose, onSave }: P
               </View>
 
               {/* Unit of measurement */}
+              {!servingsMode && (
               <View style={styles.unitSection}>
                 <Text style={styles.unitLabel}>Unit of measurement</Text>
                 <View style={styles.unitsWrap}>
@@ -244,6 +247,7 @@ export function QuantityPickerSheet({ visible, value, unit, onClose, onSave }: P
                   })}
                 </View>
               </View>
+              )}
 
               {/* Save button */}
               <TouchableOpacity
@@ -251,9 +255,44 @@ export function QuantityPickerSheet({ visible, value, unit, onClose, onSave }: P
                 onPress={handleSave}
                 activeOpacity={0.85}
               >
-                <Text style={styles.saveBtnText}>Save</Text>
+                <Text style={styles.saveBtnText}>{saveLabel}</Text>
               </TouchableOpacity>
             </View>
+  );
+}
+
+export function QuantityPickerSheet(props: Props) {
+  const { visible, onClose } = props;
+  const { rendered, backdropOpacity, sheetTranslateY } = useSheetAnimation(visible);
+
+  return (
+    <Modal visible={rendered} transparent animationType="none" onRequestClose={onClose}>
+      <View style={styles.backdrop}>
+        <Animated.View style={[styles.backdropTint, { opacity: backdropOpacity }]}>
+          <TouchableOpacity style={StyleSheet.absoluteFill} onPress={onClose} activeOpacity={1} />
+        </Animated.View>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={{ width: '100%' }}
+        >
+          <Animated.View style={{ transform: [{ translateY: sheetTranslateY }] }}>
+          <SafeAreaView style={styles.sheet} edges={['bottom']}>
+            {/* Handle */}
+            <View style={styles.handle} />
+
+            {/* Close (X) — top-right, no background */}
+            <View style={styles.closeRow}>
+              <TouchableOpacity
+                style={styles.closeBtn}
+                onPress={onClose}
+                hitSlop={12}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="close" size={22} color={Colors.primary} />
+              </TouchableOpacity>
+            </View>
+
+            <QuantityPickerBody {...props} />
           </SafeAreaView>
           </Animated.View>
         </KeyboardAvoidingView>

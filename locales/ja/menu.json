@@ -6,6 +6,7 @@
     "foodScanner": "フードスキャナー",
     "scanHistory": "スキャン履歴",
     "recipes": "レシピ",
+    "mealPlan": "献立プラン",
     "myAccount": "私のアカウント",
     "settings": "設定",
     "logOut": "ログアウト"
@@ -30,6 +31,7 @@
   "settings": {
     "title": "設定",
     "security": "安全",
+    "connectedDevices": "接続済みデバイス",
     "notifications": "通知",
     "helpSupport": "ヘルプとサポート",
     "privacyPolicy": "プライバシーポリシー",

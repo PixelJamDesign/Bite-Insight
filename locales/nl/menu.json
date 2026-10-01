@@ -6,6 +6,7 @@
     "foodScanner": "Voedselscanner",
     "scanHistory": "Geschiedenis scannen",
     "recipes": "Recepten",
+    "mealPlan": "Maaltijdplan",
     "myAccount": "Mijn account",
     "settings": "Instellingen",
     "logOut": "Uitloggen"
@@ -30,6 +31,7 @@
   "settings": {
     "title": "Instellingen",
     "security": "Beveiliging",
+    "connectedDevices": "Gekoppelde apparaten",
     "notifications": "Meldingen",
     "helpSupport": "Hulp en ondersteuning",
     "privacyPolicy": "Privacybeleid",

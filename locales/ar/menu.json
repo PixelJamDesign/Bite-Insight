@@ -6,6 +6,7 @@
     "foodScanner": "ماسح الطعام",
     "scanHistory": "مسح التاريخ",
     "recipes": "وصفات",
+    "mealPlan": "خطة الوجبات",
     "myAccount": "حسابي",
     "settings": "إعدادات",
     "logOut": "تسجيل الخروج"
@@ -30,6 +31,7 @@
   "settings": {
     "title": "إعدادات",
     "security": "حماية",
+    "connectedDevices": "الأجهزة المتصلة",
     "notifications": "إشعارات",
     "helpSupport": "المساعدة والدعم",
     "privacyPolicy": "سياسة الخصوصية",

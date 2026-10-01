@@ -24,6 +24,7 @@ import { ActiveFamilyProvider } from '@/lib/activeFamilyContext';
 import { RegionProvider } from '@/lib/regionContext';
 import { MenuProvider } from '@/lib/menuContext';
 import { DraftRecipeProvider } from '@/lib/draftRecipeContext';
+import { DraftMealProvider } from '@/lib/draftMealContext';
 import { ToastProvider } from '@/lib/toastContext';
 import { JourneyProvider, useJourney } from '@/lib/journeyContext';
 import { savePendingDeepLink, consumePendingDeepLink } from '@/lib/pendingDeepLink';
@@ -373,6 +374,9 @@ function RootLayoutInner() {
             <Stack.Screen name="recipes/pick-scan" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="recipes/[id]/index" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="recipes/[id]/edit" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="meal-plan-add" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="connected-devices" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="dexcom-connected" options={{ animation: 'fade' }} />
             <Stack.Screen name="whats-new" options={{ animation: 'fade' }} />
             <Stack.Screen name="+not-found" />
           </Stack>
@@ -558,11 +562,13 @@ export default function RootLayout() {
                   <MyPlanSheetProvider>
                     <MenuProvider>
                       <DraftRecipeProvider>
+                      <DraftMealProvider>
                         <ToastProvider>
                           <TransitionProvider>
                             <RootLayoutInner />
                           </TransitionProvider>
                         </ToastProvider>
+                      </DraftMealProvider>
                       </DraftRecipeProvider>
                     </MenuProvider>
                   </MyPlanSheetProvider>

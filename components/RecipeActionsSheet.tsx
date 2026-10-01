@@ -40,6 +40,7 @@ import ShareIcon from '@/assets/icons/recipe-actions/share.svg';
 import ShareLinkIcon from '@/assets/icons/recipe-actions/share-link.svg';
 import BookmarkIcon from '@/assets/icons/recipe-actions/bookmark.svg';
 import TrashIcon from '@/assets/icons/recipe-actions/trash.svg';
+import MealPlanIcon from '@/assets/icons/recipe-actions/meal-plan.svg';
 import LikeThumbIcon from '@/assets/icons/recipe-header/like-thumb.svg';
 import PlusSparkleIcon from '@/assets/icons/plus-sparkle.svg';
 
@@ -51,6 +52,9 @@ interface BaseProps {
   /** Fires when the user taps "Share with a friend". Parent should
    *  open the native share sheet (or an in-app friend picker). */
   onShareWithFriend: () => void;
+  /** Fires when the user taps "Add to meal plan". The row is hidden
+   *  when this isn't passed. */
+  onAddToMealPlan?: () => void;
 }
 
 interface OwnerProps extends BaseProps {
@@ -112,6 +116,19 @@ export function RecipeActionsSheet(props: Props) {
               <Text style={styles.title}>Recipe actions</Text>
 
               <View style={styles.rows}>
+                {props.onAddToMealPlan && (
+                  <ActionRow
+                    IconSvg={MealPlanIcon}
+                    iconSize={22}
+                    tint={SPRING_WATER}
+                    title="Add to meal plan"
+                    subtitle="Pick a day and a meal for this recipe"
+                    onPress={() => {
+                      onClose();
+                      props.onAddToMealPlan?.();
+                    }}
+                  />
+                )}
                 {props.variant === 'owner' ? (
                   <OwnerRows {...props} />
                 ) : (

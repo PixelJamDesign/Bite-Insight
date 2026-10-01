@@ -106,7 +106,14 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
               canPreventDefault: true,
             });
             if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name);
+              // The meal builder opens the scanner with addToMeal=1.
+              // Clear it on a plain tab press so a later scan isn't
+              // quietly added to a meal.
+              if (isScanner) {
+                navigation.navigate(route.name, { addToMeal: undefined });
+              } else {
+                navigation.navigate(route.name);
+              }
             }
           };
 
@@ -336,6 +343,7 @@ export default function TabLayout() {
             <Tabs.Screen name="scanner" options={{ title: t('tabs.scanner') }} />
             <Tabs.Screen name="history" options={{ title: t('tabs.history') }} />
             <Tabs.Screen name="ingredient-preferences" options={{ href: null }} />
+            <Tabs.Screen name="meal-plan" options={{ href: null }} />
           </Tabs>
           <MenuOverlay />
           <NotificationsOverlay />

@@ -6,6 +6,7 @@
     "foodScanner": "식품 스캐너",
     "scanHistory": "스캔 기록",
     "recipes": "조리법",
+    "mealPlan": "식단 계획",
     "myAccount": "내 계정",
     "settings": "설정",
     "logOut": "로그아웃"
@@ -30,6 +31,7 @@
   "settings": {
     "title": "설정",
     "security": "보안",
+    "connectedDevices": "연결된 기기",
     "notifications": "알림",
     "helpSupport": "도움말 및 지원",
     "privacyPolicy": "개인 정보 보호 정책",

@@ -28,6 +28,7 @@ import {
   MenuScannerIcon,
   MenuHistoryIcon,
   MenuRecipesIcon,
+  MenuMealPlanIcon,
   MenuAccountIcon,
   MenuSettingsIcon,
   MenuLogoutIcon,
@@ -190,7 +191,7 @@ function AccountScreen({ goBack, onGo, onNavigate }: { goBack: () => void; onGo:
   );
 }
 
-function SettingsScreen({ goBack, onNavigate, onOpenPolicy }: { goBack: () => void; onNavigate: (s: MenuScreen) => void; onOpenPolicy: (type: 'privacy' | 'cookie') => void }) {
+function SettingsScreen({ goBack, onNavigate, onOpenPolicy, onGo }: { goBack: () => void; onNavigate: (s: MenuScreen) => void; onOpenPolicy: (type: 'privacy' | 'cookie') => void; onGo: (route: string) => void }) {
   const { t } = useTranslation('menu');
   const { t: tc } = useTranslation('common');
   const { isPlus } = useSubscription();
@@ -207,6 +208,7 @@ function SettingsScreen({ goBack, onNavigate, onOpenPolicy }: { goBack: () => vo
       <View style={styles.navList}>
         <NavItem icon={<MenuLockIcon color={Colors.secondary} />} label={t('settings.security')} onPress={() => onNavigate('security')} chevron />
         {/* <NavItem icon={<MenuNotificationsIcon color={Colors.secondary} />} label={t('settings.notifications')} onPress={() => {}} /> */}
+        <NavItem icon={<Ionicons name="pulse" size={22} color={Colors.secondary} />} label={t('settings.connectedDevices')} onPress={() => onGo('/connected-devices')} chevron />
         <NavItem icon={<MenuHelpIcon color={Colors.secondary} />} label={t('settings.helpSupport')} onPress={() => onNavigate('help')} chevron />
         <NavItem icon={<MenuPrivacyIcon color={Colors.secondary} />} label={t('settings.privacyPolicy')} onPress={() => onOpenPolicy('privacy')} />
         <NavItem icon={<MenuCookieIcon color={Colors.secondary} />} label={t('settings.cookiePolicy')} onPress={() => onOpenPolicy('cookie')} />
@@ -1684,6 +1686,7 @@ function MainScreen({
           <NavItem icon={<MenuScannerIcon color={Colors.secondary} />} label={t('main.foodScanner')} onPress={() => go('/(tabs)/scanner')} />
           <NavItem icon={<MenuHistoryIcon color={Colors.secondary} />} label={t('main.scanHistory')} onPress={() => go('/(tabs)/history')} />
           <NavItem icon={<MenuRecipesIcon color={Colors.secondary} />} label={t('main.recipes')} onPress={() => go('/(tabs)/recipes')} />
+          <NavItem icon={<MenuMealPlanIcon color={Colors.secondary} />} label={t('main.mealPlan')} onPress={() => go('/meal-plan')} />
         </View>
       </View>
 
@@ -1846,7 +1849,7 @@ export function MenuModal({ onClose, onNavigate }: MenuModalProps) {
       return <><AccountScreen goBack={() => navigate('main', true)} onGo={handleNavigate} onNavigate={(sc) => navigate(sc)} /><Footer /></>;
     }
     if (s === 'settings') {
-      return <><SettingsScreen goBack={() => navigate('main', true)} onNavigate={(sc) => navigate(sc)} onOpenPolicy={setPolicyType} /><Footer /></>;
+      return <><SettingsScreen goBack={() => navigate('main', true)} onNavigate={(sc) => navigate(sc)} onOpenPolicy={setPolicyType} onGo={handleNavigate} /><Footer /></>;
     }
     if (s === 'marketing') {
       return <><MarketingPreferencesScreen goBack={() => navigate('settings', true)} /><Footer /></>;

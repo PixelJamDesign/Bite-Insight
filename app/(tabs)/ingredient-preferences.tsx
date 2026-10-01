@@ -23,7 +23,7 @@ import { supabase, getIngredientImageUrl } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { Colors, Shadows } from '@/constants/theme';
-import { ScreenLayout } from '@/components/ScreenLayout';
+import { ScreenLayout, screenSubtitleStyles } from '@/components/ScreenLayout';
 import { MenuLikedIcon, MenuDislikedIcon, MenuFlaggedIcon, ActionSearchIcon, ActionClearIcon, ActionPenIcon } from '@/components/MenuIcons';
 import { TextField } from '@/components/TextField';
 import { IngredientDetailModal } from '@/components/IngredientDetailModal';
@@ -395,14 +395,6 @@ export default function IngredientPreferencesScreen() {
   // ── Header extension ──────────────────────────────────────────────────────────
   const headerExtension = (
     <View style={styles.headerExt}>
-      {/* Subtitle: "Currently you like 12 ingredients" */}
-      <View style={styles.subtitleRow}>
-        <Text style={styles.subtitleLight}>{t('preferences.subtitle.currently')}{COUNT_VERBS[activeTab]} </Text>
-        <Text style={styles.subtitleBold}>
-          {t('preferences.subtitle.ingredient', { count })}
-        </Text>
-      </View>
-
       {/* Action buttons */}
       <View style={styles.actionBtnRow}>
         {editMode ? (
@@ -514,7 +506,20 @@ export default function IngredientPreferencesScreen() {
   // ── Render ────────────────────────────────────────────────────────────────────
   return (
     <>
-    <ScreenLayout title={PAGE_TITLES[activeTab]} headerExtension={headerExtension}>
+    <ScreenLayout
+      title={PAGE_TITLES[activeTab]}
+      subtitle={
+        // "Currently you like 12 ingredients"
+        <Text style={screenSubtitleStyles.light}>
+          {t('preferences.subtitle.currently')}
+          {COUNT_VERBS[activeTab]}{' '}
+          <Text style={screenSubtitleStyles.bold}>
+            {t('preferences.subtitle.ingredient', { count })}
+          </Text>
+        </Text>
+      }
+      headerExtension={headerExtension}
+    >
       {activeTab === 'flagged' && !isPlus ? (
         <FlaggedUpsell />
       ) : loading ? (
@@ -796,28 +801,6 @@ const styles = StyleSheet.create({
   headerExt: {
     paddingTop: 4,
     paddingBottom: 0,
-  },
-  subtitleRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    flexWrap: 'wrap',
-    paddingHorizontal: 24,
-    paddingBottom: 8,
-  },
-  subtitleLight: {
-    fontSize: 16,
-    fontWeight: '300',
-    fontFamily: 'Figtree_300Light',
-    color: Colors.secondary,
-    lineHeight: 24,
-  },
-  subtitleBold: {
-    fontSize: 16,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
-    letterSpacing: -0.32,
-    lineHeight: 24,
   },
   actionBtnRow: {
     flexDirection: 'row',

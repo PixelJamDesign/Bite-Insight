@@ -8,6 +8,10 @@ import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useDraftRecipe } from '@/lib/draftRecipeContext';
 import { useToast } from '@/lib/toastContext';
 import { buildProductSnapshot } from '@/lib/recipes';
+import { draftItemFromProduct } from '@/lib/mealPlan';
+import { useDraftMeal } from '@/lib/draftMealContext';
+import { QuantityPickerSheet } from '@/components/QuantityPickerSheet';
+import type { ProductSnapshot, QuantityUnit } from '@/lib/types';
 import { useTranslation } from 'react-i18next';
 import * as ImagePicker from 'expo-image-picker';
 import * as VisionScanner from '@/modules/barcode-scanner-vision/src';
@@ -36,12 +40,27 @@ export default function ScannerScreen() {
   const [regionPickerVisible, setRegionPickerVisible] = useState(false);
   const router = useRouter();
   const { session } = useAuth();
-  const scannerParams = useLocalSearchParams<{ addToRecipe?: string; returnTo?: string }>();
-  const pickMode = scannerParams.addToRecipe === '1';
+  const scannerParams = useLocalSearchParams<{ addToRecipe?: string; returnTo?: string; addToMeal?: string }>();
+  // Opened from the meal builder — the scanned product goes into the
+  // draft meal (after a portion prompt) instead of the draft recipe.
+  const mealMode = scannerParams.addToMeal === '1';
+  const draftMeal = useDraftMeal();
+  const pickMode = scannerParams.addToRecipe === '1' || mealMode;
+  // The product just scanned, waiting on a portion from the quantity sheet.
+  const [mealPending, setMealPending] = useState<{
+    snapshot: ProductSnapshot;
+    barcode: string;
+    name: string;
+  } | null>(null);
   // Where to send the user after a successful pick — passed in by
   // the recipe builder so we land back on the right URL whether
   // they came from /recipes/new or /recipes/{id}/edit.
-  const returnTo = typeof scannerParams.returnTo === 'string' ? scannerParams.returnTo : '/recipes/new';
+  const returnTo =
+    typeof scannerParams.returnTo === 'string'
+      ? scannerParams.returnTo
+      : mealMode
+        ? '/meal-plan'
+        : '/recipes/new';
   const draftRecipe = useDraftRecipe();
   const { showToast } = useToast();
   const { isPlus } = useSubscription();
@@ -329,6 +348,12 @@ export default function ScannerScreen() {
           // snapshot so the family impact matcher can search it later.
           ingredients_text: ingredientsText,
         });
+        if (mealMode) {
+          // Ask for the portion first — confirmMealAdd adds it to the draft.
+          // The scanner stays paused (scanLock) while the sheet is up.
+          setMealPending({ snapshot, barcode: result.data, name: productName });
+          return;
+        }
         draftRecipe.addIngredient({
           barcode: result.data,
           scan_id: null,
@@ -523,6 +548,49 @@ export default function ScannerScreen() {
   }
 
   // ── Shared: Region picker modal ─────────────────────────────────────────────
+  /** Lets the camera pick up the next barcode again. */
+  function resumeScanning() {
+    scanLock.current = false;
+    lastScan.current = '';
+    setScanning(true);
+  }
+
+  function confirmMealAdd(value: number, unit: QuantityUnit) {
+    const picked = mealPending;
+    setMealPending(null);
+    if (!picked) return;
+    draftMeal.addItem(
+      draftItemFromProduct({
+        barcode: picked.barcode,
+        quantity_value: value,
+        quantity_unit: unit,
+        product_snapshot: picked.snapshot,
+      }),
+    );
+    showToast({ message: `Added ${picked.name} to your meal`, variant: 'success', durationMs: 2000 });
+    // The scanner tab stays mounted — drop the meal params so the next
+    // ordinary scan isn't added to a meal as well.
+    router.setParams({ addToMeal: undefined, returnTo: undefined } as never);
+    router.replace(returnTo as never);
+  }
+
+  function renderPlanSheet() {
+    return (
+      <QuantityPickerSheet
+        visible={mealPending !== null}
+        title="How much?"
+        saveLabel="Add to meal"
+        value={100}
+        unit="g"
+        onClose={() => {
+          setMealPending(null);
+          resumeScanning();
+        }}
+        onSave={confirmMealAdd}
+      />
+    );
+  }
+
   function renderRegionModal() {
     return (
       <Modal
@@ -583,6 +651,7 @@ export default function ScannerScreen() {
 
         {/* Region picker modal */}
         {renderRegionModal()}
+      {renderPlanSheet()}
       </View>
     );
   }
@@ -646,6 +715,7 @@ export default function ScannerScreen() {
 
       {/* Region picker modal */}
       {renderRegionModal()}
+      {renderPlanSheet()}
     </View>
   );
 }

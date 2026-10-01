@@ -251,6 +251,85 @@ export interface RecipeWithIngredients extends Recipe {
   ingredients: RecipeIngredient[];
 }
 
+// ── Meal plan ───────────────────────────────────────────────────────────────
+
+export type MealPlanEntryKind = 'recipe' | 'product';
+
+/** Nutrition for the planned portion of an entry (servings × recipe
+ *  per-serving totals, or product per-100g scaled by quantity). */
+export interface MealNutrition {
+  kcal?: number;
+  fat_g?: number;
+  sat_fat_g?: number;
+  carbs_g?: number;
+  sugars_g?: number;
+  fiber_g?: number;
+  protein_g?: number;
+  salt_g?: number;
+}
+
+/** One row of meal_plan_entries — an item inside a meal. Schema lives in
+ *  supabase/migrations/20260930120000_meal_plan.sql (+ ..._meal_plan_meals.sql). */
+export interface MealPlanEntry {
+  id: string;
+  user_id: string;
+  meal_id: string;
+  /** Local calendar day, 'YYYY-MM-DD'. Mirrors the parent meal's day. */
+  plan_date: string;
+  position: number;
+  kind: MealPlanEntryKind;
+  recipe_id: string | null;
+  servings: number;
+  barcode: string | null;
+  scan_id: string | null;
+  quantity_value: number | null;
+  quantity_unit: QuantityUnit | null;
+  product_snapshot: ProductSnapshot | null;
+  title: string;
+  image_url: string | null;
+  nutriscore_grade: string | null;
+  nutrition: MealNutrition;
+  created_at: string;
+  updated_at: string;
+}
+
+/** One row of meals, with its items embedded (see listMeals). */
+export interface Meal {
+  id: string;
+  user_id: string;
+  /** Local calendar day, 'YYYY-MM-DD'. */
+  plan_date: string;
+  /** Local wall-clock time, 'HH:MM'. */
+  meal_time: string;
+  name: string;
+  /** Set when the user taps "Eating now". Null = still just planned. */
+  eaten_at: string | null;
+  created_at: string;
+  updated_at: string;
+  items: MealPlanEntry[];
+}
+
+/** An item in the meal builder before it's saved (DraftMealProvider). */
+export interface MealItemDraft {
+  /** Local key for list rendering — not the database id. */
+  key: string;
+  kind: MealPlanEntryKind;
+  recipe_id: string | null;
+  servings: number;
+  barcode: string | null;
+  scan_id: string | null;
+  quantity_value: number | null;
+  quantity_unit: QuantityUnit | null;
+  product_snapshot: ProductSnapshot | null;
+  title: string;
+  image_url: string | null;
+  nutriscore_grade: string | null;
+  /** Recipe items only: nutrition for one serving, so the servings
+   *  stepper can rescale without refetching the recipe. */
+  unit_nutrition: MealNutrition | null;
+  nutrition: MealNutrition;
+}
+
 /** Household impact row — one per member + the active user */
 export interface HouseholdImpactRow {
   memberId: string;         // 'self' for the active user, else family_profile.id

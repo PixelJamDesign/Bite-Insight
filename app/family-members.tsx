@@ -20,7 +20,7 @@ import { useSubscription } from '@/lib/subscriptionContext';
 import { useUpsellSheet } from '@/lib/upsellSheetContext';
 import { Colors } from '@/constants/theme';
 import { usePageTransition } from '@/lib/usePageTransition';
-import { ScreenLayout } from '@/components/ScreenLayout';
+import { ScreenLayout, screenSubtitleStyles } from '@/components/ScreenLayout';
 import { ActionSearchIcon, ActionPenIcon } from '@/components/MenuIcons';
 import { CachedAvatar } from '@/components/CachedAvatar';
 import { InviteFamilyMemberSheet } from '@/components/InviteFamilyMemberSheet';
@@ -245,11 +245,6 @@ export default function FamilyMembersScreen() {
   // ── Header extension ──────────────────────────────────────────────────────────
   const headerExtension = (
     <View style={styles.headerExt}>
-      <View style={styles.subtitleRow}>
-        <Text style={styles.subtitleLight}>You have </Text>
-        <Text style={styles.subtitleBold}>{count} family {count === 1 ? 'member' : 'members'}</Text>
-      </View>
-
       {count > 0 && (
         <View style={styles.actionBtnRow}>
           {editMode ? (
@@ -412,7 +407,18 @@ export default function FamilyMembersScreen() {
   // ── Render ─────────────────────────────────────────────────────────────────────
   return (
     <Animated.View style={{ flex: 1, opacity: pageOpacity, transform: [{ translateX: pageTranslateX }] }}>
-      <ScreenLayout title="My Family" headerExtension={headerExtension}>
+      <ScreenLayout
+        title="My Family"
+        subtitle={
+          <Text style={screenSubtitleStyles.light}>
+            You have{' '}
+            <Text style={screenSubtitleStyles.bold}>
+              {count} family {count === 1 ? 'member' : 'members'}
+            </Text>
+          </Text>
+        }
+        headerExtension={headerExtension}
+      >
         {loading ? (
           <LottieLoader type="loading" fullScreen={false} />
         ) : profiles.length === 0 ? (
@@ -555,21 +561,6 @@ export default function FamilyMembersScreen() {
 // ── Styles ─────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   headerExt: { paddingTop: 4, paddingBottom: 0 },
-  subtitleRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    flexWrap: 'wrap',
-    paddingHorizontal: 24,
-    paddingBottom: 8,
-  },
-  subtitleLight: {
-    fontSize: 16, fontWeight: '300', fontFamily: 'Figtree_300Light',
-    color: Colors.secondary, lineHeight: 24,
-  },
-  subtitleBold: {
-    fontSize: 16, fontWeight: '700', fontFamily: 'Figtree_700Bold',
-    color: Colors.primary, letterSpacing: -0.32, lineHeight: 18,
-  },
   actionBtnRow: {
     flexDirection: 'row', alignItems: 'center', gap: 16,
     paddingHorizontal: 24, paddingBottom: 12,

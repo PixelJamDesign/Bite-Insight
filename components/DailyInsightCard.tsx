@@ -1,11 +1,11 @@
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Ionicons } from '@expo/vector-icons';
 import { Colors, Shadows } from '@/constants/theme';
+import { dietaryTagLabel } from '@/components/DietaryTag';
+import type { DailyInsight, DietaryTag as DietaryTagType } from '@/lib/types';
+import CloseIcon from '@/assets/icons/insight-close.svg';
 
 const lightbulbImg = require('@/assets/images/lightbulb.png');
-import { DietaryTag } from './DietaryTag';
-import type { DailyInsight, DietaryTag as DietaryTagType } from '@/lib/types';
 
 interface DailyInsightCardProps {
   insight: DailyInsight;
@@ -16,6 +16,11 @@ interface DailyInsightCardProps {
   showElevation?: boolean;
 }
 
+/**
+ * Daily insight card, per the Figma "Daily Insight" component (node
+ * 2201:1115): bulb and title on one line, the tip, then the user's
+ * matching tags. Every tag uses the same neutral chip.
+ */
 export function DailyInsightCard({
   insight,
   onDismiss,
@@ -26,48 +31,60 @@ export function DailyInsightCard({
 }: DailyInsightCardProps) {
   const { t } = useTranslation('dashboard');
   const { t: tpo } = useTranslation('profileOptions');
-  const hasChips =
-    dietaryPreferences.length > 0 ||
-    healthConditions.length > 0 ||
-    allergies.length > 0;
+  const { t: tc } = useTranslation('common');
+
+  const chips = [
+    // Same labels (and same skipping of unknown keys) as DietaryTag.
+    ...dietaryPreferences.flatMap((tag) => {
+      const label = dietaryTagLabel(tag);
+      return label ? [{ key: `d:${tag}`, label }] : [];
+    }),
+    ...healthConditions.map((c) => ({
+      key: `h:${c}`,
+      label: tpo(`healthConditions.${c}`, { defaultValue: c }),
+    })),
+    ...allergies.map((a) => ({
+      key: `a:${a}`,
+      label: tpo(`allergies.${a}`, { defaultValue: a }),
+    })),
+  ];
 
   return (
     <View style={[styles.card, showElevation && Shadows.level3]}>
-      {/* Dismiss button */}
-      <TouchableOpacity style={styles.closeBtn} onPress={onDismiss} hitSlop={8}>
-        <Ionicons name="close" size={20} color={Colors.primary} />
-      </TouchableOpacity>
-
-      {/* Bulb icon */}
-      <Image source={lightbulbImg} style={styles.bulbIcon} />
-
-      {/* Title */}
-      <Text style={styles.title}>{t('dailyInsight')}</Text>
+      {/* Bulb + title */}
+      <View style={styles.titleRow}>
+        <View style={styles.bulbBox}>
+          <Image source={lightbulbImg} style={styles.bulbIcon} />
+        </View>
+        <Text style={styles.title}>{t('dailyInsight')}</Text>
+      </View>
 
       {/* Content */}
       <Text style={styles.content}>{insight.content}</Text>
 
       {/* Suitable for — user's dietary prefs, conditions & allergies */}
-      {hasChips && (
+      {chips.length > 0 && (
         <View style={styles.suitableRow}>
           <Text style={styles.suitableLabel}>{t('suitableFor')}</Text>
           <View style={styles.tagsRow}>
-            {dietaryPreferences.map((tag) => (
-              <DietaryTag key={tag} tag={tag} />
-            ))}
-            {healthConditions.map((condition) => (
-              <View key={condition} style={[styles.genericChip, { backgroundColor: '#B8DFD6' }]}>
-                <Text style={styles.genericChipLabel}>{tpo(`healthConditions.${condition}`, { defaultValue: condition })}</Text>
-              </View>
-            ))}
-            {allergies.map((allergy) => (
-              <View key={allergy} style={[styles.genericChip, { backgroundColor: '#B8DFD6' }]}>
-                <Text style={styles.genericChipLabel}>{tpo(`allergies.${allergy}`, { defaultValue: allergy })}</Text>
+            {chips.map((chip) => (
+              <View key={chip.key} style={styles.chip}>
+                <Text style={styles.chipLabel}>{chip.label}</Text>
               </View>
             ))}
           </View>
         </View>
       )}
+
+      {/* Dismiss button */}
+      <TouchableOpacity
+        style={styles.closeBtn}
+        onPress={onDismiss}
+        hitSlop={8}
+        accessibilityLabel={tc('buttons.close')}
+      >
+        <CloseIcon width={24} height={24} />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -83,24 +100,44 @@ const styles = StyleSheet.create({
   },
   closeBtn: {
     position: 'absolute',
-    top: 16,
-    right: 16,
-    width: 32,
-    height: 32,
+    top: 23,
+    right: 23,
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    // Keep the title clear of the close button.
+    paddingRight: 32,
+  },
+  // lightbulb.png has rays above and a soft shadow below the bulb, so it
+  // draws larger than its slot and hangs over top and bottom — the bulb
+  // itself then reads at the size of the title without making the row taller.
+  bulbBox: {
+    width: 16,
+    height: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },
   bulbIcon: {
-    width: 32,
-    height: 60,
+    width: 18,
+    height: 38,
+    // Pull up a little so the bulb, not the shadow, lines up with the title.
+    marginTop: -2,
     resizeMode: 'contain',
   },
   title: {
-    fontSize: 18,
+    flex: 1,
+    paddingTop: 4,
+    fontSize: 20,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
-    letterSpacing: -0.36,
+    letterSpacing: -0.4,
     lineHeight: 24,
   },
   content: {
@@ -108,37 +145,39 @@ const styles = StyleSheet.create({
     fontWeight: '300',
     fontFamily: 'Figtree_300Light',
     color: Colors.secondary,
-    lineHeight: 24,
+    lineHeight: 27,
   },
   suitableRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'baseline',
     gap: 8,
-    flexWrap: 'wrap',
   },
   suitableLabel: {
     fontSize: 14,
+    lineHeight: 16.8,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
     letterSpacing: -0.28,
-    paddingTop: 4,
   },
   tagsRow: {
+    flex: 1,
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 4,
   },
-  genericChip: {
+  chip: {
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 999,
+    backgroundColor: Colors.background,
   },
-  genericChipLabel: {
-    fontSize: 13,
+  chipLabel: {
+    fontSize: 14,
+    lineHeight: 16.8,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
-    letterSpacing: -0.26,
+    letterSpacing: -0.28,
   },
 });

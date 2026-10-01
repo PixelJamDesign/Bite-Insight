@@ -20,6 +20,10 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useDraftRecipe } from '@/lib/draftRecipeContext';
 import { useToast } from '@/lib/toastContext';
 import { buildProductSnapshot } from '@/lib/recipes';
+import { draftItemFromProduct } from '@/lib/mealPlan';
+import { useDraftMeal } from '@/lib/draftMealContext';
+import { QuantityPickerSheet } from '@/components/QuantityPickerSheet';
+import type { ProductSnapshot, QuantityUnit } from '@/lib/types';
 import { useTranslation } from 'react-i18next';
 import { Colors, Shadows, Spacing, Radius } from '@/constants/theme';
 import { ActionSearchIcon, ActionChevronDownIcon, ActionCheckIcon, ActionClearIcon, MenuArrowLeftIcon, MenuChevronRightIcon } from '@/components/MenuIcons';
@@ -109,6 +113,8 @@ const DEBOUNCE_MIN = 300;   // fastest typists
 const DEBOUNCE_MAX = 800;   // slowest typists
 const DEBOUNCE_DEFAULT = 450;
 const PAGE_SIZE = 10;
+// How many all-duplicate pages loadMore will skip through in one go.
+const MAX_EMPTY_PAGES = 3;
 // completeness + unique_scans_n drive the data-quality tiebreaker
 // in scoreRelevance. Without them every result tied on completeness
 // = 0 and we'd surface whichever entry the API ranked first.
@@ -122,8 +128,34 @@ const SEARCH_CGI_PATH = 'openfoodfacts.org/cgi/search.pl';
 export default function FoodSearchScreen() {
   const { t } = useTranslation('scanner');
   const router = useRouter();
-  const params = useLocalSearchParams<{ addToRecipe?: string }>();
-  const pickMode = params.addToRecipe === '1';
+  const params = useLocalSearchParams<{ addToRecipe?: string; addToMeal?: string }>();
+  // Opened from the meal builder — the picked product goes into the
+  // draft meal (after a portion prompt) instead of the draft recipe.
+  const mealMode = params.addToMeal === '1';
+  const draftMeal = useDraftMeal();
+  // The product the user tapped, waiting on a portion from the quantity sheet.
+  const [mealPending, setMealPending] = useState<{
+    snapshot: ProductSnapshot;
+    barcode: string;
+    name: string;
+  } | null>(null);
+
+  function confirmMealAdd(value: number, unit: QuantityUnit) {
+    const picked = mealPending;
+    setMealPending(null);
+    if (!picked) return;
+    draftMeal.addItem(
+      draftItemFromProduct({
+        barcode: picked.barcode,
+        quantity_value: value,
+        quantity_unit: unit,
+        product_snapshot: picked.snapshot,
+      }),
+    );
+    showToast({ message: `Added ${picked.name} to your meal`, variant: 'success', durationMs: 2000 });
+    router.back();
+  }
+  const pickMode = params.addToRecipe === '1' || mealMode;
   const insets = useSafeAreaInsets();
   const { isPlus } = useSubscription();
   const { showUpsell } = useUpsellSheet();
@@ -150,6 +182,11 @@ export default function FoodSearchScreen() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const pageRef = useRef(1);
+  const loadingMoreRef = useRef(false);
+  const autoLoadPausedRef = useRef(false);
+  // Latest results, readable from loadMore without a stale closure.
+  const resultsRef = useRef<SearchProduct[]>([]);
+  resultsRef.current = results;
   const currentTermRef = useRef('');
   const retryCountRef = useRef(0);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -502,6 +539,7 @@ export default function FoodSearchScreen() {
     setHasSearched(true);
     setServerError(false);
     pageRef.current = 1;
+    autoLoadPausedRef.current = false;
     currentTermRef.current = searchTerm;
 
     try {
@@ -636,47 +674,86 @@ export default function FoodSearchScreen() {
     }
   }
 
-  /** Load next page of results and append to existing list */
-  async function loadMore() {
-    if (loadingMore || !hasMore) return;
+  /**
+   * Fetches one later page, with the same fallback chain the first page
+   * uses: Search-a-Licious, then the regional CGI, then the global CGI.
+   * loadMore used to call Search-a-Licious only, so whenever that API was
+   * down (or blocked, as it is on web) every "load more" failed.
+   * Throws if all three fail.
+   */
+  async function fetchLaterPage(
+    term: string,
+    region: Region,
+    page: number,
+  ): Promise<{ hits?: unknown[]; products?: unknown[]; count?: number }> {
+    const urls = [buildSearchUrl(term, region, page), buildCgiUrl(term, region, page)];
+    if (region.subdomain && region.subdomain !== 'world') {
+      urls.push(buildCgiUrl(term, { ...region, subdomain: 'world' } as Region, page));
+    }
+    for (const url of urls) {
+      try {
+        const res = await fetch(url, { headers: OFF_HEADERS });
+        if (res.ok) return await res.json();
+      } catch {
+        // try the next source
+      }
+    }
+    throw new Error('Network error');
+  }
 
-    const nextPage = pageRef.current + 1;
-    pageRef.current = nextPage;
+  /** Load next page of results and append to existing list */
+  async function loadMore(fromButton = false) {
+    // Ref guard, not state: onEndReached can fire twice before a
+    // setLoadingMore(true) has rendered, which used to start two loads.
+    if (loadingMoreRef.current || !hasMore) return;
+    // After a failed page, only the button retries. Letting onEndReached
+    // retry made the footer flip spinner ⇄ button in a loop, because each
+    // flip re-fired onEndReached.
+    if (autoLoadPausedRef.current && !fromButton) return;
+
+    loadingMoreRef.current = true;
     setLoadingMore(true);
 
     const region = regionRef.current;
     const searchTerm = currentTermRef.current;
 
     try {
-      const url = buildSearchUrl(searchTerm, region, nextPage);
+      // A page can come back entirely made of products we already show
+      // (the first screen merges several variant searches). Keep going
+      // until something new turns up, within reason.
+      for (let attempt = 0; attempt < MAX_EMPTY_PAGES; attempt++) {
+        const nextPage = pageRef.current + 1;
+        const data = await fetchLaterPage(searchTerm, region, nextPage);
 
-      const res = await fetch(url, {
-        headers: OFF_HEADERS,
-      });
+        // The user searched for something else while this was in flight.
+        if (currentTermRef.current !== searchTerm) return;
 
-      if (!res.ok) throw new Error('Network error');
-      const data = await res.json();
-      // Search-a-Licious returns "hits", CGI returns "products"
-      const items = data.hits ?? data.products ?? [];
-      const products: SearchProduct[] = items.map(normaliseHit);
+        // Only advance once the page has actually loaded, so a failure
+        // doesn't skip a page.
+        pageRef.current = nextPage;
+        autoLoadPausedRef.current = false;
 
-      if (products.length === 0) {
-        setHasMore(false);
-        return;
+        // Search-a-Licious returns "hits", CGI returns "products"
+        const items = (data.hits ?? data.products ?? []) as Record<string, unknown>[];
+        const products: SearchProduct[] = items.map(normaliseHit);
+        const more =products.length > 0 && nextPage * PAGE_SIZE < (data.count ?? 0);
+        setHasMore(more);
+
+        const existingCodes = new Set(resultsRef.current.map((p) => p.code));
+        const fresh = processResults(products, searchTerm).filter(
+          (p) => p.code && !existingCodes.has(p.code),
+        );
+        if (fresh.length > 0) {
+          setResults((prev) => [...prev, ...fresh]);
+          return;
+        }
+        if (!more) return;
       }
-
-      const sorted = processResults(products, searchTerm);
-
-      // Deduplicate against existing results
-      setResults((prev) => {
-        const existingCodes = new Set(prev.map((p) => p.code));
-        const fresh = sorted.filter((p) => !existingCodes.has(p.code));
-        return [...prev, ...fresh];
-      });
-      setHasMore(nextPage * PAGE_SIZE < (data.count ?? 0));
     } catch {
-      // Silently handle load-more errors — user can retry
+      // Leave the "Load more" button up so the user can retry.
+      autoLoadPausedRef.current = true;
     } finally {
+      loadingMoreRef.current = false;
       setLoadingMore(false);
     }
   }
@@ -711,6 +788,12 @@ export default function FoodSearchScreen() {
           (product as { ingredients_text?: string }).ingredients_text ??
           null,
       });
+      if (mealMode) {
+        // Ask for the portion first — confirmMealAdd adds it to the draft.
+        Keyboard.dismiss();
+        setMealPending({ snapshot, barcode, name: productName || 'product' });
+        return;
+      }
       draftRecipe.addIngredient({
         barcode,
         scan_id: null,
@@ -770,7 +853,7 @@ export default function FoodSearchScreen() {
         }
       })().catch((err) => console.error('Background search-scan save failed:', err));
     }
-  }, [router, session, pickMode, draftRecipe, showToast]);
+  }, [router, session, pickMode, mealMode, draftRecipe, showToast]);
 
   // ── Render product row ──────────────────────────────────────────────────────
   const renderItem = useCallback(({ item }: { item: SearchProduct }) => {
@@ -825,22 +908,22 @@ export default function FoodSearchScreen() {
   // ── Load-more footer ───────────────────────────────────────────────────────
   const ListFooter = useCallback(() => {
     if (!hasSearched || results.length === 0) return null;
-    if (loadingMore) {
-      return (
-        <View style={styles.footerContainer}>
+    if (!loadingMore && !hasMore) return null;
+    // One fixed-height box for both states, so swapping spinner ⇄ button
+    // never changes the list height (a height change re-fires onEndReached).
+    return (
+      <View style={styles.footerContainer}>
+        {loadingMore ? (
           <ActivityIndicator size="small" color={Colors.secondary} />
-        </View>
-      );
-    }
-    if (hasMore) {
-      return (
-        <TouchableOpacity style={styles.loadMoreBtn} onPress={loadMore} activeOpacity={0.75}>
-          <Text style={styles.loadMoreText}>{t('search.loadMore', { defaultValue: 'Load more results' })}</Text>
-        </TouchableOpacity>
-      );
-    }
-    return null;
-  }, [hasSearched, results.length, loadingMore, hasMore, t]);
+        ) : (
+          <TouchableOpacity style={styles.loadMoreBtn} onPress={() => loadMore(true)} activeOpacity={0.75}>
+            <Text style={styles.loadMoreText}>{t('search.loadMore', { defaultValue: 'Load more results' })}</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasSearched, results.length > 0, loadingMore, hasMore, t]);
 
   const ItemSeparator = useCallback(() => <View style={{ height: Spacing.xxs }} />, []);
 
@@ -959,7 +1042,7 @@ export default function FoodSearchScreen() {
         ItemSeparatorComponent={ItemSeparator}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
-        onEndReached={() => { if (hasMore && !loadingMore) loadMore(); }}
+        onEndReached={() => loadMore()}
         onEndReachedThreshold={0.4}
       />
 
@@ -1023,6 +1106,17 @@ export default function FoodSearchScreen() {
         </View>
       </Modal>
       </Animated.View>
+
+      {/* Meal builder — portion for the tapped product */}
+      <QuantityPickerSheet
+        visible={mealPending !== null}
+        title="How much?"
+        saveLabel="Add to meal"
+        value={100}
+        unit="g"
+        onClose={() => setMealPending(null)}
+        onSave={confirmMealAdd}
+      />
 
       {/* Menu overlay — same pattern as (tabs)/_layout.tsx */}
       {menuVisible && (
@@ -1309,9 +1403,9 @@ const styles = StyleSheet.create({
 
   // Load-more footer
   footerContainer: {
+    height: 68,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: Spacing.m,
   },
   loadMoreBtn: {
     alignSelf: 'center',
@@ -1321,7 +1415,6 @@ const styles = StyleSheet.create({
     borderColor: '#aad4cd',
     paddingHorizontal: Spacing.m,
     paddingVertical: Spacing.xs,
-    marginVertical: Spacing.s,
   },
   loadMoreText: {
     fontSize: 14,

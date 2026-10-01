@@ -27,6 +27,7 @@ import { Colors, Spacing, Radius, Shadows, Typography } from '@/constants/theme'
 import { ScreenLayout } from '@/components/ScreenLayout';
 import { LottieLoader } from '@/components/LottieLoader';
 import { PlusBadge } from '@/components/PlusBadge';
+import { MenuMealPlanIcon } from '@/components/MenuIcons';
 import { useRecipes, usePublicRecipes } from '@/lib/useRecipes';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { useUpsellSheet } from '@/lib/upsellSheetContext';
@@ -181,12 +182,21 @@ export default function RecipesScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Recipe count */}
+      {/* Recipe count + meal plan link */}
       <View style={styles.countRow}>
         <Text style={styles.countPrefix}>Currently you have</Text>
         <Text style={styles.countValue}>
           {recipes.length} {recipes.length === 1 ? 'recipe' : 'recipes'}
         </Text>
+        <TouchableOpacity
+          style={styles.planLink}
+          onPress={() => router.push('/meal-plan' as never)}
+          activeOpacity={0.7}
+          hitSlop={8}
+        >
+          <MenuMealPlanIcon color={Colors.secondary} size={18} />
+          <Text style={styles.planLinkText}>Meal plan</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -620,6 +630,21 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     letterSpacing: -0.32,
     lineHeight: 18,
+  },
+
+  // Inline header text action, pushed to the right of the count row
+  planLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginLeft: 'auto',
+  },
+  planLinkText: {
+    fontSize: 16,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.secondary,
+    lineHeight: 20,
   },
 
   // Loading

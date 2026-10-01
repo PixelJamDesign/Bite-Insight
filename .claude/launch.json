@@ -12,6 +12,12 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["expo", "start", "--web", "--port", "8084"],
       "port": 8084
+    },
+    {
+      "name": "mockup-server",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--yes", "serve", "mockups", "-l", "4173", "--no-clipboard"],
+      "port": 4173
     }
   ]
 }

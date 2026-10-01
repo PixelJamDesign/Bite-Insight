@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { useFadeIn } from '@/lib/useFadeIn';
 import { useFocusFadeIn } from '@/lib/useFocusFadeIn';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 
 
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -26,8 +26,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { fetchAndCacheProfile } from '@/lib/profileCache';
 import { Colors, Shadows } from '@/constants/theme';
-import { DietaryTag } from '@/components/DietaryTag';
-import { StatPanel } from '@/components/StatPanel';
+import { dietaryTagLabel } from '@/components/DietaryTag';
 import { IngredientRow } from '@/components/IngredientRow';
 import { IngredientDetailModal } from '@/components/IngredientDetailModal';
 import { DailyInsightCard } from '@/components/DailyInsightCard';
@@ -36,6 +35,9 @@ import { useSubscription } from '@/lib/subscriptionContext';
 import { UpsellPanel } from '@/components/UpsellPanel';
 import { PlusBadge } from '@/components/PlusBadge';
 import { CameraIcon } from '@/components/MenuIcons';
+import { MealBlock } from '@/components/MealBlock';
+import { listMeals, toDateKey } from '@/lib/mealPlan';
+import { useMealPlanImpact } from '@/lib/useMealPlan';
 import { NotificationBell } from '@/components/NotificationBell';
 import { FlagReasonSheet } from '@/components/FlagReasonSheet';
 import { useAvatarPicker } from '@/lib/useAvatarPicker';
@@ -46,11 +48,12 @@ import {
   ALLERGY_LEGACY_MAP,
   DIETARY_PREFERENCE_LEGACY_MAP,
 } from '@/constants/profileOptions';
-import type { UserProfile, DailyInsight, Ingredient, UserIngredientPreference } from '@/lib/types';
+import type { UserProfile, DailyInsight, Ingredient, UserIngredientPreference, Meal } from '@/lib/types';
 import Logo from '../../assets/images/logo.svg';
+import AddSmallIcon from '../../assets/icons/meal-plan/add-small.svg';
 
-const scannedLabelsImg = require('../../assets/images/scanned_labels.png');
-const flagImg = require('../../assets/images/flag.png');
+/** Meals listed on the dashboard before it hands over to the planner. */
+const DASHBOARD_MEAL_LIMIT = 4;
 
 /**
  * Build a reverse map from normalised key → legacy display string(s).
@@ -80,16 +83,6 @@ function shuffle<T>(arr: T[]): T[] {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
-}
-
-/** Returns the most recent Monday at 00:00:00 local time */
-function getWeekStart(): Date {
-  const now = new Date();
-  const daysSinceMonday = (now.getDay() + 6) % 7; // Mon=0 … Sun=6
-  const monday = new Date(now);
-  monday.setDate(now.getDate() - daysSinceMonday);
-  monday.setHours(0, 0, 0, 0);
-  return monday;
 }
 
 const INSIGHT_DISMISS_KEY = 'insight_dismissed_date';
@@ -208,7 +201,6 @@ export default function HomeDashboard() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [insight, setInsight] = useState<DailyInsight | null>(null);
   const [insightDismissed, setInsightDismissed] = useState(false);
-  const [scanCount, setScanCount] = useState(0);
   const [allUnratedIngredients, setAllUnratedIngredients] = useState<Ingredient[]>([]);
   const [preferences, setPreferences] = useState<
     Record<string, UserIngredientPreference['preference']>
@@ -225,11 +217,8 @@ export default function HomeDashboard() {
     if (!session?.user) return;
     const userId = session.user.id;
 
-    const weekStart = getWeekStart().toISOString();
-
-    const [profileRes, scansRes, ingredientsRes] = await Promise.all([
+    const [profileRes, ingredientsRes] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', userId).single(),
-      supabase.from('scans').select('id').eq('user_id', userId).gte('scanned_at', weekStart),
       supabase.from('ingredients').select('*'),
     ]);
 
@@ -267,7 +256,6 @@ export default function HomeDashboard() {
     } catch {
       setInsightDismissed(false);
     }
-    if (scansRes.data) setScanCount(scansRes.data.length);
     const prefsMap: Record<string, UserIngredientPreference['preference']> = {};
     if (profileRes.data) {
       (profileRes.data.liked_ingredients ?? []).forEach((id: string) => { prefsMap[id] = 'liked'; });
@@ -285,8 +273,23 @@ export default function HomeDashboard() {
 
   useFocusEffect(useCallback(() => { fetchData(); }, [fetchData]));
 
-  // Derived — updates instantly when rateIngredient mutates profile state
-  const flaggedCount = (profile?.flagged_ingredients ?? []).length;
+  // Today's meal plan for the dashboard card. Loaded on its own so a
+  // failure here never holds up the rest of the dashboard.
+  const [todayMeals, setTodayMeals] = useState<Meal[]>([]);
+  useFocusEffect(
+    useCallback(() => {
+      const userId = session?.user?.id;
+      if (!userId) return;
+      let cancelled = false;
+      const key = toDateKey(new Date());
+      listMeals(userId, key, key)
+        .then((rows) => { if (!cancelled) setTodayMeals(rows); })
+        .catch(() => {});
+      return () => { cancelled = true; };
+    }, [session?.user?.id]),
+  );
+  // Household flags for each meal, so the blocks match the planner.
+  const todayImpact = useMealPlanImpact(todayMeals);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -410,20 +413,22 @@ export default function HomeDashboard() {
               {uploadingAvatar ? (
                 <ActivityIndicator color="#fff" size="small" />
               ) : (
-                <CameraIcon color="#fff" size={20} />
+                <CameraIcon color="#fff" size={15} />
               )}
             </TouchableOpacity>
           </View>
 
           <View style={styles.greetingText}>
-            <Text style={styles.greeting}>{getGreeting(tc)}</Text>
-            <View style={styles.nameRow}>
-              <Text style={styles.name} numberOfLines={1}>{firstName}</Text>
-              {isPlus && (
-                <View style={styles.plusBadgeWrap}>
-                  <PlusBadge />
-                </View>
-              )}
+            <View>
+              <Text style={styles.greeting}>{getGreeting(tc)}</Text>
+              <View style={styles.nameRow}>
+                <Text style={styles.name} numberOfLines={1}>{firstName}</Text>
+                {isPlus && (
+                  <View style={styles.plusBadgeWrap}>
+                    <PlusBadge />
+                  </View>
+                )}
+              </View>
             </View>
             {((profile?.dietary_preferences ?? []).length > 0 ||
               (profile?.health_conditions ?? []).length > 0 ||
@@ -447,23 +452,16 @@ export default function HomeDashboard() {
               return (
                 <View style={styles.tagsRow}>
                   {visible.map((t) => {
-                    if (t.type === 'dietary') {
-                      return <DietaryTag key={t.key} tag={t.value as any} />;
-                    }
-                    if (t.type === 'condition') {
-                      return (
-                        <View key={t.key} style={styles.genericChip}>
-                          <Text style={styles.genericChipLabel}>
-                            {tpo(`healthConditions.${t.value}`, { defaultValue: t.value })}
-                          </Text>
-                        </View>
-                      );
-                    }
+                    const label =
+                      t.type === 'dietary'
+                        ? dietaryTagLabel(t.value)
+                        : t.type === 'condition'
+                          ? tpo(`healthConditions.${t.value}`, { defaultValue: t.value })
+                          : tpo(`allergies.${t.value}`, { defaultValue: t.value });
+                    if (!label) return null;
                     return (
-                      <View key={t.key} style={[styles.genericChip, styles.allergyChip]}>
-                        <Text style={styles.genericChipLabel}>
-                          {tpo(`allergies.${t.value}`, { defaultValue: t.value })}
-                        </Text>
+                      <View key={t.key} style={styles.genericChip}>
+                        <Text style={styles.genericChipLabel}>{label}</Text>
                       </View>
                     );
                   })}
@@ -478,74 +476,163 @@ export default function HomeDashboard() {
           </View>
         </Animated.View>
 
-        {/* ── Daily Insight ── */}
-        {insight && !insightDismissed && (
-          <Animated.View style={{ opacity: fadeInsight.opacity, transform: [{ translateY: fadeInsight.translateY }] }}>
-          <DailyInsightCard
-            insight={insight}
-            onDismiss={async () => {
-              setInsightDismissed(true);
-              try {
-                if (Platform.OS === 'web') {
-                  localStorage.setItem(INSIGHT_DISMISS_KEY, todayStr());
-                } else {
-                  await SecureStore.setItemAsync(INSIGHT_DISMISS_KEY, todayStr());
+        {/* Everything below the intro sits 32 apart */}
+        <View style={styles.sectionStack}>
+          {/* ── Daily Insight ── */}
+          {insight && !insightDismissed && (
+            <Animated.View style={{ opacity: fadeInsight.opacity, transform: [{ translateY: fadeInsight.translateY }] }}>
+            <DailyInsightCard
+              insight={insight}
+              onDismiss={async () => {
+                setInsightDismissed(true);
+                try {
+                  if (Platform.OS === 'web') {
+                    localStorage.setItem(INSIGHT_DISMISS_KEY, todayStr());
+                  } else {
+                    await SecureStore.setItemAsync(INSIGHT_DISMISS_KEY, todayStr());
+                  }
+                } catch { /* ignore storage errors */ }
+              }}
+              dietaryPreferences={profile?.dietary_preferences ?? []}
+              healthConditions={profile?.health_conditions ?? []}
+              allergies={profile?.allergies ?? []}
+              showElevation={focusAnim.showElevation}
+            />
+            </Animated.View>
+          )}
+
+          {/* ── Meal plan ── */}
+          <Animated.View style={[styles.mealSection, { opacity: fadeStats.opacity, transform: [{ translateY: fadeStats.translateY }] }]}>
+            <View style={styles.mealHeader}>
+              <TouchableOpacity
+                style={styles.mealHeaderText}
+                onPress={() => router.push('/meal-plan' as any)}
+                activeOpacity={0.7}
+                accessibilityRole="link"
+              >
+                <Text style={styles.sectionTitle}>{t('mealPlanHeading')}</Text>
+                {/* "You have **4 meals** planned for today" */}
+                <Text style={styles.sectionSub}>
+                  {todayMeals.length === 0 ? (
+                    t('mealPlanSubtitleNone')
+                  ) : (
+                    <Trans
+                      t={t}
+                      i18nKey="mealPlanSubtitle"
+                      count={todayMeals.length}
+                      components={{ b: <Text style={styles.sectionSubBold} /> }}
+                    />
+                  )}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.mealAddBtn}
+                onPress={() =>
+                  router.push({ pathname: '/meal-plan', params: { date: toDateKey(new Date()), add: '1' } } as any)
                 }
-              } catch { /* ignore storage errors */ }
-            }}
-            dietaryPreferences={profile?.dietary_preferences ?? []}
-            healthConditions={profile?.health_conditions ?? []}
-            allergies={profile?.allergies ?? []}
-            showElevation={focusAnim.showElevation}
-          />
+                activeOpacity={0.8}
+                accessibilityLabel={t('mealPlanAdd')}
+              >
+                <AddSmallIcon width={20} height={20} />
+              </TouchableOpacity>
+            </View>
+
+            {todayMeals.length === 0 ? (
+              <TouchableOpacity
+                style={styles.mealEmpty}
+                onPress={() =>
+                  router.push({ pathname: '/meal-plan', params: { date: toDateKey(new Date()), add: '1' } } as any)
+                }
+                activeOpacity={0.8}
+              >
+                <Text style={styles.mealEmptyTitle}>{t('mealPlanEmptyTitle')}</Text>
+                <Text style={styles.mealEmptySub}>{t('mealPlanEmptySubtitle')}</Text>
+              </TouchableOpacity>
+            ) : (
+              <>
+                {todayMeals.slice(0, DASHBOARD_MEAL_LIMIT).map((meal) => (
+                  <MealBlock
+                    key={meal.id}
+                    meal={meal}
+                    impact={todayImpact[meal.id]}
+                    onPress={() => router.push('/meal-plan' as any)}
+                    style={styles.mealBlock}
+                  />
+                ))}
+                {todayMeals.length > DASHBOARD_MEAL_LIMIT && (
+                  <TouchableOpacity
+                    style={styles.mealMore}
+                    onPress={() => router.push('/meal-plan' as any)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.mealMoreText}>
+                      {t('mealPlanSeeAll', { count: todayMeals.length })}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </>
+            )}
           </Animated.View>
-        )}
 
-        {/* ── Week in numbers ── */}
-        <Animated.View style={[styles.statsSection, { opacity: fadeStats.opacity, transform: [{ translateY: fadeStats.translateY }] }]}>
-          <Text style={styles.sectionSubtitle}>{t('weekInNumbers')}</Text>
-          <View style={styles.statsRow}>
-            <StatPanel
-              count={scanCount}
-              label={t('scannedLabels')}
-              imageSource={scannedLabelsImg}
-              onPress={() => router.push('/(tabs)/history')}
-              showElevation={focusAnim.showElevation}
-            />
-            <StatPanel
-              count={flaggedCount}
-              label={t('flaggedIngredients')}
-              isPlusFeature
-              imageSource={flagImg}
-              onPress={() => router.push({ pathname: '/ingredient-preferences', params: { tab: 'flagged' } } as any)}
-              showElevation={focusAnim.showElevation}
-            />
-          </View>
-        </Animated.View>
+          {/* ── Upsell Panel (Plus+ pitch with feature cards + trial CTA) ── */}
+          <UpsellPanel />
 
-        {/* ── Upsell Panel (Plus+ pitch with feature cards + trial CTA) ── */}
-        <UpsellPanel />
+          {/* ── Ingredient Preferences ── */}
+          <Animated.View style={{ opacity: fadeIngList.opacity, transform: [{ translateY: fadeIngList.translateY }] }}>
+          {(() => {
+            const displayedIngredients = allUnratedIngredients.slice(0, 4);
 
-        {/* ── Ingredient Preferences ── */}
-        <Animated.View style={{ opacity: fadeIngList.opacity, transform: [{ translateY: fadeIngList.translateY }] }}>
-        {(() => {
-          const displayedIngredients = allUnratedIngredients.slice(0, 4);
+            if (displayedIngredients.length === 0) {
+              return (
+                <View style={styles.ingredientSection}>
+                  <View style={[styles.ingredientCard, focusAnim.showElevation && Shadows.level4]}>
+                    <View style={styles.completionInner}>
+                      <View style={styles.completionTick}>
+                        <Ionicons name="checkmark" size={24} color="#fff" />
+                      </View>
+                      <Text style={styles.completionTitle}>
+                        {t('completionTitle')}
+                      </Text>
+                      <Text style={styles.completionSubtitle}>
+                        {t('completionSubtitle')}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.viewAllBtn}
+                      onPress={() => router.push({ pathname: '/ingredient-preferences', params: { tab: 'liked' } } as any)}
+                    >
+                      <Text style={styles.viewAllText}>{t('viewLiked')}</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            }
 
-          if (displayedIngredients.length === 0) {
             return (
               <View style={styles.ingredientSection}>
                 <View style={[styles.ingredientCard, focusAnim.showElevation && Shadows.level4]}>
-                  <View style={styles.completionInner}>
-                    <View style={styles.completionTick}>
-                      <Ionicons name="checkmark" size={24} color="#fff" />
-                    </View>
-                    <Text style={styles.completionTitle}>
-                      {t('completionTitle')}
-                    </Text>
-                    <Text style={styles.completionSubtitle}>
-                      {t('completionSubtitle')}
+                  <View style={styles.ingredientHeader}>
+                    <Text style={styles.ingredientTitle}>{t('ingredientQuestion')}</Text>
+                    <Text style={styles.ingredientSubtitle}>
+                      {t('ingredientSubtitle')}
                     </Text>
                   </View>
+
+                  <View style={styles.ingredientList}>
+                    {displayedIngredients.map((ing) => (
+                      <IngredientRow
+                        key={ing.id}
+                        ingredient={ing}
+                        preference={preferences[ing.id]}
+                        onLike={() => rateIngredient(ing.id, 'liked')}
+                        onDislike={() => rateIngredient(ing.id, 'disliked')}
+                        onFlag={() => setFlagReasonTarget(ing)}
+                        onTap={() => setSelectedIngredient(ing)}
+                        showFlag={isPlus}
+                      />
+                    ))}
+                  </View>
+
                   <TouchableOpacity
                     style={styles.viewAllBtn}
                     onPress={() => router.push({ pathname: '/ingredient-preferences', params: { tab: 'liked' } } as any)}
@@ -555,44 +642,10 @@ export default function HomeDashboard() {
                 </View>
               </View>
             );
-          }
+          })()}
+          </Animated.View>
 
-          return (
-            <View style={styles.ingredientSection}>
-              <View style={[styles.ingredientCard, focusAnim.showElevation && Shadows.level4]}>
-                <View style={styles.ingredientHeader}>
-                  <Text style={styles.ingredientTitle}>{t('ingredientQuestion')}</Text>
-                  <Text style={styles.ingredientSubtitle}>
-                    {t('ingredientSubtitle')}
-                  </Text>
-                </View>
-
-                <View style={styles.ingredientList}>
-                  {displayedIngredients.map((ing) => (
-                    <IngredientRow
-                      key={ing.id}
-                      ingredient={ing}
-                      preference={preferences[ing.id]}
-                      onLike={() => rateIngredient(ing.id, 'liked')}
-                      onDislike={() => rateIngredient(ing.id, 'disliked')}
-                      onFlag={() => setFlagReasonTarget(ing)}
-                      onTap={() => setSelectedIngredient(ing)}
-                      showFlag={isPlus}
-                    />
-                  ))}
-                </View>
-
-                <TouchableOpacity
-                  style={styles.viewAllBtn}
-                  onPress={() => router.push({ pathname: '/ingredient-preferences', params: { tab: 'liked' } } as any)}
-                >
-                  <Text style={styles.viewAllText}>{t('viewLiked')}</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          );
-        })()}
-        </Animated.View>
+        </View>
 
         <View style={{ height: 120 + (Platform.OS === 'android' ? insets.bottom : 0) }} />
       </ScrollView>
@@ -734,22 +787,22 @@ const styles = StyleSheet.create({
   },
   greetingRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 16,
   },
   // Outer wrapper — lets the camera badge extend outside the circle.
   // Size matches the avatar so the badge positions correctly against its edge.
   avatarWrap: {
-    width: 120,
-    height: 120,
+    width: 80,
+    height: 80,
     position: 'relative',
   },
   avatarLarge: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: Colors.accent,
-    borderWidth: 4,
+    borderWidth: 3,
     borderColor: Colors.stroke.primary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -758,13 +811,13 @@ const styles = StyleSheet.create({
   // Camera badge floating on the bottom-right of the avatar. Signals tap-to-edit.
   avatarEditBadge: {
     position: 'absolute',
-    right: -4,
-    bottom: -4,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    right: -3,
+    bottom: -3,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     backgroundColor: Colors.secondary,
-    borderWidth: 3,
+    borderWidth: 2,
     borderColor: Colors.stroke.primary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -775,22 +828,22 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   avatarInitials: {
-    fontSize: 30,
+    fontSize: 24,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: '#fff',
-    letterSpacing: -0.6,
+    letterSpacing: -0.48,
+    lineHeight: 30,
   },
   greetingText: {
     flex: 1,
-    gap: 8,
+    gap: 16,
   },
   greeting: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '300',
     fontFamily: 'Figtree_300Light',
     color: Colors.secondary,
-    letterSpacing: -0.5,
     lineHeight: 18,
   },
   nameRow: {
@@ -801,15 +854,14 @@ const styles = StyleSheet.create({
   },
   name: {
     flex: 1,
-    fontSize: 30,
+    fontSize: 24,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
-    letterSpacing: -0.6,
-    lineHeight: 36,
+    letterSpacing: -0.48,
+    lineHeight: 30,
   },
   plusBadgeWrap: {
-    paddingTop: 4,
     flexShrink: 0,
   },
   tagsRow: {
@@ -818,49 +870,120 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   genericChip: {
+    height: 24,
+    justifyContent: 'center',
     paddingHorizontal: 8,
-    paddingVertical: 4,
     borderRadius: 999,
     backgroundColor: '#B8DFD6',
   },
-  allergyChip: {
-    backgroundColor: '#B8DFD6',
-  },
   genericChipLabel: {
-    fontSize: 13,
+    fontSize: 14,
+    lineHeight: 16.8,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
-    letterSpacing: -0.26,
+    letterSpacing: -0.28,
   },
   // "+N" overflow pill matches the other tag chips visually.
   overflowChip: {
+    height: 24,
+    justifyContent: 'center',
     paddingHorizontal: 8,
-    paddingVertical: 4,
     borderRadius: 999,
     backgroundColor: '#B8DFD6',
   },
   overflowChipLabel: {
-    fontSize: 13,
+    fontSize: 14,
+    lineHeight: 16.8,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
-    letterSpacing: -0.26,
+    letterSpacing: -0.28,
   },
-  statsSection: {
+
+  // Daily insight, meal plan, upsell and ingredients
+  sectionStack: {
+    gap: 32,
+  },
+
+  // ── Meal plan ──
+  mealSection: {
     gap: 8,
   },
-  sectionSubtitle: {
-    fontSize: 18,
+  mealHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  mealHeaderText: {
+    flex: 1,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.4,
+    lineHeight: 24,
+  },
+  sectionSub: {
+    fontSize: 16,
     fontWeight: '300',
     fontFamily: 'Figtree_300Light',
-    color: Colors.primary,
-    letterSpacing: -0.5,
-    lineHeight: 30,
+    color: Colors.secondary,
+    lineHeight: 27,
   },
-  statsRow: {
-    flexDirection: 'row',
-    gap: 16,
+  sectionSubBold: {
+    fontFamily: 'Figtree_700Bold',
+    fontWeight: '700',
+    color: Colors.primary,
+  },
+  mealAddBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: Colors.surface.tertiary,
+    borderWidth: 1,
+    borderColor: Colors.stroke.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadows.level3,
+  },
+  mealBlock: {
+    paddingVertical: 16,
+    paddingRight: 16,
+  },
+  mealEmpty: {
+    backgroundColor: Colors.surface.secondary,
+    borderRadius: 8,
+    padding: 16,
+    gap: 2,
+  },
+  mealEmptyTitle: {
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+  },
+  mealEmptySub: {
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
+    color: Colors.secondary,
+    letterSpacing: -0.14,
+  },
+  mealMore: {
+    alignSelf: 'flex-start',
+    paddingVertical: 4,
+  },
+  mealMoreText: {
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.secondary,
   },
   ingredientSection: {},
   ingredientCard: {

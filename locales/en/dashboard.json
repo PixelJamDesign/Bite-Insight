@@ -1,7 +1,12 @@
 {
-  "weekInNumbers": "Your week in numbers\u2026",
-  "scannedLabels": "Food labels scanned",
-  "flaggedIngredients": "Flagged ingredients",
+  "mealPlanHeading": "Meal plan",
+  "mealPlanSubtitleNone": "You have nothing planned for today",
+  "mealPlanSubtitle_one": "You have <b>{{count}} meal</b> planned for today",
+  "mealPlanSubtitle_other": "You have <b>{{count}} meals</b> planned for today",
+  "mealPlanAdd": "Plan a meal",
+  "mealPlanSeeAll": "See all {{count}} meals",
+  "mealPlanEmptyTitle": "Plan a meal for today",
+  "mealPlanEmptySubtitle": "Add a recipe or something you've scanned",
   "ingredientQuestion": "Do you like these ingredients?",
   "ingredientSubtitle": "Tell us which ingredients work for you and which don't.",
   "completionTitle": "You've nailed your list of ingredients you like and dislike!",
@@ -10,6 +15,6 @@
   "dailyInsight": "Daily Insight!",
   "suitableFor": "Suitable for:",
   "setupRequired": "Setup Required",
-  "setupMessage": "Add your Supabase URL and anon key to the .env file, then restart the app.\n\nSettings \u2192 API in your Supabase dashboard.",
+  "setupMessage": "Add your Supabase URL and anon key to the .env file, then restart the app.\n\nSettings → API in your Supabase dashboard.",
   "fallbackInitials": "??"
 }
