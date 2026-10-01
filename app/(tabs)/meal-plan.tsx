@@ -322,6 +322,15 @@ export default function MealPlanScreen() {
     }, SHEET_EXIT_MS);
   }
 
+  // "Add nutritional data" in the meal view: same step-aside-and-return.
+  function openAddNutrition(barcode: string) {
+    reopenMealIdRef.current = activeMealId;
+    setActiveMealId(null);
+    setTimeout(() => {
+      router.push({ pathname: '/contribute-product', params: { barcode, mode: 'improve', tab: 'nutrition' } });
+    }, SHEET_EXIT_MS);
+  }
+
   useFocusEffect(
     useCallback(() => {
       if (hasDraftRef.current) setBuilderOpen(true);
@@ -598,6 +607,7 @@ export default function MealPlanScreen() {
         onEdit={editMeal}
         onOpenItem={openMealItem}
         impact={activeMeal ? impact.byMeal[activeMeal.id] : undefined}
+        onAddNutrition={openAddNutrition}
       />
     </ScreenLayout>
   );

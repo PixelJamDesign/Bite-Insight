@@ -518,53 +518,67 @@ export async function saveItemsAsRecipe(
 /** "Per serving" is the meal as planned. Per 100g needs the meal's weight,
  *  which only products give us — recipes don't store theirs — so it's
  *  left out (null) once a recipe is in the meal. */
-export function mealNutritionSummary(
-  items: Array<Pick<MealItemDraft, 'kind' | 'quantity_value' | 'quantity_unit' | 'nutrition' | 'nutriscore_grade'>>,
-): {
+/** True when an item carries at least one nutrition value. */
+export function hasNutrition(item: { nutrition: MealNutrition }): boolean {
+  return Object.values(item.nutrition ?? {}).some((v) => v != null);
+}
+
+type SummaryItem = Pick<
+  MealItemDraft,
+  'kind' | 'title' | 'barcode' | 'recipe_id' | 'quantity_value' | 'quantity_unit' | 'nutrition' | 'nutriscore_grade'
+>;
+
+export function mealNutritionSummary(items: SummaryItem[]): {
   perServing: NutritionValues;
   per100: NutritionValues | null;
   grade: NutriscoreGrade | null;
+  /** Items with no nutrition at all — the totals leave them out. */
+  missing: SummaryItem[];
 } {
   const t = sumNutrition(items);
   const perServing: NutritionValues = {
-    kcal: t.kcal ?? 0,
-    fat: t.fat_g ?? 0,
-    satFat: t.sat_fat_g ?? 0,
-    carbs: t.carbs_g ?? 0,
-    sugars: t.sugars_g ?? 0,
-    fiber: t.fiber_g ?? 0,
-    protein: t.protein_g ?? 0,
-    salt: t.salt_g ?? 0,
+    kcal: t.kcal ?? null,
+    fat: t.fat_g ?? null,
+    satFat: t.sat_fat_g ?? null,
+    carbs: t.carbs_g ?? null,
+    sugars: t.sugars_g ?? null,
+    fiber: t.fiber_g ?? null,
+    protein: t.protein_g ?? null,
+    salt: t.salt_g ?? null,
   };
+  const missing = items.filter((i) => !hasNutrition(i));
+  const withData = items.filter(hasNutrition);
 
-  const allProducts = items.length > 0 && items.every((i) => i.kind === 'product');
+  // Weigh only the items that have data, so a gap doesn't dilute per 100g.
+  const allProducts = withData.length > 0 && withData.every((i) => i.kind === 'product');
   const grams = allProducts
-    ? items.reduce((sum, i) => sum + quantityToGrams(Number(i.quantity_value ?? 100), i.quantity_unit ?? 'g'), 0)
+    ? withData.reduce((sum, i) => sum + quantityToGrams(Number(i.quantity_value ?? 100), i.quantity_unit ?? 'g'), 0)
     : 0;
   if (grams <= 0) {
     // Nothing to work a score out from — a lone recipe keeps its own.
     const lone = items.length === 1 ? (items[0].nutriscore_grade as NutriscoreGrade | null) : null;
-    return { perServing, per100: null, grade: lone };
+    return { perServing, per100: null, grade: lone, missing };
   }
 
   const f = 100 / grams;
+  const scale = (v: number | null) => (v == null ? null : v * f);
   const per100: NutritionValues = {
-    kcal: perServing.kcal * f,
-    fat: perServing.fat * f,
-    satFat: perServing.satFat * f,
-    carbs: perServing.carbs * f,
-    sugars: perServing.sugars * f,
-    fiber: perServing.fiber * f,
-    protein: perServing.protein * f,
-    salt: perServing.salt * f,
+    kcal: scale(perServing.kcal),
+    fat: scale(perServing.fat),
+    satFat: scale(perServing.satFat),
+    carbs: scale(perServing.carbs),
+    sugars: scale(perServing.sugars),
+    fiber: scale(perServing.fiber),
+    protein: scale(perServing.protein),
+    salt: scale(perServing.salt),
   };
   const grade = computeNutriscore({
-    energy_kcal_100g: t.kcal == null ? undefined : per100.kcal,
-    sat_fat_g_100g: t.sat_fat_g == null ? undefined : per100.satFat,
-    sugars_g_100g: t.sugars_g == null ? undefined : per100.sugars,
-    salt_g_100g: t.salt_g == null ? undefined : per100.salt,
-    fiber_g_100g: per100.fiber,
-    protein_g_100g: per100.protein,
+    energy_kcal_100g: per100.kcal ?? undefined,
+    sat_fat_g_100g: per100.satFat ?? undefined,
+    sugars_g_100g: per100.sugars ?? undefined,
+    salt_g_100g: per100.salt ?? undefined,
+    fiber_g_100g: per100.fiber ?? undefined,
+    protein_g_100g: per100.protein ?? undefined,
   });
-  return { perServing, per100, grade };
+  return { perServing, per100, grade, missing };
 }

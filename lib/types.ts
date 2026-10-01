@@ -257,16 +257,29 @@ export type MealPlanEntryKind = 'recipe' | 'product';
 
 /** Nutrition for the planned portion of an entry (servings × recipe
  *  per-serving totals, or product per-100g scaled by quantity). */
-/** Nutrition values for the NutritionPanel (per serving or per 100g). */
+/** One row of the NutritionPanel. */
+export type NutrientRowKey =
+  | 'kcal'
+  | 'fat'
+  | 'satFat'
+  | 'carbs'
+  | 'sugars'
+  | 'fiber'
+  | 'netCarbs'
+  | 'protein'
+  | 'salt';
+
+/** Nutrition values for the NutritionPanel (per serving or per 100g).
+ *  null = no data, shown as "–" (never a misleading 0). */
 export interface NutritionValues {
-  kcal: number;
-  fat: number;
-  satFat: number;
-  carbs: number;
-  sugars: number;
-  fiber: number;
-  protein: number;
-  salt: number;
+  kcal: number | null;
+  fat: number | null;
+  satFat: number | null;
+  carbs: number | null;
+  sugars: number | null;
+  fiber: number | null;
+  protein: number | null;
+  salt: number | null;
 }
 
 export interface MealNutrition {

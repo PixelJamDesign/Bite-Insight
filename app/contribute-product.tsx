@@ -130,11 +130,14 @@ export default function ContributeProductScreen() {
   const { t } = useTranslation('scan');
   const { showToast } = useToast();
   const insets = useSafeAreaInsets();
-  const params = useLocalSearchParams<{ barcode?: string; mode?: string }>();
+  const params = useLocalSearchParams<{ barcode?: string; mode?: string; tab?: string }>();
   const barcode = typeof params.barcode === 'string' ? params.barcode : null;
   const improving = params.mode === 'improve';
 
-  const [tab, setTab] = useState<Tab>('details');
+  // ?tab=nutrition opens straight on that tab ("Add nutritional data").
+  const [tab, setTab] = useState<Tab>(
+    TABS.includes(params.tab as Tab) ? (params.tab as Tab) : 'details',
+  );
   const [name, setName] = useState('');
   const [brands, setBrands] = useState('');
   const [quantity, setQuantity] = useState('');

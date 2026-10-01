@@ -74,6 +74,8 @@ import { IconButton } from '@/components/IconButton';
 import { CheckboxCard } from '@/components/CheckboxCard';
 import { MealItemRow } from '@/components/MealItemRow';
 import { MealTimeCard } from '@/components/MealTimeCard';
+import { useNutritionRows } from '@/lib/useNutritionRows';
+import { mealNutritionCopy } from '@/lib/mealNutritionCopy';
 import { FadingScrollView } from '@/components/FadingScrollView';
 import AddIcon from '@/assets/icons/meal-plan/add.svg';
 
@@ -187,6 +189,7 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
   }, [d?.editingMealId, d?.dateKey]);
 
   const nutrition = useMemo(() => mealNutritionSummary(d?.items ?? []), [d?.items]);
+  const nutritionRows = useNutritionRows();
 
   if (!d) return null;
 
@@ -481,6 +484,13 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
                         perServing={nutrition.perServing}
                         per100={nutrition.per100}
                         grade={nutrition.grade}
+                        focusRows={nutritionRows}
+                        {...mealNutritionCopy(d.items, nutrition.missing, (barcode) => {
+                          // Get out of the way of the full screen; the host
+                          // brings this sheet back when it regains focus.
+                          onHide();
+                          router.push({ pathname: '/contribute-product', params: { barcode, mode: 'improve', tab: 'nutrition' } });
+                        })}
                       />
                     )}
 

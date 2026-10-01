@@ -123,7 +123,7 @@ Reuse these before creating new components:
 | `DailyInsightCard` | `@/components/DailyInsightCard` | Daily insight cards on home screen |
 | `ScreenLayout` | `@/components/ScreenLayout` | Every screen after the dashboard: title (+ optional `subtitle`) in the header |
 | `MealBlock` | `@/components/MealBlock` | A planned meal (planner timeline, dashboard list). Pass `impact` and `metrics` from `useMealPlanImpact` — colour and detail numbers are per user (`lib/mealDanger.ts`) |
-| `NutritionPanel` | `@/components/NutritionPanel` | Nutrition block: Per serving / Per 100g tabs, macro stack, Estimated Nutri-score (recipe builder, Plan a meal) |
+| `NutritionPanel` | `@/components/NutritionPanel` | Nutrition block: Per serving / Per 100g tabs, macro stack, Estimated Nutri-score. `focusRows` (from `useNutritionRows`) shows only what matters to the user + "See full nutritional values"; `notice` / `noData` for missing data (see `lib/mealNutritionCopy`) |
 | `CheckboxCard` | `@/components/CheckboxCard` | Figma "Checkbox": tinted card with checkbox, title and supporting text |
 | `MealItemRow` | `@/components/MealItemRow` | One recipe/product in a meal: image, brand, name, portion pill (Plan a meal sheet, meal view) |
 | `MealTimeCard` | `@/components/MealTimeCard` | "Time / When do you plan to eat?" card with the time box; opens the time picker (Plan a meal) |

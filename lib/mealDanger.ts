@@ -23,7 +23,7 @@
 import { INSIGHT_DEFS, INSIGHT_WEIGHTS, getActiveInsights, type InsightKey, type NutrientData } from './insightEngine';
 import { computeHouseholdImpact } from './householdImpact';
 import { quantityToGrams } from './recipes';
-import type { Meal, MealNutrition, RecipeIngredient, UserProfile } from './types';
+import type { Meal, MealNutrition, NutrientRowKey, RecipeIngredient, UserProfile } from './types';
 
 export type MealDangerLevel = 'planned' | 'caution' | 'avoid';
 
@@ -310,4 +310,47 @@ const METRIC_LABEL: Record<MealMetric, string> = {
 export function formatMetric(metric: MealMetric, value: number): string {
   const n = metric === 'kcal' || value >= 10 ? Math.round(value) : Math.round(value * 10) / 10;
   return `${n} ${METRIC_LABEL[metric]}`;
+}
+
+// ── Nutrition panel rows ─────────────────────────────────────────────────────
+
+/** Which panel row speaks to each insight. */
+const INSIGHT_ROW: Partial<Record<InsightKey, NutrientRowKey>> = {
+  calorie: 'kcal',
+  saturatedFat: 'satFat',
+  digestiveLoad: 'fat',
+  carbLoad: 'carbs',
+  glycemic: 'netCarbs',
+  sugar: 'sugars',
+  protein: 'protein',
+  fiber: 'fiber',
+  sodium: 'salt',
+};
+/** For a profile with nothing that points anywhere. */
+const DEFAULT_ROWS: NutrientRowKey[] = ['kcal', 'fat', 'carbs', 'protein'];
+/** Rows beyond calories. */
+const MAX_FOCUS_ROWS = 4;
+
+/** The NutritionPanel rows that matter to this user — calories, then up to
+ *  four picked from their conditions, diets and allergies (keto and
+ *  diabetes: carbs, net carbs, sugars, protein). The rest sit behind
+ *  "See full nutritional values". */
+export function nutritionRowsFor(profile: UserProfile | null): NutrientRowKey[] {
+  const ranked = new Map<InsightKey, number>();
+  if (profile) {
+    const { conditions, allergies, preferences } = profileTags(profile);
+    for (const tag of [...conditions, ...allergies, ...preferences]) {
+      for (const [key, w] of Object.entries(INSIGHT_WEIGHTS[tag] ?? {}) as [InsightKey, number][]) {
+        ranked.set(key, Math.max(ranked.get(key) ?? 0, w));
+      }
+    }
+  }
+  const picked: NutrientRowKey[] = [];
+  for (const [key] of [...ranked.entries()].sort((a, b) => b[1] - a[1])) {
+    const row = INSIGHT_ROW[key];
+    if (!row || row === 'kcal' || picked.includes(row)) continue;
+    picked.push(row);
+    if (picked.length >= MAX_FOCUS_ROWS) break;
+  }
+  return picked.length > 0 ? ['kcal', ...picked] : DEFAULT_ROWS;
 }

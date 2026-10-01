@@ -6,11 +6,22 @@
  *
  * Pass `per100` as null when there's no weight to scale by — the Per 100g
  * tab is left out rather than showing made-up numbers.
+ *
+ * Optional:
+ *   focusRows — show only these rows (the ones that matter to the user),
+ *               with "See full nutritional values" to open the rest
+ *   notice    — an Info alert above the rows, e.g. some items lack data
+ *   noData    — replaces everything with a "no nutritional data" panel
+ *
+ * Missing values show as "–", never 0.
  */
 import { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Colors, Radius, Spacing } from '@/constants/theme';
 import { NUTRISCORE_COLORS, NUTRISCORE_VERDICT, type NutriscoreGrade } from '@/lib/nutriscore';
+import { Button } from '@/components/Button';
+import { AlertCard } from '@/components/AlertCard';
+import type { NutrientRowKey } from '@/lib/types';
 
 import type { NutritionValues } from '@/lib/types';
 export type { NutritionValues };
@@ -44,26 +55,71 @@ interface Props {
   /** Nothing added yet — shows `emptyText` instead of the rows. */
   empty?: boolean;
   emptyText?: string;
+  /** Show only these rows until the user asks for the rest. */
+  focusRows?: NutrientRowKey[];
+  /** Info alert above the rows. */
+  notice?: string | null;
+  /** No nutrition at all: a panel saying so, with an optional link. */
+  noData?: { title: string; body: string; actionLabel?: string; onAction?: () => void } | null;
 }
 
-export function NutritionPanel({ title, subtitle, perServing, per100, grade, empty, emptyText }: Props) {
+const ROW_ORDER: NutrientRowKey[] = ['kcal', 'fat', 'satFat', 'carbs', 'sugars', 'fiber', 'netCarbs', 'protein', 'salt'];
+
+export function NutritionPanel({
+  title,
+  subtitle,
+  perServing,
+  per100,
+  grade,
+  empty,
+  emptyText,
+  focusRows,
+  notice,
+  noData,
+}: Props) {
   const [mode, setMode] = useState<Mode>('serving');
+  const [showAll, setShowAll] = useState(false);
   const values = mode === 'per100' && per100 ? per100 : perServing;
-  const netCarbs = Math.max(0, values.carbs - values.fiber);
+  const netCarbs = values.carbs == null ? null : Math.max(0, values.carbs - (values.fiber ?? 0));
+
+  if (noData) {
+    return (
+      <View style={styles.section}>
+        <Text style={styles.h4}>{title}</Text>
+        <View style={styles.noData}>
+          <View style={styles.noDataIcon}>
+            <FOOD_ICONS.calories width={36} height={36} />
+            <View style={styles.noDataSlash} />
+          </View>
+          <Text style={styles.noDataTitle}>{noData.title}</Text>
+          <Text style={styles.noDataBody}>{noData.body}</Text>
+          {noData.actionLabel && noData.onAction ? (
+            <TouchableOpacity onPress={noData.onAction} hitSlop={8} accessibilityRole="link">
+              <Text style={styles.noDataLink}>{noData.actionLabel}</Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      </View>
+    );
+  }
   const gradeColor = grade ? NUTRISCORE_COLORS[grade] : '#aad4cd';
   const verdict = grade ? NUTRISCORE_VERDICT[grade] : '—';
 
-  const rows: Array<{ Icon: SvgIcon; label: string; value: string }> = [
-    { Icon: FOOD_ICONS.calories, label: 'Calories', value: formatKcal(values.kcal) },
-    { Icon: FOOD_ICONS.fat, label: 'Fat', value: `${formatGrams(values.fat)}g` },
-    { Icon: FOOD_ICONS.satFat, label: 'Saturated Fat', value: `${formatGrams(values.satFat)}g` },
-    { Icon: FOOD_ICONS.carbs, label: 'Carbohydrates', value: `${formatGrams(values.carbs)}g` },
-    { Icon: FOOD_ICONS.sugars, label: 'Sugars', value: `${formatGrams(values.sugars)}g` },
-    { Icon: FOOD_ICONS.fiber, label: 'Fiber', value: `${formatGrams(values.fiber)}g` },
-    { Icon: FOOD_ICONS.netCarbs, label: 'Net Carbs', value: `${formatGrams(netCarbs)}g` },
-    { Icon: FOOD_ICONS.protein, label: 'Protein', value: `${formatGrams(values.protein)}g` },
-    { Icon: FOOD_ICONS.salt, label: 'Salt', value: `${formatGrams(values.salt)}g` },
-  ];
+  const grams = (v: number | null) => (v == null ? '–' : `${formatGrams(v)}g`);
+  const ROWS: Record<NutrientRowKey, { Icon: SvgIcon; label: string; value: string }> = {
+    kcal: { Icon: FOOD_ICONS.calories, label: 'Calories', value: values.kcal == null ? '–' : formatKcal(values.kcal) },
+    fat: { Icon: FOOD_ICONS.fat, label: 'Fat', value: grams(values.fat) },
+    satFat: { Icon: FOOD_ICONS.satFat, label: 'Saturated Fat', value: grams(values.satFat) },
+    carbs: { Icon: FOOD_ICONS.carbs, label: 'Carbohydrates', value: grams(values.carbs) },
+    sugars: { Icon: FOOD_ICONS.sugars, label: 'Sugars', value: grams(values.sugars) },
+    fiber: { Icon: FOOD_ICONS.fiber, label: 'Fiber', value: grams(values.fiber) },
+    netCarbs: { Icon: FOOD_ICONS.netCarbs, label: 'Net Carbs', value: grams(netCarbs) },
+    protein: { Icon: FOOD_ICONS.protein, label: 'Protein', value: grams(values.protein) },
+    salt: { Icon: FOOD_ICONS.salt, label: 'Salt', value: grams(values.salt) },
+  };
+  const focused = focusRows && focusRows.length < ROW_ORDER.length ? focusRows : null;
+  const shownKeys = focused && !showAll ? ROW_ORDER.filter((k) => focused.includes(k)) : ROW_ORDER;
+  const rows = shownKeys.map((k) => ROWS[k]);
 
   return (
     <View style={styles.section}>
@@ -76,6 +132,8 @@ export function NutritionPanel({ title, subtitle, perServing, per100, grade, emp
         <ModeTab label="Per serving" active={mode === 'serving'} onPress={() => setMode('serving')} />
         {per100 && <ModeTab label="Per 100g" active={mode === 'per100'} onPress={() => setMode('per100')} />}
       </View>
+
+      {notice ? <AlertCard tone="info" message={notice} /> : null}
 
       {empty ? (
         <View style={styles.empty}>
@@ -94,6 +152,14 @@ export function NutritionPanel({ title, subtitle, perServing, per100, grade, emp
           ))}
         </View>
       )}
+
+      {!empty && focused ? (
+        <Button
+          variant="outline"
+          label={showAll ? 'Show fewer values' : 'See full nutritional values'}
+          onPress={() => setShowAll((v) => !v)}
+        />
+      ) : null}
 
       <View style={styles.nutriBlock}>
         <Text style={styles.h5}>Estimated Nutri-score</Text>
@@ -142,15 +208,16 @@ function ModeTab({ label, active, onPress }: { label: string; active: boolean; o
 
 /** Multiplies every value — e.g. per-serving totals to per 100g. */
 export function scaleNutritionValues(v: NutritionValues, factor: number): NutritionValues {
+  const s = (x: number | null) => (x == null ? null : x * factor);
   return {
-    kcal: v.kcal * factor,
-    fat: v.fat * factor,
-    satFat: v.satFat * factor,
-    carbs: v.carbs * factor,
-    sugars: v.sugars * factor,
-    fiber: v.fiber * factor,
-    protein: v.protein * factor,
-    salt: v.salt * factor,
+    kcal: s(v.kcal),
+    fat: s(v.fat),
+    satFat: s(v.satFat),
+    carbs: s(v.carbs),
+    sugars: s(v.sugars),
+    fiber: s(v.fiber),
+    protein: s(v.protein),
+    salt: s(v.salt),
   };
 }
 
@@ -259,6 +326,58 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_300Light',
     color: Colors.secondary,
     letterSpacing: -0.14,
+  },
+
+  // "No nutritional data" — after the recipe book's empty state
+  noData: {
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+  },
+  noDataIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 999,
+    borderWidth: 2,
+    borderColor: Colors.secondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+    overflow: 'hidden',
+  },
+  noDataSlash: {
+    position: 'absolute',
+    width: 2,
+    height: 90,
+    backgroundColor: Colors.secondary,
+    transform: [{ rotate: '45deg' }],
+  },
+  noDataTitle: {
+    fontSize: 20,
+    lineHeight: 24,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+    letterSpacing: -0.4,
+    textAlign: 'center',
+  },
+  noDataBody: {
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
+    color: Colors.secondary,
+    textAlign: 'center',
+  },
+  noDataLink: {
+    marginTop: 4,
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.secondary,
+    textDecorationLine: 'underline',
   },
 
   nutriBlock: { gap: 8 },

@@ -25,6 +25,8 @@ import { deleteMeal, mealNutritionSummary, normaliseTime, relativeDayLabel, setM
 import type { MealImpact } from '@/lib/mealDanger';
 import { AlertCard } from '@/components/AlertCard';
 import { NutritionPanel } from '@/components/NutritionPanel';
+import { useNutritionRows } from '@/lib/useNutritionRows';
+import { mealNutritionCopy } from '@/lib/mealNutritionCopy';
 import { MoreMenu } from '@/components/MoreMenu';
 import type { MoreMenuAction } from '@/components/moreMenuTypes';
 import { MealItemRow } from '@/components/MealItemRow';
@@ -53,6 +55,8 @@ interface Props {
   onOpenItem: (item: MealPlanEntry) => void;
   /** How the meal sits with the user (useMealPlanImpact). */
   impact?: MealImpact;
+  /** "Add nutritional data" for a product with none — opens Improve item details. */
+  onAddNutrition?: (barcode: string) => void;
 }
 
 export function MealActionsSheet({
@@ -63,7 +67,9 @@ export function MealActionsSheet({
   onEdit,
   onOpenItem,
   impact,
+  onAddNutrition,
 }: Props) {
+  const nutritionRows = useNutritionRows();
   const { rendered, backdropOpacity, sheetTranslateY } = useSheetAnimation(visible);
   const { showToast } = useToast();
   const { height: windowHeight } = useWindowDimensions();
@@ -104,6 +110,7 @@ export function MealActionsSheet({
   const itemCount = meal.items.length;
   const eaten = Boolean(meal.eaten_at);
   const nutrition = mealNutritionSummary(meal.items);
+  const nutritionCopy = mealNutritionCopy(meal.items, nutrition.missing, onAddNutrition);
 
   const menuActions: MoreMenuAction[] = [
     {
@@ -207,6 +214,9 @@ export function MealActionsSheet({
                   perServing={nutrition.perServing}
                   per100={nutrition.per100}
                   grade={nutrition.grade}
+                  focusRows={nutritionRows}
+                  notice={nutritionCopy.notice}
+                  noData={nutritionCopy.noData}
                 />
               </FadingScrollView>
             </View>
