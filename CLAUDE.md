@@ -134,7 +134,7 @@ Reuse these before creating new components:
 | `FadingScrollView` | `@/components/FadingScrollView` | ScrollView for bottom sheets: top edge blurs and fades content once scrolled (ProgressiveBlur). `fadeColor` for non-white sheets |
 | `ActionsSheet` | `@/components/ActionsSheet` | Titled bottom sheet of action rows (RecipeActionsSheet layout) |
 | `AlertCard` | `@/components/AlertCard` | Figma alert (3190:5985): `tone` warning / caution / info, label pill + bold message |
-| `ImageViewer` | `@/components/ImageViewer` | Full-screen photo, shown whole. Pair with thumbnails that fill (crop) their box |
+| `ImageViewer` | `@/components/ImageViewer` | Full-screen white view that fades in, photo shown whole, white Icon Button close top right. Pair with thumbnails that fill (crop) their box |
 | `Button` | `@/components/Button` | primary / outline / ghost button variants |
 | `MenuModal` | `@/components/MenuModal` | Slide-out navigation drawer |
 

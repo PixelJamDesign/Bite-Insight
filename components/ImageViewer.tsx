@@ -3,12 +3,16 @@
  * cropped). Thumbnails elsewhere fill their box and crop; tapping one
  * opens this so people can still read the full pack.
  *
- * Same backdrop and close button as AvatarViewer. Tap anywhere to close.
+ * A plain white screen that fades in, with the white Icon Button close
+ * in the top right (where the header menu button sits). Tap anywhere to
+ * close.
  */
 import { useEffect, useState } from 'react';
 import { Modal, View, Image, TouchableOpacity, StyleSheet, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { Colors } from '@/constants/theme';
+import { IconButton } from '@/components/IconButton';
 
 interface Props {
   visible: boolean;
@@ -62,11 +66,13 @@ export function ImageViewer({ visible, uri, onClose }: Props) {
         ) : null}
       </TouchableOpacity>
 
-      {/* Same place and style as AvatarViewer's close button. */}
       <View style={[styles.headerBar, { paddingTop: insets.top + 24 }]} pointerEvents="box-none">
-        <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.8} accessibilityLabel="Close">
-          <Ionicons name="close" size={24} color="#fff" />
-        </TouchableOpacity>
+        <IconButton
+          variant="onWhite"
+          icon={<Ionicons name="close" size={24} color={Colors.primary} />}
+          onPress={onClose}
+          accessibilityLabel="Close"
+        />
       </View>
     </Modal>
   );
@@ -75,8 +81,7 @@ export function ImageViewer({ visible, uri, onClose }: Props) {
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    // Avocado-skin (#002923) at 95% opacity — as AvatarViewer
-    backgroundColor: 'rgba(0, 41, 35, 0.95)',
+    backgroundColor: Colors.surface.secondary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -89,14 +94,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
     paddingHorizontal: 24,
-  },
-  closeBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });
