@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useSyncExternalStore } from 'react';
+import { useState, useRef, useEffect, useSyncExternalStore, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   View,
@@ -15,6 +15,7 @@ import {
   TextInput,
   Linking,
   Image,
+  type ScrollView,
 } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
@@ -23,6 +24,8 @@ import { ConfirmSheet } from './ConfirmSheet';
 import { PolicySheet } from './PolicySheet';
 import { PlusBadge } from './PlusBadge';
 import { IconButton } from './IconButton';
+import { HeaderEdge } from './HeaderEdge';
+import { titleCollapse } from './headerMotion';
 import Logo from '@/assets/images/logo.svg';
 import {
   MenuDashboardIcon,
@@ -89,6 +92,19 @@ import {
 
 type MenuScreen = 'main' | 'ingredients' | 'account' | 'settings' | 'security' | 'mydata' | 'password' | 'offlinedb' | 'help' | 'marketing';
 
+/** Each sub-page's title (menu namespace), for the compact bar title. */
+const SCREEN_TITLE_KEY: Record<Exclude<MenuScreen, 'main'>, string> = {
+  ingredients: 'ingredients.title',
+  account: 'account.title',
+  settings: 'settings.title',
+  security: 'security.title',
+  mydata: 'myData.title',
+  offlinedb: 'offlineDb.title',
+  help: 'help.title',
+  marketing: 'marketingPreferences.title',
+  password: 'password.title',
+};
+
 /** Where each sub-page's back button goes. */
 const PARENT_SCREEN: Record<Exclude<MenuScreen, 'main'>, MenuScreen> = {
   ingredients: 'main',
@@ -102,46 +118,70 @@ const PARENT_SCREEN: Record<Exclude<MenuScreen, 'main'>, MenuScreen> = {
   password: 'security',
 };
 
-// ─── Menu bar: logo on the main menu, back button on sub-pages ─────────────
+// ─── Menu bar: logo on the main menu, back button + title on sub-pages ─────
 // The bar itself belongs to whichever screen opened the menu (dashboard,
 // ScreenLayout, food search), so the open sub-page is shared through a
 // tiny store. Only one menu is ever open.
 
-let menuBack: (() => void) | null = null;
-const menuBackListeners = new Set<() => void>();
-function setMenuBack(back: (() => void) | null) {
-  menuBack = back;
-  menuBackListeners.forEach((l) => l());
+interface MenuBarState {
+  back: (() => void) | null;
+  title: string | null;
 }
-function subscribeMenuBack(l: () => void) {
-  menuBackListeners.add(l);
-  return () => menuBackListeners.delete(l);
+let menuBar: MenuBarState = { back: null, title: null };
+const menuBarListeners = new Set<() => void>();
+function setMenuBar(next: MenuBarState) {
+  menuBar = next;
+  menuBarListeners.forEach((l) => l());
 }
-const getMenuBack = () => menuBack;
+function subscribeMenuBar(l: () => void) {
+  menuBarListeners.add(l);
+  return () => menuBarListeners.delete(l);
+}
+const getMenuBar = () => menuBar;
+
+/** Scroll offset of the menu page in front. Drives the title hand-over
+ *  and the edge under the bar, like ScreenLayout. */
+const menuScrollY = new Animated.Value(0);
+
+/** The sub-page's large title scrolls this far before it's under the bar
+ *  (its top sits right at the bar's bottom edge). */
+const MENU_TITLE_DISTANCE = 30;
 
 /**
  * Leading slot of the bar shown while the menu is open: the logo on the
- * main menu, the Header Nav back button on a sub-page (Settings, Account…),
- * the same as every other titled page.
+ * main menu; on a sub-page (Settings, Account…) the Header Nav back button,
+ * with the page title fading in beside it once the large title has
+ * scrolled away, the same as every other titled page.
  */
 export function MenuBarLeading({ onLogoPress }: { onLogoPress: () => void }) {
-  const back = useSyncExternalStore(subscribeMenuBack, getMenuBack, getMenuBack);
+  const { back, title } = useSyncExternalStore(subscribeMenuBar, getMenuBar, getMenuBar);
   const fade = useRef(new Animated.Value(1)).current;
   const hasBack = back !== null;
   useEffect(() => {
     fade.setValue(0);
     Animated.timing(fade, { toValue: 1, duration: 200, easing: Easing.out(Easing.quad), useNativeDriver: true }).start();
   }, [hasBack, fade]);
+  const { compactOpacity, compactShift } = titleCollapse(menuScrollY, MENU_TITLE_DISTANCE);
   return (
     <Animated.View style={[menuBarStyles.leading, { opacity: fade }]}>
       {back ? (
-        <IconButton
-          icon={<MenuArrowLeftIcon color={Colors.primary} size={16} />}
-          variant="onWhite"
-          onPress={back}
-          hitSlop={0}
-          accessibilityLabel="Back"
-        />
+        <>
+          <IconButton
+            icon={<MenuArrowLeftIcon color={Colors.primary} size={16} />}
+            variant="onWhite"
+            onPress={back}
+            hitSlop={0}
+            accessibilityLabel="Back"
+          />
+          <Animated.Text
+            style={[menuBarStyles.title, { opacity: compactOpacity, transform: [{ translateY: compactShift }] }]}
+            numberOfLines={1}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+          >
+            {title}
+          </Animated.Text>
+        </>
       ) : (
         <TouchableOpacity onPress={onLogoPress} activeOpacity={0.7} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
           <Logo width={141} height={36} />
@@ -151,8 +191,26 @@ export function MenuBarLeading({ onLogoPress }: { onLogoPress: () => void }) {
   );
 }
 
+/** A sub-page's large title: fades as it scrolls under the bar. */
+function MenuPageTitle({ children }: { children: ReactNode }) {
+  const { largeOpacity } = titleCollapse(menuScrollY, MENU_TITLE_DISTANCE);
+  return (
+    <Animated.Text style={[styles.subTitle, { opacity: largeOpacity }]} accessibilityRole="header">
+      {children}
+    </Animated.Text>
+  );
+}
+
 const menuBarStyles = StyleSheet.create({
-  leading: { minHeight: 48, justifyContent: 'center' },
+  leading: { flex: 1, minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 16 },
+  title: {
+    flex: 1,
+    fontSize: 18,
+    lineHeight: 20,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.primary,
+  },
 });
 
 // ─── Shared sub-components ────────────────────────────────────────────────────
@@ -216,7 +274,7 @@ function IngredientsScreen({ goBack, onGo }: { goBack: () => void; onGo: (route:
   return (
     <>
       <View style={styles.subHeader}>
-        <Text style={styles.subTitle}>{t('ingredients.title')}</Text>
+        <MenuPageTitle>{t('ingredients.title')}</MenuPageTitle>
       </View>
       <View style={styles.navList}>
         <NavItem icon={<MenuLikedIcon color={Colors.secondary} size={16} />} label={t('ingredients.liked')} onPress={() => goTo('liked')} chevron />
@@ -236,7 +294,7 @@ function AccountScreen({ goBack, onGo, onNavigate }: { goBack: () => void; onGo:
   return (
     <>
       <View style={styles.subHeader}>
-        <Text style={styles.subTitle}>{t('account.title')}</Text>
+        <MenuPageTitle>{t('account.title')}</MenuPageTitle>
       </View>
       <View style={styles.navList}>
         <NavItem icon={<MenuPersonalIcon color={Colors.secondary} />} label={t('account.editDetails')} onPress={() => onGo('/edit-profile')} />
@@ -259,7 +317,7 @@ function SettingsScreen({ goBack, onNavigate, onOpenPolicy, onGo }: { goBack: ()
   return (
     <>
       <View style={styles.subHeader}>
-        <Text style={styles.subTitle}>{t('settings.title')}</Text>
+        <MenuPageTitle>{t('settings.title')}</MenuPageTitle>
       </View>
       <View style={styles.navList}>
         <NavItem icon={<MenuLockIcon color={Colors.secondary} />} label={t('settings.security')} onPress={() => onNavigate('security')} chevron />
@@ -290,7 +348,7 @@ function HelpSupportScreen({ goBack, onGo }: { goBack: () => void; onGo: (route:
   return (
     <>
       <View style={styles.subHeader}>
-        <Text style={styles.subTitle}>{t('help.title')}</Text>
+        <MenuPageTitle>{t('help.title')}</MenuPageTitle>
       </View>
       <View style={styles.navList}>
         <NavItem icon={<MenuHelpIcon color={Colors.secondary} />} label={t('help.helpGuides')} onPress={() => Linking.openURL('https://biteinsight.co.uk/contact.html')} chevron />
@@ -336,7 +394,7 @@ function SecurityScreen({ goBack, onNavigate }: { goBack: () => void; onNavigate
   return (
     <>
       <View style={styles.subHeader}>
-        <Text style={styles.subTitle}>{t('security.title')}</Text>
+        <MenuPageTitle>{t('security.title')}</MenuPageTitle>
       </View>
       <View style={styles.navList}>
         {loading ? (
@@ -476,7 +534,7 @@ function MarketingPreferencesScreen({ goBack }: { goBack: () => void }) {
   return (
     <>
       <View style={styles.subHeader}>
-        <Text style={styles.subTitle}>{t('marketingPreferences.title')}</Text>
+        <MenuPageTitle>{t('marketingPreferences.title')}</MenuPageTitle>
       </View>
       <View style={styles.navList}>
         {loading ? (
@@ -680,7 +738,7 @@ function MyDataScreen({ goBack }: { goBack: () => void }) {
     <>
       <View style={styles.subHeader}>
         <View style={myDataStyles.titleRow}>
-          <Text style={styles.subTitle}>{t('myData.title')}</Text>
+          <MenuPageTitle>{t('myData.title')}</MenuPageTitle>
           {stats.joinedAt ? (
             <Text style={myDataStyles.memberSince}>{t('myData.memberSince', { date: stats.joinedAt })}</Text>
           ) : null}
@@ -1028,7 +1086,7 @@ function OfflineDatabaseScreen({ goBack }: { goBack: () => void }) {
   return (
     <>
       <View style={styles.subHeader}>
-        <Text style={styles.subTitle}>{t('offlineDb.title')}</Text>
+        <MenuPageTitle>{t('offlineDb.title')}</MenuPageTitle>
       </View>
 
       <View style={offlineDbStyles.sections}>
@@ -1470,7 +1528,7 @@ function ChangePasswordScreen({ goBack }: { goBack: () => void }) {
   return (
     <>
       <View style={styles.subHeader}>
-        <Text style={styles.subTitle}>{t('password.title')}</Text>
+        <MenuPageTitle>{t('password.title')}</MenuPageTitle>
       </View>
 
       <View style={pwStyles.form}>
@@ -1744,6 +1802,7 @@ interface MenuModalProps {
 
 export function MenuModal({ onClose, onNavigate }: MenuModalProps) {
   const { transitionTo } = useTransition();
+  const { t } = useTranslation('menu');
 
   // Two permanent slots — one is always the front, one is always the back.
   // We never unmount a slot; we just swap which one is active. This avoids
@@ -1759,7 +1818,8 @@ export function MenuModal({ onClose, onNavigate }: MenuModalProps) {
 
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  // Header height: insets.top + 24 (paddingTop) + 36 (logo) + 16 (paddingBottom)
+  // Content starts under the logo (insets.top + 24 + 36 + 16); a sub-page's
+  // title then sits right at the bar's bottom edge (see subHeader).
   const headerHeight = insets.top + 76;
 
   // Slot A starts as the visible front; slot B starts invisible behind it.
@@ -1770,16 +1830,33 @@ export function MenuModal({ onClose, onNavigate }: MenuModalProps) {
 
   const animTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigateRef = useRef(navigate);
+  const aScrollRef = useRef<ScrollView>(null);
+  const bScrollRef = useRef<ScrollView>(null);
+  /** The slot whose scroll drives the bar: switches to the incoming page
+   *  the moment navigation starts, so a late scroll event from the page
+   *  going away can't collapse the new one. */
+  const scrollSlotRef = useRef<'a' | 'b'>('a');
   navigateRef.current = navigate;
 
   // The bar goes back to the logo whenever the menu goes away.
-  useEffect(() => () => setMenuBack(null), []);
+  useEffect(() => () => {
+    setMenuBar({ back: null, title: null });
+    menuScrollY.setValue(0);
+  }, []);
 
   function navigate(newScreen: MenuScreen, isBack = false) {
     if (isAnimating) return;
     // Through the ref: the bar keeps this function, and navigate reads
     // the slot state of the render it came from.
-    setMenuBack(newScreen === 'main' ? null : () => navigateRef.current(PARENT_SCREEN[newScreen], true));
+    setMenuBar(
+      newScreen === 'main'
+        ? { back: null, title: null }
+        : { back: () => navigateRef.current(PARENT_SCREEN[newScreen], true), title: t(SCREEN_TITLE_KEY[newScreen]) },
+    );
+    // The incoming page starts at the top.
+    scrollSlotRef.current = frontIsA ? 'b' : 'a';
+    (frontIsA ? bScrollRef : aScrollRef).current?.scrollTo({ y: 0, animated: false });
+    menuScrollY.setValue(0);
     const dir = isBack ? -1 : 1;
     const slideDistance = width * 0.22;
     setSlotState(prev => ({ ...prev, isAnimating: true }));
@@ -1855,7 +1932,9 @@ export function MenuModal({ onClose, onNavigate }: MenuModalProps) {
     setSlotState({ frontIsA: true, isAnimating: false });
     setSlotAScreen('main');
     setSlotBScreen('main');
-    setMenuBack(null);
+    setMenuBar({ back: null, title: null });
+    scrollSlotRef.current = 'a';
+    menuScrollY.setValue(0);
     onClose();
   }
 
@@ -1870,7 +1949,9 @@ export function MenuModal({ onClose, onNavigate }: MenuModalProps) {
     setSlotState({ frontIsA: true, isAnimating: false });
     setSlotAScreen('main');
     setSlotBScreen('main');
-    setMenuBack(null);
+    setMenuBar({ back: null, title: null });
+    scrollSlotRef.current = 'a';
+    menuScrollY.setValue(0);
     onNavigate();
     transitionTo(route);
   }
@@ -1917,6 +1998,7 @@ export function MenuModal({ onClose, onNavigate }: MenuModalProps) {
   const sharedScrollProps = {
     contentContainerStyle: [styles.scrollContent, { paddingTop: headerHeight, paddingBottom: 32 + (Platform.OS === 'android' ? insets.bottom : 0) }] as any,
     showsVerticalScrollIndicator: false,
+    scrollEventThrottle: 16,
   };
 
   const aIsActive = frontIsA && !isAnimating;
@@ -1936,6 +2018,8 @@ export function MenuModal({ onClose, onNavigate }: MenuModalProps) {
       >
         <Animated.ScrollView
           {...sharedScrollProps}
+          ref={aScrollRef}
+          onScroll={(e) => scrollSlotRef.current === 'a' && menuScrollY.setValue(e.nativeEvent.contentOffset.y)}
           style={[styles.scroll, { opacity: aFade, transform: [{ translateX: aSlideX }] }]}
         >
           {renderScreenContent(slotAScreen)}
@@ -1951,11 +2035,16 @@ export function MenuModal({ onClose, onNavigate }: MenuModalProps) {
       >
         <Animated.ScrollView
           {...sharedScrollProps}
+          ref={bScrollRef}
+          onScroll={(e) => scrollSlotRef.current === 'b' && menuScrollY.setValue(e.nativeEvent.contentOffset.y)}
           style={[styles.scroll, { opacity: bFade, transform: [{ translateX: bSlideX }] }]}
         >
           {renderScreenContent(slotBScreen)}
         </Animated.ScrollView>
       </View>
+
+      {/* Under the bar (drawn by the screen that opened the menu) */}
+      <HeaderEdge scrollY={menuScrollY} color="#ffffff" style={[styles.barEdge, { top: insets.top + MENU_BAR_HEIGHT }]} />
 
       {policyType && (
         <PolicySheet
@@ -1970,7 +2059,13 @@ export function MenuModal({ onClose, onNavigate }: MenuModalProps) {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
+/** Bar drawn over the menu: 24 top gap + 48 buttons + 16. */
+const MENU_BAR_HEIGHT = 88;
+
 const styles = StyleSheet.create({
+  barEdge: {
+    zIndex: 2,
+  },
   container: {
     flex: 1,
     overflow: 'hidden',
@@ -2039,7 +2134,8 @@ const styles = StyleSheet.create({
   },
   subHeader: {
     gap: 12,
-    paddingTop: 16,
+    // 76 + 12 = the bar's 88, so the title starts at its edge.
+    paddingTop: 12,
   },
   subTitle: {
     fontSize: 24,

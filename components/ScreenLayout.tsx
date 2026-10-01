@@ -36,7 +36,8 @@ import { Colors } from '@/constants/theme';
 import { MenuModal, MenuBarLeading } from '@/components/MenuModal';
 import { IconButton } from '@/components/IconButton';
 import { MenuArrowLeftIcon } from '@/components/MenuIcons';
-import { ProgressiveBlur } from '@/components/ProgressiveBlur';
+import { HeaderEdge } from '@/components/HeaderEdge';
+import { titleCollapse } from '@/components/headerMotion';
 
 /** A subtitle, or a function that builds it for the large or compact header. */
 type Subtitle = ReactNode | ((compact: boolean) => ReactNode);
@@ -64,8 +65,6 @@ const NAV_TOP_GAP = 24;
 const BUTTON = 48;
 const NAV_BOTTOM_GAP = 16;
 const TITLE_BOTTOM_GAP = 16;
-/** Blur and fade band under the pinned header. */
-const FADE_HEIGHT = 32;
 
 interface ScreenHeaderContextValue {
   /** Scroll offset of the screen's main list. */
@@ -155,28 +154,7 @@ export function ScreenLayout({ title, subtitle, headerExtension, onBack, childre
     extrapolateLeft: 'extend',
     extrapolateRight: 'clamp',
   });
-  const largeOpacity = scrollY.interpolate({
-    inputRange: [0, T * 0.5],
-    outputRange: [1, 0],
-    extrapolate: 'clamp',
-  });
-  const compactOpacity = scrollY.interpolate({
-    inputRange: [T * 0.6, T],
-    outputRange: [0, 1],
-    extrapolate: 'clamp',
-  });
-  // The fade only shows once something is scrolling under it, so the
-  // first row isn't softened at rest.
-  const fadeOpacity = scrollY.interpolate({
-    inputRange: [0, 16],
-    outputRange: [0, 1],
-    extrapolate: 'clamp',
-  });
-  const compactShift = scrollY.interpolate({
-    inputRange: [T * 0.6, T],
-    outputRange: [6, 0],
-    extrapolate: 'clamp',
-  });
+  const { largeOpacity, compactOpacity, compactShift } = titleCollapse(scrollY, T);
 
   function onTitleLayout(e: LayoutChangeEvent) {
     const h = Math.round(e.nativeEvent.layout.height);
@@ -243,9 +221,7 @@ export function ScreenLayout({ title, subtitle, headerExtension, onBack, childre
         <Animated.View style={[styles.stack, { top: navHeight, transform: [{ translateY: stackShift }] }]}>
           {/* First, so the pinned controls (e.g. a card that opens over
               the list) draw over the fade. */}
-          <Animated.View style={[styles.stackFade, { opacity: fadeOpacity }]} pointerEvents="none">
-            <ProgressiveBlur height={FADE_HEIGHT} />
-          </Animated.View>
+          <HeaderEdge scrollY={scrollY} />
           <Animated.View style={[styles.largeTitle, { opacity: largeOpacity }]} onLayout={onTitleLayout}>
             <Text style={styles.titleText} numberOfLines={2} accessibilityRole="header">
               {title}
@@ -441,13 +417,6 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: Colors.background,
     zIndex: 5,
-  },
-  stackFade: {
-    position: 'absolute',
-    top: '100%',
-    left: 0,
-    right: 0,
-    height: FADE_HEIGHT,
   },
   largeTitle: {
     paddingHorizontal: 24,
