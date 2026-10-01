@@ -15,6 +15,11 @@
  *   3. The scores are averaged, weighted by how much each insight matters
  *      to the user (INSIGHT_WEIGHTS), and the average picks the state.
  *
+ * Density alone misses big portions (a sandwich is only moderately carby
+ * per 100g, but 44 g of carbs in one meal is a lot on keto), so the meal's
+ * actual totals are also checked against per-meal limits for the user's
+ * profile (PORTION_LIMITS). The card takes the worse of the two.
+ *
  * An allergy hit is always Avoid, and a dietary or condition conflict is
  * at least Caution, whatever the average says.
  *
@@ -51,6 +56,137 @@ const INSIGHT_PHRASE: Partial<Record<InsightKey, string>> = {
   carbLoad: 'high in carbs',
   additives: 'heavy on additives',
 };
+// ── Per-meal limits ──────────────────────────────────────────────────────────
+//
+// What one meal can carry before it's a poor fit, by profile tag. Values are
+// the meal's totals; over `caution` makes the card amber, over `avoid` red.
+// Keto follows the usual 20–50 g/day net-carb budget; the diabetes family
+// the common 45–60 g carbs per meal guidance. Tune here.
+
+type PortionNutrient = 'netCarbs' | 'carbs' | 'sugars' | 'kcal' | 'salt' | 'satFat';
+
+interface PortionLimit {
+  nutrient: PortionNutrient;
+  caution: number;
+  avoid: number;
+}
+
+const PORTION_LIMITS: Record<string, PortionLimit[]> = {
+  keto: [{ nutrient: 'netCarbs', caution: 10, avoid: 20 }],
+  diabetes: [
+    { nutrient: 'carbs', caution: 45, avoid: 60 },
+    { nutrient: 'sugars', caution: 15, avoid: 25 },
+  ],
+  preDiabetes: [
+    { nutrient: 'carbs', caution: 45, avoid: 60 },
+    { nutrient: 'sugars', caution: 15, avoid: 25 },
+  ],
+  insulinResistance: [
+    { nutrient: 'carbs', caution: 45, avoid: 60 },
+    { nutrient: 'sugars', caution: 15, avoid: 25 },
+  ],
+  pcos: [
+    { nutrient: 'carbs', caution: 45, avoid: 60 },
+    { nutrient: 'sugars', caution: 15, avoid: 25 },
+  ],
+  weightLoss: [{ nutrient: 'kcal', caution: 700, avoid: 900 }],
+  hypertension: [{ nutrient: 'salt', caution: 1.5, avoid: 2.5 }],
+  heartDisease: [
+    { nutrient: 'salt', caution: 1.5, avoid: 2.5 },
+    { nutrient: 'satFat', caution: 6, avoid: 10 },
+  ],
+  ckd: [{ nutrient: 'salt', caution: 1.5, avoid: 2.5 }],
+  highCholesterol: [{ nutrient: 'satFat', caution: 6, avoid: 10 }],
+  nafld: [{ nutrient: 'satFat', caution: 6, avoid: 10 }],
+};
+
+/** How each tag reads at the end of the sentence. */
+const TAG_PHRASE: Record<string, string> = {
+  keto: 'for keto',
+  diabetes: 'with diabetes',
+  preDiabetes: 'with prediabetes',
+  insulinResistance: 'with insulin resistance',
+  pcos: 'with PCOS',
+  weightLoss: 'for weight loss',
+  hypertension: 'with high blood pressure',
+  heartDisease: 'with heart disease',
+  ckd: 'with kidney disease',
+  highCholesterol: 'with high cholesterol',
+  nafld: 'with fatty liver',
+};
+
+const NUTRIENT_NAME: Record<PortionNutrient, string> = {
+  netCarbs: 'net carbs',
+  carbs: 'carbs',
+  sugars: 'sugar',
+  kcal: 'calories',
+  salt: 'salt',
+  satFat: 'saturated fat',
+};
+
+function mealTotals(meal: Meal): Partial<Record<PortionNutrient, number>> {
+  const sum = (key: keyof MealNutrition) => {
+    let total = 0;
+    let any = false;
+    for (const item of meal.items) {
+      const v = item.nutrition?.[key];
+      if (v == null) continue;
+      total += Number(v);
+      any = true;
+    }
+    return any ? total : undefined;
+  };
+  const carbs = sum('carbs_g');
+  const fiber = sum('fiber_g') ?? 0;
+  return {
+    carbs,
+    netCarbs: carbs == null ? undefined : Math.max(0, carbs - fiber),
+    sugars: sum('sugars_g'),
+    kcal: sum('kcal'),
+    salt: sum('salt_g'),
+    satFat: sum('sat_fat_g'),
+  };
+}
+
+function formatAmount(n: PortionNutrient, v: number): string {
+  if (n === 'kcal') return `${Math.round(v)} kcal`;
+  const g = v >= 10 ? Math.round(v) : Math.round(v * 10) / 10;
+  return `${g} g of ${NUTRIENT_NAME[n]}`;
+}
+
+/** The meal's totals against the user's per-meal limits: the worst level
+ *  reached, and a sentence for each limit crossed (worst first). */
+function checkPortions(meal: Meal, tags: string[]): { level: MealDangerLevel; sentences: string[] } {
+  const totals = mealTotals(meal);
+  const hits: { severity: number; over: number; sentence: string }[] = [];
+  const seen = new Set<PortionNutrient>();
+  // Strictest limit per nutrient wins when tags overlap.
+  const limits = tags
+    .flatMap((tag) => (PORTION_LIMITS[tag] ?? []).map((l) => ({ ...l, tag })))
+    .sort((a, b) => a.caution - b.caution);
+  for (const l of limits) {
+    if (seen.has(l.nutrient)) continue;
+    const v = totals[l.nutrient];
+    if (v == null) continue;
+    seen.add(l.nutrient);
+    const severity = v > l.avoid ? 2 : v > l.caution ? 1 : 0;
+    if (severity === 0) continue;
+    hits.push({
+      severity,
+      over: v / l.caution,
+      sentence: `${formatAmount(l.nutrient, v)} in one meal is a lot ${TAG_PHRASE[l.tag] ?? ''}`.trim() + '.',
+    });
+  }
+  hits.sort((a, b) => b.severity - a.severity || b.over - a.over);
+  const worst = hits[0]?.severity ?? 0;
+  return {
+    level: worst === 2 ? 'avoid' : worst === 1 ? 'caution' : 'planned',
+    sentences: hits.map((h) => h.sentence.charAt(0).toUpperCase() + h.sentence.slice(1)),
+  };
+}
+
+const LEVEL_RANK: Record<MealDangerLevel, number> = { planned: 0, caution: 1, avoid: 2 };
+
 /** At most this many reasons go in the sentence. */
 const MAX_REASONS = 2;
 
@@ -191,10 +327,24 @@ export function scoreMeal(
     }
   }
 
+  // Per-meal limits — the worse of the two wins.
+  const portionCheck = checkPortions(meal, tags);
+  if (LEVEL_RANK[portionCheck.level] > LEVEL_RANK[level]) level = portionCheck.level;
+
   if (self?.status === 'caution' && level === 'planned') level = 'caution';
   if (level === 'planned') return null;
 
-  // The worst one or two insights, then any diet or condition clash.
+  // A crossed per-meal limit is the clearest reason, so it leads.
+  if (portionCheck.sentences.length > 0) {
+    const clashes = (self?.reasons ?? []).map((r) => `${humanise(r)}.`);
+    return {
+      level,
+      reason: null,
+      explanation: [...portionCheck.sentences.slice(0, MAX_REASONS), ...clashes].join(' '),
+    };
+  }
+
+  // Otherwise the worst one or two insights, then any diet or condition clash.
   const phrases = offenders
     .sort((a, b) => b.score - a.score)
     .map((o) => INSIGHT_PHRASE[o.key])
