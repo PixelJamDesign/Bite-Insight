@@ -77,7 +77,8 @@
     "unknownName": "Unknown Product",
     "notFound": "Product not found",
     "notFoundDescription": "We couldn't find this product in our database. Try scanning again or search manually.",
-    "notFoundAction": "Go back"
+    "notFoundAction": "Go back",
+    "viewPhoto": "See the full photo"
   },
   "tab": {
     "overview": "Overview",

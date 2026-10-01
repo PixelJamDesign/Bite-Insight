@@ -3,7 +3,8 @@
     "unknownName": "Prodotto sconosciuto",
     "notFound": "Prodotto non trovato",
     "notFoundDescription": "Non abbiamo trovato questo prodotto nel nostro database. Riprova a scansionare o cerca manualmente.",
-    "notFoundAction": "Torna indietro"
+    "notFoundAction": "Torna indietro",
+    "viewPhoto": "Vedi la foto intera"
   },
   "tab": {
     "overview": "Panoramica",

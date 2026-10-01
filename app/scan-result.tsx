@@ -62,6 +62,7 @@ import MealPlanActionIcon from '@/assets/icons/recipe-actions/meal-plan.svg';
 import RecipeActionIcon from '@/assets/icons/recipe-actions/recipe.svg';
 import EditActionIcon from '@/assets/icons/recipe-actions/edit.svg';
 import { buildProductSnapshot } from '@/lib/recipes';
+import { ImageViewer } from '@/components/ImageViewer';
 
 /** Coerce a value to number, falling back to a query-param source */
 function toNum(primary: unknown, fallback: unknown): number | undefined {
@@ -716,6 +717,8 @@ export default function ScanResultScreen() {
 
   // Sheets opened from the product's ⋯ menu
   const [addToRecipeOpen, setAddToRecipeOpen] = useState(false);
+  // The header photo fills its box (cropped); tapping shows it whole.
+  const [photoOpen, setPhotoOpen] = useState(false);
   // "Add to meal plan" opens the planner's own Plan a meal drawer with
   // this product already in it.
   const draftMeal = useDraftMeal();
@@ -2018,13 +2021,19 @@ export default function ScanResultScreen() {
                 {!!quantity && <Text style={styles.quantity}>{quantity}</Text>}
               </View>
               {(fetched?.imageUrl || p.imageUrl) ? (
-                <View style={styles.imageCard}>
+                <TouchableOpacity
+                  style={styles.imageCard}
+                  onPress={() => setPhotoOpen(true)}
+                  activeOpacity={0.85}
+                  accessibilityRole="imagebutton"
+                  accessibilityLabel={t('product.viewPhoto')}
+                >
                   <Image
                     source={{ uri: fetched?.imageUrl || p.imageUrl }}
                     style={styles.productImage}
-                    resizeMode="contain"
+                    resizeMode="cover"
                   />
-                </View>
+                </TouchableOpacity>
               ) : (
                 <View style={[styles.imageCard, styles.imagePlaceholder]}>
                   <NoImagePlaceholder />
@@ -3450,6 +3459,12 @@ export default function ScanResultScreen() {
           builderHiddenRef.current = false;
           setBuilderOpen(false);
         }}
+      />
+
+      <ImageViewer
+        visible={photoOpen}
+        uri={fetched?.imageUrl || p.imageUrl || null}
+        onClose={() => setPhotoOpen(false)}
       />
 
       <AddToRecipeSheet

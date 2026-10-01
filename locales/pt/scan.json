@@ -3,7 +3,8 @@
     "unknownName": "Produto desconhecido",
     "notFound": "Produto não encontrado",
     "notFoundDescription": "Não conseguimos encontrar este produto na nossa base de dados. Tente digitalizar novamente ou pesquise manualmente.",
-    "notFoundAction": "Voltar"
+    "notFoundAction": "Voltar",
+    "viewPhoto": "Ver a foto completa"
   },
   "tab": {
     "overview": "Visão geral",

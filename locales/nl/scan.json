@@ -3,7 +3,8 @@
     "unknownName": "Onbekend product",
     "notFound": "Product niet gevonden",
     "notFoundDescription": "We konden dit product niet vinden in onze database. Probeer opnieuw te scannen of zoek handmatig.",
-    "notFoundAction": "Terug"
+    "notFoundAction": "Terug",
+    "viewPhoto": "Hele foto bekijken"
   },
   "tab": {
     "overview": "Overzicht",
