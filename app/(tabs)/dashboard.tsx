@@ -61,7 +61,7 @@ import {
 } from '@/constants/profileOptions';
 import type { UserProfile, DailyInsight, Ingredient, UserIngredientPreference, Meal } from '@/lib/types';
 import Logo from '../../assets/images/logo.svg';
-import AddSmallIcon from '../../assets/icons/meal-plan/add-small.svg';
+import AddIcon from '../../assets/icons/meal-plan/add.svg';
 
 /** Meals listed on the dashboard before it hands over to the planner. */
 const DASHBOARD_MEAL_LIMIT = 4;
@@ -623,8 +623,7 @@ export default function HomeDashboard() {
                 </Text>
               </TouchableOpacity>
               <IconButton
-                size="small"
-                icon={<AddSmallIcon width={20} height={20} />}
+                icon={<AddIcon width={24} height={24} />}
                 onPress={() =>
                   router.push({ pathname: '/meal-plan', params: { date: toDateKey(new Date()), add: '1' } } as any)
                 }
