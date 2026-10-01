@@ -46,7 +46,7 @@ export function DashboardEmptyCard({ image, imageStyle, title, subtitle, onPress
 const styles = StyleSheet.create({
   card: {
     height: 90,
-    backgroundColor: 'rgba(0,119,111,0.08)',
+    backgroundColor: 'rgba(0,119,111,0.1)',
     borderRadius: Radius.l,
     paddingHorizontal: 16,
     flexDirection: 'row',
