@@ -39,6 +39,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTrialDay6Reminder } from '@/lib/trialDay6ReminderContext';
 import { useSubscription } from '@/lib/subscriptionContext';
 import BiteInsightPlusLogo from '../assets/images/logo-biteinsight-plus.svg';
+import { FadingScrollView } from '@/components/FadingScrollView';
 
 // Figma-derived constants — same palette as TrialUpsellSheet so the
 // two sheets feel like part of one flow.
@@ -171,7 +172,8 @@ export function TrialDay6ReminderSheet() {
             <Ionicons name="close" size={24} color="#fff" />
           </TouchableOpacity>
 
-          <ScrollView
+          <FadingScrollView
+            fadeColor="#002923"
             style={styles.scrollPart}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
@@ -227,7 +229,7 @@ export function TrialDay6ReminderSheet() {
                 </View>
               </View>
             </View>
-          </ScrollView>
+          </FadingScrollView>
 
           {/* Sticky two-button footer */}
           <View

@@ -30,6 +30,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, Radius, Shadows } from '@/constants/theme';
 import { useSheetAnimation } from '@/lib/useSheetAnimation';
 import { CachedAvatar } from '@/components/CachedAvatar';
+import { FadingScrollView } from '@/components/FadingScrollView';
 import type { InsightDef, ImpactResult } from '@/lib/insightEngine';
 import BulletMarkerIcon from '@/assets/icons/bullet-marker.svg';
 
@@ -120,7 +121,7 @@ export function FamilyImpactSheet({
               </TouchableOpacity>
             </View>
 
-            <ScrollView
+            <FadingScrollView
               contentContainerStyle={styles.scrollContent}
               showsVerticalScrollIndicator={false}
             >
@@ -225,7 +226,7 @@ export function FamilyImpactSheet({
                     </Text>
                   </View>
                 )}
-            </ScrollView>
+            </FadingScrollView>
           </SafeAreaView>
         </Animated.View>
       </View>

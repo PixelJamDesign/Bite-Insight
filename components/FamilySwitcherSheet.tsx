@@ -20,6 +20,7 @@ import { useAuth } from '@/lib/auth';
 import { useActiveFamily } from '@/lib/activeFamilyContext';
 import { CachedAvatar } from '@/components/CachedAvatar';
 import { LottieLoader } from '@/components/LottieLoader';
+import { FadingScrollView } from '@/components/FadingScrollView';
 import type { FamilyProfile, UserProfile } from '@/lib/types';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
@@ -229,7 +230,7 @@ export function FamilySwitcherSheet({
             <LottieLoader type="loading" fullScreen={false} />
           </View>
         ) : (
-          <ScrollView
+          <FadingScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
             bounces={false}
@@ -334,7 +335,7 @@ export function FamilySwitcherSheet({
                 </TouchableOpacity>
               );
             })}
-          </ScrollView>
+          </FadingScrollView>
         )}
       </Animated.View>
     </Modal>

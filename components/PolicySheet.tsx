@@ -26,6 +26,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 // MenuIcons not needed — banner uses inline SVGs from policy_privacy_mini.svg / policy_cookies_mini.svg
 import { Colors, Spacing, Radius, Typography } from '@/constants/theme';
+import { FadingScrollView } from '@/components/FadingScrollView';
 
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
@@ -223,14 +224,14 @@ export function PolicySheet({ visible, onClose, type }: Props) {
 
         {/* ── Scrollable content with fade overlay ──────────── */}
         <View style={root.scrollWrap}>
-          <ScrollView
+          <FadingScrollView
             style={root.scroll}
             contentContainerStyle={root.scrollContent}
             showsVerticalScrollIndicator={false}
             bounces
           >
             {type === 'privacy' ? <PrivacyContent /> : <CookieContent />}
-          </ScrollView>
+          </FadingScrollView>
           {/* Fade overlay — sits on top of scroll content */}
           <LinearGradient
             colors={['#ffffff', 'rgba(255,255,255,0)']}

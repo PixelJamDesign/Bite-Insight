@@ -45,6 +45,7 @@ import { router } from 'expo-router';
 import { useTrialUpsell } from '@/lib/trialUpsellContext';
 import { useSubscription } from '@/lib/subscriptionContext';
 import BiteInsightPlusLogo from '../assets/images/logo-biteinsight-plus.svg';
+import { FadingScrollView } from '@/components/FadingScrollView';
 
 // ── Figma-derived constants ───────────────────────────────────────────────────
 // Mint accent used for the subhead + active timeline dot. Lives in
@@ -220,7 +221,8 @@ export function TrialUpsellSheet() {
             <Ionicons name="close" size={24} color="#fff" />
           </TouchableOpacity>
 
-          <ScrollView
+          <FadingScrollView
+            fadeColor="#002923"
             style={styles.scrollPart}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
@@ -293,7 +295,7 @@ export function TrialUpsellSheet() {
                 ))}
               </View>
             </View>
-          </ScrollView>
+          </FadingScrollView>
 
           {/* Sticky footer — CTA + cancellation note */}
           <View

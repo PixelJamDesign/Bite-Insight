@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next';
 import { Colors, Spacing, Radius, Shadows } from '@/constants/theme';
 import { MenuFlaggedIcon } from './MenuIcons';
 import { buildFlagReasonGroups } from '@/constants/flagReasons';
+import { FadingScrollView } from '@/components/FadingScrollView';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
@@ -190,7 +191,7 @@ export function FlagReasonSheet({
 
           {/* Scrollable reason list with gradient fade */}
           <View style={styles.scrollWrapper}>
-            <ScrollView
+            <FadingScrollView
               style={styles.scrollArea}
               contentContainerStyle={styles.scrollContent}
               showsVerticalScrollIndicator={false}
@@ -247,7 +248,7 @@ export function FlagReasonSheet({
                   />
                 )}
               </View>
-            </ScrollView>
+            </FadingScrollView>
 
             {/* Gradient fade at bottom of scroll area */}
             <LinearGradient

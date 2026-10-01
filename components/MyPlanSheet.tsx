@@ -20,6 +20,7 @@ import { useAuth } from '@/lib/auth';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { supabase } from '@/lib/supabase';
 import BiteInsightPlusLogo from '../assets/images/logo-biteinsight-plus.svg';
+import { FadingScrollView } from '@/components/FadingScrollView';
 
 // Reuse the illustrated icons from the Plus upsell sheet so the
 // stat cards on the My Plan sheet feel like part of the same visual
@@ -168,7 +169,8 @@ export function MyPlanSheet() {
           <Ionicons name="close" size={20} color="#fff" />
         </TouchableOpacity>
 
-        <ScrollView
+        <FadingScrollView
+            fadeColor="#002923"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
           bounces={false}
@@ -236,7 +238,7 @@ export function MyPlanSheet() {
           <Text style={styles.finePrint}>
             Your access continues until the end of your billing period.
           </Text>
-        </ScrollView>
+        </FadingScrollView>
       </Animated.View>
     </Modal>
   );

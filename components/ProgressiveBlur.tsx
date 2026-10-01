@@ -13,9 +13,9 @@ import { View, StyleSheet, Platform } from 'react-native';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
-import { FADE_COLORS, FADE_LOCATIONS, type ProgressiveBlurProps } from './progressiveBlurShared';
+import { fadeColors, isDarkColor, FADE_LOCATIONS, type ProgressiveBlurProps } from './progressiveBlurShared';
 
-export function ProgressiveBlur({ height, intensity = 24 }: ProgressiveBlurProps) {
+export function ProgressiveBlur({ height, intensity = 24, color }: ProgressiveBlurProps) {
   return (
     <View style={[styles.wrap, { height }]} pointerEvents="none">
       {Platform.OS === 'ios' && (
@@ -31,17 +31,18 @@ export function ProgressiveBlur({ height, intensity = 24 }: ProgressiveBlurProps
             />
           }
         >
-          {/* Every iOS blur adds a material tint; the ultra-thin light one
-              adds the least (the default reads as grey on our teal). */}
+          {/* Every iOS blur adds a material tint; the ultra-thin one adds
+              the least (the default reads as grey on our teal). Dark
+              surfaces get the dark version. */}
           <BlurView
             intensity={intensity}
-            tint="systemUltraThinMaterialLight"
+            tint={isDarkColor(color) ? 'systemUltraThinMaterialDark' : 'systemUltraThinMaterialLight'}
             style={StyleSheet.absoluteFill}
           />
         </MaskedView>
       )}
       <LinearGradient
-        colors={FADE_COLORS}
+        colors={fadeColors(color)}
         locations={FADE_LOCATIONS}
         style={[StyleSheet.absoluteFill, styles.colourLayer]}
       />

@@ -5,9 +5,9 @@
  */
 import { View, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { FADE_COLORS, FADE_LOCATIONS, type ProgressiveBlurProps } from './progressiveBlurShared';
+import { fadeColors, FADE_LOCATIONS, type ProgressiveBlurProps } from './progressiveBlurShared';
 
-export function ProgressiveBlur({ height, intensity = 24 }: ProgressiveBlurProps) {
+export function ProgressiveBlur({ height, intensity = 24, color }: ProgressiveBlurProps) {
   // expo-blur's web BlurView uses roughly intensity / 4 px of blur.
   const blur = `blur(${Math.round(intensity / 4)}px)`;
   const mask = 'linear-gradient(to bottom, #000, transparent)';
@@ -24,7 +24,7 @@ export function ProgressiveBlur({ height, intensity = 24 }: ProgressiveBlurProps
         }}
       />
       <LinearGradient
-        colors={FADE_COLORS}
+        colors={fadeColors(color)}
         locations={FADE_LOCATIONS}
         style={StyleSheet.absoluteFill}
       />

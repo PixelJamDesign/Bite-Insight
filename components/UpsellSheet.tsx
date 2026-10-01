@@ -19,6 +19,7 @@ import { router } from 'expo-router';
 import { useUpsellSheet } from '@/lib/upsellSheetContext';
 import { useSubscription } from '@/lib/subscriptionContext';
 import BiteInsightPlusLogo from '../assets/images/logo-biteinsight-plus.svg';
+import { FadingScrollView } from '@/components/FadingScrollView';
 
 // Feature icon image sources — local assets
 const ICON_FAMILY   = require('@/assets/icons/upsell/family.webp');
@@ -154,7 +155,8 @@ export function UpsellSheet() {
           <Ionicons name="close" size={20} color="#fff" />
         </TouchableOpacity>
 
-        <ScrollView
+        <FadingScrollView
+            fadeColor="#002923"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
           bounces={false}
@@ -177,7 +179,7 @@ export function UpsellSheet() {
             </View>
           </View>
 
-        </ScrollView>
+        </FadingScrollView>
 
         {/* ── Sticky Pricing + CTAs ── */}
         <View style={[styles.ctaSection, { paddingBottom: insets.bottom + 24 }]}>

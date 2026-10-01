@@ -73,6 +73,7 @@ import {
 import { NutritionPanel, type NutritionValues } from '@/components/NutritionPanel';
 import { IconButton } from '@/components/IconButton';
 import { CheckboxCard } from '@/components/CheckboxCard';
+import { FadingScrollView } from '@/components/FadingScrollView';
 import { computeNutriscore, type NutriscoreGrade } from '@/lib/nutriscore';
 import { quantityToGrams } from '@/lib/recipes';
 import AddIcon from '@/assets/icons/meal-plan/add.svg';
@@ -392,7 +393,7 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
 
               {step === 'main' && (
                 <Reanimated.View style={[styles.mainStep, contentStyle]}>
-                  <ScrollView
+                  <FadingScrollView
                     style={styles.scroll}
                     contentContainerStyle={styles.body}
                     keyboardShouldPersistTaps="handled"
@@ -533,7 +534,7 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
                         trailing={!isPlus ? <PlusBadge size="small" /> : null}
                       />
                     )}
-                  </ScrollView>
+                  </FadingScrollView>
 
                   {/* ── Footer ──────────────────────────────────────── */}
                   <View style={styles.footer}>

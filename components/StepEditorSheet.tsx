@@ -19,6 +19,7 @@ import { useKeyboardHeight } from '@/lib/useKeyboardHeight';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Radius, Shadows, Typography } from '@/constants/theme';
 import { useSheetAnimation } from '@/lib/useSheetAnimation';
+import { FadingScrollView } from '@/components/FadingScrollView';
 
 interface Props {
   visible: boolean;
@@ -98,7 +99,7 @@ export function StepEditorSheet({
               </TouchableOpacity>
             </View>
 
-            <ScrollView
+            <FadingScrollView
               contentContainerStyle={styles.scrollContent}
               keyboardShouldPersistTaps="handled"
             >
@@ -112,7 +113,7 @@ export function StepEditorSheet({
                 autoFocus
                 textAlignVertical="top"
               />
-            </ScrollView>
+            </FadingScrollView>
 
             <View style={styles.actions}>
               {onDelete && initialText.length > 0 && (
