@@ -10,6 +10,8 @@
  * (servings for a recipe, weight/volume for a product) before it's added.
  *
  * A screen rather than a sheet for the same reason as recipes/pick-scan.
+ * Built on ScreenLayout like every titled page: the meal's day and time
+ * as the subtitle, search pinned under the header.
  */
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -17,7 +19,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  FlatList,
   Image,
   ActivityIndicator,
 } from 'react-native';
@@ -31,10 +32,10 @@ import { listRecipes, snapshotFromScanAsync } from '@/lib/recipes';
 import { draftItemFromProduct, draftItemFromRecipe, relativeDayLabel } from '@/lib/mealPlan';
 import { useDraftMeal } from '@/lib/draftMealContext';
 import { Colors, Spacing, Radius, Typography } from '@/constants/theme';
-import { ActionSearchIcon, MenuArrowLeftIcon } from '@/components/MenuIcons';
+import { ActionSearchIcon } from '@/components/MenuIcons';
 import { LottieLoader } from '@/components/LottieLoader';
 import { TextField } from '@/components/TextField';
-import { HeaderEdge, HEADER_EDGE_AT_TOP, useScrollEdge } from '@/components/HeaderEdge';
+import { ScreenLayout, HeaderFlatList } from '@/components/ScreenLayout';
 import { QuantityPickerSheet } from '@/components/QuantityPickerSheet';
 import { NUTRISCORE_COLORS } from '@/lib/nutriscore';
 import { safeBack } from '@/lib/safeBack';
@@ -62,9 +63,6 @@ export default function AddToMealPlanScreen() {
   const [pending, setPending] = useState<
     { kind: 'recipe'; recipe: Recipe } | { kind: 'scan'; scan: Scan } | null
   >(null);
-
-  // One edge for whichever list shows (the source is fixed per visit).
-  const edge = useScrollEdge();
 
   const userId = session?.user?.id;
 
@@ -111,12 +109,6 @@ export default function AddToMealPlanScreen() {
     );
   }, [scans, q]);
 
-  // A search with no matches unmounts the list; it comes back at the top.
-  const listEmpty = (activeTab === 'recipes' ? filteredRecipes : filteredScans).length === 0;
-  useEffect(() => {
-    if (listEmpty) edge.scrollY.setValue(0);
-  }, [listEmpty, edge.scrollY]);
-
   function addRecipe(recipe: Recipe, servings: number) {
     draftMeal.addItem(draftItemFromRecipe(recipe, servings));
     safeBack();
@@ -144,35 +136,14 @@ export default function AddToMealPlanScreen() {
     }
   }
 
-  const listPadding = { paddingHorizontal: Spacing.s, paddingBottom: insets.bottom + Spacing.l };
+  const listPadding = { paddingHorizontal: Spacing.m, paddingBottom: insets.bottom + Spacing.l };
 
   return (
-    <View style={[styles.safe, { paddingTop: insets.top }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => safeBack()}
-          style={styles.backBtn}
-          activeOpacity={0.85}
-          hitSlop={8}
-          accessibilityLabel="Back"
-        >
-          <MenuArrowLeftIcon color={Colors.primary} size={24} />
-        </TouchableOpacity>
-        <View style={styles.headerText}>
-          <Text style={styles.title}>
-            {activeTab === 'recipes' ? 'Choose a recipe' : 'Add from scan history'}
-          </Text>
-          {draft && (
-            <Text style={styles.subtitle}>
-              {relativeDayLabel(draft.dateKey)} · {draft.time}
-            </Text>
-          )}
-        </View>
-        <View style={styles.backBtnSpacer} />
-      </View>
-
-      {/* Search */}
+    <ScreenLayout
+      title={activeTab === 'recipes' ? 'Choose a recipe' : 'Add from scan history'}
+      subtitle={draft ? `${relativeDayLabel(draft.dateKey)} · ${draft.time}` : undefined}
+      onBack={() => safeBack()}
+      headerExtension={
       <View style={styles.controls}>
         <TextField
           iconNode={<ActionSearchIcon size={24} color={Colors.secondary} />}
@@ -184,7 +155,8 @@ export default function AddToMealPlanScreen() {
           returnKeyType="search"
         />
       </View>
-
+      }
+    >
       {loading ? (
         <View style={styles.loadingWrap}>
           <LottieLoader type="loading" fullScreen={false} />
@@ -208,9 +180,7 @@ export default function AddToMealPlanScreen() {
             )}
           </View>
         ) : (
-          <View style={styles.listWrap}>
-            <FlatList
-              {...edge.scrollProps}
+          <HeaderFlatList
               data={filteredRecipes}
               keyExtractor={(r) => r.id}
               keyboardShouldPersistTaps="handled"
@@ -229,8 +199,6 @@ export default function AddToMealPlanScreen() {
                 />
               )}
             />
-            <HeaderEdge scrollY={edge.scrollY} style={HEADER_EDGE_AT_TOP} />
-          </View>
         )
       ) : filteredScans.length === 0 ? (
         <View style={styles.emptyWrap}>
@@ -241,9 +209,7 @@ export default function AddToMealPlanScreen() {
           </Text>
         </View>
       ) : (
-        <View style={styles.listWrap}>
-          <FlatList
-            {...edge.scrollProps}
+          <HeaderFlatList
             data={filteredScans}
             keyExtractor={(s) => s.id}
             keyboardShouldPersistTaps="handled"
@@ -262,8 +228,6 @@ export default function AddToMealPlanScreen() {
               />
             )}
           />
-          <HeaderEdge scrollY={edge.scrollY} style={HEADER_EDGE_AT_TOP} />
-        </View>
       )}
 
       <QuantityPickerSheet
@@ -281,7 +245,7 @@ export default function AddToMealPlanScreen() {
           else if (picked?.kind === 'scan') addScan(picked.scan, value, unit);
         }}
       />
-    </View>
+    </ScreenLayout>
   );
 }
 
@@ -355,49 +319,10 @@ function PickRow({
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.s,
-    paddingVertical: Spacing.xs,
-    gap: Spacing.s,
-  },
-  backBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: Colors.surface.secondary,
-    borderWidth: 1,
-    borderColor: '#aad4cd',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backBtnSpacer: { width: 48, height: 48 },
-  headerText: { flex: 1, alignItems: 'center' },
-  title: {
-    ...Typography.h4,
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
-  },
-  subtitle: {
-    ...Typography.label,
-    fontWeight: '300',
-    fontFamily: 'Figtree_300Light',
-    color: Colors.secondary,
-  },
-
+  // Search, pinned under the title (24px sides like every titled page).
   controls: {
-    paddingHorizontal: Spacing.s,
+    paddingHorizontal: Spacing.m,
     paddingBottom: Spacing.s,
-    gap: Spacing.xs,
-  },
-  listWrap: {
-    flex: 1,
   },
   loadingWrap: {
     padding: Spacing.l,
