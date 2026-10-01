@@ -63,6 +63,7 @@ import RecipeActionIcon from '@/assets/icons/recipe-actions/recipe.svg';
 import EditActionIcon from '@/assets/icons/recipe-actions/edit.svg';
 import { buildProductSnapshot } from '@/lib/recipes';
 import { ImageViewer } from '@/components/ImageViewer';
+import { HeaderEdge, HEADER_EDGE_AT_TOP, useScrollEdge } from '@/components/HeaderEdge';
 
 /** Coerce a value to number, falling back to a query-param source */
 function toNum(primary: unknown, fallback: unknown): number | undefined {
@@ -880,6 +881,7 @@ export default function ScanResultScreen() {
 
   const [activeTab, _setActiveTab] = useState<Tab>('overview');
   const contentScrollRef = useRef<ScrollView>(null);
+  const contentEdge = useScrollEdge();
   // Content runs under the home indicator; the scroll's bottom padding
   // keeps the last row clear of it (no hard clip at the safe-area line).
   const insets = useSafeAreaInsets();
@@ -2145,6 +2147,7 @@ export default function ScanResultScreen() {
       <View style={{ flex: 1 }}>
         <ScrollView
           ref={contentScrollRef}
+          {...contentEdge.scrollProps}
           style={styles.scroll}
           contentContainerStyle={[styles.scrollContent, { paddingBottom: 56 + insets.bottom }]}
           showsVerticalScrollIndicator={false}
@@ -3435,12 +3438,7 @@ export default function ScanResultScreen() {
           <Text style={styles.offAttributionText}>{t('attribution.openFoodFacts')}</Text>
         </TouchableOpacity>
         </ScrollView>
-        {/* White gradient fade at top of scroll area */}
-        <LinearGradient
-          colors={['#ffffff', 'rgba(255,255,255,0)']}
-          style={styles.stickyGradient}
-          pointerEvents="none"
-        />
+        <HeaderEdge scrollY={contentEdge.scrollY} color="#ffffff" style={HEADER_EDGE_AT_TOP} />
       </View>
 
       <FamilySwitcherSheet
@@ -3549,14 +3547,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.m,
     gap: Spacing.m,
     paddingBottom: Spacing.xs,
-  },
-  stickyGradient: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 24,
-    zIndex: 1,
   },
 
   // Back button (Figma node 3263-6137 — plain icon, no circle bg)

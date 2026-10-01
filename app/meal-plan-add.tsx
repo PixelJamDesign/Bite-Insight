@@ -34,6 +34,7 @@ import { Colors, Spacing, Radius, Typography } from '@/constants/theme';
 import { ActionSearchIcon, MenuArrowLeftIcon } from '@/components/MenuIcons';
 import { LottieLoader } from '@/components/LottieLoader';
 import { TextField } from '@/components/TextField';
+import { HeaderEdge, HEADER_EDGE_AT_TOP, useScrollEdge } from '@/components/HeaderEdge';
 import { QuantityPickerSheet } from '@/components/QuantityPickerSheet';
 import { NUTRISCORE_COLORS } from '@/lib/nutriscore';
 import { safeBack } from '@/lib/safeBack';
@@ -61,6 +62,9 @@ export default function AddToMealPlanScreen() {
   const [pending, setPending] = useState<
     { kind: 'recipe'; recipe: Recipe } | { kind: 'scan'; scan: Scan } | null
   >(null);
+
+  // One edge for whichever list shows (the source is fixed per visit).
+  const edge = useScrollEdge();
 
   const userId = session?.user?.id;
 
@@ -106,6 +110,12 @@ export default function AddToMealPlanScreen() {
         s.product_name.toLowerCase().includes(q) || (s.brand ?? '').toLowerCase().includes(q),
     );
   }, [scans, q]);
+
+  // A search with no matches unmounts the list; it comes back at the top.
+  const listEmpty = (activeTab === 'recipes' ? filteredRecipes : filteredScans).length === 0;
+  useEffect(() => {
+    if (listEmpty) edge.scrollY.setValue(0);
+  }, [listEmpty, edge.scrollY]);
 
   function addRecipe(recipe: Recipe, servings: number) {
     draftMeal.addItem(draftItemFromRecipe(recipe, servings));
@@ -198,25 +208,29 @@ export default function AddToMealPlanScreen() {
             )}
           </View>
         ) : (
-          <FlatList
-            data={filteredRecipes}
-            keyExtractor={(r) => r.id}
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={listPadding}
-            ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
-            renderItem={({ item }) => (
-              <PickRow
-                imageUrl={item.cover_image_url}
-                fallbackIcon="restaurant-outline"
-                name={item.name}
-                detail={recipeDetail(item)}
-                grade={item.nutriscore_grade}
-                busy={busyId === item.id}
-                disabled={Boolean(busyId)}
-                onPress={() => setPending({ kind: 'recipe', recipe: item })}
-              />
-            )}
-          />
+          <View style={styles.listWrap}>
+            <FlatList
+              {...edge.scrollProps}
+              data={filteredRecipes}
+              keyExtractor={(r) => r.id}
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={listPadding}
+              ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+              renderItem={({ item }) => (
+                <PickRow
+                  imageUrl={item.cover_image_url}
+                  fallbackIcon="restaurant-outline"
+                  name={item.name}
+                  detail={recipeDetail(item)}
+                  grade={item.nutriscore_grade}
+                  busy={busyId === item.id}
+                  disabled={Boolean(busyId)}
+                  onPress={() => setPending({ kind: 'recipe', recipe: item })}
+                />
+              )}
+            />
+            <HeaderEdge scrollY={edge.scrollY} style={HEADER_EDGE_AT_TOP} />
+          </View>
         )
       ) : filteredScans.length === 0 ? (
         <View style={styles.emptyWrap}>
@@ -227,25 +241,29 @@ export default function AddToMealPlanScreen() {
           </Text>
         </View>
       ) : (
-        <FlatList
-          data={filteredScans}
-          keyExtractor={(s) => s.id}
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={listPadding}
-          ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
-          renderItem={({ item }) => (
-            <PickRow
-              imageUrl={item.image_url}
-              fallbackIcon="nutrition-outline"
-              name={item.product_name}
-              detail={item.brand}
-              grade={item.nutriscore_grade}
-              busy={busyId === item.id}
-              disabled={Boolean(busyId)}
-              onPress={() => setPending({ kind: 'scan', scan: item })}
-            />
-          )}
-        />
+        <View style={styles.listWrap}>
+          <FlatList
+            {...edge.scrollProps}
+            data={filteredScans}
+            keyExtractor={(s) => s.id}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={listPadding}
+            ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+            renderItem={({ item }) => (
+              <PickRow
+                imageUrl={item.image_url}
+                fallbackIcon="nutrition-outline"
+                name={item.product_name}
+                detail={item.brand}
+                grade={item.nutriscore_grade}
+                busy={busyId === item.id}
+                disabled={Boolean(busyId)}
+                onPress={() => setPending({ kind: 'scan', scan: item })}
+              />
+            )}
+          />
+          <HeaderEdge scrollY={edge.scrollY} style={HEADER_EDGE_AT_TOP} />
+        </View>
       )}
 
       <QuantityPickerSheet
@@ -377,6 +395,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.s,
     paddingBottom: Spacing.s,
     gap: Spacing.xs,
+  },
+  listWrap: {
+    flex: 1,
   },
   loadingWrap: {
     padding: Spacing.l,

@@ -30,6 +30,7 @@ import { snapshotFromScanAsync } from '@/lib/recipes';
 import { Colors, Spacing, Radius, Typography } from '@/constants/theme';
 import { MenuArrowLeftIcon } from '@/components/MenuIcons';
 import { LottieLoader } from '@/components/LottieLoader';
+import { HeaderEdge, HEADER_EDGE_AT_TOP, useScrollEdge } from '@/components/HeaderEdge';
 import { safeBack } from '@/lib/safeBack';
 import type { Scan } from '@/lib/types';
 
@@ -40,6 +41,7 @@ export default function PickScanScreen() {
   const [scans, setScans] = useState<Scan[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyScanId, setBusyScanId] = useState<string | null>(null);
+  const edge = useScrollEdge();
 
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -108,49 +110,53 @@ export default function PickScanScreen() {
           </Text>
         </View>
       ) : (
-        <FlatList
-          data={scans}
-          keyExtractor={(s) => s.id}
-          contentContainerStyle={{
-            paddingHorizontal: Spacing.s,
-            paddingBottom: insets.bottom + Spacing.l,
-          }}
-          ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
-          renderItem={({ item }) => {
-            const isBusy = busyScanId === item.id;
-            return (
-              <TouchableOpacity
-                style={[styles.row, isBusy && styles.rowBusy]}
-                onPress={() => handlePick(item)}
-                activeOpacity={0.85}
-                disabled={Boolean(busyScanId)}
-              >
-                <View style={styles.thumb}>
-                  {item.image_url ? (
-                    <Image source={{ uri: item.image_url }} style={styles.thumbImage} />
-                  ) : (
-                    <Ionicons name="nutrition-outline" size={20} color={Colors.secondary} />
-                  )}
-                </View>
-                <View style={styles.info}>
-                  <Text style={styles.name} numberOfLines={1}>
-                    {item.product_name}
-                  </Text>
-                  {item.brand && (
-                    <Text style={styles.brand} numberOfLines={1}>
-                      {item.brand}
+        <View style={styles.listWrap}>
+          <FlatList
+            {...edge.scrollProps}
+            data={scans}
+            keyExtractor={(s) => s.id}
+            contentContainerStyle={{
+              paddingHorizontal: Spacing.s,
+              paddingBottom: insets.bottom + Spacing.l,
+            }}
+            ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+            renderItem={({ item }) => {
+              const isBusy = busyScanId === item.id;
+              return (
+                <TouchableOpacity
+                  style={[styles.row, isBusy && styles.rowBusy]}
+                  onPress={() => handlePick(item)}
+                  activeOpacity={0.85}
+                  disabled={Boolean(busyScanId)}
+                >
+                  <View style={styles.thumb}>
+                    {item.image_url ? (
+                      <Image source={{ uri: item.image_url }} style={styles.thumbImage} />
+                    ) : (
+                      <Ionicons name="nutrition-outline" size={20} color={Colors.secondary} />
+                    )}
+                  </View>
+                  <View style={styles.info}>
+                    <Text style={styles.name} numberOfLines={1}>
+                      {item.product_name}
                     </Text>
+                    {item.brand && (
+                      <Text style={styles.brand} numberOfLines={1}>
+                        {item.brand}
+                      </Text>
+                    )}
+                  </View>
+                  {isBusy ? (
+                    <ActivityIndicator color={Colors.secondary} />
+                  ) : (
+                    <Ionicons name="chevron-forward" size={18} color={Colors.secondary} />
                   )}
-                </View>
-                {isBusy ? (
-                  <ActivityIndicator color={Colors.secondary} />
-                ) : (
-                  <Ionicons name="chevron-forward" size={18} color={Colors.secondary} />
-                )}
-              </TouchableOpacity>
-            );
-          }}
-        />
+                </TouchableOpacity>
+              );
+            }}
+          />
+          <HeaderEdge scrollY={edge.scrollY} style={HEADER_EDGE_AT_TOP} />
+        </View>
       )}
     </View>
   );
@@ -184,6 +190,9 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     flex: 1,
     textAlign: 'center',
+  },
+  listWrap: {
+    flex: 1,
   },
   loadingWrap: {
     padding: Spacing.l,

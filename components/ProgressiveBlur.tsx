@@ -1,50 +1,24 @@
 /**
- * ProgressiveBlur — a band that blurs whatever scrolls under it, strongest
- * at the top edge and easing to nothing at the bottom, then fades it into
- * the page colour. Used at the top of the meal planner timeline.
+ * ProgressiveBlur — the soft edge under a header: the header's colour
+ * fading to clear over the band.
  *
- * iOS: one BlurView masked by a gradient, so the blur strength itself
- * ramps smoothly (no stepped strips).
- * Android: no reliable backdrop blur (same call as the tab bar), so the
- * colour fade alone.
- * Web: see ProgressiveBlur.web.tsx.
+ * Native: colour only. iOS won't draw a blur inside a gradient mask (it
+ * comes out sharp), and stacked blur strips show as bands, so the blur
+ * stops at the header and the frost thickens just before it (FrostBody)
+ * so that line sits under an almost solid tint.
+ * Web: ProgressiveBlur.web.tsx (CSS can fade a blur, so it does).
  */
-import { View, StyleSheet, Platform } from 'react-native';
-import MaskedView from '@react-native-masked-view/masked-view';
-import { BlurView } from 'expo-blur';
+import { View, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { fadeColors, isDarkColor, FADE_LOCATIONS, type ProgressiveBlurProps } from './progressiveBlurShared';
+import { fadeColors, FADE_LOCATIONS, type ProgressiveBlurProps } from './progressiveBlurShared';
 
-export function ProgressiveBlur({ height, intensity = 24, color }: ProgressiveBlurProps) {
+export function ProgressiveBlur({ height, color, startAlpha = 1 }: ProgressiveBlurProps) {
   return (
     <View style={[styles.wrap, { height }]} pointerEvents="none">
-      {Platform.OS === 'ios' && (
-        <MaskedView
-          style={[StyleSheet.absoluteFill, styles.blurLayer]}
-          maskElement={
-            <LinearGradient
-              colors={['#000', 'rgba(0,0,0,0)']}
-              // Gone by 60% down, so the blur only shows where the page
-              // colour (below) still mostly covers it.
-              locations={[0, 0.6]}
-              style={StyleSheet.absoluteFill}
-            />
-          }
-        >
-          {/* Every iOS blur adds a material tint; the ultra-thin one adds
-              the least (the default reads as grey on our teal). Dark
-              surfaces get the dark version. */}
-          <BlurView
-            intensity={intensity}
-            tint={isDarkColor(color) ? 'systemUltraThinMaterialDark' : 'systemUltraThinMaterialLight'}
-            style={StyleSheet.absoluteFill}
-          />
-        </MaskedView>
-      )}
       <LinearGradient
-        colors={fadeColors(color)}
+        colors={fadeColors(color, startAlpha)}
         locations={FADE_LOCATIONS}
-        style={[StyleSheet.absoluteFill, styles.colourLayer]}
+        style={StyleSheet.absoluteFill}
       />
     </View>
   );
@@ -57,7 +31,4 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
   },
-  // Explicit order: the page colour always sits over the blur.
-  blurLayer: { zIndex: 0 },
-  colourLayer: { zIndex: 1 },
 });

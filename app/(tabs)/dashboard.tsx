@@ -19,7 +19,6 @@ import { Trans, useTranslation } from 'react-i18next';
 
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as SecureStore from 'expo-secure-store';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { supabase } from '@/lib/supabase';
@@ -64,6 +63,7 @@ import {
 } from '@/constants/profileOptions';
 import type { UserProfile, DailyInsight, Ingredient, UserIngredientPreference, Meal, Scan } from '@/lib/types';
 import Logo from '../../assets/images/logo.svg';
+import { FrostedHeader, useScrollEdge } from '@/components/HeaderEdge';
 import AddIcon from '../../assets/icons/meal-plan/add.svg';
 
 /** Meals listed on the dashboard before it hands over to the planner. */
@@ -72,6 +72,8 @@ const EMPTY_MEAL_PLAN = require('../../assets/images/dashboard/empty-meal-plan.p
 const EMPTY_SCANS = require('../../assets/images/dashboard/empty-scans.png');
 /** How many of today's scans the Scanned items section shows. */
 const DASHBOARD_SCAN_LIMIT = 4;
+/** Header below the safe area: 24 top gap + 48 buttons + 16. */
+const HEADER_HEIGHT = 88;
 
 /**
  * Build a reverse map from normalised key → legacy display string(s).
@@ -216,6 +218,7 @@ export default function HomeDashboard() {
   const { menuOpen, menuVisible, openMenu, closeMenu, closeMenuInstant } = useMenu();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const headerEdge = useScrollEdge();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [insight, setInsight] = useState<DailyInsight | null>(null);
   const [insightDismissed, setInsightDismissed] = useState(false);
@@ -506,6 +509,7 @@ export default function HomeDashboard() {
       <Animated.View style={{ flex: 1, opacity: focusAnim.opacity, transform: [{ translateY: focusAnim.translateY }] }}>
       {/* ── Dashboard content (always mounted) ── */}
       <ScrollView
+        {...headerEdge.scrollProps}
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -825,12 +829,10 @@ export default function HomeDashboard() {
       </ScrollView>
       </Animated.View>
 
-      {/* ── Top fade — masks content scrolling behind the header ── */}
-      <LinearGradient
-        colors={[Colors.background, Colors.background, 'rgba(226,241,238,0)']}
-        locations={[0, 0.55, 1]}
-        style={[styles.topFade, { height: insets.top + 92 }]}
-        pointerEvents="none"
+      {/* ── Frosted glass behind the header, once content scrolls under ── */}
+      <FrostedHeader
+        scrollY={headerEdge.scrollY}
+        style={[styles.topFrost, { top: 0, height: insets.top + HEADER_HEIGHT }]}
       />
 
       {/* ── Ingredient detail modal ── */}
@@ -948,11 +950,7 @@ const styles = StyleSheet.create({
   headerMenu: {
     backgroundColor: '#fff',
   },
-  topFade: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
+  topFrost: {
     zIndex: 15,
   },
   headerActions: {

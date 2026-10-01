@@ -38,6 +38,7 @@ import type { NutrientWatchlistEntry } from '@/lib/types';
 import { CameraIcon, PersonalIcon, EmailIcon, BirthdayIcon, TickIcon, InfoIcon } from '@/components/MenuIcons';
 import { AvatarViewer } from '@/components/AvatarViewer';
 import { TextField } from '@/components/TextField';
+import { HeaderEdge, HEADER_EDGE_AT_TOP, useScrollEdge } from '@/components/HeaderEdge';
 import { useAvatarPicker } from '@/lib/useAvatarPicker';
 import { DobPicker } from '@/components/DobPicker';
 import { formatDob, toLocalDateString } from '@/lib/dateOfBirth';
@@ -296,6 +297,7 @@ export default function EditProfileScreen() {
   const dobRowRef = useRef<View>(null);
   const keyboardHeightRef = useRef(0);
   const scrollViewHeightRef = useRef(0);
+  const edge = useScrollEdge();
 
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
@@ -906,206 +908,210 @@ export default function EditProfileScreen() {
         </View>
 
         {/* Scrollable content */}
-        <ScrollView
-          ref={(ref) => {
-            (scrollRef as any).current = ref;
-            (scrollContainerRef as any).current = ref;
-          }}
-          style={{ flex: 1 }}
-          contentContainerStyle={styles.scroll}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-          onLayout={(e: LayoutChangeEvent) => {
-            scrollViewHeightRef.current = e.nativeEvent.layout.height;
-          }}
-        >
-          <Animated.View style={{ opacity: contentOpacity, transform: [{ translateX: contentTranslateX }] }}>
-          {/* ── Step: About you ── */}
-          {currentStepKey === 'about' && (
-            <>
-              <View style={styles.avatarContainer}>
-                {/* Tap the image to see it larger */}
-                <TouchableOpacity
-                  style={styles.avatarCircle}
-                  onPress={() => setAvatarViewerOpen(true)}
-                  activeOpacity={0.85}
-                  accessibilityRole="button"
-                  accessibilityLabel="View profile photo"
-                >
-                  {displayAvatar ? (
-                    <Image source={{ uri: displayAvatar }} style={styles.avatarImage} />
-                  ) : (
-                    <Text style={styles.avatarInitials}>{getInitials(fullName)}</Text>
-                  )}
-                </TouchableOpacity>
-                {/* Tap the camera to change photo */}
-                <TouchableOpacity
-                  style={styles.cameraBadge}
-                  onPress={handleAvatarPick}
-                  activeOpacity={0.85}
-                  accessibilityRole="button"
-                  accessibilityLabel="Change profile photo"
-                  hitSlop={{ top: 6, right: 6, bottom: 6, left: 6 }}
-                >
-                  <CameraIcon size={20} color="#fff" />
-                </TouchableOpacity>
-              </View>
-
-              <View style={[styles.card, styles.cardWithAvatar]}>
-                <View style={styles.cardHeader}>
-                  <Text style={styles.cardTitle}>{tp('editProfile.aboutTitle')}</Text>
-                  <Text style={styles.cardSubtitle}>{tp('editProfile.aboutSubtitle')}</Text>
-                </View>
-
-                <View style={styles.fields}>
-                  <View ref={(ref) => { (nameRowRef as any).current = ref; }}>
-                    <TextField
-                      iconNode={<PersonalIcon size={18} color={Colors.primary} />}
-                      placeholder={tc('placeholder.fullName')}
-                      autoCapitalize="words"
-                      value={fullName}
-                      onChangeText={setFullName}
-                      onFocus={() => { setFocusedField('name'); scrollInputToCenter(nameRowRef.current); }}
-                      onBlur={() => setFocusedField(null)}
-                    />
-                  </View>
-                  <View style={styles.inputRowReadOnly}>
-                    <TextField
-                      iconNode={<EmailIcon size={20} color={`${Colors.primary}50`} />}
-                      value={session?.user?.email ?? ''}
-                      onChangeText={() => {}}
-                      editable={false}
-                      clearable={false}
-                    />
-                  </View>
+        <View style={styles.scrollWrap}>
+          <ScrollView
+            {...edge.scrollProps}
+            ref={(ref) => {
+              (scrollRef as any).current = ref;
+              (scrollContainerRef as any).current = ref;
+            }}
+            style={{ flex: 1 }}
+            contentContainerStyle={styles.scroll}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            onLayout={(e: LayoutChangeEvent) => {
+              scrollViewHeightRef.current = e.nativeEvent.layout.height;
+            }}
+          >
+            <Animated.View style={{ opacity: contentOpacity, transform: [{ translateX: contentTranslateX }] }}>
+            {/* ── Step: About you ── */}
+            {currentStepKey === 'about' && (
+              <>
+                <View style={styles.avatarContainer}>
+                  {/* Tap the image to see it larger */}
                   <TouchableOpacity
-                    ref={(ref) => { (dobRowRef as any).current = ref; }}
-                    style={[styles.inputRow]}
-                    activeOpacity={0.7}
-                    onPress={() => { Keyboard.dismiss(); setShowDatePicker(true); }}
+                    style={styles.avatarCircle}
+                    onPress={() => setAvatarViewerOpen(true)}
+                    activeOpacity={0.85}
+                    accessibilityRole="button"
+                    accessibilityLabel="View profile photo"
                   >
-                    <BirthdayIcon size={20} color={Colors.primary} />
-                    <Text
-                      style={[styles.inputFieldInner, dateOfBirth ? styles.inputFieldBold : { color: Colors.secondary }]}
-                      numberOfLines={1}
-                    >
-                      {dateOfBirth ? formatDob(toLocalDateString(dateOfBirth)) : tp('editProfile.placeholder.dateOfBirth')}
-                    </Text>
-                    {dateOfBirth ? (
-                      <TouchableOpacity onPress={() => { setDateOfBirth(null); setShowDatePicker(false); }} hitSlop={8}>
-                        <Ionicons name="close" size={22} color={Colors.primary} />
-                      </TouchableOpacity>
-                    ) : null}
+                    {displayAvatar ? (
+                      <Image source={{ uri: displayAvatar }} style={styles.avatarImage} />
+                    ) : (
+                      <Text style={styles.avatarInitials}>{getInitials(fullName)}</Text>
+                    )}
+                  </TouchableOpacity>
+                  {/* Tap the camera to change photo */}
+                  <TouchableOpacity
+                    style={styles.cameraBadge}
+                    onPress={handleAvatarPick}
+                    activeOpacity={0.85}
+                    accessibilityRole="button"
+                    accessibilityLabel="Change profile photo"
+                    hitSlop={{ top: 6, right: 6, bottom: 6, left: 6 }}
+                  >
+                    <CameraIcon size={20} color="#fff" />
                   </TouchableOpacity>
                 </View>
+
+                <View style={[styles.card, styles.cardWithAvatar]}>
+                  <View style={styles.cardHeader}>
+                    <Text style={styles.cardTitle}>{tp('editProfile.aboutTitle')}</Text>
+                    <Text style={styles.cardSubtitle}>{tp('editProfile.aboutSubtitle')}</Text>
+                  </View>
+
+                  <View style={styles.fields}>
+                    <View ref={(ref) => { (nameRowRef as any).current = ref; }}>
+                      <TextField
+                        iconNode={<PersonalIcon size={18} color={Colors.primary} />}
+                        placeholder={tc('placeholder.fullName')}
+                        autoCapitalize="words"
+                        value={fullName}
+                        onChangeText={setFullName}
+                        onFocus={() => { setFocusedField('name'); scrollInputToCenter(nameRowRef.current); }}
+                        onBlur={() => setFocusedField(null)}
+                      />
+                    </View>
+                    <View style={styles.inputRowReadOnly}>
+                      <TextField
+                        iconNode={<EmailIcon size={20} color={`${Colors.primary}50`} />}
+                        value={session?.user?.email ?? ''}
+                        onChangeText={() => {}}
+                        editable={false}
+                        clearable={false}
+                      />
+                    </View>
+                    <TouchableOpacity
+                      ref={(ref) => { (dobRowRef as any).current = ref; }}
+                      style={[styles.inputRow]}
+                      activeOpacity={0.7}
+                      onPress={() => { Keyboard.dismiss(); setShowDatePicker(true); }}
+                    >
+                      <BirthdayIcon size={20} color={Colors.primary} />
+                      <Text
+                        style={[styles.inputFieldInner, dateOfBirth ? styles.inputFieldBold : { color: Colors.secondary }]}
+                        numberOfLines={1}
+                      >
+                        {dateOfBirth ? formatDob(toLocalDateString(dateOfBirth)) : tp('editProfile.placeholder.dateOfBirth')}
+                      </Text>
+                      {dateOfBirth ? (
+                        <TouchableOpacity onPress={() => { setDateOfBirth(null); setShowDatePicker(false); }} hitSlop={8}>
+                          <Ionicons name="close" size={22} color={Colors.primary} />
+                        </TouchableOpacity>
+                      ) : null}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </>
+            )}
+
+            {/* ── Step: Health Conditions ── */}
+            {currentStepKey === 'health' && (
+              <View style={styles.card}>
+                {renderChipHeader(
+                  to('question.healthCondition'),
+                  healthConditions.length,
+                  to('count.condition', { count: healthConditions.length }),
+                )}
+                {renderChips(HEALTH_CONDITION_KEYS, 'healthConditions', healthConditions, key =>
+                  setHealthConditions(prev => toggle(prev, key))
+                )}
               </View>
-            </>
-          )}
+            )}
 
-          {/* ── Step: Health Conditions ── */}
-          {currentStepKey === 'health' && (
-            <View style={styles.card}>
-              {renderChipHeader(
-                to('question.healthCondition'),
-                healthConditions.length,
-                to('count.condition', { count: healthConditions.length }),
-              )}
-              {renderChips(HEALTH_CONDITION_KEYS, 'healthConditions', healthConditions, key =>
-                setHealthConditions(prev => toggle(prev, key))
-              )}
-            </View>
-          )}
+            {/* ── Step: IBS Subtype (conditional follow-up to Health) ── */}
+            {currentStepKey === 'ibsSubtype' && (
+              <View style={styles.card}>
+                <IbsSubtypePicker value={ibsSubtype} onChange={setIbsSubtype} />
+              </View>
+            )}
 
-          {/* ── Step: IBS Subtype (conditional follow-up to Health) ── */}
-          {currentStepKey === 'ibsSubtype' && (
-            <View style={styles.card}>
-              <IbsSubtypePicker value={ibsSubtype} onChange={setIbsSubtype} />
-            </View>
-          )}
+            {/* ── Step: Cancer Subtype (conditional follow-up to Health) ── */}
+            {currentStepKey === 'cancerSubtype' && (
+              <View style={styles.card}>
+                <CancerSubtypePicker value={cancerSubtype} onChange={setCancerSubtype} />
+              </View>
+            )}
 
-          {/* ── Step: Cancer Subtype (conditional follow-up to Health) ── */}
-          {currentStepKey === 'cancerSubtype' && (
-            <View style={styles.card}>
-              <CancerSubtypePicker value={cancerSubtype} onChange={setCancerSubtype} />
-            </View>
-          )}
+            {/* ── Step: Cystic Fibrosis Subtype (conditional follow-up to Health) ── */}
+            {currentStepKey === 'cfSubtype' && (
+              <View style={styles.card}>
+                <CfSubtypePicker value={cfSubtype} onChange={setCfSubtype} />
+              </View>
+            )}
 
-          {/* ── Step: Cystic Fibrosis Subtype (conditional follow-up to Health) ── */}
-          {currentStepKey === 'cfSubtype' && (
-            <View style={styles.card}>
-              <CfSubtypePicker value={cfSubtype} onChange={setCfSubtype} />
-            </View>
-          )}
+            {/* ── Step: Pregnancy (conditional follow-up to Health) ── */}
+            {currentStepKey === 'pregnancy' && (
+              <View style={styles.card}>
+                <PregnancyStep
+                  status={pregnancyStatus}
+                  dueDate={pregnancyDueDate}
+                  onChange={(s, d) => { setPregnancyStatus(s); setPregnancyDueDate(d); }}
+                />
+              </View>
+            )}
 
-          {/* ── Step: Pregnancy (conditional follow-up to Health) ── */}
-          {currentStepKey === 'pregnancy' && (
-            <View style={styles.card}>
-              <PregnancyStep
-                status={pregnancyStatus}
-                dueDate={pregnancyDueDate}
-                onChange={(s, d) => { setPregnancyStatus(s); setPregnancyDueDate(d); }}
+            {/* ── Step: Conflict Review (only shown when conflicts detected) ── */}
+            {currentStepKey === 'conflicts' && (
+              <ConflictReviewStep
+                hardConflicts={conflictResult.hardConflicts}
+                cautions={conflictResult.cautions}
+                redundancies={conflictResult.redundancies}
+                neutralLabel={tc('nutrientDirections.balance')}
+                onResolve={(_id, category, key) => {
+                  if (category === 'health') setHealthConditions(prev => prev.filter(k => k !== key));
+                  if (category === 'allergy') setAllergies(prev => prev.filter(k => k !== key));
+                  if (category === 'dietary') setDietaryPrefs(prev => prev.filter(k => k !== key));
+                }}
+                labelFor={(category, key) => {
+                  if (category === 'health') return tpo(`healthConditions.${key}` as any) || key;
+                  if (category === 'allergy') return tpo(`allergies.${key}` as any) || key;
+                  return tpo(`dietaryPreferences.${key}` as any) || key;
+                }}
               />
-            </View>
-          )}
+            )}
 
-          {/* ── Step: Conflict Review (only shown when conflicts detected) ── */}
-          {currentStepKey === 'conflicts' && (
-            <ConflictReviewStep
-              hardConflicts={conflictResult.hardConflicts}
-              cautions={conflictResult.cautions}
-              redundancies={conflictResult.redundancies}
-              neutralLabel={tc('nutrientDirections.balance')}
-              onResolve={(_id, category, key) => {
-                if (category === 'health') setHealthConditions(prev => prev.filter(k => k !== key));
-                if (category === 'allergy') setAllergies(prev => prev.filter(k => k !== key));
-                if (category === 'dietary') setDietaryPrefs(prev => prev.filter(k => k !== key));
-              }}
-              labelFor={(category, key) => {
-                if (category === 'health') return tpo(`healthConditions.${key}` as any) || key;
-                if (category === 'allergy') return tpo(`allergies.${key}` as any) || key;
-                return tpo(`dietaryPreferences.${key}` as any) || key;
-              }}
-            />
-          )}
+            {/* ── Step: Nutrient Watchlist ── */}
+            {currentStepKey === 'nutrients' && (
+              <View style={styles.nutrientCard}>
+                {renderNutrientStep()}
+              </View>
+            )}
 
-          {/* ── Step: Nutrient Watchlist ── */}
-          {currentStepKey === 'nutrients' && (
-            <View style={styles.nutrientCard}>
-              {renderNutrientStep()}
-            </View>
-          )}
+            {/* ── Step: Allergies ── */}
+            {currentStepKey === 'allergies' && (
+              <View style={styles.card}>
+                {renderChipHeader(
+                  to('question.allergies'),
+                  allergies.length,
+                  to('count.allergy', { count: allergies.length }),
+                )}
+                {renderChips(ALLERGY_KEYS, 'allergies', allergies, key =>
+                  setAllergies(prev => toggle(prev, key))
+                )}
+              </View>
+            )}
 
-          {/* ── Step: Allergies ── */}
-          {currentStepKey === 'allergies' && (
-            <View style={styles.card}>
-              {renderChipHeader(
-                to('question.allergies'),
-                allergies.length,
-                to('count.allergy', { count: allergies.length }),
-              )}
-              {renderChips(ALLERGY_KEYS, 'allergies', allergies, key =>
-                setAllergies(prev => toggle(prev, key))
-              )}
-            </View>
-          )}
+            {/* ── Step: Dietary Preferences ── */}
+            {currentStepKey === 'dietary' && (
+              <View style={styles.card}>
+                {renderChipHeader(
+                  to('question.dietaryPreferences'),
+                  dietaryPrefs.length,
+                  to('count.preference', { count: dietaryPrefs.length }),
+                )}
+                {renderChips(DIETARY_PREFERENCE_KEYS, 'dietaryPreferences', dietaryPrefs, key =>
+                  setDietaryPrefs(prev => toggle(prev, key))
+                )}
+              </View>
+            )}
 
-          {/* ── Step: Dietary Preferences ── */}
-          {currentStepKey === 'dietary' && (
-            <View style={styles.card}>
-              {renderChipHeader(
-                to('question.dietaryPreferences'),
-                dietaryPrefs.length,
-                to('count.preference', { count: dietaryPrefs.length }),
-              )}
-              {renderChips(DIETARY_PREFERENCE_KEYS, 'dietaryPreferences', dietaryPrefs, key =>
-                setDietaryPrefs(prev => toggle(prev, key))
-              )}
-            </View>
-          )}
-
-          <View style={{ height: 120 }} />
-          </Animated.View>
-        </ScrollView>
+            <View style={{ height: 120 }} />
+            </Animated.View>
+          </ScrollView>
+          <HeaderEdge scrollY={edge.scrollY} style={HEADER_EDGE_AT_TOP} />
+        </View>
 
         {/* ── Footer — hidden when date picker is open ── */}
         {!showDatePicker && (
@@ -1180,6 +1186,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 30,
     paddingBottom: 48,
+  },
+
+  scrollWrap: {
+    flex: 1,
   },
 
   stepHeader: {

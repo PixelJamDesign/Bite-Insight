@@ -24,7 +24,7 @@ import { ConfirmSheet } from './ConfirmSheet';
 import { PolicySheet } from './PolicySheet';
 import { PlusBadge } from './PlusBadge';
 import { IconButton } from './IconButton';
-import { HeaderEdge } from './HeaderEdge';
+import { FrostedHeader } from './HeaderEdge';
 import { titleCollapse } from './headerMotion';
 import Logo from '@/assets/images/logo.svg';
 import {
@@ -2043,8 +2043,13 @@ export function MenuModal({ onClose, onNavigate }: MenuModalProps) {
         </Animated.ScrollView>
       </View>
 
-      {/* Under the bar (drawn by the screen that opened the menu) */}
-      <HeaderEdge scrollY={menuScrollY} color="#ffffff" style={[styles.barEdge, { top: insets.top + MENU_BAR_HEIGHT }]} />
+      {/* Frosted glass behind the bar (the bar itself is drawn, transparent,
+          by the screen that opened the menu) */}
+      <FrostedHeader
+        scrollY={menuScrollY}
+        color="#ffffff"
+        style={[styles.barFrost, { top: 0, height: insets.top + MENU_BAR_HEIGHT }]}
+      />
 
       {policyType && (
         <PolicySheet
@@ -2063,7 +2068,7 @@ export function MenuModal({ onClose, onNavigate }: MenuModalProps) {
 const MENU_BAR_HEIGHT = 88;
 
 const styles = StyleSheet.create({
-  barEdge: {
+  barFrost: {
     zIndex: 2,
   },
   container: {

@@ -27,7 +27,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import { FrostedHeader, useScrollEdge } from '@/components/HeaderEdge';
 import { DismissibleRow } from '@/components/DismissibleRow';
 import Svg, { Path } from 'react-native-svg';
 import { Colors, Spacing, Radius, Shadows } from '@/constants/theme';
@@ -300,6 +300,7 @@ function FamilyLinkAcceptedCard({ item }: { item: InboxNotification }) {
 // ── Overlay ──────────────────────────────────────────────────────────────────
 export function NotificationsOverlay() {
   const insets = useSafeAreaInsets();
+  const headerEdge = useScrollEdge();
   const { visible, anim, hide } = useNotificationsOverlay();
   const { notifications, loading, unreadCount, refresh, markRead, markAllRead, dismiss } =
     useNotifications();
@@ -474,6 +475,7 @@ export function NotificationsOverlay() {
 
       {/* List behind the header */}
       <FlatList
+        {...headerEdge.scrollProps}
         data={notifications}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
@@ -505,15 +507,11 @@ export function NotificationsOverlay() {
         }
       />
 
-      {/* Fade gradient — solid background at the top fading to
-          transparent further down. Lets the cards scroll underneath
-          the header and blur out as they hit it, matching the
-          dashboard pattern. Sits BELOW the header content layer. */}
-      <LinearGradient
-        colors={[Colors.background, Colors.background, 'rgba(226,241,238,0)']}
-        locations={[0, 0.7, 1]}
-        style={[styles.headerFade, { height: insets.top + 104 }]}
-        pointerEvents="none"
+      {/* Frosted glass behind the header once cards scroll under it,
+          the same as every header. Sits BELOW the header content layer. */}
+      <FrostedHeader
+        scrollY={headerEdge.scrollY}
+        style={[styles.headerFrost, { top: 0, height: insets.top + 24 + 48 + 16 }]}
       />
 
       {/* Header — logo on the LEFT (same coords as the dashboard's
@@ -550,11 +548,7 @@ const styles = StyleSheet.create({
   },
   // ── Header fade — solid bg fading to transparent so list scrolls
   //    underneath and blurs out as it meets the header ──
-  headerFade: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
+  headerFrost: {
     zIndex: 5,
   },
   // ── Header (matches dashboard header coords exactly) ──

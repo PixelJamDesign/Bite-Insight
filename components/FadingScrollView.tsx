@@ -6,8 +6,9 @@
  *   - A mask fades the content to clear right at the top edge. The fade's
  *     depth follows the scroll offset (up to FADE_HEIGHT), so at rest
  *     nothing is faded and, once scrolled, the edge is always soft.
- *   - ProgressiveBlur sits over the same band, easing in over the first
- *     FADE_HEIGHT px, so what's leaving also blurs.
+ *   - HeaderEdge (the app's one scroll-under-header treatment) sits over
+ *     the same band, so what's leaving also blurs, with the same timing
+ *     as every header.
  *   - A second mask does the same at the bottom, its depth following how
  *     much content is left below (none once you reach the end).
  *
@@ -20,9 +21,9 @@ import { forwardRef, useRef } from 'react';
 import { View, Animated, StyleSheet, ScrollView, type ScrollViewProps } from 'react-native';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ProgressiveBlur } from '@/components/ProgressiveBlur';
+import { HeaderEdge, HEADER_EDGE_AT_TOP, HEADER_EDGE_HEIGHT } from '@/components/HeaderEdge';
 
-export const FADE_HEIGHT = 32;
+export const FADE_HEIGHT = HEADER_EDGE_HEIGHT;
 
 export interface FadingScrollViewProps extends ScrollViewProps {
   /** Surface colour behind the content, #rrggbb. Default white. */
@@ -62,11 +63,6 @@ export const FadingScrollView = forwardRef<ScrollView, FadingScrollViewProps>(fu
     extrapolate: 'clamp',
   });
   const bottomShift = Animated.multiply(bottomDepth, -1);
-  const blurOpacity = scrollY.interpolate({
-    inputRange: [0, FADE_HEIGHT],
-    outputRange: [0, 1],
-    extrapolate: 'clamp',
-  });
 
   return (
     <View style={[styles.wrap, style]}>
@@ -112,9 +108,7 @@ export const FadingScrollView = forwardRef<ScrollView, FadingScrollViewProps>(fu
           </Animated.ScrollView>
         </MaskedView>
       </MaskedView>
-      <Animated.View style={[styles.blur, { opacity: blurOpacity }]} pointerEvents="none">
-        <ProgressiveBlur height={FADE_HEIGHT} color={fadeColor} />
-      </Animated.View>
+      <HeaderEdge scrollY={scrollY} color={fadeColor} style={HEADER_EDGE_AT_TOP} />
     </View>
   );
 });
@@ -132,11 +126,4 @@ const styles = StyleSheet.create({
   // content under the edge, then slides up into it.
   maskBottom: { position: 'absolute', top: 0, left: 0, right: 0, bottom: -FADE_HEIGHT },
   maskSolid: { flex: 1, backgroundColor: '#000' },
-  blur: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: FADE_HEIGHT,
-  },
 });

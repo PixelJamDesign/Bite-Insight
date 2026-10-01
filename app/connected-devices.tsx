@@ -26,6 +26,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, Radius, Spacing, Typography } from '@/constants/theme';
 import { MenuArrowLeftIcon } from '@/components/MenuIcons';
 import { LottieLoader } from '@/components/LottieLoader';
+import { HeaderEdge, HEADER_EDGE_AT_TOP, useScrollEdge } from '@/components/HeaderEdge';
 import { safeBack } from '@/lib/safeBack';
 import { useToast } from '@/lib/toastContext';
 import {
@@ -57,6 +58,7 @@ export default function ConnectedDevicesScreen() {
   const [busy, setBusy] = useState<'connect' | 'disconnect' | 'refresh' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [consented, setConsented] = useState(false);
+  const edge = useScrollEdge();
 
   const loadLatest = useCallback(async () => {
     try {
@@ -160,149 +162,155 @@ export default function ConnectedDevicesScreen() {
           <LottieLoader type="loading" fullScreen={false} />
         </View>
       ) : (
-        <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + Spacing.l }]}>
-          <View style={styles.card}>
-            <View style={styles.cardHead}>
-              <View style={styles.iconTile}>
-                <Ionicons name="pulse" size={24} color={Colors.secondary} />
+        <View style={styles.scrollWrap}>
+          <ScrollView
+            {...edge.scrollProps}
+            contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + Spacing.l }]}
+          >
+            <View style={styles.card}>
+              <View style={styles.cardHead}>
+                <View style={styles.iconTile}>
+                  <Ionicons name="pulse" size={24} color={Colors.secondary} />
+                </View>
+                <View style={styles.cardHeadText}>
+                  <Text style={styles.cardTitle}>Dexcom</Text>
+                  <Text style={styles.cardSub}>
+                    {status.connected && status.connectedAt
+                      ? `Connected since ${formatDate(status.connectedAt)}`
+                      : 'Not connected'}
+                  </Text>
+                </View>
+                {status.connected && status.environment === 'sandbox' && (
+                  <View style={styles.testPill}>
+                    <Text style={styles.testPillText}>Test data</Text>
+                  </View>
+                )}
               </View>
-              <View style={styles.cardHeadText}>
-                <Text style={styles.cardTitle}>Dexcom</Text>
-                <Text style={styles.cardSub}>
-                  {status.connected && status.connectedAt
-                    ? `Connected since ${formatDate(status.connectedAt)}`
-                    : 'Not connected'}
-                </Text>
-              </View>
-              {status.connected && status.environment === 'sandbox' && (
-                <View style={styles.testPill}>
-                  <Text style={styles.testPillText}>Test data</Text>
+
+              {status.connected ? (
+                <>
+                  <View style={styles.reading}>
+                    {latest === undefined ? (
+                      <ActivityIndicator color={Colors.secondary} />
+                    ) : latest === null ? (
+                      <Text style={styles.body}>No readings in the last 24 hours.</Text>
+                    ) : (
+                      <>
+                        <Text style={styles.readingLabel}>Latest reading</Text>
+                        <Text style={styles.readingValue}>{toMmol(latest.value)} mmol/L</Text>
+                        <Text style={styles.body}>
+                          {latest.value} mg/dL at {formatTime(latest.time)}
+                        </Text>
+                      </>
+                    )}
+                  </View>
+                  <Text style={styles.note}>
+                    Dexcom shares readings about 3 hours after they're taken (1 hour in the US), so
+                    this won't match your receiver exactly.
+                  </Text>
+                  <View style={styles.buttonRow}>
+                    <TouchableOpacity
+                      style={styles.outlineBtn}
+                      onPress={handleDisconnect}
+                      disabled={busy !== null}
+                      activeOpacity={0.85}
+                    >
+                      {busy === 'disconnect' ? (
+                        <ActivityIndicator color={Colors.secondary} />
+                      ) : (
+                        <Text style={styles.outlineBtnText}>Disconnect</Text>
+                      )}
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.primaryBtn, styles.flexOne]}
+                      onPress={handleRefresh}
+                      disabled={busy !== null}
+                      activeOpacity={0.85}
+                    >
+                      {busy === 'refresh' ? (
+                        <ActivityIndicator color="#fff" />
+                      ) : (
+                        <Text style={styles.primaryBtnText}>Refresh</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.body}>
+                    Link your Dexcom account and Bite Insight can show how the meals you plan affect
+                    your glucose.
+                  </Text>
+                  {/* What the user is agreeing to. Glucose is special category
+                      health data under UK GDPR, so this is explicit, opt-in
+                      consent — Connect stays disabled until it's ticked. */}
+                  <View style={styles.consentBox}>
+                    <Text style={styles.consentTitle}>Before you connect</Text>
+                    <Text style={styles.consentItem}>
+                      <Text style={styles.consentLead}>What we read: </Text>
+                      your glucose readings, plus the device, calibration and event details Dexcom
+                      shares with every connected app.
+                    </Text>
+                    <Text style={styles.consentItem}>
+                      <Text style={styles.consentLead}>What for: </Text>
+                      showing how the meals you plan and eat affect your glucose. Nothing else. We
+                      don't sell it or use it for ads.
+                    </Text>
+                    <Text style={styles.consentItem}>
+                      <Text style={styles.consentLead}>What we keep: </Text>
+                      the access Dexcom gives us, held on our servers. Readings are fetched when you
+                      look at them.
+                    </Text>
+                    <Text style={styles.consentItem}>
+                      <Text style={styles.consentLead}>Changing your mind: </Text>
+                      tap Disconnect here at any time and we delete that access straight away. You
+                      can also remove Bite Insight from your Dexcom account.
+                    </Text>
+                    <Text style={styles.note}>
+                      You sign in on Dexcom's own page. We never see your Dexcom password.
+                    </Text>
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.consentRow}
+                    onPress={() => setConsented((v) => !v)}
+                    activeOpacity={0.8}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: consented }}
+                  >
+                    <View style={[styles.checkbox, consented && styles.checkboxChecked]}>
+                      {consented && <Ionicons name="checkmark" size={16} color="#fff" />}
+                    </View>
+                    <Text style={styles.consentLabel}>
+                      I agree to Bite Insight reading my Dexcom data as described above.
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.primaryBtn, !consented && styles.primaryBtnDisabled]}
+                    onPress={handleConnect}
+                    disabled={busy !== null || !consented}
+                    activeOpacity={0.85}
+                  >
+                    {busy === 'connect' ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Text style={styles.primaryBtnText}>Connect Dexcom</Text>
+                    )}
+                  </TouchableOpacity>
+                </>
+              )}
+
+              {error && (
+                <View style={styles.errorBox}>
+                  <Ionicons name="alert-circle-outline" size={18} color={Colors.status.negative} />
+                  <Text style={styles.errorText}>{error}</Text>
                 </View>
               )}
             </View>
-
-            {status.connected ? (
-              <>
-                <View style={styles.reading}>
-                  {latest === undefined ? (
-                    <ActivityIndicator color={Colors.secondary} />
-                  ) : latest === null ? (
-                    <Text style={styles.body}>No readings in the last 24 hours.</Text>
-                  ) : (
-                    <>
-                      <Text style={styles.readingLabel}>Latest reading</Text>
-                      <Text style={styles.readingValue}>{toMmol(latest.value)} mmol/L</Text>
-                      <Text style={styles.body}>
-                        {latest.value} mg/dL at {formatTime(latest.time)}
-                      </Text>
-                    </>
-                  )}
-                </View>
-                <Text style={styles.note}>
-                  Dexcom shares readings about 3 hours after they're taken (1 hour in the US), so
-                  this won't match your receiver exactly.
-                </Text>
-                <View style={styles.buttonRow}>
-                  <TouchableOpacity
-                    style={styles.outlineBtn}
-                    onPress={handleDisconnect}
-                    disabled={busy !== null}
-                    activeOpacity={0.85}
-                  >
-                    {busy === 'disconnect' ? (
-                      <ActivityIndicator color={Colors.secondary} />
-                    ) : (
-                      <Text style={styles.outlineBtnText}>Disconnect</Text>
-                    )}
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.primaryBtn, styles.flexOne]}
-                    onPress={handleRefresh}
-                    disabled={busy !== null}
-                    activeOpacity={0.85}
-                  >
-                    {busy === 'refresh' ? (
-                      <ActivityIndicator color="#fff" />
-                    ) : (
-                      <Text style={styles.primaryBtnText}>Refresh</Text>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              </>
-            ) : (
-              <>
-                <Text style={styles.body}>
-                  Link your Dexcom account and Bite Insight can show how the meals you plan affect
-                  your glucose.
-                </Text>
-                {/* What the user is agreeing to. Glucose is special category
-                    health data under UK GDPR, so this is explicit, opt-in
-                    consent — Connect stays disabled until it's ticked. */}
-                <View style={styles.consentBox}>
-                  <Text style={styles.consentTitle}>Before you connect</Text>
-                  <Text style={styles.consentItem}>
-                    <Text style={styles.consentLead}>What we read: </Text>
-                    your glucose readings, plus the device, calibration and event details Dexcom
-                    shares with every connected app.
-                  </Text>
-                  <Text style={styles.consentItem}>
-                    <Text style={styles.consentLead}>What for: </Text>
-                    showing how the meals you plan and eat affect your glucose. Nothing else. We
-                    don't sell it or use it for ads.
-                  </Text>
-                  <Text style={styles.consentItem}>
-                    <Text style={styles.consentLead}>What we keep: </Text>
-                    the access Dexcom gives us, held on our servers. Readings are fetched when you
-                    look at them.
-                  </Text>
-                  <Text style={styles.consentItem}>
-                    <Text style={styles.consentLead}>Changing your mind: </Text>
-                    tap Disconnect here at any time and we delete that access straight away. You
-                    can also remove Bite Insight from your Dexcom account.
-                  </Text>
-                  <Text style={styles.note}>
-                    You sign in on Dexcom's own page. We never see your Dexcom password.
-                  </Text>
-                </View>
-
-                <TouchableOpacity
-                  style={styles.consentRow}
-                  onPress={() => setConsented((v) => !v)}
-                  activeOpacity={0.8}
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked: consented }}
-                >
-                  <View style={[styles.checkbox, consented && styles.checkboxChecked]}>
-                    {consented && <Ionicons name="checkmark" size={16} color="#fff" />}
-                  </View>
-                  <Text style={styles.consentLabel}>
-                    I agree to Bite Insight reading my Dexcom data as described above.
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.primaryBtn, !consented && styles.primaryBtnDisabled]}
-                  onPress={handleConnect}
-                  disabled={busy !== null || !consented}
-                  activeOpacity={0.85}
-                >
-                  {busy === 'connect' ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <Text style={styles.primaryBtnText}>Connect Dexcom</Text>
-                  )}
-                </TouchableOpacity>
-              </>
-            )}
-
-            {error && (
-              <View style={styles.errorBox}>
-                <Ionicons name="alert-circle-outline" size={18} color={Colors.status.negative} />
-                <Text style={styles.errorText}>{error}</Text>
-              </View>
-            )}
-          </View>
-        </ScrollView>
+          </ScrollView>
+          <HeaderEdge scrollY={edge.scrollY} style={HEADER_EDGE_AT_TOP} />
+        </View>
       )}
     </View>
   );
@@ -334,6 +342,9 @@ const styles = StyleSheet.create({
   headerSpacer: {
     width: 48,
     height: 48,
+  },
+  scrollWrap: {
+    flex: 1,
   },
   title: {
     ...Typography.h4,

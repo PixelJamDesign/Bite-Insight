@@ -26,6 +26,7 @@ import { CachedAvatar } from '@/components/CachedAvatar';
 import { InviteFamilyMemberSheet } from '@/components/InviteFamilyMemberSheet';
 import { LinkedMemberOverlay } from '@/components/LinkedMemberOverlay';
 import { TextField } from '@/components/TextField';
+import { HeaderEdge, HEADER_EDGE_AT_TOP, useScrollEdge } from '@/components/HeaderEdge';
 import { LottieLoader } from '@/components/LottieLoader';
 import type { FamilyProfile } from '@/lib/types';
 import { useTranslation } from 'react-i18next';
@@ -136,6 +137,8 @@ export default function FamilyMembersScreen() {
   const [searchActive, setSearchActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const searchInputRef = useRef<TextInput>(null);
+  // Edit mode's draggable list reports its offset itself (no onScroll).
+  const editEdge = useScrollEdge();
 
   useEffect(() => {
     if (!isPlus) showUpsell();
@@ -467,7 +470,9 @@ export default function FamilyMembersScreen() {
               )}
               contentContainerStyle={styles.scrollContent}
               showsVerticalScrollIndicator={false}
+              onScrollOffsetChange={(y) => editEdge.scrollY.setValue(y)}
             />
+            <HeaderEdge scrollY={editEdge.scrollY} style={HEADER_EDGE_AT_TOP} />
 
             {/* Edit mode footer */}
             <View style={styles.editFooter}>

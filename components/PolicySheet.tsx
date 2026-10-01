@@ -20,7 +20,6 @@ import {
   type GestureResponderEvent,
   type PanResponderGestureState,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path, Circle, Rect, Line, G } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -222,7 +221,7 @@ export function PolicySheet({ visible, onClose, type }: Props) {
           </View>
         </View>
 
-        {/* ── Scrollable content with fade overlay ──────────── */}
+        {/* ── Scrollable content (FadingScrollView handles the edges) ── */}
         <View style={root.scrollWrap}>
           <FadingScrollView
             style={root.scroll}
@@ -232,12 +231,6 @@ export function PolicySheet({ visible, onClose, type }: Props) {
           >
             {type === 'privacy' ? <PrivacyContent /> : <CookieContent />}
           </FadingScrollView>
-          {/* Fade overlay — sits on top of scroll content */}
-          <LinearGradient
-            colors={['#ffffff', 'rgba(255,255,255,0)']}
-            style={root.scrollFade}
-            pointerEvents="none"
-          />
         </View>
       </Animated.View>
     </Modal>
@@ -336,13 +329,6 @@ const root = StyleSheet.create({
   scrollContent: {
     paddingTop: Spacing.m, // 24px breathing room — content fades behind gradient
     paddingBottom: 40,
-  },
-  scrollFade: {
-    position: 'absolute',
-    top: 0,
-    left: -Spacing.m, // bleed to sheet edges
-    right: -Spacing.m,
-    height: 40, // gradient fade height
   },
 });
 

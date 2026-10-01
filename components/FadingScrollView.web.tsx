@@ -13,10 +13,10 @@ import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from 'react-native';
-import { ProgressiveBlur } from '@/components/ProgressiveBlur';
+import { HeaderEdge, HEADER_EDGE_AT_TOP, HEADER_EDGE_HEIGHT } from '@/components/HeaderEdge';
 import type { FadingScrollViewProps } from './FadingScrollView';
 
-const FADE_HEIGHT = 32;
+const FADE_HEIGHT = HEADER_EDGE_HEIGHT;
 
 function maskFor(offset: number, remaining: number): string {
   const top = Math.max(0, Math.min(offset, FADE_HEIGHT));
@@ -39,7 +39,7 @@ export const FadingScrollView = forwardRef<ScrollView, FadingScrollViewProps>(fu
 ) {
   const scrollRef = useRef<ScrollView>(null);
   useImperativeHandle(ref, () => scrollRef.current as ScrollView);
-  const blurOpacity = useRef(new Animated.Value(0)).current;
+  const scrollY = useRef(new Animated.Value(0)).current;
 
   const applyMask = useCallback((offset: number) => {
     const node = (scrollRef.current as unknown as { getScrollableNode?: () => HTMLElement })
@@ -53,7 +53,7 @@ export const FadingScrollView = forwardRef<ScrollView, FadingScrollViewProps>(fu
   const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const y = e.nativeEvent.contentOffset.y;
     applyMask(y);
-    blurOpacity.setValue(Math.max(0, Math.min(y / FADE_HEIGHT, 1)));
+    scrollY.setValue(y);
     onScroll?.(e);
   };
 
@@ -83,9 +83,7 @@ export const FadingScrollView = forwardRef<ScrollView, FadingScrollViewProps>(fu
       >
         {children}
       </ScrollView>
-      <Animated.View style={[styles.blur, { opacity: blurOpacity }]} pointerEvents="none">
-        <ProgressiveBlur height={FADE_HEIGHT} color={fadeColor} />
-      </Animated.View>
+      <HeaderEdge scrollY={scrollY} color={fadeColor} style={HEADER_EDGE_AT_TOP} />
     </View>
   );
 });
@@ -93,11 +91,4 @@ export const FadingScrollView = forwardRef<ScrollView, FadingScrollViewProps>(fu
 const styles = StyleSheet.create({
   wrap: { flexGrow: 1, flexShrink: 1 },
   fill: { flexGrow: 1, flexShrink: 1 },
-  blur: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: FADE_HEIGHT,
-  },
 });

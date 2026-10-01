@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 24,
     paddingBottom: 16,
-    backgroundColor: '#fff',
+    // Transparent: MenuModal draws the frosted glass behind it.
   },
 });
 

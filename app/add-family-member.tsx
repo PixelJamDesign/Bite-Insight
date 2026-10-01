@@ -47,6 +47,7 @@ import { FamilyIngredientPreferencesPanel } from '@/components/FamilyIngredientP
 import { FlagReasonSheet } from '@/components/FlagReasonSheet';
 import { familyInviteShareContent } from '@/lib/familyInviteShare';
 import { TextField } from '@/components/TextField';
+import { HeaderEdge, HEADER_EDGE_AT_TOP, useScrollEdge } from '@/components/HeaderEdge';
 import type { Ingredient } from '@/lib/types';
 import { CONDITION_INFO } from '@/constants/conditionInfo';
 import Logo from '../assets/images/logo.svg';
@@ -532,6 +533,7 @@ export default function AddFamilyMemberScreen() {
 
   // ── Content slide transition (same pattern as onboarding/edit-profile) ──
   const scrollRef = useRef<ScrollView>(null);
+  const edge = useScrollEdge();
   const contentOpacity = useRef(new Animated.Value(0)).current;
   const contentTranslateX = useRef(new Animated.Value(40)).current;
   const slideDirectionRef = useRef<'forward' | 'backward'>('forward');
@@ -1149,252 +1151,256 @@ export default function AddFamilyMemberScreen() {
         </View>
 
         {/* Scrollable content */}
-        <ScrollView
-          ref={scrollRef}
-          style={{ flex: 1 }}
-          contentContainerStyle={styles.scroll}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          <Animated.View style={{ opacity: contentOpacity, transform: [{ translateX: contentTranslateX }] }}>
-          {/* ── Step: Do they already have an account? (add only) ── */}
-          {currentStepKey === 'account' && (
-            <View style={styles.card}>
-              <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>Do they already have a Bite Insight account?</Text>
-                <Text style={styles.cardSubtitle}>
-                  If they do, we'll invite them to link it so their preferences stay in sync with
-                  you. If not then we can create a new profile.
-                </Text>
-              </View>
+        <View style={styles.scrollWrap}>
+          <ScrollView
+            {...edge.scrollProps}
+            ref={scrollRef}
+            style={{ flex: 1 }}
+            contentContainerStyle={styles.scroll}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <Animated.View style={{ opacity: contentOpacity, transform: [{ translateX: contentTranslateX }] }}>
+            {/* ── Step: Do they already have an account? (add only) ── */}
+            {currentStepKey === 'account' && (
+              <View style={styles.card}>
+                <View style={styles.cardHeader}>
+                  <Text style={styles.cardTitle}>Do they already have a Bite Insight account?</Text>
+                  <Text style={styles.cardSubtitle}>
+                    If they do, we'll invite them to link it so their preferences stay in sync with
+                    you. If not then we can create a new profile.
+                  </Text>
+                </View>
 
-              {/* Yes reveals name + email fields and the copy-link option */}
-              {hasAccount === true && (
-                <View style={styles.accountReveal}>
-                  <TextField
-                    icon="person-outline"
-                    required
-                    placeholder="Their name"
-                    autoCapitalize="words"
-                    value={inviteName}
-                    onChangeText={setInviteName}
-                  />
+                {/* Yes reveals name + email fields and the copy-link option */}
+                {hasAccount === true && (
+                  <View style={styles.accountReveal}>
+                    <TextField
+                      icon="person-outline"
+                      required
+                      placeholder="Their name"
+                      autoCapitalize="words"
+                      value={inviteName}
+                      onChangeText={setInviteName}
+                    />
 
-                  <TextField
-                    icon="mail-outline"
-                    required
-                    placeholder="their@email.com"
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    value={accountEmail}
-                    onChangeText={setAccountEmail}
-                  />
+                    <TextField
+                      icon="mail-outline"
+                      required
+                      placeholder="their@email.com"
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      value={accountEmail}
+                      onChangeText={setAccountEmail}
+                    />
 
+                    <TouchableOpacity
+                      style={styles.copyLinkRow}
+                      onPress={handleCopyLink}
+                      activeOpacity={0.7}
+                      disabled={saving}
+                    >
+                      <Text style={styles.copyLinkMuted}>Don't have their email?</Text>
+                      <View style={styles.copyLinkCta}>
+                        <ActionLinkIcon size={16} color={Colors.secondary} />
+                        <Text style={styles.copyLinkText}>Copy invitation link</Text>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                <View style={styles.accountButtons}>
                   <TouchableOpacity
-                    style={styles.copyLinkRow}
-                    onPress={handleCopyLink}
-                    activeOpacity={0.7}
+                    style={[styles.accountBtn, hasAccount === false ? styles.accountBtnUnselected : styles.accountBtnSelected]}
+                    activeOpacity={0.85}
+                    onPress={handleAccountYes}
                     disabled={saving}
                   >
-                    <Text style={styles.copyLinkMuted}>Don't have their email?</Text>
-                    <View style={styles.copyLinkCta}>
-                      <ActionLinkIcon size={16} color={Colors.secondary} />
-                      <Text style={styles.copyLinkText}>Copy invitation link</Text>
-                    </View>
+                    <Text style={[styles.accountBtnText, hasAccount === false && styles.accountBtnTextUnselected]}>
+                      Yes
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.accountBtn, hasAccount === true ? styles.accountBtnUnselected : styles.accountBtnSelected]}
+                    activeOpacity={0.85}
+                    onPress={handleAccountNo}
+                    disabled={saving}
+                  >
+                    <Text style={[styles.accountBtnText, hasAccount === true && styles.accountBtnTextUnselected]}>
+                      No
+                    </Text>
                   </TouchableOpacity>
                 </View>
-              )}
-
-              <View style={styles.accountButtons}>
-                <TouchableOpacity
-                  style={[styles.accountBtn, hasAccount === false ? styles.accountBtnUnselected : styles.accountBtnSelected]}
-                  activeOpacity={0.85}
-                  onPress={handleAccountYes}
-                  disabled={saving}
-                >
-                  <Text style={[styles.accountBtnText, hasAccount === false && styles.accountBtnTextUnselected]}>
-                    Yes
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.accountBtn, hasAccount === true ? styles.accountBtnUnselected : styles.accountBtnSelected]}
-                  activeOpacity={0.85}
-                  onPress={handleAccountNo}
-                  disabled={saving}
-                >
-                  <Text style={[styles.accountBtnText, hasAccount === true && styles.accountBtnTextUnselected]}>
-                    No
-                  </Text>
-                </TouchableOpacity>
               </View>
-            </View>
-          )}
+            )}
 
-          {/* ── Step: About them ── */}
-          {currentStepKey === 'about' && (
-            <>
-              <TouchableOpacity style={styles.avatarContainer} onPress={pickAvatar} activeOpacity={0.85}>
-                <View style={styles.avatarCircle}>
-                  {(avatarUri ?? cachedExistingAvatar) ? (
-                    <Image source={{ uri: (avatarUri ?? cachedExistingAvatar)! }} style={styles.avatarImage} />
-                  ) : (
-                    <Text style={styles.avatarInitials}>{getInitials(fullName)}</Text>
-                  )}
-                </View>
-                <View style={styles.cameraBadge}>
-                  <CameraIcon size={16} color="#fff" />
-                </View>
-              </TouchableOpacity>
+            {/* ── Step: About them ── */}
+            {currentStepKey === 'about' && (
+              <>
+                <TouchableOpacity style={styles.avatarContainer} onPress={pickAvatar} activeOpacity={0.85}>
+                  <View style={styles.avatarCircle}>
+                    {(avatarUri ?? cachedExistingAvatar) ? (
+                      <Image source={{ uri: (avatarUri ?? cachedExistingAvatar)! }} style={styles.avatarImage} />
+                    ) : (
+                      <Text style={styles.avatarInitials}>{getInitials(fullName)}</Text>
+                    )}
+                  </View>
+                  <View style={styles.cameraBadge}>
+                    <CameraIcon size={16} color="#fff" />
+                  </View>
+                </TouchableOpacity>
 
-              <View style={[styles.card, styles.cardWithAvatar]}>
-                <View style={styles.cardHeader}>
-                  <Text style={styles.cardTitle}>
-                    {isEditing ? tp('familyMember.aboutTitleEdit') : tp('familyMember.aboutTitleAdd')}
-                  </Text>
-                  <Text style={styles.cardSubtitle}>
-                    {isEditing
-                      ? tp('familyMember.aboutSubtitleEdit')
-                      : tp('familyMember.aboutSubtitleAdd')}
-                  </Text>
-                </View>
-
-                <View style={styles.fields}>
-                  <View style={[styles.inputRow, focusedField === 'name' && styles.inputRowFocused]}>
-                    <PersonalIcon size={16} color={Colors.primary} />
-                    <TextInput
-                      style={[styles.inputFieldInner, fullName ? styles.inputFieldBold : null]}
-                      placeholder={tc('placeholder.fullName')}
-                      placeholderTextColor={`${Colors.secondary}`}
-                      selectionColor={Colors.primary}
-                      autoCapitalize="words"
-                      value={fullName}
-                      onChangeText={setFullName}
-                      onFocus={() => setFocusedField('name')}
-                      onBlur={() => setFocusedField(null)}
-                    />
-                    {fullName ? (
-                      <TouchableOpacity onPress={() => setFullName('')} hitSlop={8}>
-                        <Ionicons name="close" size={18} color={`${Colors.primary}80`} />
-                      </TouchableOpacity>
-                    ) : null}
+                <View style={[styles.card, styles.cardWithAvatar]}>
+                  <View style={styles.cardHeader}>
+                    <Text style={styles.cardTitle}>
+                      {isEditing ? tp('familyMember.aboutTitleEdit') : tp('familyMember.aboutTitleAdd')}
+                    </Text>
+                    <Text style={styles.cardSubtitle}>
+                      {isEditing
+                        ? tp('familyMember.aboutSubtitleEdit')
+                        : tp('familyMember.aboutSubtitleAdd')}
+                    </Text>
                   </View>
 
-                  {/* Relationship chips */}
-                  <Text style={styles.fieldLabel}>{tp('familyMember.field.relationship')}</Text>
-                  <View style={styles.relationshipWrap}>
-                    {RELATIONSHIP_KEYS.map(key => {
-                      const active = relationship === key;
-                      return (
-                        <TouchableOpacity
-                          key={key}
-                          style={[styles.relationshipChip, active && styles.relationshipChipActive]}
-                          onPress={() => setRelationship(active ? '' : key)}
-                          activeOpacity={0.75}
-                        >
-                          <Text style={[styles.relationshipChipLabel, active && styles.relationshipChipLabelActive]}>
-                            {tpo(`relationships.${key}`)}
-                          </Text>
+                  <View style={styles.fields}>
+                    <View style={[styles.inputRow, focusedField === 'name' && styles.inputRowFocused]}>
+                      <PersonalIcon size={16} color={Colors.primary} />
+                      <TextInput
+                        style={[styles.inputFieldInner, fullName ? styles.inputFieldBold : null]}
+                        placeholder={tc('placeholder.fullName')}
+                        placeholderTextColor={`${Colors.secondary}`}
+                        selectionColor={Colors.primary}
+                        autoCapitalize="words"
+                        value={fullName}
+                        onChangeText={setFullName}
+                        onFocus={() => setFocusedField('name')}
+                        onBlur={() => setFocusedField(null)}
+                      />
+                      {fullName ? (
+                        <TouchableOpacity onPress={() => setFullName('')} hitSlop={8}>
+                          <Ionicons name="close" size={18} color={`${Colors.primary}80`} />
                         </TouchableOpacity>
-                      );
-                    })}
+                      ) : null}
+                    </View>
+
+                    {/* Relationship chips */}
+                    <Text style={styles.fieldLabel}>{tp('familyMember.field.relationship')}</Text>
+                    <View style={styles.relationshipWrap}>
+                      {RELATIONSHIP_KEYS.map(key => {
+                        const active = relationship === key;
+                        return (
+                          <TouchableOpacity
+                            key={key}
+                            style={[styles.relationshipChip, active && styles.relationshipChipActive]}
+                            onPress={() => setRelationship(active ? '' : key)}
+                            activeOpacity={0.75}
+                          >
+                            <Text style={[styles.relationshipChipLabel, active && styles.relationshipChipLabelActive]}>
+                              {tpo(`relationships.${key}`)}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
                   </View>
                 </View>
+              </>
+            )}
+
+            {/* ── Step: Health Conditions ── */}
+            {currentStepKey === 'health' && (
+              <View style={styles.card}>
+                {renderChipHeader(
+                  to('question.healthConditionFamily'),
+                  healthConditions.length,
+                  to('count.condition', { count: healthConditions.length }),
+                )}
+                {renderChips(HEALTH_CONDITION_KEYS, 'healthConditions', healthConditions, key =>
+                  setHealthConditions(prev => toggle(prev, key))
+                )}
               </View>
-            </>
-          )}
+            )}
 
-          {/* ── Step: Health Conditions ── */}
-          {currentStepKey === 'health' && (
-            <View style={styles.card}>
-              {renderChipHeader(
-                to('question.healthConditionFamily'),
-                healthConditions.length,
-                to('count.condition', { count: healthConditions.length }),
-              )}
-              {renderChips(HEALTH_CONDITION_KEYS, 'healthConditions', healthConditions, key =>
-                setHealthConditions(prev => toggle(prev, key))
-              )}
-            </View>
-          )}
+            {/* ── Step: Nutrient Watchlist ── */}
+            {currentStepKey === 'nutrients' && (
+              <View style={styles.nutrientCard}>
+                {renderNutrientStep()}
+              </View>
+            )}
 
-          {/* ── Step: Nutrient Watchlist ── */}
-          {currentStepKey === 'nutrients' && (
-            <View style={styles.nutrientCard}>
-              {renderNutrientStep()}
-            </View>
-          )}
+            {/* ── Step: Allergies ── */}
+            {currentStepKey === 'allergies' && (
+              <View style={styles.card}>
+                {renderChipHeader(
+                  to('question.allergiesFamily'),
+                  allergies.length,
+                  to('count.allergy', { count: allergies.length }),
+                )}
+                {renderChips(ALLERGY_KEYS, 'allergies', allergies, key =>
+                  setAllergies(prev => toggle(prev, key))
+                )}
+              </View>
+            )}
 
-          {/* ── Step: Allergies ── */}
-          {currentStepKey === 'allergies' && (
-            <View style={styles.card}>
-              {renderChipHeader(
-                to('question.allergiesFamily'),
-                allergies.length,
-                to('count.allergy', { count: allergies.length }),
-              )}
-              {renderChips(ALLERGY_KEYS, 'allergies', allergies, key =>
-                setAllergies(prev => toggle(prev, key))
-              )}
-            </View>
-          )}
+            {/* ── Step: Dietary Preferences ── */}
+            {currentStepKey === 'dietary' && (
+              <View style={styles.card}>
+                {renderChipHeader(
+                  to('question.dietaryPreferencesFamily'),
+                  dietaryPrefs.length,
+                  to('count.preference', { count: dietaryPrefs.length }),
+                )}
+                {renderChips(DIETARY_PREFERENCE_KEYS, 'dietaryPreferences', dietaryPrefs, key =>
+                  setDietaryPrefs(prev => toggle(prev, key))
+                )}
+              </View>
+            )}
 
-          {/* ── Step: Dietary Preferences ── */}
-          {currentStepKey === 'dietary' && (
-            <View style={styles.card}>
-              {renderChipHeader(
-                to('question.dietaryPreferencesFamily'),
-                dietaryPrefs.length,
-                to('count.preference', { count: dietaryPrefs.length }),
-              )}
-              {renderChips(DIETARY_PREFERENCE_KEYS, 'dietaryPreferences', dietaryPrefs, key =>
-                setDietaryPrefs(prev => toggle(prev, key))
-              )}
-            </View>
-          )}
+            {/* ── Step: Ingredient Preferences ── */}
+            {currentStepKey === 'ingredients' && (
+              <View style={styles.card}>
+                <FamilyIngredientPreferencesPanel
+                  member={{
+                    id: params.id ?? 'new',
+                    name: fullName.trim() || 'This family member',
+                    avatar_url: existingAvatar ?? avatarUri ?? null,
+                    tags: [
+                      ...healthConditions,
+                      ...allergies,
+                      ...dietaryPrefs,
+                    ],
+                  }}
+                  ingredients={ingredientCatalog}
+                  tab={ingredientTab}
+                  onTabChange={setIngredientTab}
+                  category={ingredientCategory}
+                  onCategoryChange={setIngredientCategory}
+                  categories={INGREDIENT_CATEGORIES}
+                  draft={{
+                    liked: likedIngredients,
+                    disliked: dislikedIngredients,
+                    flagged: flaggedIngredients,
+                  }}
+                  onDraftChange={(next) => {
+                    setLikedIngredients(next.liked);
+                    setDislikedIngredients(next.disliked);
+                    setFlaggedIngredients(next.flagged);
+                  }}
+                  showMemberHeader={false}
+                  // Match the dashboard: tapping flag opens a sheet so the
+                  // user can pick one or more reasons before the ingredient
+                  // is marked as flagged.
+                  onFlagRequest={(ing) => setFlagReasonTarget(ing)}
+                />
+              </View>
+            )}
 
-          {/* ── Step: Ingredient Preferences ── */}
-          {currentStepKey === 'ingredients' && (
-            <View style={styles.card}>
-              <FamilyIngredientPreferencesPanel
-                member={{
-                  id: params.id ?? 'new',
-                  name: fullName.trim() || 'This family member',
-                  avatar_url: existingAvatar ?? avatarUri ?? null,
-                  tags: [
-                    ...healthConditions,
-                    ...allergies,
-                    ...dietaryPrefs,
-                  ],
-                }}
-                ingredients={ingredientCatalog}
-                tab={ingredientTab}
-                onTabChange={setIngredientTab}
-                category={ingredientCategory}
-                onCategoryChange={setIngredientCategory}
-                categories={INGREDIENT_CATEGORIES}
-                draft={{
-                  liked: likedIngredients,
-                  disliked: dislikedIngredients,
-                  flagged: flaggedIngredients,
-                }}
-                onDraftChange={(next) => {
-                  setLikedIngredients(next.liked);
-                  setDislikedIngredients(next.disliked);
-                  setFlaggedIngredients(next.flagged);
-                }}
-                showMemberHeader={false}
-                // Match the dashboard: tapping flag opens a sheet so the
-                // user can pick one or more reasons before the ingredient
-                // is marked as flagged.
-                onFlagRequest={(ing) => setFlagReasonTarget(ing)}
-              />
-            </View>
-          )}
-
-          <View style={{ height: 120 }} />
-          </Animated.View>
-        </ScrollView>
+            <View style={{ height: 120 }} />
+            </Animated.View>
+          </ScrollView>
+          <HeaderEdge scrollY={edge.scrollY} style={HEADER_EDGE_AT_TOP} />
+        </View>
 
         {/* ── Footer ──
             - account step, no choice yet: full-width Cancel
@@ -1530,6 +1536,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 30,
     paddingBottom: 30,
+  },
+
+  scrollWrap: {
+    flex: 1,
   },
 
   stepHeader: {

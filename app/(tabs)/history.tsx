@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useMemo } from 'react';
+import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { DismissibleRow } from '@/components/DismissibleRow';
 import { ScanCard } from '@/components/ScanCard';
 import { openScanResult } from '@/lib/openScan';
@@ -23,6 +23,7 @@ import { useAuth } from '@/lib/auth';
 import { Colors, Shadows, Spacing } from '@/constants/theme';
 import { ScreenLayout } from '@/components/ScreenLayout';
 import { IconButton } from '@/components/IconButton';
+import { HeaderEdge, HEADER_EDGE_AT_TOP, useScrollEdge } from '@/components/HeaderEdge';
 import { useTabBarSlide } from '@/lib/tabBarContext';
 import { LottieLoader } from '@/components/LottieLoader';
 import type { Scan } from '@/lib/types';
@@ -316,6 +317,7 @@ export default function HistoryScreen() {
   const [scans, setScans] = useState<Scan[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const listEdge = useScrollEdge();
 
   // Fade-in animations for content
   const fadeContent = useFadeIn(!loading, 0);
@@ -404,6 +406,12 @@ export default function HistoryScreen() {
     if (tab) return scans.filter((scan) => isSameLocalDay(scan.scanned_at, tab.date));
     return scans;
   }, [scans, dateRange, selectedKey, dateTabs]);
+
+  // An empty day unmounts the list; it comes back at the top.
+  const listEmpty = filteredScans.length === 0;
+  useEffect(() => {
+    if (listEmpty) listEdge.scrollY.setValue(0);
+  }, [listEmpty, listEdge.scrollY]);
 
   // ── Month label ─────────────────────────────────────────────────────────────
   const today = new Date();
@@ -525,22 +533,27 @@ export default function HistoryScreen() {
               </Text>
             </View>
           ) : (
-            <FlatList
-              data={filteredScans}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <ScanRow scan={item} onPress={() => openScan(item)} onDelete={() => deleteScan(item.id)} />
-              )}
-              contentContainerStyle={styles.list}
-              showsVerticalScrollIndicator={false}
-              refreshControl={
-                <RefreshControl
-                  refreshing={refreshing}
-                  onRefresh={onRefresh}
-                  tintColor={Colors.primary}
-                />
-              }
-            />
+            <>
+              <FlatList
+                {...listEdge.scrollProps}
+                data={filteredScans}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <ScanRow scan={item} onPress={() => openScan(item)} onDelete={() => deleteScan(item.id)} />
+                )}
+                contentContainerStyle={styles.list}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                    tintColor={Colors.primary}
+                  />
+                }
+              />
+              {/* Frosted edge where the list passes under the date tabs */}
+              <HeaderEdge scrollY={listEdge.scrollY} style={HEADER_EDGE_AT_TOP} />
+            </>
           )}
         </Animated.View>
 

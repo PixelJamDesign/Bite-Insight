@@ -29,6 +29,7 @@ import { Colors, Shadows, Spacing, Radius } from '@/constants/theme';
 import { IconButton } from '@/components/IconButton';
 import { ActionSearchIcon, ActionChevronDownIcon, ActionCheckIcon, ActionClearIcon, MenuArrowLeftIcon, MenuChevronRightIcon } from '@/components/MenuIcons';
 import { TextField } from '@/components/TextField';
+import { HeaderEdge, HEADER_EDGE_AT_TOP, useScrollEdge } from '@/components/HeaderEdge';
 import { Ionicons } from '@expo/vector-icons';
 import { useMenu } from '@/lib/menuContext';
 import Logo from '../assets/images/logo.svg';
@@ -158,6 +159,7 @@ export default function FoodSearchScreen() {
   }
   const pickMode = params.addToRecipe === '1' || mealMode;
   const insets = useSafeAreaInsets();
+  const listEdge = useScrollEdge();
   const { isPlus } = useSubscription();
   const { showUpsell } = useUpsellSheet();
   const { session } = useAuth();
@@ -1005,46 +1007,50 @@ export default function FoodSearchScreen() {
       </View>
 
       {/* Results list */}
-      <FlatList
-        data={results}
-        renderItem={renderItem}
-        keyExtractor={keyExtractor}
-        ListHeaderComponent={hasSearched && !loading && results.length > 0 ? (
-          <Text style={styles.subtitle}>
-            {t('search.showing', { count: totalCount, term: submittedQuery })}
-          </Text>
-        ) : hasSearched && !loading && results.length === 0 && serverError ? (
-          <View style={{ alignItems: 'center', gap: 12 }}>
+      <View style={styles.listWrap}>
+        <FlatList
+          {...listEdge.scrollProps}
+          data={results}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          ListHeaderComponent={hasSearched && !loading && results.length > 0 ? (
             <Text style={styles.subtitle}>
-              {t('search.serverBusy')}
+              {t('search.showing', { count: totalCount, term: submittedQuery })}
             </Text>
-            <TouchableOpacity
-              style={{ backgroundColor: Colors.secondary, borderRadius: Radius.m, paddingVertical: 10, paddingHorizontal: 24 }}
-              onPress={() => { if (submittedQuery) performSearch(submittedQuery, regionRef.current); }}
-              activeOpacity={0.8}
-            >
-              <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700', fontFamily: 'Figtree_700Bold' }}>
-                {t('search.retry')}
+          ) : hasSearched && !loading && results.length === 0 && serverError ? (
+            <View style={{ alignItems: 'center', gap: 12 }}>
+              <Text style={styles.subtitle}>
+                {t('search.serverBusy')}
               </Text>
-            </TouchableOpacity>
-          </View>
-        ) : hasSearched && !loading && results.length === 0 ? (
-          <Text style={styles.subtitle}>
-            {t('search.noResults', { term: submittedQuery })}
-          </Text>
-        ) : null}
-        ListEmptyComponent={ListEmpty}
-        ListFooterComponent={ListFooter}
-        contentContainerStyle={[
-          styles.listContent,
-          { paddingBottom: insets.bottom + 24 },
-        ]}
-        ItemSeparatorComponent={ItemSeparator}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
-        onEndReached={() => loadMore()}
-        onEndReachedThreshold={0.4}
-      />
+              <TouchableOpacity
+                style={{ backgroundColor: Colors.secondary, borderRadius: Radius.m, paddingVertical: 10, paddingHorizontal: 24 }}
+                onPress={() => { if (submittedQuery) performSearch(submittedQuery, regionRef.current); }}
+                activeOpacity={0.8}
+              >
+                <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700', fontFamily: 'Figtree_700Bold' }}>
+                  {t('search.retry')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : hasSearched && !loading && results.length === 0 ? (
+            <Text style={styles.subtitle}>
+              {t('search.noResults', { term: submittedQuery })}
+            </Text>
+          ) : null}
+          ListEmptyComponent={ListEmpty}
+          ListFooterComponent={ListFooter}
+          contentContainerStyle={[
+            styles.listContent,
+            { paddingBottom: insets.bottom + 24 },
+          ]}
+          ItemSeparatorComponent={ItemSeparator}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          onEndReached={() => loadMore()}
+          onEndReachedThreshold={0.4}
+        />
+        <HeaderEdge scrollY={listEdge.scrollY} style={HEADER_EDGE_AT_TOP} />
+      </View>
 
       {/* Region picker modal */}
       <Modal
@@ -1149,6 +1155,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.m,
     paddingTop: Spacing.m,
+  },
+  listWrap: {
+    flex: 1,
   },
   listContent: {
     paddingHorizontal: Spacing.m,
@@ -1431,5 +1440,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.m,
+    paddingBottom: Spacing.s,
+    // Transparent: MenuModal draws the frosted glass behind it.
   },
 });

@@ -131,6 +131,7 @@ Reuse these before creating new components:
 | `MealTotalsList` | `@/components/MealTotalsList` | A `MealNutrition` total as the shared `NutritionRows` stack (planner day totals) |
 | `IconButton` | `@/components/IconButton` | Figma Icon Button: `size` regular (48) / small (36), `variant` onTeal / onWhite, optional `badge` |
 | `MoreMenu` | `@/components/MoreMenu` | ⋯ button with actions — system menu on iOS (SwiftUI Menu, fixed order) & Android (Expo UI MenuView), ActionsSheet on web. Items show in the same order everywhere. `size` small (36, default) / regular (48) |
+| `FrostedHeader` / `HeaderEdge` | `@/components/HeaderEdge` | THE treatment for content scrolling behind any header (see "Scroll-under-header effect" below). Never hand-roll a gradient or blur under a header |
 | `FadingScrollView` | `@/components/FadingScrollView` | ScrollView for bottom sheets: no hard edges — top blurs and fades once scrolled, bottom fades while there is more below. `fadeColor` for non-white sheets |
 | `ActionsSheet` | `@/components/ActionsSheet` | Titled bottom sheet of action rows (RecipeActionsSheet layout) |
 | `AlertCard` | `@/components/AlertCard` | Figma alert (3190:5985): `tone` warning / caution / info, label pill + bold message |
@@ -187,6 +188,26 @@ CRITICAL: Each row is INDIVIDUALLY styled — do NOT wrap in a shared card conta
 // Title: Heading 4 — 18px bold, -0.36 tracking, 24 line height
 // Subtitle: Body Small — 14px light, -0.14 tracking, 21 line height
 ```
+
+### Scroll-under-header effect (frosted glass)
+One effect everywhere content scrolls behind a header, bar or pinned section:
+frosted glass — the content stays visible, blurred and tinted with the
+header's colour, softening out over a 32px edge, and only once something is
+actually under it. Material values live in `components/progressiveBlurShared.ts`
+(`FROST_TINT`, `FROST_BLUR_INTENSITY`, `FROST_BLUR_PX`).
+```tsx
+// Header floating over the content (absolute): frost fills the header area
+<FrostedHeader scrollY={scrollY} color="#ffffff" style={{ top: 0, height: headerHeight }} />
+
+// Header above the list in normal layout: frosted edge at the list's top
+const edge = useScrollEdge();
+<View style={{ flex: 1 }}>
+  <ScrollView {...edge.scrollProps} />
+  <HeaderEdge scrollY={edge.scrollY} color="#ffffff" style={HEADER_EDGE_AT_TOP} />
+</View>
+```
+ScreenLayout (`HeaderScrollView`/`HeaderFlatList`), the menu and `FadingScrollView` already include it.
+Android has no backdrop blur here, so it's a stronger tint there.
 
 ### Tab Bar Active Pill
 ```ts

@@ -29,6 +29,7 @@ import { Colors, Shadows } from '@/constants/theme';
 import { HEALTH_CONDITION_KEYS, ALLERGY_KEYS, DIETARY_PREFERENCE_KEYS } from '@/constants/profileOptions';
 import { CameraIcon, PersonalIcon, EmailIcon, BirthdayIcon, TickIcon, InfoIcon } from '@/components/MenuIcons';
 import { TextField } from '@/components/TextField';
+import { HeaderEdge, HEADER_EDGE_AT_TOP, useScrollEdge } from '@/components/HeaderEdge';
 import { DoneAccessory } from '@/components/DoneAccessory';
 import { ConditionInfoSheet } from '@/components/ConditionInfoSheet';
 import { SuggestionSheet, type SuggestionCategory } from '@/components/SuggestionSheet';
@@ -86,6 +87,7 @@ export default function SignUpScreen() {
   const [suggestionCategory, setSuggestionCategory] = useState<SuggestionCategory | null>(null);
   const chipSearchRef = useRef<TextInput>(null);
   const scrollRef = useRef<ScrollView>(null);
+  const edge = useScrollEdge();
   const scrollContainerRef = useRef<View>(null);
   const nameRowRef = useRef<View>(null);
   const emailRowRef = useRef<View>(null);
@@ -478,165 +480,169 @@ export default function SignUpScreen() {
         </View>
 
         {/* Scrollable content */}
-        <ScrollView
-          ref={(ref) => {
-            (scrollRef as any).current = ref;
-            (scrollContainerRef as any).current = ref;
-          }}
-          style={{ flex: 1 }}
-          contentContainerStyle={styles.scroll}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-          onLayout={(e: LayoutChangeEvent) => {
-            scrollViewHeightRef.current = e.nativeEvent.layout.height;
-          }}
-        >
-          {/* ── Step 1: About you ── */}
-          {step === 1 && (
-            <>
-              <TouchableOpacity style={styles.avatarContainer} onPress={pickAvatar} activeOpacity={0.85}>
-                <View style={styles.avatarCircle}>
-                  {avatarUri ? (
-                    <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
-                  ) : (
-                    <Text style={styles.avatarInitials}>{getInitials(fullName)}</Text>
-                  )}
-                </View>
-                <View style={styles.cameraBadge}>
-                  <CameraIcon size={16} color="#fff" />
-                </View>
-              </TouchableOpacity>
+        <View style={styles.scrollWrap}>
+          <ScrollView
+            {...edge.scrollProps}
+            ref={(ref) => {
+              (scrollRef as any).current = ref;
+              (scrollContainerRef as any).current = ref;
+            }}
+            style={{ flex: 1 }}
+            contentContainerStyle={styles.scroll}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            onLayout={(e: LayoutChangeEvent) => {
+              scrollViewHeightRef.current = e.nativeEvent.layout.height;
+            }}
+          >
+            {/* ── Step 1: About you ── */}
+            {step === 1 && (
+              <>
+                <TouchableOpacity style={styles.avatarContainer} onPress={pickAvatar} activeOpacity={0.85}>
+                  <View style={styles.avatarCircle}>
+                    {avatarUri ? (
+                      <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
+                    ) : (
+                      <Text style={styles.avatarInitials}>{getInitials(fullName)}</Text>
+                    )}
+                  </View>
+                  <View style={styles.cameraBadge}>
+                    <CameraIcon size={16} color="#fff" />
+                  </View>
+                </TouchableOpacity>
 
-              <View style={[styles.card, styles.cardWithAvatar]}>
-                <View style={styles.cardHeader}>
-                  <Text style={styles.cardTitle}>{ta('signup.aboutYouTitle')}</Text>
-                  <Text style={styles.cardSubtitle}>{ta('signup.aboutYouSubtitle')}</Text>
-                </View>
+                <View style={[styles.card, styles.cardWithAvatar]}>
+                  <View style={styles.cardHeader}>
+                    <Text style={styles.cardTitle}>{ta('signup.aboutYouTitle')}</Text>
+                    <Text style={styles.cardSubtitle}>{ta('signup.aboutYouSubtitle')}</Text>
+                  </View>
 
-                <View style={styles.fields}>
-                  <View ref={(ref) => { (nameRowRef as any).current = ref; }}>
-                    <TextField
-                      iconNode={<PersonalIcon size={20} color={Colors.primary} />}
-                      placeholder={tc('placeholder.fullName')}
-                      autoCapitalize="words"
-                      value={fullName}
-                      onChangeText={setFullName}
-                      onFocus={() => { setFocusedField('name'); scrollInputToCenter(nameRowRef.current); }}
-                      onBlur={() => setFocusedField(null)}
-                    />
-                  </View>
-                  <View ref={(ref) => { (emailRowRef as any).current = ref; }}>
-                    <TextField
-                      iconNode={<EmailIcon size={20} color={Colors.primary} />}
-                      placeholder={tc('placeholder.emailAddress')}
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      value={email}
-                      onChangeText={setEmail}
-                      onFocus={() => { setFocusedField('email'); scrollInputToCenter(emailRowRef.current); }}
-                      onBlur={() => setFocusedField(null)}
-                    />
-                  </View>
-                  <View ref={(ref) => { (passwordRowRef as any).current = ref; }}>
-                    <TextField
-                      iconNode={<Ionicons name="lock-closed-outline" size={20} color={Colors.primary} />}
-                      secureToggle
-                      placeholder={ta('signup.placeholder.password')}
-                      value={password}
-                      onChangeText={setPassword}
-                      onFocus={() => { setFocusedField('password'); scrollInputToCenter(passwordRowRef.current); }}
-                      onBlur={() => setFocusedField(null)}
-                    />
-                  </View>
-                  <TouchableOpacity
-                    ref={(ref) => { (dobRowRef as any).current = ref; }}
-                    style={[styles.inputRow]}
-                    activeOpacity={0.7}
-                    onPress={() => { Keyboard.dismiss(); setShowDatePicker(true); }}
-                  >
-                    <BirthdayIcon size={20} color={Colors.primary} />
-                    <Text
-                      style={[styles.inputFieldInner, dateOfBirth ? styles.inputFieldBold : { color: `${Colors.primary}50` }]}
-                      numberOfLines={1}
+                  <View style={styles.fields}>
+                    <View ref={(ref) => { (nameRowRef as any).current = ref; }}>
+                      <TextField
+                        iconNode={<PersonalIcon size={20} color={Colors.primary} />}
+                        placeholder={tc('placeholder.fullName')}
+                        autoCapitalize="words"
+                        value={fullName}
+                        onChangeText={setFullName}
+                        onFocus={() => { setFocusedField('name'); scrollInputToCenter(nameRowRef.current); }}
+                        onBlur={() => setFocusedField(null)}
+                      />
+                    </View>
+                    <View ref={(ref) => { (emailRowRef as any).current = ref; }}>
+                      <TextField
+                        iconNode={<EmailIcon size={20} color={Colors.primary} />}
+                        placeholder={tc('placeholder.emailAddress')}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        value={email}
+                        onChangeText={setEmail}
+                        onFocus={() => { setFocusedField('email'); scrollInputToCenter(emailRowRef.current); }}
+                        onBlur={() => setFocusedField(null)}
+                      />
+                    </View>
+                    <View ref={(ref) => { (passwordRowRef as any).current = ref; }}>
+                      <TextField
+                        iconNode={<Ionicons name="lock-closed-outline" size={20} color={Colors.primary} />}
+                        secureToggle
+                        placeholder={ta('signup.placeholder.password')}
+                        value={password}
+                        onChangeText={setPassword}
+                        onFocus={() => { setFocusedField('password'); scrollInputToCenter(passwordRowRef.current); }}
+                        onBlur={() => setFocusedField(null)}
+                      />
+                    </View>
+                    <TouchableOpacity
+                      ref={(ref) => { (dobRowRef as any).current = ref; }}
+                      style={[styles.inputRow]}
+                      activeOpacity={0.7}
+                      onPress={() => { Keyboard.dismiss(); setShowDatePicker(true); }}
                     >
-                      {dateOfBirth ? formatDob(toLocalDateString(dateOfBirth)) : ta('signup.placeholder.dateOfBirth')}
-                    </Text>
-                    {dateOfBirth ? (
-                      <TouchableOpacity onPress={() => { setDateOfBirth(null); setShowDatePicker(false); }} hitSlop={8}>
-                        <Ionicons name="close" size={18} color={`${Colors.primary}80`} />
-                      </TouchableOpacity>
-                    ) : null}
+                      <BirthdayIcon size={20} color={Colors.primary} />
+                      <Text
+                        style={[styles.inputFieldInner, dateOfBirth ? styles.inputFieldBold : { color: `${Colors.primary}50` }]}
+                        numberOfLines={1}
+                      >
+                        {dateOfBirth ? formatDob(toLocalDateString(dateOfBirth)) : ta('signup.placeholder.dateOfBirth')}
+                      </Text>
+                      {dateOfBirth ? (
+                        <TouchableOpacity onPress={() => { setDateOfBirth(null); setShowDatePicker(false); }} hitSlop={8}>
+                          <Ionicons name="close" size={18} color={`${Colors.primary}80`} />
+                        </TouchableOpacity>
+                      ) : null}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <View style={styles.signInRow}>
+                  <Text style={styles.signInPrompt}>{ta('signup.hasAccount')}</Text>
+                  <TouchableOpacity onPress={() => router.replace('/(auth)/login')} activeOpacity={0.7}>
+                    <Text style={styles.signInLink}>{tc('link.signIn')}</Text>
                   </TouchableOpacity>
                 </View>
+              </>
+            )}
+
+            {/* ── Step 2: Health Conditions ── */}
+            {step === 2 && (
+              <View style={styles.card}>
+                {renderChipHeader(
+                  to('question.healthCondition'),
+                  healthConditions.length,
+                  to('count.condition', { count: healthConditions.length }),
+                )}
+                {chipSearchActive && null /* spacer handled by card gap */}
+                {renderChips(HEALTH_CONDITION_KEYS, 'healthConditions', healthConditions, key =>
+                  setHealthConditions(prev => toggle(prev, key))
+                )}
               </View>
+            )}
 
-              <View style={styles.signInRow}>
-                <Text style={styles.signInPrompt}>{ta('signup.hasAccount')}</Text>
-                <TouchableOpacity onPress={() => router.replace('/(auth)/login')} activeOpacity={0.7}>
-                  <Text style={styles.signInLink}>{tc('link.signIn')}</Text>
-                </TouchableOpacity>
+            {/* ── Step 3: Allergies ── */}
+            {step === 3 && (
+              <View style={styles.card}>
+                {renderChipHeader(
+                  to('question.allergies'),
+                  allergies.length,
+                  to('count.allergy', { count: allergies.length }),
+                )}
+                {renderChips(ALLERGY_KEYS, 'allergies', allergies, key =>
+                  setAllergies(prev => toggle(prev, key))
+                )}
               </View>
-            </>
-          )}
+            )}
 
-          {/* ── Step 2: Health Conditions ── */}
-          {step === 2 && (
-            <View style={styles.card}>
-              {renderChipHeader(
-                to('question.healthCondition'),
-                healthConditions.length,
-                to('count.condition', { count: healthConditions.length }),
-              )}
-              {chipSearchActive && null /* spacer handled by card gap */}
-              {renderChips(HEALTH_CONDITION_KEYS, 'healthConditions', healthConditions, key =>
-                setHealthConditions(prev => toggle(prev, key))
-              )}
-            </View>
-          )}
+            {/* ── Step 4: Dietary Preferences ── */}
+            {step === 4 && (
+              <View style={styles.card}>
+                {renderChipHeader(
+                  to('question.dietaryPreferences'),
+                  dietaryPrefs.length,
+                  to('count.preference', { count: dietaryPrefs.length }),
+                )}
+                {renderChips(DIETARY_PREFERENCE_KEYS, 'dietaryPreferences', dietaryPrefs, key =>
+                  setDietaryPrefs(prev => toggle(prev, key))
+                )}
+              </View>
+            )}
 
-          {/* ── Step 3: Allergies ── */}
-          {step === 3 && (
-            <View style={styles.card}>
-              {renderChipHeader(
-                to('question.allergies'),
-                allergies.length,
-                to('count.allergy', { count: allergies.length }),
-              )}
-              {renderChips(ALLERGY_KEYS, 'allergies', allergies, key =>
-                setAllergies(prev => toggle(prev, key))
-              )}
-            </View>
-          )}
+            {/* Quick-start link — shown on steps 2-4 so users can create
+                their account without filling health/allergy/dietary prefs */}
+            {step >= 2 && (
+              <TouchableOpacity
+                style={styles.skipBtn}
+                onPress={handleCreateAndSkip}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.skipText}>{tc('buttons.skip')}</Text>
+              </TouchableOpacity>
+            )}
 
-          {/* ── Step 4: Dietary Preferences ── */}
-          {step === 4 && (
-            <View style={styles.card}>
-              {renderChipHeader(
-                to('question.dietaryPreferences'),
-                dietaryPrefs.length,
-                to('count.preference', { count: dietaryPrefs.length }),
-              )}
-              {renderChips(DIETARY_PREFERENCE_KEYS, 'dietaryPreferences', dietaryPrefs, key =>
-                setDietaryPrefs(prev => toggle(prev, key))
-              )}
-            </View>
-          )}
-
-          {/* Quick-start link — shown on steps 2-4 so users can create
-              their account without filling health/allergy/dietary prefs */}
-          {step >= 2 && (
-            <TouchableOpacity
-              style={styles.skipBtn}
-              onPress={handleCreateAndSkip}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.skipText}>{tc('buttons.skip')}</Text>
-            </TouchableOpacity>
-          )}
-
-          <View style={{ height: 120 }} />
-        </ScrollView>
+            <View style={{ height: 120 }} />
+          </ScrollView>
+          <HeaderEdge scrollY={edge.scrollY} style={HEADER_EDGE_AT_TOP} />
+        </View>
 
         {/* ── Footer — hidden when date picker is open ── */}
         {!showDatePicker && (
@@ -690,6 +696,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 8,
     paddingBottom: 24,
+  },
+
+  scrollWrap: {
+    flex: 1,
   },
 
   stepHeader: {

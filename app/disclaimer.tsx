@@ -26,6 +26,7 @@ import { useJourney } from '@/lib/journeyContext';
 import { shouldShowWhatsNew } from './whats-new';
 import { Colors, Shadows } from '@/constants/theme';
 import { TickIcon } from '@/components/MenuIcons';
+import { HeaderEdge, HEADER_EDGE_AT_TOP, useScrollEdge } from '@/components/HeaderEdge';
 import Logo from '../assets/images/logo.svg';
 
 const CHECKS = ['check1', 'check2', 'check3', 'check4'] as const;
@@ -37,6 +38,7 @@ export default function DisclaimerScreen() {
   const { advanceTo } = useJourney();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation('journey');
+  const edge = useScrollEdge();
 
   // Entrance/exit animation (horizontal slide, matching the journey flow)
   const contentOpacity = useRef(new Animated.Value(0)).current;
@@ -140,16 +142,11 @@ export default function DisclaimerScreen() {
       {/* Logo — matches onboarding screen positioning */}
       <View style={styles.logoArea}>
         <Logo width={141} height={36} />
-        {/* Fade overlay — content fades as it scrolls behind the logo */}
-        <LinearGradient
-          colors={[Colors.background, 'rgba(226,241,238,0)']}
-          style={styles.logoFade}
-          pointerEvents="none"
-        />
       </View>
 
       <View style={{ flex: 1 }}>
         <ScrollView
+          {...edge.scrollProps}
           style={{ flex: 1 }}
           contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
@@ -223,6 +220,7 @@ export default function DisclaimerScreen() {
           <View style={{ height: 180 }} />
           </Animated.View>
         </ScrollView>
+        <HeaderEdge scrollY={edge.scrollY} style={HEADER_EDGE_AT_TOP} />
       </View>
 
       {/* ── Footer ── */}
@@ -269,13 +267,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
     zIndex: 2,
     overflow: 'visible',
-  },
-  logoFade: {
-    position: 'absolute',
-    bottom: -32,
-    left: 0,
-    right: 0,
-    height: 32,
   },
 
   scroll: {

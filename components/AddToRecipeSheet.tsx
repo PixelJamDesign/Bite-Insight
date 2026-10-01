@@ -25,6 +25,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ActionSearchIcon } from '@/components/MenuIcons';
 import { TextField } from '@/components/TextField';
 import { LottieLoader } from '@/components/LottieLoader';
+import { HeaderEdge, HEADER_EDGE_AT_TOP, useScrollEdge } from '@/components/HeaderEdge';
 import { router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
@@ -53,6 +54,12 @@ export function AddToRecipeSheet({ visible, onClose, snapshot, barcode }: Props)
   const [search, setSearch] = useState('');
   const [adding, setAdding] = useState<string | null>(null); // recipe id being added
   const { rendered, backdropOpacity, sheetTranslateY } = useSheetAnimation(visible);
+  const listEdge = useScrollEdge();
+
+  // The list remounts at the top each time the sheet opens.
+  useEffect(() => {
+    if (visible) listEdge.scrollY.setValue(0);
+  }, [visible, listEdge.scrollY]);
 
   useEffect(() => {
     if (!visible || !session?.user?.id) return;
@@ -248,39 +255,43 @@ export function AddToRecipeSheet({ visible, onClose, snapshot, barcode }: Props)
               <LottieLoader type="loading" fullScreen={false} />
             </View>
           ) : (
-            <FlatList
-              data={filteredRecipes}
-              keyExtractor={(r) => r.id}
-              contentContainerStyle={{ paddingBottom: Spacing.l }}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.recipeRow}
-                  onPress={() => handleAddToExisting(item)}
-                  disabled={adding === item.id}
-                  activeOpacity={0.8}
-                >
-                  <View style={styles.recipeThumb}>
-                    {item.cover_image_url ? (
-                      <Image source={{ uri: item.cover_image_url }} style={styles.recipeThumbImage} resizeMode="cover" />
+            <View style={styles.listWrap}>
+              <FlatList
+                {...listEdge.scrollProps}
+                data={filteredRecipes}
+                keyExtractor={(r) => r.id}
+                contentContainerStyle={{ paddingBottom: Spacing.l }}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.recipeRow}
+                    onPress={() => handleAddToExisting(item)}
+                    disabled={adding === item.id}
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.recipeThumb}>
+                      {item.cover_image_url ? (
+                        <Image source={{ uri: item.cover_image_url }} style={styles.recipeThumbImage} resizeMode="cover" />
+                      ) : (
+                        <Ionicons name="restaurant-outline" size={18} color={Colors.secondary} />
+                      )}
+                    </View>
+                    <View style={styles.recipeInfo}>
+                      <Text style={styles.recipeName} numberOfLines={1}>{item.name}</Text>
+                      <Text style={styles.recipeMeta}>
+                        {item.servings} {item.servings === 1 ? 'serving' : 'servings'}
+                        {item.total_kcal != null ? ` · ${item.total_kcal} kcal` : ''}
+                      </Text>
+                    </View>
+                    {adding === item.id ? (
+                      <ActivityIndicator color={Colors.secondary} />
                     ) : (
-                      <Ionicons name="restaurant-outline" size={18} color={Colors.secondary} />
+                      <Ionicons name="chevron-forward" size={18} color={Colors.secondary} />
                     )}
-                  </View>
-                  <View style={styles.recipeInfo}>
-                    <Text style={styles.recipeName} numberOfLines={1}>{item.name}</Text>
-                    <Text style={styles.recipeMeta}>
-                      {item.servings} {item.servings === 1 ? 'serving' : 'servings'}
-                      {item.total_kcal != null ? ` · ${item.total_kcal} kcal` : ''}
-                    </Text>
-                  </View>
-                  {adding === item.id ? (
-                    <ActivityIndicator color={Colors.secondary} />
-                  ) : (
-                    <Ionicons name="chevron-forward" size={18} color={Colors.secondary} />
-                  )}
-                </TouchableOpacity>
-              )}
-            />
+                  </TouchableOpacity>
+                )}
+              />
+              <HeaderEdge scrollY={listEdge.scrollY} color="#ffffff" style={HEADER_EDGE_AT_TOP} />
+            </View>
           )}
         </SafeAreaView>
         </Animated.View>
@@ -407,6 +418,8 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_700Bold',
   },
   loadingWrap: { padding: Spacing.l, alignItems: 'center' },
+  // Shrinks with the list when the sheet hits its max height.
+  listWrap: { flexShrink: 1 },
 
   recipeRow: {
     flexDirection: 'row',

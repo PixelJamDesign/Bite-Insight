@@ -36,7 +36,7 @@ import { Colors } from '@/constants/theme';
 import { MenuModal, MenuBarLeading } from '@/components/MenuModal';
 import { IconButton } from '@/components/IconButton';
 import { MenuArrowLeftIcon } from '@/components/MenuIcons';
-import { HeaderEdge } from '@/components/HeaderEdge';
+import { FrostedHeader } from '@/components/HeaderEdge';
 import { titleCollapse } from '@/components/headerMotion';
 
 /** A subtitle, or a function that builds it for the large or compact header. */
@@ -217,11 +217,19 @@ export function ScreenLayout({ title, subtitle, headerExtension, onBack, childre
           {children}
         </View>
 
-        {/* ── Large title + pinned controls ── */}
-        <Animated.View style={[styles.stack, { top: navHeight, transform: [{ translateY: stackShift }] }]}>
-          {/* First, so the pinned controls (e.g. a card that opens over
-              the list) draw over the fade. */}
-          <HeaderEdge scrollY={scrollY} />
+        {/* ── Frosted glass behind the button row and pinned controls.
+            Moves with them, and shows once the list passes underneath
+            (after the large title has gone). ── */}
+        <FrostedHeader
+          scrollY={scrollY}
+          showFrom={T}
+          style={[styles.frost, { top: 0, height: navHeight + insetTop, transform: [{ translateY: stackShift }] }]}
+        />
+
+        {/* ── Large title + pinned controls. Clipped at the button row, so
+            the title slides away under it. ── */}
+        <View style={[styles.stackClip, { top: navHeight }]} pointerEvents="box-none">
+        <Animated.View style={[styles.stack, { transform: [{ translateY: stackShift }] }]}>
           <Animated.View style={[styles.largeTitle, { opacity: largeOpacity }]} onLayout={onTitleLayout}>
             <Text style={styles.titleText} numberOfLines={2} accessibilityRole="header">
               {title}
@@ -230,6 +238,7 @@ export function ScreenLayout({ title, subtitle, headerExtension, onBack, childre
           </Animated.View>
           <View onLayout={onExtensionLayout}>{headerExtension}</View>
         </Animated.View>
+        </View>
 
         {/* ── Menu overlay ── */}
         {menuVisible && (
@@ -411,12 +420,22 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
   },
-  stack: {
+  frost: {
+    zIndex: 4,
+  },
+  stackClip: {
     position: 'absolute',
     left: 0,
     right: 0,
-    backgroundColor: Colors.background,
+    bottom: 0,
+    overflow: 'hidden',
     zIndex: 5,
+  },
+  stack: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
   },
   largeTitle: {
     paddingHorizontal: 24,
@@ -462,11 +481,10 @@ const styles = StyleSheet.create({
     gap: 16,
     paddingHorizontal: 24,
     paddingBottom: NAV_BOTTOM_GAP,
-    backgroundColor: Colors.background,
     zIndex: 20,
   },
+  // The menu draws its own frosted glass behind this row.
   navBarMenu: {
-    backgroundColor: '#fff',
     justifyContent: 'space-between',
   },
   logo: {
