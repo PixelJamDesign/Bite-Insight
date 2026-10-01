@@ -13,7 +13,13 @@ import { createContext, useCallback, useContext, useMemo, useState, type ReactNo
 import { draftItemFromEntry, withPortion } from './mealPlan';
 import type { Meal, MealItemDraft, QuantityUnit } from './types';
 
+let draftIdSeq = 0;
+const nextDraftId = () => ++draftIdSeq;
+
 export interface DraftMeal {
+  /** New for every startNew/startEdit, so per-draft UI state (e.g. the
+   *  Save as a recipe tick) resets even for the same day or meal. */
+  id: number;
   /** Set when editing an existing meal. */
   editingMealId: string | null;
   dateKey: string;
@@ -50,11 +56,12 @@ export function DraftMealProvider({ children }: { children: ReactNode }) {
   const [draft, setDraft] = useState<DraftMeal | null>(null);
 
   const startNew = useCallback((dateKey: string, time: string) => {
-    setDraft({ editingMealId: null, dateKey, time, name: '', items: [] });
+    setDraft({ id: nextDraftId(), editingMealId: null, dateKey, time, name: '', items: [] });
   }, []);
 
   const startEdit = useCallback((meal: Meal) => {
     setDraft({
+      id: nextDraftId(),
       editingMealId: meal.id,
       dateKey: meal.plan_date,
       time: meal.meal_time,

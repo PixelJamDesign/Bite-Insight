@@ -6,7 +6,7 @@
  *   const { meals, byDate, loading, error, refresh } = useMealPlanWeek(weekStart);
  *   const impact = useMealPlanImpact(meals);
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { supabase } from './supabase';
 import { useAuth } from './auth';
@@ -153,6 +153,15 @@ export function useMealPlanImpact(meals: Meal[]): MealPlanImpact {
     [meals],
   );
 
+  // Bumped each time the screen comes back into view, so a recipe edited
+  // elsewhere (new ingredient, different servings) is re-checked.
+  const [focusTick, setFocusTick] = useState(0);
+  useFocusEffect(
+    useCallback(() => {
+      setFocusTick((t) => t + 1);
+    }, []),
+  );
+
   useEffect(() => {
     if (!recipeIdsKey) {
       setRecipeIngredients({});
@@ -180,7 +189,7 @@ export function useMealPlanImpact(meals: Meal[]): MealPlanImpact {
     return () => {
       cancelled = true;
     };
-  }, [recipeIdsKey]);
+  }, [recipeIdsKey, focusTick]);
 
   useRepairMissingNutrition(meals);
 
@@ -212,16 +221,19 @@ function hasNoNutrition(item: MealPlanEntry): boolean {
  * once and save it back, so the meal can be scored and totalled. The
  * planner's realtime feed (or the next focus) picks up the change.
  */
+/** Shared by every screen using the hook (dashboard and planner), so an
+ *  item is only looked up once per app session. */
+const repairTried = new Set<string>();
+
 function useRepairMissingNutrition(meals: Meal[]) {
-  const tried = useRef(new Set<string>());
 
   useEffect(() => {
     const broken = meals
       .flatMap((m) => m.items)
       .filter((i) => i.kind === 'product' && i.barcode && i.product_snapshot && hasNoNutrition(i))
-      .filter((i) => !tried.current.has(i.id));
+      .filter((i) => !repairTried.has(i.id));
     for (const item of broken) {
-      tried.current.add(item.id);
+      repairTried.add(item.id);
       const snap = item.product_snapshot!;
       snapshotFromOff({
         barcode: item.barcode!,
@@ -236,6 +248,7 @@ function useRepairMissingNutrition(meals: Meal[]) {
           ...snap,
           nutrition_per_100g: fresh.nutrition_per_100g,
           allergens: snap.allergens?.length ? snap.allergens : fresh.allergens,
+          ingredients: snap.ingredients?.length ? snap.ingredients : fresh.ingredients,
           ingredients_text: snap.ingredients_text ?? fresh.ingredients_text,
         };
         const nutrition = productNutrition(

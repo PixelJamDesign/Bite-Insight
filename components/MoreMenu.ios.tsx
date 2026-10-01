@@ -10,14 +10,13 @@
  * Android uses MoreMenu.native.tsx; web uses MoreMenu.tsx.
  */
 import { Button, Host, Menu, RNHostView, Section } from '@expo/ui/swift-ui';
-import { menuOrder } from '@expo/ui/swift-ui/modifiers';
+import { accessibilityLabel as a11yLabel, menuOrder } from '@expo/ui/swift-ui/modifiers';
 import { IconButton } from '@/components/IconButton';
 import type { MoreMenuProps } from '@/components/moreMenuTypes';
 import MoreIcon from '@/assets/icons/more.svg';
 
 /** Lets the menu finish closing before an action presents a Modal. */
 const MENU_DISMISS_MS = 250;
-const FIXED_ORDER = [menuOrder('fixed')];
 
 export function MoreMenu({ actions, title, variant = 'onTeal', size = 'small', accessibilityLabel }: MoreMenuProps) {
   const iconSize = size === 'small' ? 20 : 24;
@@ -34,7 +33,7 @@ export function MoreMenu({ actions, title, variant = 'onTeal', size = 'small', a
   return (
     <Host matchContents testID={accessibilityLabel} ignoreSafeArea="all">
       <Menu
-        modifiers={FIXED_ORDER}
+        modifiers={[menuOrder('fixed'), a11yLabel(accessibilityLabel ?? 'More actions')]}
         label={
           <RNHostView matchContents>
             {/* Visual only — the menu handles the tap. */}

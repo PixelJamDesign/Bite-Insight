@@ -70,7 +70,11 @@ export function AddIngredientSheet({
 export function AddIngredientOptions({
   onPick,
   includeRecipes = false,
-}: Pick<Props, 'onPick' | 'includeRecipes'>) {
+  includeScan = true,
+}: Pick<Props, 'onPick' | 'includeRecipes'> & {
+  /** Off where the scanner can't come back to the caller. */
+  includeScan?: boolean;
+}) {
   return (
     <View style={styles.options}>
       {includeRecipes && (
@@ -87,12 +91,14 @@ export function AddIngredientOptions({
         subtitle="Browse the Open Food Facts database"
         onPress={() => onPick('search')}
       />
-      <Option
-        icon="barcode-outline"
-        title="Scan a barcode"
-        subtitle="Use the camera to scan a product"
-        onPress={() => onPick('scan')}
-      />
+      {includeScan && (
+        <Option
+          icon="barcode-outline"
+          title="Scan a barcode"
+          subtitle="Use the camera to scan a product"
+          onPress={() => onPick('scan')}
+        />
+      )}
       <Option
         icon="time-outline"
         title="Add from scan history"

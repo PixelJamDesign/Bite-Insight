@@ -328,30 +328,30 @@ export function scoreMeal(
   }
 
   // Per-meal limits — the worse of the two wins.
+  const densityLevel = level;
   const portionCheck = checkPortions(meal, tags);
   if (LEVEL_RANK[portionCheck.level] > LEVEL_RANK[level]) level = portionCheck.level;
 
   if (self?.status === 'caution' && level === 'planned') level = 'caution';
   if (level === 'planned') return null;
 
-  // A crossed per-meal limit is the clearest reason, so it leads.
-  if (portionCheck.sentences.length > 0) {
-    const clashes = (self?.reasons ?? []).map((r) => `${humanise(r)}.`);
-    return {
-      level,
-      reason: null,
-      explanation: [...portionCheck.sentences.slice(0, MAX_REASONS), ...clashes].join(' '),
-    };
-  }
-
-  // Otherwise the worst one or two insights, then any diet or condition clash.
+  // A crossed per-meal limit is the clearest reason, so it leads. The
+  // density insights follow when they're what set the colour, then any
+  // diet or condition clash.
   const phrases = offenders
     .sort((a, b) => b.score - a.score)
     .map((o) => INSIGHT_PHRASE[o.key])
     .filter((p): p is string => Boolean(p))
     .slice(0, MAX_REASONS);
+  const densitySentence = phrases.length ? `It's ${joinReasons(phrases)}.` : null;
+  const showDensity =
+    portionCheck.sentences.length === 0 || LEVEL_RANK[densityLevel] > LEVEL_RANK[portionCheck.level];
   const clashes = (self?.reasons ?? []).map((r) => `${humanise(r)}.`);
-  const sentences = [phrases.length ? `It's ${joinReasons(phrases)}.` : null, ...clashes].filter(Boolean);
+  const sentences = [
+    ...portionCheck.sentences.slice(0, MAX_REASONS),
+    showDensity ? densitySentence : null,
+    ...clashes,
+  ].filter(Boolean);
   return { level, reason: null, explanation: sentences.length ? sentences.join(' ') : null };
 }
 

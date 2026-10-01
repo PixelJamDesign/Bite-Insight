@@ -50,6 +50,9 @@ const ALLERGEN_SYNONYMS: Record<string, string[]> = {
   'sesame': ['sesame', 'tahini'],
   'sulphites': ['sulphite', 'sulfite', 'sulphur dioxide', 'sulfur dioxide', 'e220', 'e221', 'e222', 'e223', 'e224', 'e225', 'e226', 'e227', 'e228'],
   'lupin': ['lupin'],
+  'sulphite': ['sulphite', 'sulfite', 'sulphur dioxide', 'sulfur dioxide', 'e220', 'e221', 'e222', 'e223', 'e224', 'e225', 'e226', 'e227', 'e228'],
+  'msg': ['msg', 'monosodium glutamate', 'e621'],
+  'aloe vera': ['aloe vera', 'aloe'],
 };
 
 // ── Dietary preference conflict map ──────────────────────────────────────────
@@ -106,6 +109,12 @@ const CONDITION_KEYWORDS: Record<string, string[]> = {
 
 function norm(s: string): string {
   return s.toLowerCase().trim();
+}
+
+/** Profile keys are camelCase ('treeNut', 'aloeVera'); split them into
+ *  words before looking them up or showing them ('tree nut'). */
+function keyToWords(s: string): string {
+  return norm(s.replace(/([a-z])([A-Z])/g, '$1 $2'));
 }
 
 function textContainsAny(text: string, keywords: string[]): boolean {
@@ -188,11 +197,13 @@ function findFlagsForMember(
       .map((i) => i.name)
       .join(', ');
     const allergens = asArray<string>(snap.allergens).map(norm);
-    const searchText = `${productName} ${productIngredients}`;
+    // The raw ingredient text too — structured lists are often empty.
+    const searchText = `${productName} ${productIngredients} ${snap.ingredients_text ?? ''}`;
 
     // ── Allergies → avoid ─────────────────────────────────────────────────
     for (const allergy of member.allergies) {
-      const keywords = ALLERGEN_SYNONYMS[norm(allergy)] ?? [norm(allergy)];
+      const words = keyToWords(allergy);
+      const keywords = ALLERGEN_SYNONYMS[words] ?? [words];
 
       // Check OFF allergens array (authoritative) first
       const hitsAllergenTag = keywords.some((kw) =>
@@ -205,7 +216,7 @@ function findFlagsForMember(
         flags.push({
           ingredientId: ing.id,
           ingredientName: productName,
-          reason: `Contains ${allergy.toLowerCase()}`,
+          reason: `Contains ${words}`,
           severity: 'avoid',
         });
         break; // one allergy flag per ingredient is enough
@@ -219,7 +230,7 @@ function findFlagsForMember(
         flags.push({
           ingredientId: ing.id,
           ingredientName: productName,
-          reason: `Not suitable for ${pref}`,
+          reason: `Not suitable for ${keyToWords(pref)}`,
           severity: 'caution',
         });
         break;
@@ -233,7 +244,7 @@ function findFlagsForMember(
         flags.push({
           ingredientId: ing.id,
           ingredientName: productName,
-          reason: `May affect ${condition.toLowerCase()}`,
+          reason: `May affect ${keyToWords(condition)}`,
           severity: 'caution',
         });
         break;

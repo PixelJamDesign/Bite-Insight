@@ -3459,6 +3459,12 @@ export default function ScanResultScreen() {
           builderHiddenRef.current = false;
           setBuilderOpen(false);
         }}
+        onUnhide={() => {
+          builderHiddenRef.current = false;
+          setBuilderOpen(true);
+        }}
+        // The scanner can't come back to a product page.
+        scanReturnTo={null}
       />
 
       <ImageViewer

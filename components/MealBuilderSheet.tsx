@@ -100,9 +100,15 @@ interface Props {
   onHide: () => void;
   /** The meal was saved or discarded. The draft has been cleared. */
   onDone: (result: { saved: boolean; dateKey: string }) => void;
+  /** Bring the sheet back after it hid itself for a Modal (the Plus
+   *  upsell), which no focus event will announce. */
+  onUnhide?: () => void;
+  /** Where the scanner returns to after "Scan a barcode". null hides the
+   *  option — e.g. from a product page, which the scanner can't get back to. */
+  scanReturnTo?: string | null;
 }
 
-export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
+export function MealBuilderSheet({ visible, onHide, onDone, onUnhide, scanReturnTo = '/meal-plan' }: Props) {
   const { rendered, backdropOpacity, sheetTranslateY } = useSheetAnimation(visible);
   const { height: windowHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -110,7 +116,15 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
   const { session } = useAuth();
   const { showToast } = useToast();
   const { isPlus } = useSubscription();
-  const { showUpsell } = useUpsellSheet();
+  const { showUpsell, visible: upsellVisible } = useUpsellSheet();
+  // Set while hidden for the upsell; when it closes, ask to come back.
+  const hiddenForUpsell = useRef(false);
+  useEffect(() => {
+    if (upsellVisible || !hiddenForUpsell.current) return;
+    hiddenForUpsell.current = false;
+    onUnhide?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [upsellVisible]);
   const draftMeal = useDraftMeal();
   // The draft is cleared the moment a meal is saved or discarded; keep
   // the last one so the sheet still has something to show as it slides out.
@@ -186,7 +200,7 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
   useEffect(() => {
     setSaveAsRecipe(false);
     setSaving(false);
-  }, [d?.editingMealId, d?.dateKey]);
+  }, [d?.id]);
 
   const nutrition = useMemo(() => mealNutritionSummary(d?.items ?? []), [d?.items]);
   const nutritionRows = useNutritionRows();
@@ -233,7 +247,7 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
       // The scanner can't router.back() to us reliably, so tell it where
       // to land — same reason the recipe builder passes returnTo.
       router.push(
-        `/(tabs)/scanner?addToMeal=1&returnTo=${encodeURIComponent('/meal-plan')}` as never,
+        `/(tabs)/scanner?addToMeal=1&returnTo=${encodeURIComponent(scanReturnTo ?? '/meal-plan')}` as never,
       );
     }
   }
@@ -241,6 +255,7 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
   function handleToggleSaveAsRecipe() {
     if (!isPlus) {
       // Let this sheet finish closing before the upsell Modal opens.
+      hiddenForUpsell.current = true;
       onHide();
       setTimeout(showUpsell, 350);
       return;
@@ -282,14 +297,24 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
       });
     } else {
       showToast({
-        message: recipeSaved ? `Planned for ${when} and saved to your recipes` : `Planned for ${when}`,
+        message: isEditing
+          ? `Saved your changes to ${resolvedName}`
+          : recipeSaved
+            ? `Planned for ${when} and saved to your recipes`
+            : `Planned for ${when}`,
         variant: 'success',
       });
     }
   }
 
   return (
-    <Modal visible={rendered} transparent animationType="none" onRequestClose={handleDiscard}>
+    <Modal
+      visible={rendered}
+      transparent
+      animationType="none"
+      // Android back: a step goes back to the form; the form asks to discard.
+      onRequestClose={step !== 'main' ? () => goTo('main') : handleDiscard}
+    >
       <View style={styles.backdrop}>
         <Animated.View style={[styles.backdropTint, { opacity: backdropOpacity }]}>
           {/* Tapping outside only closes an empty meal — a stray tap
@@ -350,7 +375,11 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
               {step === 'add' && (
                 <Reanimated.View style={[styles.stepBody, contentStyle]}>
                   <Text style={styles.title}>Add to meal</Text>
-                  <AddIngredientOptions onPick={handleAddSourceSelected} includeRecipes />
+                  <AddIngredientOptions
+                    onPick={handleAddSourceSelected}
+                    includeRecipes
+                    includeScan={scanReturnTo !== null}
+                  />
                 </Reanimated.View>
               )}
 
@@ -502,6 +531,7 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
                         title="Save as a recipe"
                         supportingText="Put this meal in your recipe book for future use."
                         trailing={!isPlus ? <PlusBadge size="small" /> : null}
+                        accessibilityHint={!isPlus ? 'Needs Bite Insight Plus' : undefined}
                       />
                     )}
                   </FadingScrollView>

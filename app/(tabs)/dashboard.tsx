@@ -894,6 +894,11 @@ export default function HomeDashboard() {
           setBuilderOpen(false);
           if (saved) loadTodayMeals();
         }}
+        onUnhide={() => {
+          builderHiddenRef.current = false;
+          setBuilderOpen(true);
+        }}
+        scanReturnTo="/dashboard"
       />
 
       {/* ── Flag Reason Sheet ── */}

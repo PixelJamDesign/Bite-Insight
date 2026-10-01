@@ -48,7 +48,13 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 
   useEffect(() => {
     let x = tabPositions.current[activeName];
-    if (x === undefined) return;
+    // Screens that aren't in the tab bar (Scan history, ingredient
+    // preferences) get no pill rather than a stale one.
+    if (x === undefined) {
+      indicatorOpacity.setValue(0);
+      return;
+    }
+    indicatorOpacity.setValue(1);
     // Center the 48px indicator behind the wider 84px scanner button
     if (activeName === 'scanner') x += 18;
     if (!initializedRef.current) {

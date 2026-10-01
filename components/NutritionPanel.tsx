@@ -77,7 +77,9 @@ export function NutritionPanel({
   notice,
   noData,
 }: Props) {
-  const [mode, setMode] = useState<Mode>('serving');
+  const [chosenMode, setMode] = useState<Mode>('serving');
+  // Per 100g can disappear (a recipe joins the meal); fall back with it.
+  const mode: Mode = chosenMode === 'per100' && per100 ? 'per100' : 'serving';
   const values = mode === 'per100' && per100 ? per100 : perServing;
 
   if (noData) {

@@ -402,6 +402,9 @@ export async function saveMeal(userId: string, input: SaveMealInput): Promise<st
   const name = input.name.trim() || defaultMealName(input.time);
   let mealId = input.id ?? null;
   const isNew = !mealId;
+  // On an edit, the old items are only removed once the new ones are in,
+  // so a failed save never leaves the meal empty.
+  let oldItemIds: string[] = [];
 
   if (mealId) {
     const { error } = await supabase
@@ -412,11 +415,15 @@ export async function saveMeal(userId: string, input: SaveMealInput): Promise<st
       console.warn('[mealPlan] saveMeal update error:', error.message);
       return null;
     }
-    const { error: delErr } = await supabase.from('meal_plan_entries').delete().eq('meal_id', mealId);
-    if (delErr) {
-      console.warn('[mealPlan] saveMeal clear items error:', delErr.message);
+    const { data: old, error: oldErr } = await supabase
+      .from('meal_plan_entries')
+      .select('id')
+      .eq('meal_id', mealId);
+    if (oldErr) {
+      console.warn('[mealPlan] saveMeal read items error:', oldErr.message);
       return null;
     }
+    oldItemIds = (old ?? []).map((r: { id: string }) => r.id);
   } else {
     const { data, error } = await supabase
       .from('meals')
@@ -439,6 +446,11 @@ export async function saveMeal(userId: string, input: SaveMealInput): Promise<st
       if (isNew) await supabase.from('meals').delete().eq('id', mealId);
       return null;
     }
+  }
+  if (oldItemIds.length > 0) {
+    const { error: delErr } = await supabase.from('meal_plan_entries').delete().in('id', oldItemIds);
+    // The new items are saved; leftover old ones would double up, so say so.
+    if (delErr) console.warn('[mealPlan] saveMeal clear old items error:', delErr.message);
   }
   return mealId;
 }
@@ -549,28 +561,34 @@ export function mealNutritionSummary(items: SummaryItem[]): {
   const missing = items.filter((i) => !hasNutrition(i));
   const withData = items.filter(hasNutrition);
 
-  // Weigh only the items that have data, so a gap doesn't dilute per 100g.
+  // Per 100g needs weights, which only products have. Each nutrient is
+  // scaled over just the products that list it, so a gap doesn't dilute it.
   const allProducts = withData.length > 0 && withData.every((i) => i.kind === 'product');
-  const grams = allProducts
-    ? withData.reduce((sum, i) => sum + quantityToGrams(Number(i.quantity_value ?? 100), i.quantity_unit ?? 'g'), 0)
-    : 0;
-  if (grams <= 0) {
+  if (!allProducts) {
     // Nothing to work a score out from — a lone recipe keeps its own.
     const lone = items.length === 1 ? (items[0].nutriscore_grade as NutriscoreGrade | null) : null;
     return { perServing, per100: null, grade: lone, missing };
   }
-
-  const f = 100 / grams;
-  const scale = (v: number | null) => (v == null ? null : v * f);
+  const per100For = (key: keyof MealNutrition): number | null => {
+    let grams = 0;
+    let total = 0;
+    for (const i of withData) {
+      const v = i.nutrition?.[key];
+      if (v == null) continue;
+      grams += quantityToGrams(Number(i.quantity_value ?? 100), i.quantity_unit ?? 'g');
+      total += Number(v);
+    }
+    return grams > 0 ? (total / grams) * 100 : null;
+  };
   const per100: NutritionValues = {
-    kcal: scale(perServing.kcal),
-    fat: scale(perServing.fat),
-    satFat: scale(perServing.satFat),
-    carbs: scale(perServing.carbs),
-    sugars: scale(perServing.sugars),
-    fiber: scale(perServing.fiber),
-    protein: scale(perServing.protein),
-    salt: scale(perServing.salt),
+    kcal: per100For('kcal'),
+    fat: per100For('fat_g'),
+    satFat: per100For('sat_fat_g'),
+    carbs: per100For('carbs_g'),
+    sugars: per100For('sugars_g'),
+    fiber: per100For('fiber_g'),
+    protein: per100For('protein_g'),
+    salt: per100For('salt_g'),
   };
   const grade = computeNutriscore({
     energy_kcal_100g: per100.kcal ?? undefined,

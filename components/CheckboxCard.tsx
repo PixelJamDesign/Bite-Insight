@@ -18,10 +18,12 @@ interface Props {
   supportingText?: string;
   /** Extra element on the right, e.g. a Plus badge. */
   trailing?: React.ReactNode;
+  /** Read after the label, e.g. that the option needs Plus. */
+  accessibilityHint?: string;
   style?: StyleProp<ViewStyle>;
 }
 
-export function CheckboxCard({ checked, onPress, title, supportingText, trailing, style }: Props) {
+export function CheckboxCard({ checked, onPress, title, supportingText, trailing, accessibilityHint, style }: Props) {
   return (
     <TouchableOpacity
       style={[styles.card, style]}
@@ -29,7 +31,8 @@ export function CheckboxCard({ checked, onPress, title, supportingText, trailing
       activeOpacity={0.85}
       accessibilityRole="checkbox"
       accessibilityState={{ checked }}
-      accessibilityLabel={title}
+      accessibilityLabel={supportingText ? `${title}. ${supportingText}` : title}
+      accessibilityHint={accessibilityHint}
     >
       <View style={styles.positioner}>
         {checked ? <CheckedIcon width={24} height={24} /> : <View style={styles.box} />}

@@ -8,6 +8,7 @@
  * Actions run after a short pause so the menu has gone before anything
  * presents a Modal.
  */
+import { View } from 'react-native';
 import MenuView from '@expo/ui/community/menu';
 import { IconButton } from '@/components/IconButton';
 import type { MoreMenuProps } from '@/components/moreMenuTypes';
@@ -31,12 +32,15 @@ export function MoreMenu({ actions, title, variant = 'onTeal', size = 'small', a
       }}
       testID={accessibilityLabel}
     >
-      {/* Visual only — the native menu handles the tap. */}
+      {/* Visual only — the native menu handles the tap. The wrapper carries
+          the label so TalkBack reads the button. */}
+      <View accessible accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? 'More actions'}>
       <IconButton
         size={size}
         variant={variant}
         icon={<MoreIcon width={size === 'small' ? 20 : 24} height={size === 'small' ? 20 : 24} />}
       />
+      </View>
     </MenuView>
   );
 }

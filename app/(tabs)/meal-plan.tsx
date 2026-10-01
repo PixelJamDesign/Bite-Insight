@@ -307,19 +307,23 @@ export default function MealPlanScreen() {
   // sheet steps aside while that's up and comes back on the way back.
   const reopenMealIdRef = useRef<string | null>(null);
   function openMealItem(item: MealPlanEntry) {
+    // Work out where to go first — a recipe that's since been deleted has
+    // no page, and the sheet shouldn't close for nothing.
+    const go =
+      item.kind === 'recipe' && item.recipe_id
+        ? () => router.push(`/recipes/${item.recipe_id}` as never)
+        : item.kind === 'product' && item.product_snapshot
+          ? () =>
+              router.push({
+                pathname: '/scan-result',
+                params: scanResultParamsFromSnapshot(item.product_snapshot!, item.barcode),
+              })
+          : null;
+    if (!go) return;
     reopenMealIdRef.current = activeMealId;
     setActiveMealId(null);
     // Push once the sheet has slid away, or its Modal covers the new page.
-    setTimeout(() => {
-      if (item.kind === 'recipe' && item.recipe_id) {
-        router.push(`/recipes/${item.recipe_id}` as never);
-      } else if (item.product_snapshot) {
-        router.push({
-          pathname: '/scan-result',
-          params: scanResultParamsFromSnapshot(item.product_snapshot, item.barcode),
-        });
-      }
-    }, SHEET_EXIT_MS);
+    setTimeout(go, SHEET_EXIT_MS);
   }
 
   // "Add nutritional data" in the meal view: same step-aside-and-return.
@@ -333,8 +337,12 @@ export default function MealPlanScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (hasDraftRef.current) setBuilderOpen(true);
-      if (reopenMealIdRef.current) {
+      // One sheet at a time (two Modals at once freeze iOS): a meal still
+      // being built wins over reopening the meal view.
+      if (hasDraftRef.current) {
+        setBuilderOpen(true);
+        reopenMealIdRef.current = null;
+      } else if (reopenMealIdRef.current) {
         setActiveMealId(reopenMealIdRef.current);
         reopenMealIdRef.current = null;
       }
@@ -597,6 +605,7 @@ export default function MealPlanScreen() {
           setBuilderOpen(false);
           if (saved) refresh();
         }}
+        onUnhide={() => setBuilderOpen(true)}
       />
 
       <MealActionsSheet
