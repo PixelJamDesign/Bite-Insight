@@ -72,6 +72,7 @@ import { NutritionPanel, type NutritionValues } from '@/components/NutritionPane
 import { IconButton } from '@/components/IconButton';
 import { CheckboxCard } from '@/components/CheckboxCard';
 import { MealItemRow } from '@/components/MealItemRow';
+import { MealTimeCard } from '@/components/MealTimeCard';
 import { FadingScrollView } from '@/components/FadingScrollView';
 import { computeNutriscore, type NutriscoreGrade } from '@/lib/nutriscore';
 import { quantityToGrams } from '@/lib/recipes';
@@ -416,19 +417,7 @@ export function MealBuilderSheet({ visible, onHide, onDone }: Props) {
                         />
                       </View>
 
-                      <TouchableOpacity
-                        style={styles.inlineCard}
-                        onPress={() => goTo('time')}
-                        activeOpacity={0.85}
-                      >
-                        <View style={styles.inlineCardLeft}>
-                          <Text style={styles.h5}>Time</Text>
-                          <Text style={styles.caption}>When do you plan to eat?</Text>
-                        </View>
-                        <View style={styles.timeBox}>
-                          <Text style={styles.timeBoxText}>{d.time}</Text>
-                        </View>
-                      </TouchableOpacity>
+                      <MealTimeCard time={d.time} onPress={() => goTo('time')} />
                     </View>
 
                     {/* ── Items ───────────────────────────────────────── */}
@@ -662,13 +651,6 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     letterSpacing: -0.4,
   },
-  h5: {
-    fontSize: 16,
-    lineHeight: 20,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
-  },
   bodySmall: {
     fontSize: 16,
     lineHeight: 24,
@@ -696,38 +678,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
   },
 
-  inlineCard: {
-    backgroundColor: '#f5fbfb',
-    borderWidth: 1,
-    borderColor: '#aad4cd',
-    borderRadius: Radius.m,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  inlineCardLeft: { flex: 1, gap: 4 },
-  // Figma time "Tab": white, teal stroke, 109 wide
-  timeBox: {
-    width: 109,
-    backgroundColor: Colors.surface.secondary,
-    borderWidth: 1,
-    borderColor: '#aad4cd',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  timeBoxText: {
-    fontSize: 20,
-    lineHeight: 26,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.secondary,
-    letterSpacing: -0.5,
-    fontVariant: ['tabular-nums'],
-  },
   // Body Small — the supporting lines under card and section titles
   caption: {
     fontSize: 14,

@@ -452,8 +452,12 @@ export async function copyMeal(userId: string, meal: Meal, dateKey: string): Pro
 }
 
 /** Moves a meal to another day, keeping its time. */
-export async function moveMeal(meal: Meal, dateKey: string): Promise<boolean> {
-  const { error } = await supabase.from('meals').update({ plan_date: dateKey }).eq('id', meal.id);
+/** Moves a meal to another day, and to a new time when `time` is given. */
+export async function moveMeal(meal: Meal, dateKey: string, time?: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('meals')
+    .update(time ? { plan_date: dateKey, meal_time: normaliseTime(time) } : { plan_date: dateKey })
+    .eq('id', meal.id);
   if (error) {
     console.warn('[mealPlan] moveMeal error:', error.message);
     return false;

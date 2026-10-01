@@ -126,6 +126,7 @@ Reuse these before creating new components:
 | `NutritionPanel` | `@/components/NutritionPanel` | Nutrition block: Per serving / Per 100g tabs, macro stack, Estimated Nutri-score (recipe builder, Plan a meal) |
 | `CheckboxCard` | `@/components/CheckboxCard` | Figma "Checkbox": tinted card with checkbox, title and supporting text |
 | `MealItemRow` | `@/components/MealItemRow` | One recipe/product in a meal: image, brand, name, portion pill (Plan a meal sheet, meal view) |
+| `MealTimeCard` | `@/components/MealTimeCard` | "Time / When do you plan to eat?" card with the time box; opens the time picker (Plan a meal, Move meal) |
 | `MealTotalsList` | `@/components/MealTotalsList` | Stack of nutrition total rows with food icons |
 | `IconButton` | `@/components/IconButton` | Figma Icon Button: `size` regular (48) / small (36), `variant` onTeal / onWhite, optional `badge` |
 | `MoreMenu` | `@/components/MoreMenu` | ⋯ button with actions — native menu on iOS & Android (Expo UI MenuView), ActionsSheet on web. `size` small (36, default) / regular (48) |

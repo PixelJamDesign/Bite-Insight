@@ -6,10 +6,9 @@
  * hit the iOS double-modal freeze, see app/recipes/pick-scan.tsx):
  *   • 'actions' — the meal: name, item count, day and time, and its items.
  *                 The ⋯ button (MoreMenu — the system menu on iOS and
- *                 Android) holds Eating now / Edit / Move / Plan this
- *                 again / Remove.
- *   • 'move'    — day picker, moves this meal
- *   • 'copy'    — day picker, plans a fresh copy
+ *                 Android) holds Eating now / Edit / Move / Remove.
+ *   • 'move'    — day picker and time card, moves this meal
+ *   • 'time'    — the time wheel (MealTimeBody), back to 'move' on save
  */
 import { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, Animated, useWindowDimensions } from 'react-native';
@@ -17,13 +16,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Radius } from '@/constants/theme';
 import { useSheetAnimation } from '@/lib/useSheetAnimation';
-import { useAuth } from '@/lib/auth';
 import { useToast } from '@/lib/toastContext';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { useUpsellSheet } from '@/lib/upsellSheetContext';
 import {
-  addDays,
-  copyMeal,
   dayAtTimeLabel,
   deleteMeal,
   moveMeal,
@@ -38,15 +34,16 @@ import { MoreMenu } from '@/components/MoreMenu';
 import type { MoreMenuAction } from '@/components/moreMenuTypes';
 import { MealItemRow } from '@/components/MealItemRow';
 import { FadingScrollView } from '@/components/FadingScrollView';
+import { MealTimeCard } from '@/components/MealTimeCard';
+import { MealTimeBody } from '@/components/MealTimeSheet';
 import EditIcon from '@/assets/icons/recipe-actions/edit.svg';
-import DuplicateIcon from '@/assets/icons/recipe-actions/duplicate.svg';
 import TrashIcon from '@/assets/icons/recipe-actions/trash.svg';
 import TickIcon from '@/assets/icons/recipe-actions/tick.svg';
 import UndoIcon from '@/assets/icons/recipe-actions/undo.svg';
 import CalendarIcon from '@/assets/icons/recipe-actions/meal-plan.svg';
 import type { Meal } from '@/lib/types';
 
-type Mode = 'actions' | 'move' | 'copy';
+type Mode = 'actions' | 'move' | 'time';
 
 const MIN_HEIGHT_RATIO = 0.5;
 
@@ -65,7 +62,6 @@ interface Props {
 
 export function MealActionsSheet({ visible, meal: mealProp, onClose, onChanged, onEdit }: Props) {
   const { rendered, backdropOpacity, sheetTranslateY } = useSheetAnimation(visible);
-  const { session } = useAuth();
   const { showToast } = useToast();
   const { isPlus } = useSubscription();
   const { showUpsell } = useUpsellSheet();
@@ -77,6 +73,7 @@ export function MealActionsSheet({ visible, meal: mealProp, onClose, onChanged, 
 
   const [mode, setMode] = useState<Mode>('actions');
   const [targetDate, setTargetDate] = useState(toDateKey(new Date()));
+  const [targetTime, setTargetTime] = useState('12:00');
   const [busy, setBusy] = useState(false);
 
   // Reset whenever the sheet opens on a meal.
@@ -90,19 +87,14 @@ export function MealActionsSheet({ visible, meal: mealProp, onClose, onChanged, 
 
   if (!meal) return null;
 
-  function openPicker(next: 'move' | 'copy') {
+  function openMove() {
     if (!meal) return;
     const todayKey = toDateKey(new Date());
-    if (!isPlus) {
-      // Free accounts only ever plan today.
-      setTargetDate(todayKey);
-    } else if (next === 'move') {
-      // Can't move into the past — the picker only lists today onwards.
-      setTargetDate(meal.plan_date >= todayKey ? meal.plan_date : todayKey);
-    } else {
-      setTargetDate(meal.plan_date === todayKey ? toDateKey(addDays(new Date(), 1)) : todayKey);
-    }
-    setMode(next);
+    // Free accounts only ever plan today, and nothing moves into the
+    // past — the picker only lists today onwards.
+    setTargetDate(!isPlus || meal.plan_date < todayKey ? todayKey : meal.plan_date);
+    setTargetTime(normaliseTime(meal.meal_time));
+    setMode('move');
   }
 
   async function handleToggleEaten() {
@@ -132,14 +124,10 @@ export function MealActionsSheet({ visible, meal: mealProp, onClose, onChanged, 
     }
   }
 
-  async function handleConfirmPicker() {
-    const userId = session?.user?.id;
-    if (!meal || !userId || busy) return;
+  async function handleConfirmMove() {
+    if (!meal || busy) return;
     setBusy(true);
-    const ok =
-      mode === 'move'
-        ? await moveMeal(meal, targetDate)
-        : Boolean(await copyMeal(userId, meal, targetDate));
+    const ok = await moveMeal(meal, targetDate, targetTime);
     setBusy(false);
     if (!ok) {
       showToast({ message: 'Could not update your plan. Please try again.', variant: 'error' });
@@ -147,11 +135,7 @@ export function MealActionsSheet({ visible, meal: mealProp, onClose, onChanged, 
     }
     onClose();
     onChanged();
-    const where = dayAtTimeLabel(targetDate, meal.meal_time);
-    showToast({
-      message: mode === 'move' ? `Moved to ${where}` : `Added to ${where}`,
-      variant: 'success',
-    });
+    showToast({ message: `Moved to ${dayAtTimeLabel(targetDate, targetTime)}`, variant: 'success' });
   }
 
   const itemCount = meal.items.length;
@@ -178,18 +162,10 @@ export function MealActionsSheet({ visible, meal: mealProp, onClose, onChanged, 
     {
       key: 'move',
       label: 'Move',
-      subtitle: 'Shift it to another day',
+      subtitle: 'Change the day or time',
       systemImage: 'calendar',
       Icon: CalendarIcon,
-      onPress: () => openPicker('move'),
-    },
-    {
-      key: 'copy',
-      label: 'Plan this again',
-      subtitle: 'Add the same meal to another day',
-      systemImage: 'plus.square.on.square',
-      Icon: DuplicateIcon,
-      onPress: () => openPicker('copy'),
+      onPress: openMove,
     },
     {
       key: 'remove',
@@ -218,7 +194,7 @@ export function MealActionsSheet({ visible, meal: mealProp, onClose, onChanged, 
               {mode !== 'actions' ? (
                 <TouchableOpacity
                   style={styles.closeBtn}
-                  onPress={() => setMode('actions')}
+                  onPress={() => setMode(mode === 'time' ? 'move' : 'actions')}
                   hitSlop={12}
                   activeOpacity={0.7}
                   accessibilityLabel="Back"
@@ -274,14 +250,25 @@ export function MealActionsSheet({ visible, meal: mealProp, onClose, onChanged, 
                   ))}
                 </FadingScrollView>
               </View>
+            ) : mode === 'time' ? (
+              <View style={styles.timeStep}>
+                <MealTimeBody
+                  visible
+                  value={targetTime}
+                  onSave={(time) => {
+                    setTargetTime(time);
+                    setMode('move');
+                  }}
+                />
+              </View>
             ) : (
               <View style={styles.body}>
                 <View style={styles.titleBlock}>
                   <Text style={styles.title} numberOfLines={2}>
-                    {mode === 'move' ? 'Move meal' : 'Plan this again'}
+                    Move meal
                   </Text>
                   <Text style={styles.subtitle} numberOfLines={1}>
-                    {`${meal.name} · ${meal.meal_time}`}
+                    {meal.name}
                   </Text>
                 </View>
                 <MealDayPicker
@@ -295,15 +282,14 @@ export function MealActionsSheet({ visible, meal: mealProp, onClose, onChanged, 
                     setTimeout(showUpsell, 350);
                   }}
                 />
+                <MealTimeCard time={targetTime} onPress={() => setMode('time')} />
                 <TouchableOpacity
                   style={[styles.saveBtn, busy && styles.saveBtnBusy]}
-                  onPress={handleConfirmPicker}
+                  onPress={handleConfirmMove}
                   disabled={busy}
                   activeOpacity={0.85}
                 >
-                  <Text style={styles.saveBtnText}>
-                    {mode === 'move' ? 'Move meal' : 'Add to plan'}
-                  </Text>
+                  <Text style={styles.saveBtnText}>Move meal</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -355,6 +341,7 @@ const styles = StyleSheet.create({
     color: Colors.secondary,
   },
   items: { gap: 8 },
+  timeStep: { marginTop: 8 },
   titleBlock: { gap: 4 },
   title: {
     fontSize: 24,
