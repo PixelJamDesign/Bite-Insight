@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Linking, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/lib/supabase';
@@ -8,6 +8,18 @@ import { useAuth } from '@/lib/auth';
 const THRESHOLDS = [20, 40];
 const STORAGE_KEY_COMPLETED = 'review_prompt_completed'; // user said "yes!"
 const STORAGE_KEY_DISMISS_COUNT = 'review_prompt_dismiss_count'; // how many times dismissed
+// Debug menu: show the prompt on the next product page, whatever the count.
+const STORAGE_KEY_FORCE = 'review_prompt_force';
+
+/** Debug menu: the next product page opens with the review prompt. */
+export async function forceReviewPrompt() {
+  await AsyncStorage.setItem(STORAGE_KEY_FORCE, 'true');
+}
+
+/** Debug menu: forget the user's earlier answers so the prompt can fire again. */
+export async function resetReviewPrompt() {
+  await AsyncStorage.multiRemove([STORAGE_KEY_COMPLETED, STORAGE_KEY_DISMISS_COUNT, STORAGE_KEY_FORCE]);
+}
 
 // Store identifiers, used to deep-link the user straight into the review
 // flow on the right store for their platform.
@@ -58,6 +70,15 @@ export async function openStoreReview() {
 export function useReviewPrompt() {
   const { session } = useAuth();
   const [showReviewPrompt, setShowReviewPrompt] = useState(false);
+
+  // Forced from the debug menu: show once, as soon as the page opens.
+  useEffect(() => {
+    AsyncStorage.getItem(STORAGE_KEY_FORCE).then((v) => {
+      if (v !== 'true') return;
+      AsyncStorage.removeItem(STORAGE_KEY_FORCE);
+      setShowReviewPrompt(true);
+    });
+  }, []);
 
   const checkEligibility = useCallback(async () => {
     if (!session?.user?.id) return;

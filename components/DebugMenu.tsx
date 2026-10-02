@@ -23,6 +23,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { forceReviewPrompt, resetReviewPrompt } from '@/lib/useReviewPrompt';
+import { openScanResult } from '@/lib/openScan';
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { Colors, Spacing, Radius, Typography } from '@/constants/theme';
@@ -327,6 +329,31 @@ export function DebugMenu() {
     );
   };
 
+  // The review prompt lives on the product page, so open the latest scan
+  // with the prompt forced on.
+  const triggerReviewPrompt = async () => {
+    if (!session?.user?.id) return;
+    const { data, error } = await supabase
+      .from('scans')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .order('scanned_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error || !data) {
+      Alert.alert('No scans', 'Scan a product first, then try again.');
+      return;
+    }
+    await forceReviewPrompt();
+    hideDebugMenu();
+    await openScanResult(data);
+  };
+
+  const resetReviewPromptState = async () => {
+    await resetReviewPrompt();
+    Alert.alert('Reset', 'Review prompt answers cleared. It will fire again at 20 scans.');
+  };
+
   const resetWhatsNewSeen = async () => {
     await AsyncStorage.removeItem('lastSeenWhatsNewVersion');
     Alert.alert('Reset', 'What\'s New seen flag cleared. Reopen the app to see it again.');
@@ -388,6 +415,7 @@ export function DebugMenu() {
               <ActionButton label="Show Update toast" onPress={triggerUpdateToast} />
               <ActionButton label="Show paid Upsell sheet" onPress={triggerPaidUpsell} />
               <ActionButton label="Show My Plan sheet" onPress={triggerMyPlan} />
+              <ActionButton label="Show Review prompt" onPress={triggerReviewPrompt} />
               <ActionButton
                 label="Open OFF Contribute screen"
                 onPress={() => { hideDebugMenu(); router.push({ pathname: '/contribute-product', params: { barcode: '2000000000017' } }); }}
@@ -409,6 +437,7 @@ export function DebugMenu() {
               <ActionButton label="Reset trial cooldown (local)" onPress={resetTrialCooldown} />
               <ActionButton label="Reset trial status (Supabase)" onPress={resetTrialStatusOnServer} />
               <ActionButton label={`Reset "What's New" seen`} onPress={resetWhatsNewSeen} />
+              <ActionButton label="Reset Review prompt" onPress={resetReviewPromptState} />
               <ActionButton label="Nuke AsyncStorage" onPress={resetAllStorage} />
             </Section>
 
