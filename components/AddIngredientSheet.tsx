@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Shadows, Typography } from '@/constants/theme';
 import { useSheetAnimation } from '@/lib/useSheetAnimation';
 import { OptionCard } from '@/components/OptionCard';
+import { usePostHog } from 'posthog-react-native';
 
 export type AddSource = 'search' | 'scan' | 'history' | 'recipe';
 
@@ -64,6 +65,45 @@ export function AddIngredientSheet({
   );
 }
 
+type SourceRow = { source: AddSource; icon: keyof typeof Ionicons.glyphMap; title: string; subtitle: string };
+
+const SOURCE_ROWS: Record<AddSource, SourceRow> = {
+  history: {
+    source: 'history',
+    icon: 'time-outline',
+    title: 'Add from scan history',
+    subtitle: 'Pick from your recent scans',
+  },
+  recipe: {
+    source: 'recipe',
+    icon: 'restaurant-outline',
+    title: 'Choose a recipe',
+    subtitle: 'Pick from your recipe book',
+  },
+  search: {
+    source: 'search',
+    icon: 'search',
+    title: 'Search foods',
+    subtitle: 'Browse the Open Food Facts database',
+  },
+  scan: {
+    source: 'scan',
+    icon: 'barcode-outline',
+    title: 'Scan a barcode',
+    subtitle: 'Use the camera to scan a product',
+  },
+};
+
+/**
+ * Fixed orders, most likely first. Planning a meal you're usually not
+ * holding the product, so things already scanned and recipes come first;
+ * building a recipe you often are, so search and scan lead. Kept fixed on
+ * purpose: people learn where an option sits. `add_source_picked` in
+ * PostHog shows which get used, to tune these for everyone.
+ */
+const MEAL_ORDER: AddSource[] = ['history', 'recipe', 'search', 'scan'];
+const RECIPE_ORDER: AddSource[] = ['search', 'scan', 'history'];
+
 /**
  * The source rows without the sheet around them, so they can also be
  * shown as a step inside another sheet (MealBuilderSheet).
@@ -76,36 +116,27 @@ export function AddIngredientOptions({
   /** Off where the scanner can't come back to the caller. */
   includeScan?: boolean;
 }) {
+  const posthog = usePostHog();
+  const context = includeRecipes ? 'meal' : 'recipe';
+  const rows = (includeRecipes ? MEAL_ORDER : RECIPE_ORDER).filter((source) => includeScan || source !== 'scan');
+
   return (
     <View style={styles.options}>
-      {includeRecipes && (
-        <OptionCard
-          icon="restaurant-outline"
-          title="Choose a recipe"
-          subtitle="Pick from your recipe book"
-          onPress={() => onPick('recipe')}
-        />
-      )}
-      <OptionCard
-        icon="search"
-        title="Search foods"
-        subtitle="Browse the Open Food Facts database"
-        onPress={() => onPick('search')}
-      />
-      {includeScan && (
-        <OptionCard
-          icon="barcode-outline"
-          title="Scan a barcode"
-          subtitle="Use the camera to scan a product"
-          onPress={() => onPick('scan')}
-        />
-      )}
-      <OptionCard
-        icon="time-outline"
-        title="Add from scan history"
-        subtitle="Pick from your recent scans"
-        onPress={() => onPick('history')}
-      />
+      {rows.map((source, index) => {
+        const row = SOURCE_ROWS[source];
+        return (
+          <OptionCard
+            key={source}
+            icon={row.icon}
+            title={row.title}
+            subtitle={row.subtitle}
+            onPress={() => {
+              posthog?.capture('add_source_picked', { source, position: index + 1, context });
+              onPick(source);
+            }}
+          />
+        );
+      })}
     </View>
   );
 }
