@@ -148,7 +148,7 @@ const CARDS: CardData[] = [
     plus: true,
     description:
       "Plan what you're eating for any day of the week. Add products you've scanned or your own recipes, and we'll check each meal against your health profile before you eat it.",
-    plusNote: 'Bite Insight+ members unlock the ability to plan meals for the week!',
+    plusNote: 'Bite Insight+ members unlock the ability to plan meals for the week and save your meals as recipes in your recipe book!',
     subsections: [
       {
         heading: 'What you can do:',
@@ -156,7 +156,6 @@ const CARDS: CardData[] = [
           { title: 'Plan your meals', sub: "Free for today's meals. Add each one at the time you plan to eat it." },
           { title: 'See how a meal suits you', sub: "Meals turn amber or red when they don't fit your profile, and we'll tell you why." },
           { title: 'Keep track of your day', sub: 'Mark meals as eaten and see your totals for the day.' },
-          { title: 'Save a meal as a recipe', sub: 'Found a meal that works for you? Save it and plan it again later.' },
         ],
       },
     ],
