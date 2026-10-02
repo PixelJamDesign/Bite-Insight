@@ -24,14 +24,14 @@ import { FadingScrollView } from '@/components/FadingScrollView';
 // Feature icon image sources — local assets
 const ICON_FAMILY   = require('@/assets/icons/upsell/family.webp');
 const ICON_FLAG     = require('@/assets/icons/upsell/flag.webp');
-const ICON_RECIPE   = require('@/assets/icons/upsell/recipes.webp');
+const ICON_MEAL_PLAN = require('@/assets/icons/upsell/meal-plan.webp');
 const ICON_BARCODE  = require('@/assets/icons/upsell/barcode.webp');
 const ICON_FREE     = require('@/assets/icons/upsell/plus.webp');
 
 const FEATURES = [
   { icon: ICON_FAMILY,  label: 'Create and manage family profiles' },
   { icon: ICON_FLAG,    label: 'Report ingredients you want to avoid' },
-  { icon: ICON_RECIPE,  label: 'Recipe ideas based on your preferences' },
+  { icon: ICON_MEAL_PLAN, label: 'Plan meals for the whole week' },
   {
     icon: ICON_BARCODE,
     label: 'Global Barcode Scanner',

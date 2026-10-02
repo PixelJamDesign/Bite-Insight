@@ -16,7 +16,7 @@ import BiteInsightPlusLogo from '../assets/images/logo-biteinsight-plus.svg';
 // Local upsell feature icons (shared with UpsellSheet)
 const ICON_FAMILY  = require('@/assets/icons/upsell/family.webp');
 const ICON_FLAG    = require('@/assets/icons/upsell/flag.webp');
-const ICON_RECIPE  = require('@/assets/icons/upsell/recipes.webp');
+const ICON_MEAL_PLAN = require('@/assets/icons/upsell/meal-plan.webp');
 const ICON_BARCODE = require('@/assets/icons/upsell/barcode.webp');
 
 const FEATURES = [
@@ -31,9 +31,9 @@ const FEATURES = [
     body: 'Flag specific ingredients you want to watch out for. Every time you scan a product, we\'ll highlight them so nothing slips through.',
   },
   {
-    icon: ICON_RECIPE,
-    title: 'Recipe Ideas',
-    body: 'Get recipe suggestions tailored to your dietary preferences and the ingredients you love. Discover new meals that work for you.',
+    icon: ICON_MEAL_PLAN,
+    title: 'Meal Planner',
+    body: "Plan meals for any day of the week, not just today. Each one is checked against your health profile, so you'll know how it fits before you eat it.",
   },
   {
     icon: ICON_BARCODE,
