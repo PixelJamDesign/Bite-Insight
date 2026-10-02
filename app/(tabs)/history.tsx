@@ -301,7 +301,7 @@ function CalendarPicker({
 // auto-deletes). The card itself is the shared ScanCard.
 function ScanRow({ scan, onPress, onDelete }: { scan: Scan; onPress: () => void; onDelete: () => void }) {
   return (
-    <DismissibleRow onDismiss={onDelete} accessibilityLabel="Delete scan">
+    <DismissibleRow onDismiss={onDelete} borderColor="#aad4cd" accessibilityLabel="Delete scan">
       <ScanCard scan={scan} onPress={onPress} />
     </DismissibleRow>
   );

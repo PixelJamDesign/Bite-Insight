@@ -701,6 +701,7 @@ export default function HomeDashboard() {
                   <DismissibleRow
                     key={meal.id}
                     onDismiss={() => removeMeal(meal)}
+                    radius={8}
                     accessibilityLabel={`Remove ${meal.name} from your plan`}
                   >
                   <MealBlock
@@ -766,7 +767,12 @@ export default function HomeDashboard() {
               />
             ) : (
               recentScans.map((scan) => (
-                <DismissibleRow key={scan.id} onDismiss={() => removeScan(scan.id)} accessibilityLabel="Delete scan">
+                <DismissibleRow
+                  key={scan.id}
+                  onDismiss={() => removeScan(scan.id)}
+                  borderColor="#aad4cd"
+                  accessibilityLabel="Delete scan"
+                >
                   <ScanCard scan={scan} onPress={() => openScanResult(scan)} />
                 </DismissibleRow>
               ))

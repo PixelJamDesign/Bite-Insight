@@ -2,13 +2,16 @@
  * DismissibleRow — wraps a list row with the standard app-wide
  * swipe-to-delete gesture.
  *
- *   - Swipe left → the card narrows from the right, just enough to show a
+ *   - Swipe left → the card's right edge pulls in, just enough to show a
  *     red circular trash button beside it. Tap the button to dismiss.
  *   - Swipe right, or tap the card, to close it again.
  *
- * The card shrinks rather than sliding off, so its image and title stay in
- * view. A swipe never deletes on its own: deleting always takes a tap on
- * the button.
+ * The card's layout never changes: it stays full width inside a clipping
+ * window that narrows, so the right-hand end (Nutri-score, chevron, ⋯)
+ * slides out of view while the image and title stay put. Pass the card's
+ * `radius` (and `borderColor`, if it has an outline) so the clipped edge
+ * still looks like the card. A swipe never deletes on its own: deleting
+ * always takes a tap on the button.
  *
  * Pan gesture + Reanimated, so the drag runs on the UI thread. The pan only
  * claims horizontal drags, so the list still scrolls normally.
@@ -25,7 +28,7 @@ import Reanimated, {
   withSpring,
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '@/constants/theme';
+import { Colors, Radius } from '@/constants/theme';
 
 /** Space the open row makes for the trash button. */
 const ACTION_WIDTH = 72;
@@ -40,18 +43,26 @@ interface DismissibleRowProps {
   children: ReactNode;
   /** Fired when the trash button is tapped. */
   onDismiss: () => void;
+  /** Corner radius of the card, so the clipped edge is rounded to match. */
+  radius?: number;
+  /** The card's 1px outline colour, redrawn on the clipped edge. */
+  borderColor?: string;
   accessibilityLabel?: string;
 }
 
 export function DismissibleRow({
   children,
   onDismiss,
+  radius = Radius.l,
+  borderColor,
   accessibilityLabel = 'Dismiss',
 }: DismissibleRowProps) {
   // Only the first tap should land; the row unmounts once the caller
   // removes it from the list.
   const triggeredRef = useRef(false);
   const [open, setOpen] = useState(false);
+  // The card keeps this full width while its window narrows.
+  const [cardWidth, setCardWidth] = useState<number | undefined>(undefined);
 
   // How far the card has been pulled in from the right (0 = closed).
   const reveal = useSharedValue(0);
@@ -101,7 +112,7 @@ export function DismissibleRow({
 
   return (
     <GestureDetector gesture={pan}>
-      <View>
+      <View onLayout={(e) => setCardWidth(e.nativeEvent.layout.width)}>
         <Reanimated.View
           style={[styles.action, actionStyle]}
           // The hidden button can't be hit by accident.
@@ -117,8 +128,14 @@ export function DismissibleRow({
             <Ionicons name="trash-outline" size={22} color="#fff" />
           </TouchableOpacity>
         </Reanimated.View>
-        <Reanimated.View style={cardStyle}>
-          {children}
+        <Reanimated.View style={[styles.window, { borderRadius: radius }, cardStyle]}>
+          <View style={cardWidth ? { width: cardWidth } : undefined}>{children}</View>
+          {borderColor && (
+            <View
+              pointerEvents="none"
+              style={[StyleSheet.absoluteFill, styles.outline, { borderRadius: radius, borderColor }]}
+            />
+          )}
           {/* While open, a tap on the card closes it instead of opening it. */}
           {open && (
             <Pressable style={StyleSheet.absoluteFill} onPress={close} accessibilityLabel="Close" />
@@ -130,6 +147,8 @@ export function DismissibleRow({
 }
 
 const styles = StyleSheet.create({
+  window: { overflow: 'hidden' },
+  outline: { borderWidth: 1 },
   // Full row height so the circular button centres against the card,
   // however tall the card is.
   action: {

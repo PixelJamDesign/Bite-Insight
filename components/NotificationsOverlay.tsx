@@ -109,7 +109,7 @@ function NotificationCard({
     isUnread && Date.now() - new Date(item.sent_at).getTime() < 24 * 60 * 60 * 1000;
 
   return (
-    <DismissibleRow onDismiss={onDismiss} accessibilityLabel="Dismiss notification">
+    <DismissibleRow onDismiss={onDismiss} borderColor={Colors.stroke.primary} accessibilityLabel="Dismiss notification">
       <TouchableOpacity
         style={[styles.card, isUnread ? styles.cardUnread : styles.cardRead]}
         activeOpacity={0.7}
@@ -406,7 +406,7 @@ export function NotificationsOverlay() {
     ({ item }: { item: InboxNotification }) => {
       if (item.type === 'family_invite') {
         return (
-          <DismissibleRow onDismiss={() => dismiss(item.id)} accessibilityLabel="Dismiss notification">
+          <DismissibleRow onDismiss={() => dismiss(item.id)} borderColor={Colors.stroke.primary} accessibilityLabel="Dismiss notification">
             <FamilyInviteCard
               item={item}
               busy={respondingId === item.id}
@@ -419,7 +419,7 @@ export function NotificationsOverlay() {
       }
       if (item.type === 'family_link_accepted') {
         return (
-          <DismissibleRow onDismiss={() => dismiss(item.id)} accessibilityLabel="Dismiss notification">
+          <DismissibleRow onDismiss={() => dismiss(item.id)} borderColor={Colors.stroke.primary} accessibilityLabel="Dismiss notification">
             <FamilyLinkAcceptedCard item={item} />
           </DismissibleRow>
         );
