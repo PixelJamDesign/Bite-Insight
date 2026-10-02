@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Linking, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as StoreReview from 'expo-store-review';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 
@@ -148,11 +149,23 @@ export function useReviewPrompt() {
     await AsyncStorage.setItem(STORAGE_KEY_DECLINED, 'true');
   }, []);
 
-  /** User tapped "yes, I love it!" — mark complete, deep-link to the
-   *  right store for their platform, never ask again. */
+  /** User tapped "Yes, I love it!" — mark complete, then show the store's
+   *  own in-app review popup so they can rate without leaving the app.
+   *  Where that isn't available, open the store's review page instead. */
   const completeReviewPrompt = useCallback(async () => {
     setShowReviewPrompt(false);
     await AsyncStorage.setItem(STORAGE_KEY_COMPLETED, 'true');
+    // Let the card's modal finish closing first; iOS won't present the
+    // review sheet over a modal that's on its way out.
+    await new Promise((r) => setTimeout(r, 400));
+    try {
+      if (await StoreReview.hasAction()) {
+        await StoreReview.requestReview();
+        return;
+      }
+    } catch (err) {
+      console.warn('[ReviewPrompt] In-app review failed:', err);
+    }
     await openStoreReview();
   }, []);
 
