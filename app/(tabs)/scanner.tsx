@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import * as ImagePicker from 'expo-image-picker';
 import * as VisionScanner from '@/modules/barcode-scanner-vision/src';
 import { supabase } from '@/lib/supabase';
+import { saveScanToHistory } from '@/lib/scanHistory';
 import { useAuth } from '@/lib/auth';
 import { OFF_HEADERS } from '@/lib/openFoodFacts';
 import { useSubscription } from '@/lib/subscriptionContext';
@@ -425,47 +426,13 @@ export default function ScannerScreen() {
       // If the product is still "Unknown", scan-result.tsx will save after the
       // OFF API fetch succeeds — or skip saving entirely if the product isn't found.
       const isKnownProduct = productName !== tScan('product.unknownName') && productName !== '';
-      if (isKnownProduct) {
-        (async () => {
-          // Wait for profile upsert + check existing scan in parallel
-          const [, { data: existing }] = await Promise.all([
-            profilePromise,
-            supabase
-              .from('scans')
-              .select('id')
-              .eq('user_id', session?.user.id)
-              .eq('barcode', result.data)
-              .limit(1)
-              .single(),
-          ]);
-
-          if (existing) {
-            const { error: saveError } = await supabase
-              .from('scans')
-              .update({
-                scanned_at: new Date().toISOString(),
-                product_name: productName,
-                brand,
-                image_url: imageUrl,
-                nutriscore_grade: nutriscoreGrade,
-              })
-              .eq('id', existing.id);
-            if (saveError) console.warn('[Scanner] Scan history save failed:', saveError.message);
-          } else {
-            const { error: saveError } = await supabase
-              .from('scans')
-              .insert({
-                user_id: session?.user.id,
-                barcode: result.data,
-                product_name: productName,
-                brand,
-                image_url: imageUrl,
-                nutriscore_grade: nutriscoreGrade,
-                flagged_count: 0,
-              });
-            if (saveError) console.warn('[Scanner] Scan history save failed:', saveError.message);
-          }
-        })().catch((err) => console.error('Background scan save failed:', err));
+      if (isKnownProduct && session?.user.id) {
+        saveScanToHistory(
+          session.user.id,
+          result.data,
+          { product_name: productName, brand, image_url: imageUrl, nutriscore_grade: nutriscoreGrade },
+          { after: profilePromise, tag: 'Scanner' },
+        );
       }
     } catch (err) {
       console.error('Scan error:', err);

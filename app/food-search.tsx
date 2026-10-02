@@ -44,6 +44,7 @@ import { useUpsellSheet } from '@/lib/upsellSheetContext';
 import { useRegion, REGIONS, FLAG_IMAGES, PlusTag } from '@/lib/regionContext';
 import type { Region } from '@/lib/regionContext';
 import { supabase } from '@/lib/supabase';
+import { saveScanToHistory } from '@/lib/scanHistory';
 import { useAuth } from '@/lib/auth';
 import { OFF_HEADERS } from '@/lib/openFoodFacts';
 
@@ -833,44 +834,15 @@ export default function FoodSearchScreen() {
       params: { scanId: '', productName, brand, imageUrl, barcode, nutriscoreGrade },
     });
 
-    // Save to scan history in background (mirrors scanner.tsx pattern)
+    // Save to scan history (queued with scan-result's own save so the two
+    // never both insert).
     if (session?.user?.id && barcode) {
-      (async () => {
-        const { data: existing } = await supabase
-          .from('scans')
-          .select('id')
-          .eq('user_id', session.user.id)
-          .eq('barcode', barcode)
-          .limit(1)
-          .single();
-
-        if (existing) {
-          const { error: saveError } = await supabase
-            .from('scans')
-            .update({
-              scanned_at: new Date().toISOString(),
-              product_name: productName,
-              brand,
-              image_url: imageUrl,
-              nutriscore_grade: nutriscoreGrade,
-            })
-            .eq('id', existing.id);
-          if (saveError) console.warn('[Search] Scan history save failed:', saveError.message);
-        } else {
-          const { error: saveError } = await supabase
-            .from('scans')
-            .insert({
-              user_id: session.user.id,
-              barcode,
-              product_name: productName,
-              brand,
-              image_url: imageUrl,
-              nutriscore_grade: nutriscoreGrade,
-              flagged_count: 0,
-            });
-          if (saveError) console.warn('[Search] Scan history save failed:', saveError.message);
-        }
-      })().catch((err) => console.error('Background search-scan save failed:', err));
+      saveScanToHistory(
+        session.user.id,
+        barcode,
+        { product_name: productName, brand, image_url: imageUrl, nutriscore_grade: nutriscoreGrade },
+        { tag: 'Search' },
+      );
     }
   }, [router, session, pickMode, mealMode, draftRecipe, showToast]);
 

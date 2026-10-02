@@ -20,6 +20,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Spacing, Radius, Typography } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
+import { saveScanToHistory } from '@/lib/scanHistory';
 import { OFF_HEADERS, OFF_URL } from '@/lib/openFoodFacts';
 import { useAuth } from '@/lib/auth';
 import { getCachedProfile, fetchAndCacheProfile } from '@/lib/profileCache';
@@ -1169,34 +1170,17 @@ export default function ScanResultScreen() {
           // a recipe, since that's a view gesture, not a real scan.
           if (session?.user?.id && p.noSave !== '1') {
             const resolvedName = fetchedProductName || p.productName;
-            const saveScan = async (attempt = 0): Promise<void> => {
-              try {
-                const { data: existing } = await supabase.from('scans').select('id').eq('user_id', session.user.id).eq('barcode', p.barcode).limit(1).single();
-                if (existing) {
-                  const { error: saveError } = await supabase.from('scans').update({
-                    product_name: resolvedName,
-                    brand: fetchedBrand || p.brand || null,
-                    image_url: fetchedImageUrl || p.imageUrl || null,
-                    nutriscore_grade: op.nutriscore_grade || op.nutrition_grade_fr || null,
-                    scanned_at: new Date().toISOString(),
-                  }).eq('id', existing.id);
-                  if (saveError) console.warn('[ScanResult] Scan history save failed:', saveError.message);
-                } else {
-                  // Scanner didn't save (product was unknown at scan time) — insert now
-                  const { error: saveError } = await supabase.from('scans').insert({
-                    user_id: session.user.id,
-                    barcode: p.barcode,
-                    product_name: resolvedName,
-                    brand: fetchedBrand || p.brand || null,
-                    image_url: fetchedImageUrl || p.imageUrl || null,
-                    nutriscore_grade: op.nutriscore_grade || op.nutrition_grade_fr || null,
-                    flagged_count: 0,
-                  });
-                  if (saveError) console.warn('[ScanResult] Scan history save failed:', saveError.message);
-                }
-              } catch { /* non-critical */ }
-            };
-            saveScan();
+            saveScanToHistory(
+              session.user.id,
+              p.barcode,
+              {
+                product_name: resolvedName,
+                brand: fetchedBrand || p.brand || null,
+                image_url: fetchedImageUrl || p.imageUrl || null,
+                nutriscore_grade: op.nutriscore_grade || op.nutrition_grade_fr || null,
+              },
+              { tag: 'ScanResult' },
+            );
           }
         } else {
           // OFF API returned no product — flag as not found
