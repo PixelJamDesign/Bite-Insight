@@ -200,13 +200,8 @@ export default function AddToMealPlanScreen() {
               contentContainerStyle={listPadding}
               ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
               renderItem={({ item }) => (
-                <PickRow
-                  imageUrl={item.cover_image_url}
-                  fallbackIcon="restaurant-outline"
-                  name={item.name}
-                  detail={recipeDetail(item)}
-                  grade={item.nutriscore_grade}
-                  busy={busyId === item.id}
+                <RecipeCard
+                  recipe={item}
                   disabled={Boolean(busyId)}
                   onPress={() => setPending({ kind: 'recipe', recipe: item })}
                 />
@@ -282,67 +277,65 @@ function recipeDetail(recipe: Recipe): string {
   const parts: string[] = [];
   if (recipe.total_carbs_g != null) parts.push(`${Math.round(Number(recipe.total_carbs_g))} g carbs`);
   if (recipe.total_kcal != null) parts.push(`${Math.round(Number(recipe.total_kcal))} kcal`);
-  return parts.length > 0 ? `${parts.join(' · ')} per serving` : `Serves ${recipe.servings}`;
+  // Per serving ("per serving" itself gets cut off on a phone-width card).
+  return parts.length > 0 ? parts.join(' · ') : `Serves ${recipe.servings}`;
 }
 
-// ── Row ──────────────────────────────────────────────────────────────────────
+// ── Recipe card ──────────────────────────────────────────────────────────────
+// Laid out like ScanCard (the Scan History card) so the two lists match:
+// 60px image, 18px name with per-serving carbs and kcal under it,
+// Nutri-score pill, small + button.
 
-function PickRow({
-  imageUrl,
-  fallbackIcon,
-  name,
-  detail,
-  grade,
-  busy,
+function RecipeCard({
+  recipe,
   disabled,
   onPress,
 }: {
-  imageUrl: string | null;
-  fallbackIcon: 'restaurant-outline' | 'nutrition-outline';
-  name: string;
-  detail: string | null;
-  grade: string | null;
-  busy: boolean;
+  recipe: Recipe;
   disabled: boolean;
   onPress: () => void;
 }) {
-  const g = grade?.toLowerCase() as keyof typeof NUTRISCORE_COLORS | undefined;
+  const g = recipe.nutriscore_grade?.toLowerCase() as keyof typeof NUTRISCORE_COLORS | undefined;
   const nutriColor = g ? NUTRISCORE_COLORS[g] : null;
+  const detail = recipeDetail(recipe);
 
   return (
     <TouchableOpacity
-      style={[styles.row, busy && styles.rowBusy]}
+      style={styles.card}
       onPress={onPress}
-      activeOpacity={0.85}
+      activeOpacity={0.75}
       disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={`${recipe.name}, ${detail}`}
     >
-      <View style={styles.thumb}>
-        {imageUrl ? (
-          <Image source={{ uri: imageUrl }} style={styles.thumbImage} />
+      <View style={styles.image}>
+        {recipe.cover_image_url ? (
+          <Image source={{ uri: recipe.cover_image_url }} style={styles.imageFill} resizeMode="cover" />
         ) : (
-          <Ionicons name={fallbackIcon} size={20} color={Colors.secondary} />
+          <Ionicons name="restaurant-outline" size={24} color={Colors.secondary} />
         )}
       </View>
-      <View style={styles.info}>
-        <Text style={styles.name} numberOfLines={1}>
-          {name}
+      <View style={styles.text}>
+        <Text style={styles.name} numberOfLines={2}>
+          {recipe.name}
         </Text>
-        {detail ? (
-          <Text style={styles.detail} numberOfLines={1}>
-            {detail}
-          </Text>
-        ) : null}
+        <Text style={styles.detail} numberOfLines={1}>
+          {detail}
+        </Text>
       </View>
-      {g && nutriColor && (
-        <View style={[styles.nutri, { backgroundColor: nutriColor }]}>
-          <Text style={styles.nutriText}>{g.toUpperCase()}</Text>
+      {g && nutriColor ? (
+        <View style={[styles.grade, { backgroundColor: nutriColor }]}>
+          <Text style={styles.gradeText}>{g.toUpperCase()}</Text>
         </View>
-      )}
-      {busy ? (
-        <ActivityIndicator color={Colors.secondary} />
-      ) : (
-        <Ionicons name="add" size={22} color={Colors.secondary} />
-      )}
+      ) : null}
+      <IconButton
+        size="small"
+        variant="onWhite"
+        icon={<AddIcon width={20} height={20} />}
+        onPress={onPress}
+        disabled={disabled}
+        accessibilityLabel={`Add ${recipe.name}`}
+      />
     </TouchableOpacity>
   );
 }
@@ -380,53 +373,61 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+  // Matches ScanCard
+  card: {
     backgroundColor: Colors.surface.secondary,
+    borderRadius: Radius.l,
     borderWidth: 1,
     borderColor: '#aad4cd',
-    borderRadius: Radius.l,
-    paddingHorizontal: Spacing.s,
-    paddingVertical: Spacing.s,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.s,
+    gap: Spacing.s,
   },
-  rowBusy: { opacity: 0.6 },
-  thumb: {
-    width: 44,
-    height: 44,
+  image: {
+    width: 60,
+    height: 60,
     borderRadius: Radius.m,
     backgroundColor: Colors.surface.tertiary,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  thumbImage: { width: '100%', height: '100%' },
-  info: { flex: 1, gap: 2 },
-  name: {
+  imageFill: { width: '100%', height: '100%' },
+  text: { flex: 1, justifyContent: 'center', gap: Spacing.xxs },
+  detail: {
     fontSize: 14,
+    lineHeight: 17,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    color: Colors.secondary,
+    letterSpacing: -0.28,
+  },
+  name: {
+    fontSize: 18,
+    lineHeight: 20,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     color: Colors.primary,
   },
-  detail: {
-    fontSize: 12,
-    fontWeight: '300',
-    fontFamily: 'Figtree_300Light',
-    color: Colors.secondary,
-  },
-  nutri: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+  grade: {
+    width: 24,
+    height: 36,
+    borderRadius: 999,
+    borderWidth: 2,
+    borderColor: Colors.surface.secondary,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  nutriText: {
-    fontSize: 11,
-    lineHeight: 14,
+  gradeText: {
+    color: '#fff',
+    fontSize: 18,
+    lineHeight: 20,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
-    color: '#fff',
+    textAlign: 'center',
+    textShadowColor: 'rgba(0,0,0,0.29)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
 });
