@@ -96,12 +96,13 @@ const SOURCE_ROWS: Record<AddSource, SourceRow> = {
 
 /**
  * Fixed orders, most likely first. Planning a meal you're usually not
- * holding the product, so things already scanned and recipes come first;
- * building a recipe you often are, so search and scan lead. Kept fixed on
+ * holding the product, so things already scanned come first; recipes go
+ * last as few people have any yet (5 users, Oct 2026). Building a recipe
+ * you often are holding it, so search and scan lead. Kept fixed on
  * purpose: people learn where an option sits. `add_source_picked` in
  * PostHog shows which get used, to tune these for everyone.
  */
-const MEAL_ORDER: AddSource[] = ['history', 'recipe', 'search', 'scan'];
+const MEAL_ORDER: AddSource[] = ['history', 'search', 'scan', 'recipe'];
 const RECIPE_ORDER: AddSource[] = ['search', 'scan', 'history'];
 
 /**
