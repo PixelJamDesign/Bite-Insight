@@ -3,9 +3,12 @@
  * (dashboard 5916:16031): 60px image, brand over an 18px name, the
  * Nutri-score grade in a pill, and a chevron.
  *
- * Used by the scan history list (wrapped in a swipe-to-delete row) and the
- * dashboard's Scanned items. Open a scan with openScanResult (lib/openScan).
+ * Used by the scan history list (wrapped in a swipe-to-delete row), the
+ * dashboard's Scanned items and the meal planner's "Add from scan history"
+ * (with a + in place of the chevron). Open a scan with openScanResult
+ * (lib/openScan).
  */
+import type { ReactNode } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Colors, Radius } from '@/constants/theme';
 import { sentenceCase } from '@/lib/text';
@@ -21,14 +24,29 @@ const NUTRISCORE_COLORS: Record<string, string> = {
   e: '#ff3f42',
 };
 
-export function ScanCard({ scan, onPress }: { scan: Scan; onPress: () => void }) {
+export function ScanCard({
+  scan,
+  onPress,
+  trailing,
+  disabled = false,
+  dimmed = false,
+}: {
+  scan: Scan;
+  onPress: () => void;
+  /** Replaces the chevron, e.g. a + to add it somewhere. */
+  trailing?: ReactNode;
+  disabled?: boolean;
+  /** Fades the card, e.g. while it's being added. */
+  dimmed?: boolean;
+}) {
   const grade = scan.nutriscore_grade?.toLowerCase();
   const gradeColor = grade ? NUTRISCORE_COLORS[grade] : null;
 
   return (
     <TouchableOpacity
-      style={styles.card}
+      style={[styles.card, dimmed && styles.dimmed]}
       onPress={onPress}
+      disabled={disabled}
       activeOpacity={0.75}
       accessibilityRole="button"
       accessibilityLabel={[scan.brand, scan.product_name, grade ? `Nutri-score ${grade.toUpperCase()}` : null]
@@ -57,9 +75,11 @@ export function ScanCard({ scan, onPress }: { scan: Scan; onPress: () => void })
           <Text style={styles.gradeText}>{grade!.toUpperCase()}</Text>
         </View>
       ) : null}
-      <View style={styles.chevron}>
-        <MenuChevronRightIcon color={Colors.primary} size={14} />
-      </View>
+      {trailing ?? (
+        <View style={styles.chevron}>
+          <MenuChevronRightIcon color={Colors.primary} size={14} />
+        </View>
+      )}
     </TouchableOpacity>
   );
 }
@@ -82,6 +102,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface.tertiary,
     overflow: 'hidden',
   },
+  dimmed: { opacity: 0.6 },
   imagePlaceholder: { alignItems: 'center', justifyContent: 'center' },
   text: { flex: 1, justifyContent: 'center' },
   brand: {

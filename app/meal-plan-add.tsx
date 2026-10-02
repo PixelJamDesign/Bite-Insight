@@ -27,6 +27,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
+import { ScanCard } from '@/components/ScanCard';
 import { useToast } from '@/lib/toastContext';
 import { listRecipes, snapshotFromScanAsync } from '@/lib/recipes';
 import { draftItemFromProduct, draftItemFromRecipe, relativeDayLabel } from '@/lib/mealPlan';
@@ -39,7 +40,7 @@ import { ScreenLayout, HeaderFlatList } from '@/components/ScreenLayout';
 import { QuantityPickerSheet } from '@/components/QuantityPickerSheet';
 import { NUTRISCORE_COLORS } from '@/lib/nutriscore';
 import { safeBack } from '@/lib/safeBack';
-import type { QuantityUnit, Recipe, Scan } from '@/lib/types';
+import type { ProductSnapshot, QuantityUnit, Recipe, Scan } from '@/lib/types';
 
 type TabKey = 'recipes' | 'scans';
 
@@ -61,7 +62,9 @@ export default function AddToMealPlanScreen() {
   const [busyId, setBusyId] = useState<string | null>(null);
   // The row the user tapped, waiting on a portion from the quantity sheet.
   const [pending, setPending] = useState<
-    { kind: 'recipe'; recipe: Recipe } | { kind: 'scan'; scan: Scan } | null
+    | { kind: 'recipe'; recipe: Recipe }
+    | { kind: 'scan'; scan: Scan; snapshot: ProductSnapshot }
+    | null
   >(null);
 
   const userId = session?.user?.id;
@@ -109,31 +112,39 @@ export default function AddToMealPlanScreen() {
     );
   }, [scans, q]);
 
+  const servingG = pending?.kind === 'scan' ? pending.snapshot.serving_g ?? null : null;
+
   function addRecipe(recipe: Recipe, servings: number) {
     draftMeal.addItem(draftItemFromRecipe(recipe, servings));
     safeBack();
   }
 
-  async function addScan(scan: Scan, value: number, unit: QuantityUnit) {
+  // Load the product first, so the quantity sheet knows its serving size.
+  async function pickScan(scan: Scan) {
     if (busyId) return; // guard against double-taps
     setBusyId(scan.id);
     try {
       const snapshot = await snapshotFromScanAsync(scan);
-      draftMeal.addItem(
-        draftItemFromProduct({
-          barcode: scan.barcode,
-          scan_id: scan.id,
-          quantity_value: value,
-          quantity_unit: unit,
-          product_snapshot: snapshot,
-        }),
-      );
-      safeBack();
+      setPending({ kind: 'scan', scan, snapshot });
     } catch (e) {
-      console.warn('[meal-plan-add] failed to add product:', e);
-      setBusyId(null);
+      console.warn('[meal-plan-add] failed to load product:', e);
       showToast({ message: 'Could not add that product. Please try again.', variant: 'error' });
+    } finally {
+      setBusyId(null);
     }
+  }
+
+  function addScan(scan: Scan, snapshot: ProductSnapshot, value: number, unit: QuantityUnit) {
+    draftMeal.addItem(
+      draftItemFromProduct({
+        barcode: scan.barcode,
+        scan_id: scan.id,
+        quantity_value: value,
+        quantity_unit: unit,
+        product_snapshot: snapshot,
+      }),
+    );
+    safeBack();
   }
 
   const listPadding = { paddingHorizontal: Spacing.m, paddingBottom: insets.bottom + Spacing.l };
@@ -216,15 +227,21 @@ export default function AddToMealPlanScreen() {
             contentContainerStyle={listPadding}
             ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
             renderItem={({ item }) => (
-              <PickRow
-                imageUrl={item.image_url}
-                fallbackIcon="nutrition-outline"
-                name={item.product_name}
-                detail={item.brand}
-                grade={item.nutriscore_grade}
-                busy={busyId === item.id}
+              // The same card as Scan History, with a + instead of the chevron.
+              <ScanCard
+                scan={item}
+                onPress={() => pickScan(item)}
                 disabled={Boolean(busyId)}
-                onPress={() => setPending({ kind: 'scan', scan: item })}
+                dimmed={busyId === item.id}
+                trailing={
+                  <View style={styles.addSlot}>
+                    {busyId === item.id ? (
+                      <ActivityIndicator color={Colors.secondary} />
+                    ) : (
+                      <Ionicons name="add" size={22} color={Colors.secondary} />
+                    )}
+                  </View>
+                }
               />
             )}
           />
@@ -235,14 +252,17 @@ export default function AddToMealPlanScreen() {
         title={pending?.kind === 'recipe' ? 'How many servings?' : 'How much?'}
         saveLabel="Add to meal"
         servingsMode={pending?.kind === 'recipe'}
-        value={pending?.kind === 'recipe' ? 1 : DEFAULT_PRODUCT_GRAMS}
-        unit="g"
+        // A product with a known serving size starts at 1 serving.
+        value={pending?.kind === 'recipe' || servingG ? 1 : DEFAULT_PRODUCT_GRAMS}
+        unit={servingG ? 'serving' : 'g'}
+        servingGrams={servingG}
+        servingSize={pending?.kind === 'scan' ? pending.snapshot.serving_size : null}
         onClose={() => setPending(null)}
         onSave={(value, unit) => {
           const picked = pending;
           setPending(null);
           if (picked?.kind === 'recipe') addRecipe(picked.recipe, value);
-          else if (picked?.kind === 'scan') addScan(picked.scan, value, unit);
+          else if (picked?.kind === 'scan') addScan(picked.scan, picked.snapshot, value, unit);
         }}
       />
     </ScreenLayout>
@@ -319,6 +339,8 @@ function PickRow({
 }
 
 const styles = StyleSheet.create({
+  // Same footprint as ScanCard's 20px chevron slot, so the card lines up.
+  addSlot: { width: 22, alignItems: 'center', justifyContent: 'center' },
   // Search, pinned under the title (24px sides like every titled page).
   controls: {
     paddingHorizontal: Spacing.m,
