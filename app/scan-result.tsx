@@ -40,6 +40,7 @@ import { useFadeIn } from '@/lib/useFadeIn';
 import { usePageTransition } from '@/lib/usePageTransition';
 import { useReviewPrompt } from '@/lib/useReviewPrompt';
 import { ReviewPromptCard } from '@/components/ReviewPromptCard';
+import { showFeedbackQuestionnaire } from '@/lib/feedback';
 import {
   parseIngredientsText,
   parseIngredientsWithHierarchy,
@@ -3532,7 +3533,11 @@ export default function ScanResultScreen() {
         <ReviewPromptCard
           milestone={reviewMilestone}
           onYes={completeReviewPrompt}
-          onNotReally={declineReviewPrompt}
+          onNotReally={() => {
+            declineReviewPrompt();
+            // Let the review card's modal close before the next one opens.
+            setTimeout(() => showFeedbackQuestionnaire('review'), 350);
+          }}
           onLater={dismissReviewPrompt}
         />
       )}

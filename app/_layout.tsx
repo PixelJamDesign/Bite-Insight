@@ -36,6 +36,7 @@ import { UpdateToast } from '@/components/UpdateToast';
 import { useUpdateAvailable } from '@/lib/useUpdateAvailable';
 import { TrialUpsellProvider } from '@/lib/trialUpsellContext';
 import { TrialUpsellSheet } from '@/components/TrialUpsellSheet';
+import { FeedbackQuestionnaireHost } from '@/components/FeedbackQuestionnaire';
 import { useTrialUpsellTrigger } from '@/lib/useTrialUpsellTrigger';
 import { DebugMenuProvider } from '@/lib/debugMenuContext';
 import { DebugMenu } from '@/components/DebugMenu';
@@ -395,6 +396,7 @@ function RootLayoutInner() {
       <PregnancyPromptGate />
       <UpdateToastGate />
       <TrialUpsellSheet />
+      <FeedbackQuestionnaireHost />
       <TrialUpsellTriggerGate />
       <TrialDay6ReminderSheet />
       <PushTokenGate />

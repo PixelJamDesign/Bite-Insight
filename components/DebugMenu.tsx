@@ -25,6 +25,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { forceReviewPrompt, resetReviewPrompt, type ReviewMilestone } from '@/lib/useReviewPrompt';
 import { openScanResult } from '@/lib/openScan';
+import { resetTrialDeclineAsked, showFeedbackQuestionnaire } from '@/lib/feedback';
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { Colors, Spacing, Radius, Typography } from '@/constants/theme';
@@ -418,6 +419,8 @@ export function DebugMenu() {
               <ActionButton label="Show Review prompt (20 scans)" onPress={() => triggerReviewPrompt(20)} />
               <ActionButton label="Show Review prompt (50 scans)" onPress={() => triggerReviewPrompt(50)} />
               <ActionButton label="Show Review prompt (100 scans)" onPress={() => triggerReviewPrompt(100)} />
+              <ActionButton label="Show Review questionnaire" onPress={() => { hideDebugMenu(); setTimeout(() => showFeedbackQuestionnaire('review'), 350); }} />
+              <ActionButton label="Show Trial questionnaire" onPress={() => { hideDebugMenu(); setTimeout(() => showFeedbackQuestionnaire('trial_decline'), 350); }} />
               <ActionButton
                 label="Open OFF Contribute screen"
                 onPress={() => { hideDebugMenu(); router.push({ pathname: '/contribute-product', params: { barcode: '2000000000017' } }); }}
@@ -440,6 +443,7 @@ export function DebugMenu() {
               <ActionButton label="Reset trial status (Supabase)" onPress={resetTrialStatusOnServer} />
               <ActionButton label={`Reset "What's New" seen`} onPress={resetWhatsNewSeen} />
               <ActionButton label="Reset Review prompt" onPress={resetReviewPromptState} />
+              <ActionButton label="Reset Trial questionnaire (ask again)" onPress={async () => { await resetTrialDeclineAsked(); Alert.alert('Reset', 'Closing the trial sheet will ask why again.'); }} />
               <ActionButton label="Nuke AsyncStorage" onPress={resetAllStorage} />
             </Section>
 

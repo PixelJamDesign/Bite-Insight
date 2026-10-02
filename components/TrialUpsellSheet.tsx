@@ -42,6 +42,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Path } from 'react-native-svg';
 import { router } from 'expo-router';
+import { shouldAskTrialDecline, showFeedbackQuestionnaire } from '@/lib/feedback';
 import { useTrialUpsell } from '@/lib/trialUpsellContext';
 import { useSubscription } from '@/lib/subscriptionContext';
 import BiteInsightPlusLogo from '../assets/images/logo-biteinsight-plus.svg';
@@ -137,6 +138,15 @@ export function TrialUpsellSheet() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible, isPlus]);
 
+  // The user closed it (X, backdrop, back gesture): the first time, ask
+  // why once the sheet has slid away.
+  async function closeByUser() {
+    dismissTrialUpsell();
+    if (await shouldAskTrialDecline()) {
+      setTimeout(() => showFeedbackQuestionnaire('trial_decline'), 450);
+    }
+  }
+
   if (!mounted) return null;
 
   const displayTrialDays = trialDays ?? 7;
@@ -172,7 +182,7 @@ export function TrialUpsellSheet() {
       visible={mounted}
       transparent
       animationType="none"
-      onRequestClose={dismissTrialUpsell}
+      onRequestClose={closeByUser}
       statusBarTranslucent
     >
       {/* Backdrop — tap-to-dismiss */}
@@ -182,7 +192,7 @@ export function TrialUpsellSheet() {
       >
         <TouchableOpacity
           style={StyleSheet.absoluteFill}
-          onPress={dismissTrialUpsell}
+          onPress={closeByUser}
           activeOpacity={1}
         />
       </Animated.View>
@@ -215,7 +225,7 @@ export function TrialUpsellSheet() {
         <View style={styles.sheet}>
           <TouchableOpacity
             style={styles.closeBtn}
-            onPress={dismissTrialUpsell}
+            onPress={closeByUser}
             activeOpacity={0.8}
           >
             <Ionicons name="close" size={24} color="#fff" />

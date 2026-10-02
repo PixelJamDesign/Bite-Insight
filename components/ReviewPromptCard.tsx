@@ -9,7 +9,7 @@
  * wide in Figma) and are laid out from the card's centre, so the art
  * stays put on wider phones.
  */
-import { useEffect, useRef, type ComponentType } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   AccessibilityInfo,
   Animated,
@@ -22,17 +22,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { Colors, Radius, Shadows, Spacing } from '@/constants/theme';
 import type { ReviewMilestone } from '@/lib/useReviewPrompt';
-
-// Native blur behind the scrim. Expo Go can't load the view, so there the
-// scrim is a little darker instead.
-type BlurProps = { blurType?: string; blurAmount?: number; style?: any; pointerEvents?: 'none' };
-const BlurView: ComponentType<BlurProps> | null =
-  Constants.executionEnvironment === ExecutionEnvironment.StoreClient
-    ? null
-    : require('@sbaiahmed1/react-native-blur').BlurView;
+import { BlurScrim } from '@/components/BlurScrim';
 
 const DESIGN_WIDTH = 354;
 /** How far the art rises above the card's top edge. */
@@ -159,10 +151,7 @@ export function ReviewPromptCard({ milestone, onYes, onNotReally, onLater }: Pro
   return (
     <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={onLater}>
       <View style={styles.overlay}>
-        <Animated.View style={[StyleSheet.absoluteFill, { opacity: backdrop }]} pointerEvents="none">
-          {BlurView && <BlurView blurType="dark" blurAmount={12} style={StyleSheet.absoluteFill} />}
-          <View style={[StyleSheet.absoluteFill, BlurView ? styles.scrim : styles.scrimNoBlur]} />
-        </Animated.View>
+        <BlurScrim opacity={backdrop} />
 
         <Animated.View
           style={[
@@ -271,12 +260,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: Spacing.m,
-  },
-  scrim: {
-    backgroundColor: 'rgba(2, 52, 50, 0.6)',
-  },
-  scrimNoBlur: {
-    backgroundColor: 'rgba(2, 52, 50, 0.85)',
   },
   cardWrap: {
     width: '100%',
