@@ -28,6 +28,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { ScanCard } from '@/components/ScanCard';
+import { IconButton } from '@/components/IconButton';
+import AddIcon from '@/assets/icons/meal-plan/add.svg';
 import { useToast } from '@/lib/toastContext';
 import { listRecipes, snapshotFromScanAsync } from '@/lib/recipes';
 import { draftItemFromProduct, draftItemFromRecipe, relativeDayLabel } from '@/lib/mealPlan';
@@ -234,13 +236,20 @@ export default function AddToMealPlanScreen() {
                 disabled={Boolean(busyId)}
                 dimmed={busyId === item.id}
                 trailing={
-                  <View style={styles.addSlot}>
-                    {busyId === item.id ? (
-                      <ActivityIndicator color={Colors.secondary} />
-                    ) : (
-                      <Ionicons name="add" size={22} color={Colors.secondary} />
-                    )}
-                  </View>
+                  <IconButton
+                    size="small"
+                    variant="onWhite"
+                    icon={
+                      busyId === item.id ? (
+                        <ActivityIndicator size="small" color={Colors.secondary} />
+                      ) : (
+                        <AddIcon width={20} height={20} />
+                      )
+                    }
+                    onPress={() => pickScan(item)}
+                    disabled={Boolean(busyId)}
+                    accessibilityLabel={`Add ${item.product_name}`}
+                  />
                 }
               />
             )}
@@ -339,8 +348,6 @@ function PickRow({
 }
 
 const styles = StyleSheet.create({
-  // Same footprint as ScanCard's 20px chevron slot, so the card lines up.
-  addSlot: { width: 22, alignItems: 'center', justifyContent: 'center' },
   // Search, pinned under the title (24px sides like every titled page).
   controls: {
     paddingHorizontal: Spacing.m,
