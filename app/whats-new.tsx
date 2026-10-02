@@ -24,6 +24,7 @@ import { Colors, Spacing, Radius, Shadows } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { PlusBadge } from '@/components/PlusBadge';
+import { AlertCard } from '@/components/AlertCard';
 import { FrostedHeader, useScrollEdge } from '@/components/HeaderEdge';
 import { MenuNotificationsIcon } from '@/components/MenuIcons';
 import { DashboardIcon, MealPlanIcon } from '@/components/TabIcons';
@@ -92,6 +93,8 @@ interface CardData {
   badge: string;
   title: string;
   description: string;
+  /** Optional info banner under the description. */
+  banner?: string;
   subsections?: { heading: string; bullets: Bullet[] }[];
   /** When true, the Plus chip sits next to the title to flag the
    *  feature as Plus-only. */
@@ -145,11 +148,12 @@ const CARDS: CardData[] = [
     plus: true,
     description:
       "Plan what you're eating for any day of the week. Add products you've scanned or your own recipes, and we'll check each meal against your health profile before you eat it.",
+    banner: 'Meal Planner is free to use for today. Planning future days needs Bite Insight+.',
     subsections: [
       {
         heading: 'What you can do:',
         bullets: [
-          { title: 'Plan your meals', sub: "Today's plan is free for everyone. With Bite Insight+ you can plan the whole week." },
+          { title: 'Plan your meals', sub: 'Add meals and snacks to a day, at the time you plan to eat them.' },
           { title: 'See how a meal suits you', sub: "Meals turn amber or red when they don't fit your profile, and we'll tell you why." },
           { title: 'Keep track of your day', sub: 'Mark meals as eaten and see your totals for the day.' },
           { title: 'Save a meal as a recipe', sub: 'Found a meal that works for you? Save it and plan it again later.' },
@@ -257,6 +261,11 @@ export default function WhatsNewScreen() {
 
               {/* Description */}
               <Text style={styles.cardDesc}>{card.description}</Text>
+              {card.banner ? (
+                <View style={styles.banner}>
+                  <AlertCard tone="info" message={card.banner} />
+                </View>
+              ) : null}
 
               {/* Sub-sections — bullets are either plain strings or
                   { title, sub? } pairs for bold-title + small caption. */}
@@ -429,6 +438,9 @@ const styles = StyleSheet.create({
     letterSpacing: -0.4,
     color: Colors.primary,
     marginBottom: Spacing.xxs,
+  },
+  banner: {
+    marginTop: Spacing.s,
   },
   cardDesc: {
     fontSize: 16,
