@@ -31,6 +31,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, Radius } from '@/constants/theme';
 import {
   QUANTITY_UNITS,
+  UNIT_TO_ML,
   unitMeta,
   convertUnits,
   canConvert,
@@ -55,6 +56,11 @@ interface Props {
    *  in halves, the unit chips are hidden, and `unit` is passed straight
    *  back through onSave. Used by the meal planner. */
   servingsMode?: boolean;
+  /** A product's serving in grams (or ml). When set, a "Servings" unit is
+   *  offered first, so people can say "2 servings". */
+  servingGrams?: number | null;
+  /** The serving size as printed on the pack, e.g. "1 bar (45 g)". */
+  servingSize?: string | null;
 }
 
 const SERVINGS_STEP = 0.5;
@@ -73,6 +79,8 @@ export function QuantityPickerBody({
   title = 'Quantity',
   saveLabel = 'Save',
   servingsMode = false,
+  servingGrams = null,
+  servingSize = null,
 }: Props) {
   const [localValue, setLocalValue] = useState<number>(value);
   const [localUnit, setLocalUnit] = useState<QuantityUnit>(unit);
@@ -137,6 +145,27 @@ export function QuantityPickerBody({
    */
   function handleUnitChange(nextUnit: QuantityUnit) {
     if (nextUnit === localUnit) return;
+
+    // Servings ↔ weight/volume goes through the product's serving size.
+    if (servingGrams && (nextUnit === 'serving' || localUnit === 'serving')) {
+      const fromRatio = UNIT_TO_ML[localUnit];
+      const grams =
+        localUnit === 'serving' ? localValue * servingGrams : fromRatio != null ? localValue * fromRatio : null;
+      const toRatio = UNIT_TO_ML[nextUnit];
+      if (nextUnit === 'serving') {
+        // Nearest half serving, never 0.
+        setLocalValue(grams != null ? Math.max(0.5, Math.round((grams / servingGrams) * 2) / 2) : 1);
+      } else if (grams != null && toRatio != null) {
+        const converted = grams / toRatio;
+        setLocalValue(
+          shouldShowAsFraction(nextUnit) ? snapToFractionStep(converted, nextUnit) : Math.round(converted),
+        );
+      } else {
+        setLocalValue(unitMeta(nextUnit).defaultValue);
+      }
+      setLocalUnit(nextUnit);
+      return;
+    }
 
     if (canConvert(localUnit, nextUnit)) {
       const converted = convertUnits(localUnit, nextUnit, localValue) ?? 0;
@@ -233,7 +262,7 @@ export function QuantityPickerBody({
                     underlineColorAndroid="transparent"
                   />
                   <Text style={styles.valueUnit}>
-                    {servingsMode
+                    {servingsMode || localUnit === 'serving'
                       ? localValue === 1 ? 'serving' : 'servings'
                       : meta.label.toLowerCase()}
                   </Text>
@@ -253,13 +282,16 @@ export function QuantityPickerBody({
                   Enter an amount above 0
                 </Text>
               )}
+              {!showError && localUnit === 'serving' && servingGrams != null && (
+                <Text style={styles.servingHint}>{servingHint(localValue, servingGrams, servingSize)}</Text>
+              )}
 
               {/* Unit of measurement */}
               {!servingsMode && (
               <View style={styles.unitSection}>
                 <Text style={styles.unitLabel}>Unit of measurement</Text>
                 <View style={styles.unitsWrap}>
-                  {QUANTITY_UNITS.map((u) => {
+                  {unitChoices(servingGrams).map((u) => {
                     const isActive = localUnit === u.key;
                     return (
                       <TouchableOpacity
@@ -288,6 +320,21 @@ export function QuantityPickerBody({
               </TouchableOpacity>
             </View>
   );
+}
+
+/** The unit chips: "Servings" first when the product's serving is known,
+ *  left out otherwise. */
+function unitChoices(servingGrams: number | null) {
+  const others = QUANTITY_UNITS.filter((u) => u.key !== 'serving');
+  return servingGrams ? [unitMeta('serving'), ...others] : others;
+}
+
+/** "60 g in all. One serving is 30 g." */
+function servingHint(value: number, servingGrams: number, servingSize: string | null): string {
+  const suffix = /\dml\b|\bml\b|millil/i.test(servingSize ?? '') ? 'ml' : 'g';
+  const one = servingSize?.trim() || `${servingGrams} ${suffix}`;
+  if (value === 1) return `One serving is ${one}.`;
+  return `${Math.round(value * servingGrams)} ${suffix} in all. One serving is ${one}.`;
 }
 
 export function QuantityPickerSheet(props: Props) {
@@ -456,6 +503,16 @@ const styles = StyleSheet.create({
   },
 
   valueCardError: { borderColor: Colors.status.negative },
+  servingHint: {
+    marginTop: -8,
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
+    color: Colors.secondary,
+    letterSpacing: -0.14,
+    textAlign: 'center',
+  },
   errorText: {
     marginTop: -8,
     fontSize: 14,

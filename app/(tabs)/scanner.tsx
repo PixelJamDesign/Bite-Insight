@@ -350,6 +350,7 @@ export default function ScannerScreen() {
           // parses it into structured entries *and* persists it on the
           // snapshot so the family impact matcher can search it later.
           ingredients_text: ingredientsText,
+          serving_size: servingSize,
         });
         if (mealMode) {
           // Ask for the portion first — confirmMealAdd adds it to the draft.
@@ -556,8 +557,11 @@ export default function ScannerScreen() {
         visible={mealPending !== null}
         title="How much?"
         saveLabel="Add to meal"
-        value={100}
-        unit="g"
+        // A product with a known serving size starts at 1 serving.
+        value={mealPending?.snapshot.serving_g ? 1 : 100}
+        unit={mealPending?.snapshot.serving_g ? 'serving' : 'g'}
+        servingGrams={mealPending?.snapshot.serving_g}
+        servingSize={mealPending?.snapshot.serving_size}
         onClose={() => {
           setMealPending(null);
           resumeScanning();

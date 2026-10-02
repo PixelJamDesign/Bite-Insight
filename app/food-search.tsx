@@ -65,6 +65,8 @@ interface SearchProduct {
   image_front_small_url?: string;
   nutriscore_grade?: string;
   quantity?: string;
+  serving_size?: string;
+  serving_quantity?: number | string;
   nutriments?: Record<string, number | undefined>;
   allergens_tags?: string[];
   ingredients?: Array<{ id?: string; text?: string }>;
@@ -122,7 +124,7 @@ const MAX_EMPTY_PAGES = 3;
 // in scoreRelevance. Without them every result tied on completeness
 // = 0 and we'd surface whichever entry the API ranked first.
 const SEARCH_FIELDS =
-  'code,product_name,brands,image_front_small_url,nutriscore_grade,quantity,nutriments,allergens_tags,ingredients,completeness,unique_scans_n';
+  'code,product_name,brands,image_front_small_url,nutriscore_grade,quantity,serving_size,serving_quantity,nutriments,allergens_tags,ingredients,completeness,unique_scans_n';
 // Search-a-Licious API — Elasticsearch-backed, much faster than the old CGI endpoint
 const SEARCH_API = 'https://search.openfoodfacts.org/search';
 // Fallback to classic CGI if Search-a-Licious fails
@@ -805,6 +807,8 @@ export default function FoodSearchScreen() {
           (product as { ingredients_text_en?: string; ingredients_text?: string }).ingredients_text_en ??
           (product as { ingredients_text?: string }).ingredients_text ??
           null,
+        serving_size: product.serving_size ?? null,
+        serving_quantity: product.serving_quantity ?? null,
       });
       if (mealMode) {
         // Ask for the portion first — confirmMealAdd adds it to the draft.
@@ -1106,8 +1110,11 @@ export default function FoodSearchScreen() {
         visible={mealPending !== null}
         title="How much?"
         saveLabel="Add to meal"
-        value={100}
-        unit="g"
+        // A product with a known serving size starts at 1 serving.
+        value={mealPending?.snapshot.serving_g ? 1 : 100}
+        unit={mealPending?.snapshot.serving_g ? 'serving' : 'g'}
+        servingGrams={mealPending?.snapshot.serving_g}
+        servingSize={mealPending?.snapshot.serving_size}
         onClose={() => setMealPending(null)}
         onSave={confirmMealAdd}
       />

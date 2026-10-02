@@ -228,13 +228,19 @@ export function mealPortions(
       const share = Number(item.servings || 1) / (recipeServings[item.recipe_id] || 1);
       for (const ing of recipeIngredients[item.recipe_id] ?? []) {
         out.push({
-          grams: quantityToGrams(Number(ing.quantity_value), ing.quantity_unit) * share,
+          grams:
+            quantityToGrams(Number(ing.quantity_value), ing.quantity_unit, ing.product_snapshot?.serving_g) *
+            share,
           per100: ing.product_snapshot?.nutrition_per_100g ?? {},
         });
       }
     } else if (item.product_snapshot) {
       out.push({
-        grams: quantityToGrams(Number(item.quantity_value ?? 100), item.quantity_unit ?? 'g'),
+        grams: quantityToGrams(
+          Number(item.quantity_value ?? 100),
+          item.quantity_unit ?? 'g',
+          item.product_snapshot.serving_g,
+        ),
         per100: item.product_snapshot.nutrition_per_100g ?? {},
       });
     }

@@ -1923,6 +1923,7 @@ export default function ScanResultScreen() {
     // structured entries *and* persists it on the snapshot so the
     // family impact sheet can surface flagged ingredient matches.
     ingredients_text: ingredientsText || null,
+    serving_size: servingSize || null,
   });
   const productBarcode = typeof p.barcode === 'string' ? p.barcode : null;
   // Only link the scan when we were given a real scans.id.

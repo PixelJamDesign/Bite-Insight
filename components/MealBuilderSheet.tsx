@@ -408,6 +408,8 @@ export function MealBuilderSheet({ visible, onHide, onDone, onUnhide, scanReturn
                         : portionItem.quantity_value ?? 100
                     }
                     unit={portionItem.quantity_unit ?? 'g'}
+                    servingGrams={portionItem.product_snapshot?.serving_g}
+                    servingSize={portionItem.product_snapshot?.serving_size}
                     onClose={() => goTo('main')}
                     onSave={(value, unit) => {
                       draftMeal.updatePortion(

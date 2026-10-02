@@ -173,7 +173,7 @@ export function productNutrition(
   quantityUnit: QuantityUnit,
 ): MealNutrition {
   const per100 = snapshot.nutrition_per_100g ?? {};
-  const n = ingredientNutrition(snapshot, quantityToGrams(quantityValue, quantityUnit));
+  const n = ingredientNutrition(snapshot, quantityToGrams(quantityValue, quantityUnit, snapshot.serving_g));
   return {
     kcal: per100.energy_kcal == null ? undefined : Math.round(n.kcal),
     fat_g: per100.fat_g == null ? undefined : round1(n.fat),
@@ -538,7 +538,7 @@ export function hasNutrition(item: { nutrition: MealNutrition }): boolean {
 type SummaryItem = Pick<
   MealItemDraft,
   'kind' | 'title' | 'barcode' | 'recipe_id' | 'quantity_value' | 'quantity_unit' | 'nutrition' | 'nutriscore_grade'
->;
+> & { product_snapshot?: Pick<ProductSnapshot, 'serving_g'> | null };
 
 export function mealNutritionSummary(items: SummaryItem[]): {
   perServing: NutritionValues;
@@ -575,7 +575,7 @@ export function mealNutritionSummary(items: SummaryItem[]): {
     for (const i of withData) {
       const v = i.nutrition?.[key];
       if (v == null) continue;
-      grams += quantityToGrams(Number(i.quantity_value ?? 100), i.quantity_unit ?? 'g');
+      grams += quantityToGrams(Number(i.quantity_value ?? 100), i.quantity_unit ?? 'g', i.product_snapshot?.serving_g);
       total += Number(v);
     }
     return grams > 0 ? (total / grams) * 100 : null;

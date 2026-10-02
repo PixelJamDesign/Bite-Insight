@@ -33,9 +33,12 @@ import type {
  *   - cup     → 240g
  *   - unit    → 100g default (overridden if product has typical weight later)
  *   - pack    → 100g default (should ideally use product serving_quantity)
+ *   - serving → the product's serving size (`servingG`), else 100g
  */
-export function quantityToGrams(value: number, unit: QuantityUnit): number {
+export function quantityToGrams(value: number, unit: QuantityUnit, servingG?: number | null): number {
   switch (unit) {
+    case 'serving':
+      return value * (servingG && servingG > 0 ? servingG : 100);
     case 'g':
     case 'ml':
       return value;
@@ -103,7 +106,7 @@ export function computeRecipeTotals(
   const sum = { kcal: 0, fat: 0, saturated_fat: 0, carbs: 0, sugars: 0, fiber: 0, protein: 0, salt: 0 };
 
   for (const ing of ingredients) {
-    const grams = quantityToGrams(ing.quantity_value, ing.quantity_unit);
+    const grams = quantityToGrams(ing.quantity_value, ing.quantity_unit, ing.product_snapshot?.serving_g);
     const nut = ingredientNutrition(ing.product_snapshot, grams);
     sum.kcal += nut.kcal;
     sum.fat += nut.fat;
@@ -134,12 +137,38 @@ export function computeRecipeTotals(
  * can derive per-100g values for Nutri-score.
  */
 export function computeTotalWeightGrams(
-  ingredients: Array<{ quantity_value: number; quantity_unit: QuantityUnit }>,
+  ingredients: Array<{
+    quantity_value: number;
+    quantity_unit: QuantityUnit;
+    product_snapshot?: Pick<ProductSnapshot, 'serving_g'> | null;
+  }>,
 ): number {
   return ingredients.reduce(
-    (sum, ing) => sum + quantityToGrams(ing.quantity_value, ing.quantity_unit),
+    (sum, ing) =>
+      sum + quantityToGrams(ing.quantity_value, ing.quantity_unit, ing.product_snapshot?.serving_g),
     0,
   );
+}
+
+/**
+ * A product's serving in grams (or ml), from Open Food Facts'
+ * `serving_quantity` when it has one, else read off the printed
+ * `serving_size` ("30 g", "1 bar (45g)", "250 ml"). Null when neither
+ * gives a usable number.
+ */
+export function parseServingGrams(
+  servingSize?: string | null,
+  servingQuantity?: number | string | null,
+): number | null {
+  const q = Number(servingQuantity);
+  if (Number.isFinite(q) && q > 0) return q;
+  if (!servingSize) return null;
+  // Prefer the last "<number> g/ml" in the text: "1 bar (45 g)" → 45.
+  const matches = [...servingSize.matchAll(/(\d+(?:[.,]\d+)?)\s*(g|gr|grams?|ml|millilitres?|milliliters?)\b/gi)];
+  const last = matches[matches.length - 1];
+  if (!last) return null;
+  const n = Number(last[1].replace(',', '.'));
+  return Number.isFinite(n) && n > 0 ? n : null;
 }
 
 /**
@@ -598,6 +627,8 @@ function snapshotFromCached(cached: CachedProduct, scanIngredients: Scan['ingred
     // Keep the raw text too — gives the recipe impact matcher a second
     // chance if the structured list ends up sparse or outdated.
     ingredients_text: cached.ingredientsText ?? null,
+    serving_size: cached.servingSize ?? null,
+    serving_g: parseServingGrams(cached.servingSize),
   };
 }
 
@@ -688,6 +719,8 @@ export async function snapshotFromOff(
         dietary_tags: i.dietary_tags,
       })),
       ingredients_text: op.ingredients_text_en || op.ingredients_text || null,
+      serving_size: op.serving_size ?? null,
+      serving_quantity: op.serving_quantity ?? null,
     });
   } catch (e) {
     console.warn('[recipes] Open Food Facts lookup failed:', e);
@@ -733,6 +766,9 @@ export function buildProductSnapshot(input: {
    *  fallback when the structured list is absent/sparse, and persisted
    *  on the snapshot so the impact sheet can search it later. */
   ingredients_text?: string | null;
+  /** OFF's printed serving size and its numeric quantity, if known. */
+  serving_size?: string | null;
+  serving_quantity?: number | string | null;
 }): ProductSnapshot {
   const n = input.nutriments ?? {};
 
@@ -769,5 +805,7 @@ export function buildProductSnapshot(input: {
     allergens: input.allergens ?? [],
     ingredients,
     ingredients_text: input.ingredients_text ?? null,
+    serving_size: input.serving_size || null,
+    serving_g: parseServingGrams(input.serving_size, input.serving_quantity),
   };
 }

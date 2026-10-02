@@ -9,6 +9,10 @@
  *                                           Close for most liquids/sauces;
  *                                           approximate for dry goods.
  *   Count (unit, pack) ↔ anything         — not meaningful; resets to 1.
+ *   Serving ↔ weight/volume               — only via the product's own
+ *                                           serving size (the picker's
+ *                                           `servingGrams`); listed only
+ *                                           when that's known.
  */
 import type { QuantityUnit } from '@/lib/types';
 
@@ -29,6 +33,7 @@ export const QUANTITY_UNITS: QuantityUnitMeta[] = [
   { key: 'tbsp', label: 'Tablespoons',  shortLabel: 'Tbsp',  defaultValue: 1,   step: 0.5, precision: 1 },
   { key: 'tsp',  label: 'Teaspoons',    shortLabel: 'Tsp',   defaultValue: 1,   step: 0.5, precision: 1 },
   { key: 'cup',  label: 'Cups',         shortLabel: 'Cups',  defaultValue: 0.5, step: 0.25, precision: 2 },
+  { key: 'serving', label: 'Servings',  shortLabel: 'servings', defaultValue: 1, step: 0.5, precision: 1 },
 ];
 
 export function unitMeta(unit: QuantityUnit): QuantityUnitMeta {
@@ -47,6 +52,7 @@ export const UNIT_TO_ML: Record<QuantityUnit, number | null> = {
   cup:  240,   // US customary cup (widely used in recipes)
   unit: null,
   pack: null,
+  serving: null,
 };
 
 export function canConvert(from: QuantityUnit, to: QuantityUnit): boolean {
@@ -145,6 +151,8 @@ export function snapToFractionStep(value: number, unit: QuantityUnit): number {
 /** Value-only display, used inside the Quantity sheet next to the unit. */
 export function formatQuantityValue(value: number, unit: QuantityUnit): string {
   if (shouldShowAsFraction(unit)) return formatFractional(value, unit);
+  // "2" not "2.0"; halves stay "1.5".
+  if (unit === 'serving') return String(Math.round(value * 10) / 10);
   const meta = unitMeta(unit);
   return value.toFixed(meta.precision);
 }
@@ -153,6 +161,10 @@ export function formatQuantityValue(value: number, unit: QuantityUnit): string {
  * Short "100g" / "¾ cups" / "4 units" style used in ingredient rows.
  */
 export function formatQuantity(value: number, unit: QuantityUnit): string {
+  if (unit === 'serving') {
+    const v = Math.round(value * 10) / 10;
+    return `${v} ${v === 1 ? 'serving' : 'servings'}`;
+  }
   if (shouldShowAsFraction(unit)) {
     const meta = unitMeta(unit);
     return `${formatFractional(value, unit)} ${meta.shortLabel}`;

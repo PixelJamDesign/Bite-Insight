@@ -143,7 +143,8 @@ export interface FamilyProfile {
 
 // ── Recipes (Phase 1: My Recipes) ───────────────────────────────────────────
 
-export type QuantityUnit = 'g' | 'ml' | 'unit' | 'pack' | 'tbsp' | 'tsp' | 'cup';
+/** 'serving' is the product's own serving size (ProductSnapshot.serving_g). */
+export type QuantityUnit = 'g' | 'ml' | 'unit' | 'pack' | 'tbsp' | 'tsp' | 'cup' | 'serving';
 
 export type RecipeVisibility = 'private' | 'household' | 'public';
 
@@ -180,6 +181,11 @@ export interface ProductSnapshot {
    *  array. Used by the recipe impact matcher as a fallback when the
    *  structured `ingredients` array is empty. */
   ingredients_text?: string | null;
+  /** The pack's serving size as printed, e.g. "30 g" or "1 bar (45 g)". */
+  serving_size?: string | null;
+  /** That serving in grams (or ml), when it could be worked out. Lets a
+   *  portion be given as servings. Missing on older snapshots. */
+  serving_g?: number | null;
 }
 
 export interface RecipeIngredient {
