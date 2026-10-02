@@ -4,17 +4,20 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 
-/** Thresholds at which the prompt appears: first at 20, second chance at 40, then never */
-const THRESHOLDS = [20, 40];
+/** Scan milestones at which the prompt appears: 20, then 50, then 100 if
+ *  they keep choosing "Ask me later", then never. */
+const THRESHOLDS = [20, 50, 100] as const;
+export type ReviewMilestone = (typeof THRESHOLDS)[number];
 const STORAGE_KEY_COMPLETED = 'review_prompt_completed'; // user said "yes!"
 const STORAGE_KEY_DISMISS_COUNT = 'review_prompt_dismiss_count'; // how many times dismissed
 const STORAGE_KEY_DECLINED = 'review_prompt_declined'; // user said "not really"
 // Debug menu: show the prompt on the next product page, whatever the count.
 const STORAGE_KEY_FORCE = 'review_prompt_force';
 
-/** Debug menu: the next product page opens with the review prompt. */
-export async function forceReviewPrompt() {
-  await AsyncStorage.setItem(STORAGE_KEY_FORCE, 'true');
+/** Debug menu: the next product page opens with the review prompt for
+ *  this milestone. */
+export async function forceReviewPrompt(milestone: ReviewMilestone = 20) {
+  await AsyncStorage.setItem(STORAGE_KEY_FORCE, String(milestone));
 }
 
 /** Debug menu: forget the user's earlier answers so the prompt can fire again. */
@@ -60,8 +63,8 @@ export async function openStoreReview() {
  * Hook that triggers a "loving the app?" prompt after scan milestones.
  *
  * - 20 scans → first prompt
- * - If dismissed, waits until 40 scans → second (final) prompt
- * - If dismissed twice or completed once → never asks again
+ * - "Ask me later" → again at 50, then at 100 (the last time)
+ * - "Yes" or "Not really" → never asks again
  *
  * Usage:
  * ```
@@ -71,12 +74,15 @@ export async function openStoreReview() {
 export function useReviewPrompt() {
   const { session } = useAuth();
   const [showReviewPrompt, setShowReviewPrompt] = useState(false);
+  const [reviewMilestone, setReviewMilestone] = useState<ReviewMilestone>(20);
 
   // Forced from the debug menu: show once, as soon as the page opens.
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY_FORCE).then((v) => {
-      if (v !== 'true') return;
+      const forced = THRESHOLDS.find((t) => String(t) === v);
+      if (!forced) return;
       AsyncStorage.removeItem(STORAGE_KEY_FORCE);
+      setReviewMilestone(forced);
       setShowReviewPrompt(true);
     });
   }, []);
@@ -115,6 +121,7 @@ export function useReviewPrompt() {
       }
 
       if ((count ?? 0) >= currentThreshold) {
+        setReviewMilestone(currentThreshold);
         setShowReviewPrompt(true);
       }
     } catch (err) {
@@ -151,6 +158,7 @@ export function useReviewPrompt() {
 
   return {
     showReviewPrompt,
+    reviewMilestone,
     recheckAfterScan,
     dismissReviewPrompt,
     declineReviewPrompt,

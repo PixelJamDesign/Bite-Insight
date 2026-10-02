@@ -23,7 +23,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { forceReviewPrompt, resetReviewPrompt } from '@/lib/useReviewPrompt';
+import { forceReviewPrompt, resetReviewPrompt, type ReviewMilestone } from '@/lib/useReviewPrompt';
 import { openScanResult } from '@/lib/openScan';
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
@@ -331,7 +331,7 @@ export function DebugMenu() {
 
   // The review prompt lives on the product page, so open the latest scan
   // with the prompt forced on.
-  const triggerReviewPrompt = async () => {
+  const triggerReviewPrompt = async (milestone: ReviewMilestone) => {
     if (!session?.user?.id) return;
     const { data, error } = await supabase
       .from('scans')
@@ -344,14 +344,14 @@ export function DebugMenu() {
       Alert.alert('No scans', 'Scan a product first, then try again.');
       return;
     }
-    await forceReviewPrompt();
+    await forceReviewPrompt(milestone);
     hideDebugMenu();
     await openScanResult(data);
   };
 
   const resetReviewPromptState = async () => {
     await resetReviewPrompt();
-    Alert.alert('Reset', 'Review prompt answers cleared. It will fire again at 20 scans.');
+    Alert.alert('Reset', 'Review prompt answers cleared. It will fire again from 20 scans.');
   };
 
   const resetWhatsNewSeen = async () => {
@@ -415,7 +415,9 @@ export function DebugMenu() {
               <ActionButton label="Show Update toast" onPress={triggerUpdateToast} />
               <ActionButton label="Show paid Upsell sheet" onPress={triggerPaidUpsell} />
               <ActionButton label="Show My Plan sheet" onPress={triggerMyPlan} />
-              <ActionButton label="Show Review prompt" onPress={triggerReviewPrompt} />
+              <ActionButton label="Show Review prompt (20 scans)" onPress={() => triggerReviewPrompt(20)} />
+              <ActionButton label="Show Review prompt (50 scans)" onPress={() => triggerReviewPrompt(50)} />
+              <ActionButton label="Show Review prompt (100 scans)" onPress={() => triggerReviewPrompt(100)} />
               <ActionButton
                 label="Open OFF Contribute screen"
                 onPress={() => { hideDebugMenu(); router.push({ pathname: '/contribute-product', params: { barcode: '2000000000017' } }); }}

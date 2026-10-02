@@ -715,7 +715,7 @@ export default function ScanResultScreen() {
   const { t } = useTranslation('scan');
   const { t: tc } = useTranslation('common');
   const { t: tpo } = useTranslation('profileOptions');
-  const { showReviewPrompt, recheckAfterScan, dismissReviewPrompt, declineReviewPrompt, completeReviewPrompt } = useReviewPrompt();
+  const { showReviewPrompt, reviewMilestone, recheckAfterScan, dismissReviewPrompt, declineReviewPrompt, completeReviewPrompt } = useReviewPrompt();
 
   // Sheets opened from the product's ⋯ menu
   const [addToRecipeOpen, setAddToRecipeOpen] = useState(false);
@@ -3530,6 +3530,7 @@ export default function ScanResultScreen() {
       {/* ── Review prompt — full-screen takeover ── */}
       {showReviewPrompt && (
         <ReviewPromptCard
+          milestone={reviewMilestone}
           onYes={completeReviewPrompt}
           onNotReally={declineReviewPrompt}
           onLater={dismissReviewPrompt}

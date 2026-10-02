@@ -1,10 +1,10 @@
 /**
- * ReviewPromptCard — the "You've scanned over 20 products!" moment
- * (Figma 5949:14597). A white card with a 3D "20" sitting over its top
- * edge; confetti bursts out from behind the number as the card lands,
- * then drifts gently while it's open.
+ * ReviewPromptCard — the scan milestone moment (Figma "Review Prompt",
+ * 5949:14831): 20, 50 and 100 scans. A white card with a 3D number
+ * sitting over its top edge; confetti bursts out from behind the number
+ * as the card lands, then drifts gently while it's open.
  *
- * Artwork comes from the Figma frame, exported per piece so each can
+ * Artwork comes from the Figma frames, exported per piece so each can
  * move on its own. Positions below are in the card's own points (354pt
  * wide in Figma) and are laid out from the card's centre, so the art
  * stays put on wider phones.
@@ -16,6 +16,7 @@ import {
   Easing,
   Image,
   Modal,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -23,6 +24,7 @@ import {
 } from 'react-native';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { Colors, Radius, Shadows, Spacing } from '@/constants/theme';
+import type { ReviewMilestone } from '@/lib/useReviewPrompt';
 
 // Native blur behind the scrim. Expo Go can't load the view, so there the
 // scrim is a little darker instead.
@@ -36,35 +38,75 @@ const DESIGN_WIDTH = 354;
 /** How far the art rises above the card's top edge. */
 const ART_RISE = 130;
 
-const TWENTY = { x: 76.3, y: -55.3, w: 197.3, h: 118.3 };
+const SPRITES = {
+  c1: { src: require('@/assets/images/review/confetti-c1.png'), w: 49, h: 50.3, spin: -140 },
+  c2: { src: require('@/assets/images/review/confetti-c2.png'), w: 28, h: 29, spin: 90 },
+  c3: { src: require('@/assets/images/review/confetti-c3.png'), w: 12, h: 11, spin: 180 },
+  c4: { src: require('@/assets/images/review/confetti-c4.png'), w: 24.3, h: 25, spin: -120 },
+  c5: { src: require('@/assets/images/review/confetti-c5.png'), w: 23, h: 31, spin: 160 },
+  c6: { src: require('@/assets/images/review/confetti-c6.png'), w: 23, h: 31, spin: -170 },
+  c7: { src: require('@/assets/images/review/confetti-c7.png'), w: 37.7, h: 35.3, spin: 130 },
+  c8: { src: require('@/assets/images/review/confetti-c8.png'), w: 31, h: 32.7, spin: 150 },
+  c9: { src: require('@/assets/images/review/confetti-c9.png'), w: 38, h: 34, spin: -150 },
+};
+type SpriteKey = keyof typeof SPRITES;
+const SPRITE_KEYS = Object.keys(SPRITES) as SpriteKey[];
 
-const PIECES = [
-  { key: 'c1', src: require('@/assets/images/review/confetti-c1.png'), x: 180, y: -110, w: 49, h: 50.3, spin: -140 },
-  { key: 'c2', src: require('@/assets/images/review/confetti-c2.png'), x: 244, y: -98, w: 28, h: 29, spin: 90 },
-  { key: 'c3', src: require('@/assets/images/review/confetti-c3.png'), x: 191, y: -130, w: 12, h: 11, spin: 180 },
-  { key: 'c4', src: require('@/assets/images/review/confetti-c4.png'), x: 63, y: -45, w: 24.3, h: 25, spin: -120 },
-  { key: 'c5', src: require('@/assets/images/review/confetti-c5.png'), x: 270, y: -45, w: 23, h: 31, spin: 160 },
-  { key: 'c6', src: require('@/assets/images/review/confetti-c6.png'), x: 82, y: -86, w: 23, h: 31, spin: -170 },
-  { key: 'c7', src: require('@/assets/images/review/confetti-c7.png'), x: 140, y: -117, w: 37.7, h: 35.3, spin: 130 },
-  { key: 'c8', src: require('@/assets/images/review/confetti-c8.png'), x: 268, y: 11, w: 31, h: 32.7, spin: 150 },
-  { key: 'c9', src: require('@/assets/images/review/confetti-c9.png'), x: 51, y: 0, w: 38, h: 34, spin: -150 },
-] as const;
+/** Confetti positions (top-left, card points). 20 and 50 share a layout;
+ *  the wider 100 spreads it out. */
+const LAYOUT_TWO_DIGIT: Record<SpriteKey, [number, number]> = {
+  c1: [180, -110], c2: [244, -98], c3: [191, -130], c4: [63, -45], c5: [270, -45],
+  c6: [82, -86], c7: [140, -117], c8: [268, 11], c9: [51, 0],
+};
+const LAYOUT_HUNDRED: Record<SpriteKey, [number, number]> = {
+  c1: [180, -110], c2: [244, -98], c3: [191, -130], c4: [43, -65], c5: [310, -65],
+  c6: [76, -92], c7: [114, -104], c8: [318, 11], c9: [12, 7],
+};
 
-/** Where the confetti bursts from: the middle of the "20". */
-const ORIGIN = { x: TWENTY.x + TWENTY.w / 2, y: TWENTY.y + TWENTY.h / 2 };
+const MILESTONES: Record<
+  ReviewMilestone,
+  {
+    title: string;
+    number: { src: number; x: number; y: number; w: number; h: number };
+    layout: Record<SpriteKey, [number, number]>;
+  }
+> = {
+  20: {
+    title: "You've scanned over 20 products!",
+    number: { src: require('@/assets/images/review/twenty.webp'), x: 76.3, y: -55.3, w: 197.3, h: 118.3 },
+    layout: LAYOUT_TWO_DIGIT,
+  },
+  50: {
+    title: "50 products!? You're smashing it!",
+    number: { src: require('@/assets/images/review/fifty.webp'), x: 76.3, y: -56, w: 198, h: 119 },
+    layout: LAYOUT_TWO_DIGIT,
+  },
+  100: {
+    title: 'Over 100 products scanned!',
+    number: { src: require('@/assets/images/review/hundred.webp'), x: 41.3, y: -56, w: 283, h: 119 },
+    layout: LAYOUT_HUNDRED,
+  },
+};
+
+const STORE_NAME = Platform.OS === 'android' ? 'Google Play' : 'App Store';
 
 interface Props {
+  milestone: ReviewMilestone;
   onYes: () => void;
   onNotReally: () => void;
   onLater: () => void;
 }
 
-export function ReviewPromptCard({ onYes, onNotReally, onLater }: Props) {
+export function ReviewPromptCard({ milestone, onYes, onNotReally, onLater }: Props) {
+  const m = MILESTONES[milestone];
+  // Where the confetti bursts from: the middle of the number.
+  const origin = { x: m.number.x + m.number.w / 2, y: m.number.y + m.number.h / 2 };
+
   const backdrop = useRef(new Animated.Value(0)).current;
   const card = useRef(new Animated.Value(0)).current;
-  const twenty = useRef(new Animated.Value(0)).current;
-  const burst = useRef(PIECES.map(() => new Animated.Value(0))).current;
-  const drift = useRef(PIECES.map(() => new Animated.Value(0))).current;
+  const number = useRef(new Animated.Value(0)).current;
+  const burst = useRef(SPRITE_KEYS.map(() => new Animated.Value(0))).current;
+  const drift = useRef(SPRITE_KEYS.map(() => new Animated.Value(0))).current;
 
   useEffect(() => {
     let cancelled = false;
@@ -73,14 +115,14 @@ export function ReviewPromptCard({ onYes, onNotReally, onLater }: Props) {
     AccessibilityInfo.isReduceMotionEnabled().then((reduce) => {
       if (cancelled) return;
       if (reduce) {
-        [backdrop, card, twenty, ...burst].forEach((v) => v.setValue(1));
+        [backdrop, card, number, ...burst].forEach((v) => v.setValue(1));
         return;
       }
       Animated.timing(backdrop, { toValue: 1, duration: 220, useNativeDriver: true }).start();
       Animated.spring(card, { toValue: 1, friction: 7, tension: 70, useNativeDriver: true }).start();
       Animated.sequence([
         Animated.delay(140),
-        Animated.spring(twenty, { toValue: 1, friction: 4.5, tension: 120, useNativeDriver: true }),
+        Animated.spring(number, { toValue: 1, friction: 4.5, tension: 120, useNativeDriver: true }),
       ]).start();
       Animated.stagger(
         28,
@@ -110,7 +152,7 @@ export function ReviewPromptCard({ onYes, onNotReally, onLater }: Props) {
       cancelled = true;
       loops.forEach((l) => l.stop());
     };
-  }, [backdrop, card, twenty, burst, drift]);
+  }, [backdrop, card, number, burst, drift]);
 
   // A modal so it sits over everything on the page, floating header and
   // tab bar included.
@@ -135,11 +177,14 @@ export function ReviewPromptCard({ onYes, onNotReally, onLater }: Props) {
           ]}
         >
           <View style={styles.card}>
+            <Text style={styles.title}>{m.title}</Text>
+
             <View style={styles.textBlock}>
-              <Text style={styles.title}>You've scanned over 20 products!</Text>
               <Text style={styles.lead}>Loving Bite Insight?</Text>
               <Text style={styles.body}>
-                We'd love to know what you think about the Bite Insight app and how we can make it better for you.
+                We'd really like to hear what you think about the Bite Insight app and how we can make it better
+                for you. Leaving a review or rating on the {STORE_NAME} helps us a lot, and we'd appreciate your
+                feedback!
               </Text>
             </View>
 
@@ -151,26 +196,28 @@ export function ReviewPromptCard({ onYes, onNotReally, onLater }: Props) {
                 <Text style={styles.secondaryLabel}>Not really</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.tertiaryBtn} onPress={onLater} activeOpacity={0.7}>
-                <Text style={styles.secondaryLabel}>Ask me later</Text>
+                <Text style={styles.tertiaryLabel}>Ask me later</Text>
               </TouchableOpacity>
             </View>
           </View>
 
           {/* Art over the top edge, laid out on the 354pt design grid */}
           <View style={styles.art} pointerEvents="none">
-            {PIECES.map((p, i) => {
-              const dx = ORIGIN.x - (p.x + p.w / 2);
-              const dy = ORIGIN.y - (p.y + p.h / 2);
+            {SPRITE_KEYS.map((key, i) => {
+              const p = SPRITES[key];
+              const [x, y] = m.layout[key];
+              const dx = origin.x - (x + p.w / 2);
+              const dy = origin.y - (y + p.h / 2);
               const b = burst[i];
               return (
                 <Animated.Image
-                  key={p.key}
+                  key={key}
                   source={p.src}
                   style={[
                     styles.abs,
                     {
-                      left: p.x,
-                      top: p.y + ART_RISE,
+                      left: x,
+                      top: y + ART_RISE,
                       width: p.w,
                       height: p.h,
                       opacity: b.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0, 1, 1] }),
@@ -195,19 +242,19 @@ export function ReviewPromptCard({ onYes, onNotReally, onLater }: Props) {
               style={[
                 styles.abs,
                 {
-                  left: TWENTY.x,
-                  top: TWENTY.y + ART_RISE,
-                  width: TWENTY.w,
-                  height: TWENTY.h,
-                  opacity: twenty.interpolate({ inputRange: [0, 0.3, 1], outputRange: [0, 1, 1] }),
+                  left: m.number.x,
+                  top: m.number.y + ART_RISE,
+                  width: m.number.w,
+                  height: m.number.h,
+                  opacity: number.interpolate({ inputRange: [0, 0.3, 1], outputRange: [0, 1, 1] }),
                   transform: [
-                    { translateY: twenty.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) },
-                    { scale: twenty.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1] }) },
+                    { translateY: number.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) },
+                    { scale: number.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1] }) },
                   ],
                 },
               ]}
             >
-              <Image source={require('@/assets/images/review/twenty.webp')} style={styles.fill} resizeMode="contain" />
+              <Image source={m.number.src} style={styles.fill} resizeMode="contain" />
             </Animated.View>
           </View>
         </Animated.View>
@@ -247,23 +294,25 @@ const styles = StyleSheet.create({
     gap: Spacing.m,
     ...Shadows.level4,
   },
-  textBlock: {
-    gap: Spacing.xs,
-  },
   title: {
-    fontSize: 20,
-    lineHeight: 24,
+    fontSize: 30,
+    lineHeight: 36,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
-    letterSpacing: -0.4,
+    letterSpacing: -0.6,
     color: Colors.primary,
+    textAlign: 'center',
+  },
+  textBlock: {
+    gap: Spacing.xs,
   },
   lead: {
     fontSize: 16,
     lineHeight: 27,
-    fontWeight: '300',
-    fontFamily: 'Figtree_300Light',
-    color: Colors.secondary,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    letterSpacing: -0.32,
+    color: Colors.primary,
   },
   body: {
     fontSize: 14,
@@ -308,6 +357,14 @@ const styles = StyleSheet.create({
   tertiaryBtn: {
     paddingVertical: Spacing.xs,
     alignItems: 'center',
+  },
+  tertiaryLabel: {
+    fontSize: 14,
+    lineHeight: 17,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    letterSpacing: -0.28,
+    color: Colors.secondary,
   },
   art: {
     position: 'absolute',
