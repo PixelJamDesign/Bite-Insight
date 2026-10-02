@@ -28,4 +28,6 @@ export interface MoreMenuProps {
   /** small (36, the default) or regular (48) — e.g. a sheet header. */
   size?: IconButtonSize;
   accessibilityLabel?: string;
+  /** The small plain ⋯ used inside list rows, instead of the Icon Button. */
+  bare?: boolean;
 }

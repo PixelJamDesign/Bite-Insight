@@ -17,13 +17,9 @@
  */
 import { useMemo, useState } from 'react';
 import {
-  ActionSheetIOS,
-  Dimensions,
   Image,
   LayoutAnimation,
-  Modal,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -31,9 +27,7 @@ import {
   TouchableOpacity,
   UIManager,
   View,
-  type GestureResponderEvent,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { getIngredientImageUrl } from '@/lib/supabase';
 
@@ -72,11 +66,12 @@ import {
   ActionPenIcon,
   ActionSearchIcon,
   ActionClearIcon,
-  MenuLikedIcon,
-  MenuDislikedIcon,
-  MenuFlaggedIcon,
 } from '@/components/MenuIcons';
 import { IngredientDetailModal } from '@/components/IngredientDetailModal';
+import { MoreMenu } from '@/components/MoreMenu';
+import type { MoreMenuAction } from '@/components/moreMenuTypes';
+import { DislikeActionIcon, FlagActionIcon, LikeActionIcon } from '@/components/ingredientMenuIcons';
+import TrashActionIcon from '@/assets/icons/recipe-actions/trash.svg';
 import type { Ingredient } from '@/lib/types';
 
 // ── Types ────────────────────────────────────────────────────────────────
@@ -299,83 +294,54 @@ export function FamilyIngredientPreferencesPanel({
   // current preference state is omitted, and a 'Remove' destructive option
   // appears whenever the ingredient has any preference set.
   const { t: tIngredients } = useTranslation('ingredients');
-  const [menuIngredient, setMenuIngredient] = useState<PreferenceIngredient | null>(null);
-  const [menuAnchor, setMenuAnchor] = useState({ x: 0, y: 0 });
-  const screenHeight = Dimensions.get('window').height;
 
   // Detail modal — opens when the user taps an ingredient row (and the
   // parent hasn't supplied its own onIngredientTap handler). Mirrors the
   // behaviour of the user-view ingredient preferences screen.
   const [detailIngredient, setDetailIngredient] = useState<PreferenceIngredient | null>(null);
 
-  function closeMenu() {
-    setMenuIngredient(null);
-  }
-
-  type MenuAction = {
-    label: string;
-    renderIcon: (color: string) => React.ReactNode;
-    color?: string;
-    onPress: () => void;
-  };
-
-  function getMenuActions(ing: PreferenceIngredient): MenuAction[] {
+  // The row's ⋯ quick menu.
+  function getMenuActions(ing: PreferenceIngredient): MoreMenuAction[] {
     const current = preferenceById[ing.id] ?? null;
-    const actions: MenuAction[] = [];
+    const actions: MoreMenuAction[] = [];
     if (current !== 'liked') {
       actions.push({
+        key: 'like',
         label: tIngredients('preferences.menu.likeIngredient', { defaultValue: 'Like' }),
-        renderIcon: (color) => <MenuLikedIcon size={18} color={color} />,
-        onPress: () => { closeMenu(); handleLike(ing); },
+        systemImage: 'hand.thumbsup',
+        Icon: LikeActionIcon,
+        onPress: () => handleLike(ing),
       });
     }
     if (current !== 'disliked') {
       actions.push({
+        key: 'dislike',
         label: tIngredients('preferences.menu.dislikeIngredient', { defaultValue: 'Dislike' }),
-        renderIcon: (color) => <MenuDislikedIcon size={18} color={color} />,
-        onPress: () => { closeMenu(); handleDislike(ing); },
+        systemImage: 'hand.thumbsdown',
+        Icon: DislikeActionIcon,
+        onPress: () => handleDislike(ing),
       });
     }
     if (current !== 'flagged' && showFlag) {
       actions.push({
+        key: 'flag',
         label: tIngredients('preferences.menu.flagIngredient', { defaultValue: 'Flag' }),
-        renderIcon: (color) => <MenuFlaggedIcon size={18} color={color} />,
-        onPress: () => { closeMenu(); handleFlag(ing); },
+        systemImage: 'flag',
+        Icon: FlagActionIcon,
+        onPress: () => handleFlag(ing),
       });
     }
     if (current !== null) {
       actions.push({
+        key: 'remove',
         label: tIngredients('preferences.menu.removeIngredient', { defaultValue: 'Remove preference' }),
-        renderIcon: (color) => <Ionicons name="trash-outline" size={18} color={color} />,
-        color: Colors.status.negative,
-        onPress: () => { closeMenu(); handleRemove(ing); },
+        systemImage: 'trash',
+        Icon: TrashActionIcon,
+        destructive: true,
+        onPress: () => handleRemove(ing),
       });
     }
     return actions;
-  }
-
-  function openRowMenu(ing: PreferenceIngredient, event: GestureResponderEvent) {
-    const actions = getMenuActions(ing);
-    if (actions.length === 0) return;
-
-    if (Platform.OS === 'ios') {
-      const cancelLabel = tIngredients('common.cancel', { defaultValue: 'Cancel' });
-      const labels = [...actions.map((a) => a.label), cancelLabel];
-      const destructiveIndex = actions.findIndex((a) => !!a.color);
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          title: ing.name,
-          options: labels,
-          cancelButtonIndex: labels.length - 1,
-          destructiveButtonIndex: destructiveIndex >= 0 ? destructiveIndex : undefined,
-        },
-        (idx) => { if (idx < actions.length) actions[idx].onPress(); },
-      );
-      return;
-    }
-
-    setMenuAnchor({ x: event.nativeEvent.pageX, y: event.nativeEvent.pageY });
-    setMenuIngredient(ing);
   }
 
   const sectionTitle =
@@ -586,56 +552,17 @@ export function FamilyIngredientPreferencesPanel({
               <Text style={styles.rowName} numberOfLines={1}>
                 {ing.name}
               </Text>
-              <TouchableOpacity
-                style={styles.rowMenuBtn}
-                onPress={(e) => openRowMenu(ing, e)}
-                activeOpacity={0.7}
-                hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
-              >
-                <Ionicons name="ellipsis-horizontal" size={14} color={Colors.secondary} />
-              </TouchableOpacity>
+              <MoreMenu
+                bare
+                title={ing.name}
+                accessibilityLabel={`Actions for ${ing.name}`}
+                actions={getMenuActions(ing)}
+              />
             </TouchableOpacity>
           ))
         )}
       </View>
 
-      {/* Floating action menu — Android / web. iOS uses ActionSheetIOS. */}
-      {menuIngredient !== null && Platform.OS !== 'ios' && (
-        <Modal
-          transparent
-          visible
-          animationType="fade"
-          onRequestClose={closeMenu}
-          statusBarTranslucent
-        >
-          <Pressable style={styles.menuOverlay} onPress={closeMenu} />
-          <View
-            style={[
-              styles.actionMenuCard,
-              { top: Math.max(80, Math.min(menuAnchor.y - 8, screenHeight - 240)) },
-            ]}
-          >
-            {getMenuActions(menuIngredient).map((action) => (
-              <TouchableOpacity
-                key={action.label}
-                style={styles.actionMenuItem}
-                onPress={action.onPress}
-                activeOpacity={0.7}
-              >
-                {action.renderIcon(action.color ?? Colors.primary)}
-                <Text
-                  style={[
-                    styles.actionMenuItemText,
-                    action.color ? { color: action.color } : null,
-                  ]}
-                >
-                  {action.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </Modal>
-      )}
 
       {/* Ingredient detail modal — same modal used on the user-view
           ingredient preferences screen. Opens when the row is tapped
@@ -924,40 +851,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginRight: 8,
   },
-  rowMenuBtn: {
-    width: 20,
-    height: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
 
-  // ── Action menu (Android / web only — iOS uses native ActionSheetIOS) ──
-  menuOverlay: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-  },
-  actionMenuCard: {
-    position: 'absolute',
-    right: 20,
-    backgroundColor: Colors.surface.secondary,
-    borderRadius: Radius.m,
-    paddingVertical: 8,
-    minWidth: 200,
-    ...Shadows.level4,
-  },
-  actionMenuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-  },
-  actionMenuItemText: {
-    fontSize: 16,
-    fontWeight: '400',
-    fontFamily: 'Figtree_400Regular',
-    color: Colors.primary,
-  },
 
   // Empty state
   emptyCard: {

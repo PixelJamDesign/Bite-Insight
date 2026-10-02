@@ -10,14 +10,12 @@
  */
 import { View } from 'react-native';
 import MenuView from '@expo/ui/community/menu';
-import { IconButton } from '@/components/IconButton';
+import { MoreMenuButton } from '@/components/MoreMenuButton';
 import type { MoreMenuProps } from '@/components/moreMenuTypes';
-import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '@/constants/theme';
 
 const MENU_DISMISS_MS = 250;
 
-export function MoreMenu({ actions, title, variant = 'onTeal', size = 'small', accessibilityLabel }: MoreMenuProps) {
+export function MoreMenu({ actions, title, variant = 'onTeal', size = 'small', accessibilityLabel, bare }: MoreMenuProps) {
   return (
     <MenuView
       title={title}
@@ -36,11 +34,7 @@ export function MoreMenu({ actions, title, variant = 'onTeal', size = 'small', a
       {/* Visual only — the native menu handles the tap. The wrapper carries
           the label so TalkBack reads the button. */}
       <View accessible accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? 'More actions'}>
-      <IconButton
-        size={size}
-        variant={variant}
-        icon={<Ionicons name="ellipsis-horizontal" size={size === 'small' ? 20 : 24} color={Colors.primary} />}
-      />
+      <MoreMenuButton size={size} variant={variant} bare={bare} />
       </View>
     </MenuView>
   );

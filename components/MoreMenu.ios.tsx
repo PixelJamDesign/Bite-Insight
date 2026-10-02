@@ -11,16 +11,13 @@
  */
 import { Button, Host, Menu, RNHostView, Section } from '@expo/ui/swift-ui';
 import { accessibilityLabel as a11yLabel, menuOrder } from '@expo/ui/swift-ui/modifiers';
-import { IconButton } from '@/components/IconButton';
+import { MoreMenuButton } from '@/components/MoreMenuButton';
 import type { MoreMenuProps } from '@/components/moreMenuTypes';
-import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '@/constants/theme';
 
 /** Lets the menu finish closing before an action presents a Modal. */
 const MENU_DISMISS_MS = 250;
 
-export function MoreMenu({ actions, title, variant = 'onTeal', size = 'small', accessibilityLabel }: MoreMenuProps) {
-  const iconSize = size === 'small' ? 20 : 24;
+export function MoreMenu({ actions, title, variant = 'onTeal', size = 'small', accessibilityLabel, bare }: MoreMenuProps) {
   const items = actions.map((a) => (
     <Button
       key={a.key}
@@ -38,11 +35,7 @@ export function MoreMenu({ actions, title, variant = 'onTeal', size = 'small', a
         label={
           <RNHostView matchContents>
             {/* Visual only — the menu handles the tap. */}
-            <IconButton
-              size={size}
-              variant={variant}
-              icon={<Ionicons name="ellipsis-horizontal" size={iconSize} color={Colors.primary} />}
-            />
+            <MoreMenuButton size={size} variant={variant} bare={bare} />
           </RNHostView>
         }
       >

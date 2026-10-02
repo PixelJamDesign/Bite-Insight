@@ -5,16 +5,12 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  ActionSheetIOS,
-  Modal,
   Platform,
   TextInput,
   Image,
   Animated,
   Easing,
-  useWindowDimensions,
 } from 'react-native';
-import type { GestureResponderEvent } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -24,7 +20,11 @@ import { useAuth } from '@/lib/auth';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { Colors, Shadows } from '@/constants/theme';
 import { ScreenLayout, HeaderScrollView, subtitleStyles } from '@/components/ScreenLayout';
-import { MenuLikedIcon, MenuDislikedIcon, MenuFlaggedIcon, ActionSearchIcon, ActionClearIcon, ActionPenIcon } from '@/components/MenuIcons';
+import { ActionSearchIcon, ActionClearIcon, ActionPenIcon } from '@/components/MenuIcons';
+import { MoreMenu } from '@/components/MoreMenu';
+import type { MoreMenuAction } from '@/components/moreMenuTypes';
+import { DislikeActionIcon, FlagActionIcon, LikeActionIcon } from '@/components/ingredientMenuIcons';
+import TrashActionIcon from '@/assets/icons/recipe-actions/trash.svg';
 import { TextField } from '@/components/TextField';
 import { IngredientDetailModal } from '@/components/IngredientDetailModal';
 import { FlagReasonSheet } from '@/components/FlagReasonSheet';
@@ -101,9 +101,6 @@ export default function IngredientPreferencesScreen() {
     }).start();
   }, [editMode]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [menuIngredient, setMenuIngredient] = useState<PreferenceItem | null>(null);
-  const [menuAnchor, setMenuAnchor] = useState({ x: 0, y: 0 });
-  const { height: screenHeight } = useWindowDimensions();
   const [searchActive, setSearchActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -276,12 +273,7 @@ export default function IngredientPreferencesScreen() {
     });
   }
 
-  function closeMenu() {
-    setMenuIngredient(null);
-  }
-
   async function handleMove(ingredientId: string, targetPref: PreferenceTab) {
-    closeMenu();
     if (!session?.user) return;
     setItems((prev) => prev.filter((i) => i.ingredient_id !== ingredientId));
 
@@ -312,64 +304,45 @@ export default function IngredientPreferencesScreen() {
     }
   }
 
-  type MenuAction = {
-    label: string;
-    renderIcon: (color: string) => React.ReactNode;
-    color?: string;
-    onPress: () => void;
-  };
-
-  function getMenuActions(item: PreferenceItem): MenuAction[] {
-    const actions: MenuAction[] = [];
+  // The row's ⋯ quick menu: move to another list, flag (Plus), or remove.
+  function getMenuActions(item: PreferenceItem): MoreMenuAction[] {
+    const actions: MoreMenuAction[] = [];
     if (activeTab !== 'liked') {
       actions.push({
+        key: 'like',
         label: t('preferences.menu.likeIngredient'),
-        renderIcon: (color) => <MenuLikedIcon size={18} color={color} />,
+        systemImage: 'hand.thumbsup',
+        Icon: LikeActionIcon,
         onPress: () => handleMove(item.ingredient_id, 'liked'),
       });
     }
     if (activeTab !== 'disliked') {
       actions.push({
+        key: 'dislike',
         label: t('preferences.menu.dislikeIngredient'),
-        renderIcon: (color) => <MenuDislikedIcon size={18} color={color} />,
+        systemImage: 'hand.thumbsdown',
+        Icon: DislikeActionIcon,
         onPress: () => handleMove(item.ingredient_id, 'disliked'),
       });
     }
     if (activeTab !== 'flagged' && isPlus) {
       actions.push({
+        key: 'flag',
         label: t('preferences.menu.flagIngredient'),
-        renderIcon: (color) => <MenuFlaggedIcon size={18} color={color} />,
-        onPress: () => { closeMenu(); setFlagReasonTarget(item); },
+        systemImage: 'flag',
+        Icon: FlagActionIcon,
+        onPress: () => setFlagReasonTarget(item),
       });
     }
     actions.push({
+      key: 'remove',
       label: t('preferences.menu.removeIngredient'),
-      renderIcon: (color) => <Ionicons name="trash-outline" size={18} color={color} />,
-      color: Colors.status.negative,
-      onPress: () => { closeMenu(); handleRemove(item.ingredient_id); },
+      systemImage: 'trash',
+      Icon: TrashActionIcon,
+      destructive: true,
+      onPress: () => handleRemove(item.ingredient_id),
     });
     return actions;
-  }
-
-  function openRowMenu(item: PreferenceItem, event: GestureResponderEvent) {
-    const actions = getMenuActions(item);
-
-    if (Platform.OS === 'ios') {
-      const labels = [...actions.map((a) => a.label), tc('buttons.cancel')];
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          title: item.ingredients.name,
-          options: labels,
-          cancelButtonIndex: labels.length - 1,
-          destructiveButtonIndex: actions.findIndex((a) => !!a.color),
-        },
-        (idx) => { if (idx < actions.length) actions[idx].onPress(); }
-      );
-      return;
-    }
-
-    setMenuAnchor({ x: event.nativeEvent.pageX, y: event.nativeEvent.pageY });
-    setMenuIngredient(item);
   }
 
   function exitEditMode() {
@@ -599,14 +572,12 @@ export default function IngredientPreferencesScreen() {
                   {item.ingredients.name}
                 </Text>
                 {!editMode && (
-                  <TouchableOpacity
-                    style={styles.rowMenuBtn}
-                    onPress={(e) => openRowMenu(item, e)}
-                    activeOpacity={0.7}
-                    hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
-                  >
-                    <Ionicons name="ellipsis-horizontal" size={14} color={Colors.secondary} />
-                  </TouchableOpacity>
+                  <MoreMenu
+                    bare
+                    title={item.ingredients.name}
+                    accessibilityLabel={`Actions for ${item.ingredients.name}`}
+                    actions={getMenuActions(item)}
+                  />
                 )}
               </TouchableOpacity>
             ))}
@@ -700,36 +671,6 @@ export default function IngredientPreferencesScreen() {
       dietaryPreferences={profileMeta.dietary_preferences}
     />
 
-    {/* ── Floating action menu — web + Android ── */}
-    {menuIngredient !== null && Platform.OS !== 'ios' && (
-      <Modal
-        transparent
-        visible
-        animationType="fade"
-        onRequestClose={closeMenu}
-        statusBarTranslucent
-      >
-        <TouchableOpacity style={[StyleSheet.absoluteFill, styles.menuOverlay]} onPress={closeMenu} activeOpacity={1} />
-        <View style={[
-          styles.actionMenuCard,
-          { top: Math.max(80, Math.min(menuAnchor.y - 8, screenHeight - 240)) },
-        ]}>
-          {getMenuActions(menuIngredient).map((action) => (
-            <TouchableOpacity
-              key={action.label}
-              style={styles.actionMenuItem}
-              onPress={action.onPress}
-              activeOpacity={0.7}
-            >
-              {action.renderIcon(action.color ?? Colors.primary)}
-              <Text style={[styles.actionMenuItemText, action.color ? { color: action.color } : null]}>
-                {action.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </Modal>
-    )}
     </>
   );
 }
@@ -968,36 +909,6 @@ const styles = StyleSheet.create({
     paddingBottom: 130,
   },
 
-  // ── Floating action menu ─────────────────────────────────────────────────────
-  menuOverlay: {
-    backgroundColor: 'rgba(226, 241, 238, 0.60)',
-  },
-  actionMenuCard: {
-    position: 'absolute',
-    right: 24,
-    backgroundColor: Colors.surface.secondary,
-    borderRadius: 8,
-    padding: 8,
-    minWidth: 192,
-    maxWidth: 260,
-    ...Shadows.level2,
-  },
-  actionMenuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    height: 36,
-    paddingHorizontal: 8,
-    borderRadius: 4,
-  },
-  actionMenuItemText: {
-    fontSize: 14,
-    fontWeight: '400',
-    fontFamily: 'Figtree_400Regular',
-    color: Colors.primary,
-    letterSpacing: -0.14,
-    lineHeight: 21,
-  },
 
   // ── Ingredient row ───────────────────────────────────────────────────────────
   row: {
