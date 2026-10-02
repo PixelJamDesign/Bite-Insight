@@ -203,7 +203,9 @@ export default function AddToMealPlanScreen() {
                 <RecipeCard
                   recipe={item}
                   disabled={Boolean(busyId)}
-                  onPress={() => setPending({ kind: 'recipe', recipe: item })}
+                  // The card opens the recipe to look over; + adds it.
+                  onPress={() => router.push(`/recipes/${item.id}` as never)}
+                  onAdd={() => setPending({ kind: 'recipe', recipe: item })}
                 />
               )}
             />
@@ -290,10 +292,12 @@ function RecipeCard({
   recipe,
   disabled,
   onPress,
+  onAdd,
 }: {
   recipe: Recipe;
   disabled: boolean;
   onPress: () => void;
+  onAdd: () => void;
 }) {
   const g = recipe.nutriscore_grade?.toLowerCase() as keyof typeof NUTRISCORE_COLORS | undefined;
   const nutriColor = g ? NUTRISCORE_COLORS[g] : null;
@@ -332,7 +336,7 @@ function RecipeCard({
         size="small"
         variant="onWhite"
         icon={<AddIcon width={20} height={20} />}
-        onPress={onPress}
+        onPress={onAdd}
         disabled={disabled}
         accessibilityLabel={`Add ${recipe.name}`}
       />
