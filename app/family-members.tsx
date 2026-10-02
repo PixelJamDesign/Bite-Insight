@@ -17,6 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { supabase } from '@/lib/supabase';
+import { sortFamily } from '@/lib/familyOrder';
 import { useAuth } from '@/lib/auth';
 import { useSubscription } from '@/lib/subscriptionContext';
 import { useUpsellSheet } from '@/lib/upsellSheetContext';
@@ -150,7 +151,8 @@ export default function FamilyMembersScreen() {
     if (!session?.user?.id) return;
     // get_family_members() overlays linked members' live account data
     // (avatar, conditions, allergies, diet, ingredient prefs) over the
-    // static managed columns, and is already ordered by sort_order.
+    // static managed columns, and is already ordered by sort_order;
+    // sortFamily then groups it by generation (parents above kids).
     const [{ data }, { data: invites }] = await Promise.all([
       supabase.rpc('get_family_members'),
       supabase
@@ -159,7 +161,7 @@ export default function FamilyMembersScreen() {
         .eq('inviter_user_id', session.user.id)
         .eq('status', 'pending'),
     ]);
-    if (data) setProfiles(data as FamilyProfile[]);
+    if (data) setProfiles(sortFamily(data as FamilyProfile[]));
     // Map family_profile_id → invite (drop expired). target_email null = link invite.
     const now = Date.now();
     const map: Record<string, { email: string | null }> = {};
@@ -207,11 +209,15 @@ export default function FamilyMembersScreen() {
     setSearchQuery('');
   }
 
-  /** Persist new order after drag-to-reorder */
+  /** Persist new order after drag-to-reorder. A drag can only reorder
+   *  members within their generation: a child dragged above a parent
+   *  settles back below them. */
   async function handleReorder(data: FamilyProfile[]) {
-    setProfiles(data);
+    const ordered = sortFamily(data);
+    // Keep the pending invites, which aren't in the draggable list.
+    setProfiles([...ordered, ...profiles.filter((p) => !data.some((d) => d.id === p.id))]);
     // Fire-and-forget: update sort_order for each profile
-    data.forEach((profile, index) => {
+    ordered.forEach((profile, index) => {
       supabase
         .from('family_profiles')
         .update({ sort_order: index + 1 })
@@ -520,15 +526,16 @@ export default function FamilyMembersScreen() {
               contentContainerStyle={styles.scrollContent}
               showsVerticalScrollIndicator={false}
             >
-              {filteredProfiles.map(renderNormalRow)}
-
-              {/* Pending invitations — invited but not yet accepted */}
+              {/* Invites not yet accepted go first, so they get noticed;
+                  the section only shows when there are some. */}
               {!searchQuery.trim() && pendingProfiles.length > 0 && (
                 <>
-                  <Text style={styles.pendingHeader}>Pending Invitations</Text>
+                  <Text style={[styles.pendingHeader, styles.pendingHeaderFirst]}>Waiting to accept</Text>
                   {pendingProfiles.map(renderPendingRow)}
+                  <Text style={styles.pendingHeader}>Your family</Text>
                 </>
               )}
+              {filteredProfiles.map(renderNormalRow)}
             </HeaderScrollView>
 
             {/* Add button — inside ScreenLayout so the menu overlay covers it */}
@@ -672,6 +679,7 @@ const styles = StyleSheet.create({
     color: Colors.primary, letterSpacing: -0.36,
     marginTop: 24, marginBottom: 4,
   },
+  pendingHeaderFirst: { marginTop: 0 },
   pendingStatus: {
     fontSize: 14, lineHeight: 21, fontFamily: 'Figtree_300Light',
     color: Colors.secondary, letterSpacing: -0.14,

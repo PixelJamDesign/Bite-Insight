@@ -5,6 +5,7 @@
  * Used by the recipe detail view's household impact table.
  */
 import { supabase } from './supabase';
+import { sortFamily } from './familyOrder';
 import type { UserProfile, FamilyProfile } from './types';
 
 export interface Household {
@@ -33,6 +34,6 @@ export async function fetchHousehold(userId: string): Promise<Household | null> 
 
   return {
     self: profileRes.data as UserProfile,
-    family: (familyRes.data ?? []) as FamilyProfile[],
+    family: sortFamily((familyRes.data ?? []) as FamilyProfile[]),
   };
 }

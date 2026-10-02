@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { Colors } from '@/constants/theme';
 import { IconButton } from '@/components/IconButton';
 import { supabase } from '@/lib/supabase';
+import { sortFamily } from '@/lib/familyOrder';
 import { useAuth } from '@/lib/auth';
 import { useActiveFamily } from '@/lib/activeFamilyContext';
 import { CachedAvatar } from '@/components/CachedAvatar';
@@ -112,7 +113,7 @@ export function FamilySwitcherSheet({
       supabase
         .rpc('get_family_members')
         .then(({ data }) => {
-          setFamilyProfiles((data as FamilyProfile[]) ?? []);
+          setFamilyProfiles(sortFamily((data as FamilyProfile[]) ?? []));
           setLoading(false);
         });
     }
