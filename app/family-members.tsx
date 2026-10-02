@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import { useFocusEffect, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { MenuChevronRightIcon } from '@/components/MenuIcons';
+import { IconButton } from '@/components/IconButton';
 import { LinearGradient } from 'expo-linear-gradient';
 import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -303,21 +305,23 @@ export default function FamilyMembersScreen() {
   );
 
   // ── Render row (normal mode) ────────────────────────────────────────────────
+  function openMember(profile: FamilyProfile) {
+    // Linked members own their own account — open the read-only detail
+    // overlay (with the Remove-from-family action) instead of the editor.
+    if (profile.linked_user_id) {
+      setLinkedMember(profile);
+      return;
+    }
+    router.push({ pathname: '/add-family-member', params: { id: profile.id } });
+  }
+
   function renderNormalRow(profile: FamilyProfile) {
     const tags = getAllTags(profile, tpo);
     return (
       <TouchableOpacity
         key={profile.id}
         style={styles.row}
-        onPress={() => {
-          // Linked members own their own account — open the read-only detail
-          // overlay (with the Remove-from-family action) instead of the editor.
-          if (profile.linked_user_id) {
-            setLinkedMember(profile);
-            return;
-          }
-          router.push({ pathname: '/add-family-member', params: { id: profile.id } });
-        }}
+        onPress={() => openMember(profile)}
         activeOpacity={0.75}
       >
         {/* Avatar */}
@@ -349,22 +353,27 @@ export default function FamilyMembersScreen() {
           )}
         </View>
 
-        {/* Right side: invite button (managed members only) + chevron */}
+        {/* Right side: invite button (managed members only) + arrow */}
         <View style={styles.rowRight}>
           {!profile.linked_user_id && (
-            <TouchableOpacity
-              style={styles.inviteBtn}
+            <IconButton
+              size="small"
+              variant="onWhite"
+              icon={<Ionicons name="person-add-outline" size={18} color={Colors.secondary} />}
               onPress={() => {
                 setInviteMember({ id: profile.id, name: profile.name });
                 setInviteVisible(true);
               }}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="person-add-outline" size={18} color={Colors.secondary} />
-            </TouchableOpacity>
+              accessibilityLabel={`Invite ${profile.name}`}
+            />
           )}
-          <Ionicons name="chevron-forward" size={16} color={`${Colors.primary}40`} />
+          <IconButton
+            size="small"
+            variant="onWhite"
+            icon={<MenuChevronRightIcon color={Colors.primary} size={16} />}
+            onPress={() => openMember(profile)}
+            accessibilityLabel={`Open ${profile.name}`}
+          />
         </View>
       </TouchableOpacity>
     );
@@ -379,19 +388,7 @@ export default function FamilyMembersScreen() {
         key={profile.id}
         style={styles.row}
         activeOpacity={0.75}
-        onPress={() => {
-          Alert.alert(profile.name, `${status}. Waiting for them to accept.`, [
-            { text: 'Close', style: 'cancel' },
-            {
-              text: 'Cancel invite',
-              style: 'destructive',
-              onPress: async () => {
-                await supabase.from('family_profiles').delete().eq('id', profile.id);
-                loadProfiles();
-              },
-            },
-          ]);
-        }}
+        onPress={() => showPending()}
       >
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{getInitials(profile.name)}</Text>
@@ -400,11 +397,29 @@ export default function FamilyMembersScreen() {
           <Text style={styles.rowName} numberOfLines={1}>{profile.name}</Text>
           <Text style={styles.pendingStatus} numberOfLines={1}>{status}</Text>
         </View>
-        <View style={styles.chevronWrap}>
-          <Ionicons name="chevron-forward" size={16} color={`${Colors.primary}40`} />
-        </View>
+        <IconButton
+          size="small"
+          variant="onWhite"
+          icon={<MenuChevronRightIcon color={Colors.primary} size={16} />}
+          onPress={() => showPending()}
+          accessibilityLabel={`Invitation for ${profile.name}`}
+        />
       </TouchableOpacity>
     );
+
+    function showPending() {
+      Alert.alert(profile.name, `${status}. Waiting for them to accept.`, [
+        { text: 'Close', style: 'cancel' },
+        {
+          text: 'Cancel invite',
+          style: 'destructive',
+          onPress: async () => {
+            await supabase.from('family_profiles').delete().eq('id', profile.id);
+            loadProfiles();
+          },
+        },
+      ]);
+    }
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────────
@@ -609,28 +624,29 @@ const styles = StyleSheet.create({
   // Member list
   listOuter: { flex: 1 },
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: 24, paddingTop: 4, gap: 16, paddingBottom: 140 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 4, gap: 8, paddingBottom: 140 },
 
+  // Same card as ScanCard / OptionCard
   row: {
     flexDirection: 'row', alignItems: 'center', gap: 16,
-  },
-  rowDragging: {
-    opacity: 0.9,
     backgroundColor: Colors.surface.secondary,
     borderRadius: 16,
-    paddingHorizontal: 8,
-    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: '#aad4cd',
+    padding: 16,
   },
+  rowDragging: { opacity: 0.9 },
   dragHandle: {
     width: 36, height: 36, alignItems: 'center', justifyContent: 'center',
   },
+  // 60px, like the image on the other cards
   avatar: {
-    width: 80, height: 80, borderRadius: 999,
+    width: 60, height: 60, borderRadius: 999,
     backgroundColor: Colors.accent, alignItems: 'center', justifyContent: 'center',
-    borderWidth: 4, borderColor: '#fff', overflow: 'hidden',
+    overflow: 'hidden',
   },
   avatarText: {
-    fontSize: 22, fontWeight: '700', fontFamily: 'Figtree_700Bold',
+    fontSize: 20, fontWeight: '700', fontFamily: 'Figtree_700Bold',
     color: '#fff', letterSpacing: -0.2,
   },
   rowInfo: { flex: 1, gap: 4 },
@@ -651,7 +667,6 @@ const styles = StyleSheet.create({
     fontSize: 13, fontWeight: '700', fontFamily: 'Figtree_700Bold',
     color: Colors.primary, letterSpacing: -0.26, lineHeight: 16,
   },
-  chevronWrap: { width: 20, height: 20, alignItems: 'center', justifyContent: 'center' },
   pendingHeader: {
     fontSize: 18, lineHeight: 24, fontFamily: 'Figtree_700Bold',
     color: Colors.primary, letterSpacing: -0.36,
@@ -662,16 +677,6 @@ const styles = StyleSheet.create({
     color: Colors.secondary, letterSpacing: -0.14,
   },
   rowRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  inviteBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: Colors.surface.tertiary,
-    borderWidth: 1,
-    borderColor: '#aad4cd',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
 
   // Checkbox (edit mode)
   checkbox: {
