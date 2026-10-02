@@ -397,10 +397,10 @@ export default function ContributeProductScreen() {
             {/* Details */}
             {tab === 'details' && (
               <View style={styles.group16}>
-                <TextField value={name} onChangeText={setName} placeholder={t('contribute.field.name')} autoCapitalize="words" />
-                <TextField value={brands} onChangeText={setBrands} placeholder={t('contribute.field.brand')} autoCapitalize="words" />
-                <TextField value={quantity} onChangeText={setQuantity} placeholder={t('contribute.field.quantity')} />
-                <TextField value={categories} onChangeText={setCategories} placeholder={t('contribute.field.category')} autoCapitalize="words" />
+                <TextField label={t('contribute.field.name')} value={name} onChangeText={setName} placeholder={t('contribute.fieldExample.name')} autoCapitalize="words" />
+                <TextField label={t('contribute.field.brand')} value={brands} onChangeText={setBrands} placeholder={t('contribute.fieldExample.brand')} autoCapitalize="words" />
+                <TextField label={t('contribute.field.quantity')} value={quantity} onChangeText={setQuantity} placeholder={t('contribute.fieldExample.quantity')} />
+                <TextField label={t('contribute.field.category')} value={categories} onChangeText={setCategories} placeholder={t('contribute.fieldExample.category')} autoCapitalize="words" />
               </View>
             )}
 

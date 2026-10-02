@@ -57,8 +57,14 @@
     "field": {
       "name": "Product name",
       "brand": "Brand",
-      "quantity": "Quantity (e.g. 330ml)",
-      "category": "Category (e.g. Soft drinks)"
+      "quantity": "Quantity",
+      "category": "Category"
+    },
+    "fieldExample": {
+      "name": "e.g. Strawberry yogurt",
+      "brand": "e.g. Alpro",
+      "quantity": "e.g. 330ml",
+      "category": "e.g. Soft drinks"
     },
     "photo": {
       "front": "Front",
