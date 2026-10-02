@@ -438,7 +438,7 @@ export default function ScannerScreen() {
           ]);
 
           if (existing) {
-            await supabase
+            const { error: saveError } = await supabase
               .from('scans')
               .update({
                 scanned_at: new Date().toISOString(),
@@ -448,8 +448,9 @@ export default function ScannerScreen() {
                 nutriscore_grade: nutriscoreGrade,
               })
               .eq('id', existing.id);
+            if (saveError) console.warn('[Scanner] Scan history save failed:', saveError.message);
           } else {
-            await supabase
+            const { error: saveError } = await supabase
               .from('scans')
               .insert({
                 user_id: session?.user.id,
@@ -460,6 +461,7 @@ export default function ScannerScreen() {
                 nutriscore_grade: nutriscoreGrade,
                 flagged_count: 0,
               });
+            if (saveError) console.warn('[Scanner] Scan history save failed:', saveError.message);
           }
         })().catch((err) => console.error('Background scan save failed:', err));
       }

@@ -1173,16 +1173,17 @@ export default function ScanResultScreen() {
               try {
                 const { data: existing } = await supabase.from('scans').select('id').eq('user_id', session.user.id).eq('barcode', p.barcode).limit(1).single();
                 if (existing) {
-                  await supabase.from('scans').update({
+                  const { error: saveError } = await supabase.from('scans').update({
                     product_name: resolvedName,
                     brand: fetchedBrand || p.brand || null,
                     image_url: fetchedImageUrl || p.imageUrl || null,
                     nutriscore_grade: op.nutriscore_grade || op.nutrition_grade_fr || null,
                     scanned_at: new Date().toISOString(),
                   }).eq('id', existing.id);
+                  if (saveError) console.warn('[ScanResult] Scan history save failed:', saveError.message);
                 } else {
                   // Scanner didn't save (product was unknown at scan time) — insert now
-                  await supabase.from('scans').insert({
+                  const { error: saveError } = await supabase.from('scans').insert({
                     user_id: session.user.id,
                     barcode: p.barcode,
                     product_name: resolvedName,
@@ -1191,6 +1192,7 @@ export default function ScanResultScreen() {
                     nutriscore_grade: op.nutriscore_grade || op.nutrition_grade_fr || null,
                     flagged_count: 0,
                   });
+                  if (saveError) console.warn('[ScanResult] Scan history save failed:', saveError.message);
                 }
               } catch { /* non-critical */ }
             };
