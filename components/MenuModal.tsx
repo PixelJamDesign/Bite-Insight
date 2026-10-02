@@ -26,8 +26,7 @@ import { PlusBadge } from './PlusBadge';
 import { IconButton } from './IconButton';
 import Constants from 'expo-constants';
 import { FEATURES } from '@/constants/features';
-import { LinearGradient } from 'expo-linear-gradient';
-import { FrostedHeader } from './HeaderEdge';
+import { FrostedFooter, FrostedHeader } from './HeaderEdge';
 import { titleCollapse } from './headerMotion';
 import Logo from '@/assets/images/logo.svg';
 import {
@@ -248,12 +247,8 @@ function Footer({ bottomInset }: { bottomInset: number }) {
   const { showDebugMenu } = useDebugMenu();
   return (
     <View style={[styles.footer, { paddingBottom: bottomInset + 12 }]}>
-      {/* Content scrolling behind fades out above the row */}
-      <LinearGradient
-        colors={['rgba(255,255,255,0)', '#ffffff']}
-        style={styles.footerFade}
-        pointerEvents="none"
-      />
+      {/* Content scrolling behind frosts over under the row */}
+      <FrostedFooter color="#ffffff" style={StyleSheet.absoluteFill} />
       {/* 3-second long-press on the version footer opens the hidden
           debug menu. Available in all builds (incl. TestFlight + App
           Store) so QA can drive sheet triggers and reset state on
@@ -2182,15 +2177,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 24,
     paddingTop: 12,
-    backgroundColor: '#ffffff',
     zIndex: 3,
-  },
-  footerFade: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: -24,
-    height: 24,
   },
   footerText: {
     fontSize: 13,

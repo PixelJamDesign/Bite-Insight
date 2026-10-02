@@ -17,6 +17,10 @@
  *   it frosts over as it reaches the top of the list and fades into the
  *   header colour.
  *
+ *   FrostedFooter — the same material for a bar pinned to the bottom (the
+ *   menu footer): frost fills the bar and eases out over HEADER_EDGE_HEIGHT
+ *   above it.
+ *
  * Blur: @sbaiahmed1/react-native-blur's ProgressiveBlurView — iOS variable
  * blur, Android QmBlurView, web layered backdrop-filter. Expo Go can't load
  * that native view, so there it's the tint alone, a little stronger.
@@ -54,7 +58,7 @@ const SHOW_OVER = 16;
 type ProgressiveBlurProps = {
   blurType?: string;
   blurAmount?: number;
-  direction?: 'blurredTopClearBottom';
+  direction?: 'blurredTopClearBottom' | 'blurredBottomClearTop';
   startOffset?: number;
   style?: StyleProp<ViewStyle>;
   pointerEvents?: 'none';
@@ -80,8 +84,19 @@ function showOpacity(scrollY: ScrollValue | undefined, from = 0) {
 /**
  * The material itself, filling its parent: full strength down to
  * `plateau` (0–1 of the height), then blur and tint ease out to clear.
+ * `fromBottom` mirrors it: full strength at the bottom, clear at the top.
  */
-function Frost({ color, plateau, topAlpha }: { color: string; plateau: number; topAlpha: number }) {
+function Frost({
+  color,
+  plateau,
+  topAlpha,
+  fromBottom = false,
+}: {
+  color: string;
+  plateau: number;
+  topAlpha: number;
+  fromBottom?: boolean;
+}) {
   // Tint holds through the plateau, then eases out (a little faster at
   // first, so the clear end doesn't look washed).
   const fadeMid = plateau + (1 - plateau) * 0.45;
@@ -92,7 +107,7 @@ function Frost({ color, plateau, topAlpha }: { color: string; plateau: number; t
           // The ultra-thin material adds the least grey to our teal.
           blurType={isDarkColor(color) ? 'systemUltraThinMaterialDark' : 'systemUltraThinMaterialLight'}
           blurAmount={FROST_BLUR_RADIUS}
-          direction="blurredTopClearBottom"
+          direction={fromBottom ? 'blurredBottomClearTop' : 'blurredTopClearBottom'}
           startOffset={plateau}
           style={StyleSheet.absoluteFill}
           pointerEvents="none"
@@ -101,6 +116,8 @@ function Frost({ color, plateau, topAlpha }: { color: string; plateau: number; t
       <LinearGradient
         colors={[rgba(color, topAlpha), rgba(color, topAlpha), rgba(color, topAlpha * 0.45), rgba(color, 0)]}
         locations={[0, plateau, fadeMid, 1]}
+        start={fromBottom ? { x: 0, y: 1 } : { x: 0, y: 0 }}
+        end={fromBottom ? { x: 0, y: 0 } : { x: 0, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
     </>
@@ -136,6 +153,30 @@ export function FrostedHeader({ scrollY, showFrom = 0, color = Colors.background
         <Frost color={color} plateau={plateau} topAlpha={TINT} />
       </View>
     </Animated.View>
+  );
+}
+
+interface FrostedFooterProps {
+  /** Footer colour (#rrggbb). Defaults to the page teal. */
+  color?: string;
+  /** Position and size: the footer's area (absolute). */
+  style?: StyleProp<ViewStyle>;
+}
+
+/** Frosted glass for a bar pinned over the bottom of the content, easing out above it. */
+export function FrostedFooter({ color = Colors.background, style }: FrostedFooterProps) {
+  const [height, setHeight] = useState(0);
+  const plateau = height > 0 ? height / (height + HEADER_EDGE_HEIGHT) : 0.7;
+  return (
+    <View
+      style={[styles.frost, style]}
+      pointerEvents="none"
+      onLayout={(e: LayoutChangeEvent) => setHeight(Math.round(e.nativeEvent.layout.height))}
+    >
+      <View style={styles.footerFrostBox}>
+        <Frost color={color} plateau={plateau} topAlpha={TINT} fromBottom />
+      </View>
+    </View>
   );
 }
 
@@ -200,6 +241,13 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: -HEADER_EDGE_HEIGHT,
+  },
+  footerFrostBox: {
+    position: 'absolute',
+    top: -HEADER_EDGE_HEIGHT,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   edge: {
     position: 'absolute',
