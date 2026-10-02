@@ -5,9 +5,10 @@
  * flagged-ingredient style, an optional comment, Send feedback / Skip.
  *
  * FeedbackQuestionnaireHost is mounted once in the root layout and shows
- * whichever questionnaire showFeedbackQuestionnaire() asked for.
+ * whichever questionnaire showFeedbackQuestionnaire() asked for, then the
+ * "Thank you for your feedback!" toast (Figma 5957:11755) once it's sent.
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ComponentType } from 'react';
 import {
   Animated,
   KeyboardAvoidingView,
@@ -21,6 +22,8 @@ import {
   View,
 } from 'react-native';
 import { usePostHog } from 'posthog-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { Colors, Radius, Shadows, Spacing } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import {
@@ -35,6 +38,18 @@ import { BlurScrim } from '@/components/BlurScrim';
 import CheckedIcon from '@/assets/icons/checkbox-checked.svg';
 import ChatIcon from '@/assets/icons/feedback/chat.svg';
 import HeartIcon from '@/assets/icons/feedback/heart.svg';
+import StarIcon from '@/assets/icons/feedback/star.svg';
+
+// Frosted glass for the toast, so it reads on any background. Expo Go
+// can't load the native blur; there the tint is more solid instead.
+type BlurProps = { blurType?: string; blurAmount?: number; style?: any };
+const BlurView: ComponentType<BlurProps> | null =
+  Constants.executionEnvironment === ExecutionEnvironment.StoreClient
+    ? null
+    : require('@sbaiahmed1/react-native-blur').BlurView;
+
+/** How long the thank-you toast stays up on its own. */
+const THANKS_MS = 4000;
 
 const ICONS: Record<FeedbackSource, typeof ChatIcon> = {
   review: ChatIcon,
@@ -43,12 +58,32 @@ const ICONS: Record<FeedbackSource, typeof ChatIcon> = {
 
 export function FeedbackQuestionnaireHost() {
   const source = useFeedbackQuestionnaire();
-  if (!source) return null;
-  // Keyed so each opening starts with nothing ticked.
-  return <FeedbackQuestionnaire key={source} source={source} onClose={hideFeedbackQuestionnaire} />;
+  const [thanks, setThanks] = useState(false);
+  return (
+    <>
+      {source && (
+        // Keyed so each opening starts with nothing ticked.
+        <FeedbackQuestionnaire
+          key={source}
+          source={source}
+          onClose={hideFeedbackQuestionnaire}
+          onSent={() => setThanks(true)}
+        />
+      )}
+      {thanks && <ThanksToast onDone={() => setThanks(false)} />}
+    </>
+  );
 }
 
-function FeedbackQuestionnaire({ source, onClose }: { source: FeedbackSource; onClose: () => void }) {
+function FeedbackQuestionnaire({
+  source,
+  onClose,
+  onSent,
+}: {
+  source: FeedbackSource;
+  onClose: () => void;
+  onSent: () => void;
+}) {
   const copy = FEEDBACK_COPY[source];
   const Icon = ICONS[source];
   const { session } = useAuth();
@@ -56,7 +91,6 @@ function FeedbackQuestionnaire({ source, onClose }: { source: FeedbackSource; on
 
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [comment, setComment] = useState('');
-  const [sent, setSent] = useState(false);
   const canSend = picked.size > 0 || comment.trim().length > 0;
 
   const fade = useRef(new Animated.Value(0)).current;
@@ -77,14 +111,15 @@ function FeedbackQuestionnaire({ source, onClose }: { source: FeedbackSource; on
     });
   }
 
-  async function send() {
-    if (!canSend || sent) return;
+  function send() {
+    if (!canSend) return;
     // Keep the list's order, not the order they were tapped.
     const reasons = copy.reasons.map((r) => r.key).filter((k) => picked.has(k));
-    setSent(true);
     posthog?.capture('feedback_submitted', { source, reasons, has_comment: comment.trim().length > 0 });
-    await submitFeedback({ source, userId: session?.user?.id, reasons, comment });
-    setTimeout(close, 900);
+    submitFeedback({ source, userId: session?.user?.id, reasons, comment });
+    close();
+    // Once the card has gone.
+    setTimeout(onSent, 250);
   }
 
   return (
@@ -153,12 +188,12 @@ function FeedbackQuestionnaire({ source, onClose }: { source: FeedbackSource; on
               <TouchableOpacity
                 style={[styles.primaryBtn, !canSend && styles.btnDisabled]}
                 onPress={send}
-                disabled={!canSend || sent}
+                disabled={!canSend}
                 activeOpacity={0.85}
               >
-                <Text style={styles.primaryLabel}>{sent ? 'Thanks, that really helps' : 'Send feedback'}</Text>
+                <Text style={styles.primaryLabel}>Send feedback</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.secondaryBtn} onPress={close} disabled={sent} activeOpacity={0.7}>
+              <TouchableOpacity style={styles.secondaryBtn} onPress={close} activeOpacity={0.7}>
                 <Text style={styles.secondaryLabel}>Skip</Text>
               </TouchableOpacity>
             </View>
@@ -169,8 +204,119 @@ function FeedbackQuestionnaire({ source, onClose }: { source: FeedbackSource; on
   );
 }
 
+/** The pill at the top: "Thank you for your feedback!" with Dismiss. */
+function ThanksToast({ onDone }: { onDone: () => void }) {
+  const insets = useSafeAreaInsets();
+  const anim = useRef(new Animated.Value(0)).current;
+
+  function hide() {
+    Animated.timing(anim, { toValue: 0, duration: 200, useNativeDriver: true }).start(() => onDone());
+  }
+
+  useEffect(() => {
+    Animated.spring(anim, { toValue: 1, friction: 8, tension: 80, useNativeDriver: true }).start();
+    const t = setTimeout(hide, THANKS_MS);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <View style={[styles.toastWrap, { top: insets.top + Spacing.xs }]} pointerEvents="box-none">
+      <Animated.View
+        style={[
+          styles.toast,
+          {
+            opacity: anim,
+            transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [-24, 0] }) }],
+          },
+        ]}
+        accessibilityRole="alert"
+        accessibilityLabel="Thank you for your feedback!"
+      >
+        <View style={styles.toastGlass} pointerEvents="none">
+          {BlurView && <BlurView blurType="light" blurAmount={16} style={StyleSheet.absoluteFill} />}
+          <View style={[StyleSheet.absoluteFill, BlurView ? styles.toastTint : styles.toastTintNoBlur]} />
+        </View>
+        <View style={styles.toastText}>
+          <StarIcon width={18} height={18} />
+          <Text style={styles.toastBold}>Thank you</Text>
+          <Text style={styles.toastLight} numberOfLines={1}>
+            for your feedback!
+          </Text>
+        </View>
+        <TouchableOpacity onPress={hide} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+          <Text style={styles.toastDismiss}>Dismiss</Text>
+        </TouchableOpacity>
+      </Animated.View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  toastWrap: {
+    position: 'absolute',
+    left: Spacing.s + 3,
+    right: Spacing.s + 3,
+    zIndex: 1000,
+    elevation: 1000,
+  },
+  toast: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.xs,
+    minHeight: 32,
+    paddingHorizontal: Spacing.s,
+    paddingVertical: Spacing.xxs,
+    borderRadius: Radius.full,
+  },
+  // The glass, clipped to the pill. (No shadow: on a see-through view iOS
+  // would draw it around the text.)
+  toastGlass: {
+    ...StyleSheet.absoluteFill,
+    borderRadius: Radius.full,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.7)',
+  },
+  toastTint: {
+    backgroundColor: 'rgba(226, 241, 238, 0.6)',
+  },
+  toastTintNoBlur: {
+    backgroundColor: 'rgba(226, 241, 238, 0.94)',
+  },
+  toastText: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xxs,
+  },
+  toastBold: {
+    fontSize: 16,
+    lineHeight: 18,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    letterSpacing: -0.32,
+    color: '#18a68f',
+  },
+  toastLight: {
+    flexShrink: 1,
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
+    color: '#00342c',
+  },
+  toastDismiss: {
+    fontSize: 14,
+    lineHeight: 17,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    letterSpacing: -0.28,
+    color: Colors.secondary,
+    textDecorationLine: 'underline',
+  },
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
