@@ -140,6 +140,9 @@ const styles = StyleSheet.create({
     borderWidth: 5,
     borderColor: '#fff',
     backgroundColor: Colors.accent,
+    // Centres the initials when there's no photo.
+    alignItems: 'center',
+    justifyContent: 'center',
     overflow: 'hidden',
     marginBottom: -40,
     zIndex: 2,
