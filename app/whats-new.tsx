@@ -162,15 +162,16 @@ const CARDS: CardData[] = [
     badge: 'Updated!',
     title: 'A Fresh New Look',
     icon: SparklesIcon,
-    description: "We've redesigned Bite Insight so it's easier to find your way around.",
+    description:
+      "We've redesigned Bite Insight from top to bottom. Screens are cleaner and less cluttered, so the things you use most are quicker to reach and easier to read.",
     subsections: [
       {
         heading: "What's changed:",
         bullets: [
-          { title: 'New dashboard', sub: "Today's meals and your recent scans, together on one screen." },
-          { title: 'Meal Planner tab', sub: 'Your planner now has its own spot in the tab bar.' },
-          { title: 'Easier to get around', sub: 'Every screen has a back button, and titles tuck away as you scroll.' },
-          { title: 'Clearer product pages', sub: 'Nutrition starts with what matters for your profile. Tap ⋯ to add a product to a meal or a recipe.' },
+          {
+            title: 'New dashboard',
+            sub: "Your day at a glance. Today's planned meals and your recent scans now sit together on one screen, and the Meal Planner is a tap away in the tab bar.",
+          },
         ],
       },
     ],
