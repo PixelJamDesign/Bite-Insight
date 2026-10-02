@@ -24,7 +24,6 @@ import { Colors, Spacing, Radius, Shadows } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { PlusBadge } from '@/components/PlusBadge';
-import { AlertCard } from '@/components/AlertCard';
 import { FrostedHeader, useScrollEdge } from '@/components/HeaderEdge';
 import { MenuNotificationsIcon } from '@/components/MenuIcons';
 import { DashboardIcon, MealPlanIcon } from '@/components/TabIcons';
@@ -93,8 +92,9 @@ interface CardData {
   badge: string;
   title: string;
   description: string;
-  /** Optional info banner under the description. */
-  banner?: string;
+  /** Optional panel at the bottom of the card telling Bite Insight+
+   *  members what they get (Figma "Banner", 5949:14477). */
+  plusNote?: string;
   subsections?: { heading: string; bullets: Bullet[] }[];
   /** When true, the Plus chip sits next to the title to flag the
    *  feature as Plus-only. */
@@ -148,12 +148,12 @@ const CARDS: CardData[] = [
     plus: true,
     description:
       "Plan what you're eating for any day of the week. Add products you've scanned or your own recipes, and we'll check each meal against your health profile before you eat it.",
-    banner: 'Meal Planner is free to use for today. Planning future days needs Bite Insight+.',
+    plusNote: 'Bite Insight+ members unlock the ability to plan meals for the week!',
     subsections: [
       {
         heading: 'What you can do:',
         bullets: [
-          { title: 'Plan your meals', sub: 'Add meals and snacks to a day, at the time you plan to eat them.' },
+          { title: 'Plan your meals', sub: "Free for today's meals. Add each one at the time you plan to eat it." },
           { title: 'See how a meal suits you', sub: "Meals turn amber or red when they don't fit your profile, and we'll tell you why." },
           { title: 'Keep track of your day', sub: 'Mark meals as eaten and see your totals for the day.' },
           { title: 'Save a meal as a recipe', sub: 'Found a meal that works for you? Save it and plan it again later.' },
@@ -241,15 +241,14 @@ export default function WhatsNewScreen() {
             const IconComponent = card.icon;
             return (
             <View key={i} style={styles.card}>
-              {/* Icon + Badge row. Plus chip sits stacked under the
-                  badge for Plus-only features so it reads as a
-                  qualifier on the badge itself. */}
+              {/* Icon + tags row. The Plus chip sits beside the update
+                  tag for Plus-only features (Figma 5478:10384). */}
               <View style={styles.cardHeader}>
                 <View style={styles.iconCircle}>
-                  <IconComponent width={28} height={28} />
+                  <IconComponent width={30} height={30} />
                 </View>
                 <View style={styles.cardHeaderTags}>
-                  {card.plus && <PlusBadge size="small" />}
+                  {card.plus && <PlusBadge />}
                   <View style={styles.badge}>
                     <Text style={styles.badgeText}>{card.badge}</Text>
                   </View>
@@ -261,11 +260,6 @@ export default function WhatsNewScreen() {
 
               {/* Description */}
               <Text style={styles.cardDesc}>{card.description}</Text>
-              {card.banner ? (
-                <View style={styles.banner}>
-                  <AlertCard tone="info" message={card.banner} />
-                </View>
-              ) : null}
 
               {/* Sub-sections — bullets are either plain strings or
                   { title, sub? } pairs for bold-title + small caption. */}
@@ -294,6 +288,17 @@ export default function WhatsNewScreen() {
                   })}
                 </View>
               ))}
+
+              {/* What Bite Insight+ members get */}
+              {card.plusNote ? (
+                <View style={styles.plusNote}>
+                  <Text style={styles.plusNoteTitle}>Bite Insight+ Feature</Text>
+                  <Text style={styles.plusNoteText}>{card.plusNote}</Text>
+                  <View style={styles.plusNoteBadge}>
+                    <PlusBadge />
+                  </View>
+                </View>
+              ) : null}
             </View>
           );
           })}
@@ -395,7 +400,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: Spacing.s,
+    marginBottom: Spacing.xs,
   },
   iconCircle: {
     width: 55,
@@ -412,39 +417,35 @@ const styles = StyleSheet.create({
     height: 24,
     justifyContent: 'center',
     alignItems: 'center',
+    ...Shadows.level3,
   },
   badgeText: {
-    fontSize: 13,
-    lineHeight: 16,
+    fontSize: 14,
+    lineHeight: 17,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
-    letterSpacing: -0.26,
+    letterSpacing: -0.28,
     color: Colors.primary,
   },
-  // Right-side stack inside cardHeader: the kind-of-update badge
-  // sits on top, the Plus chip drops in underneath when the
-  // feature is Plus-only. alignItems:flex-end so both pills hug
-  // the right edge of the card.
+  // Right side of cardHeader: Plus chip (Plus-only features) then the
+  // update tag, side by side.
   cardHeaderTags: {
-    flexDirection: 'column',
-    alignItems: 'flex-end',
-    gap: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
   cardTitle: {
     fontSize: 20,
-    lineHeight: 26,
+    lineHeight: 24,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     letterSpacing: -0.4,
     color: Colors.primary,
-    marginBottom: Spacing.xxs,
-  },
-  banner: {
-    marginTop: Spacing.s,
+    marginBottom: Spacing.xs,
   },
   cardDesc: {
     fontSize: 16,
-    lineHeight: 24,
+    lineHeight: 27,
     fontWeight: '300',
     fontFamily: 'Figtree_300Light',
     letterSpacing: 0,
@@ -454,30 +455,29 @@ const styles = StyleSheet.create({
   // ── Sub-sections (card 4) ─────────────────────────────────────────────────
   subsection: {
     marginTop: Spacing.s,
+    gap: Spacing.xs,
   },
   subsectionHeading: {
-    fontSize: 16,
+    fontSize: 18,
     lineHeight: 20,
     fontWeight: '700',
     fontFamily: 'Figtree_700Bold',
     letterSpacing: 0,
     color: Colors.primary,
-    marginBottom: Spacing.s,
   },
   bulletRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: Spacing.s,
-    marginBottom: 2,
   },
   // Nudge the marker down so it lines up with the first line of text
   // (matches the Figma "Bullet Container" top padding).
   bulletMarker: {
-    paddingTop: 3,
+    paddingTop: 4,
   },
   bulletText: {
     fontSize: 16,
-    lineHeight: 24,
+    lineHeight: 27,
     fontWeight: '300',
     fontFamily: 'Figtree_300Light',
     letterSpacing: 0,
@@ -489,7 +489,7 @@ const styles = StyleSheet.create({
   },
   bulletTitle: {
     fontSize: 16,
-    lineHeight: 24,
+    lineHeight: 27,
     fontWeight: '300',
     fontFamily: 'Figtree_300Light',
     letterSpacing: 0,
@@ -502,7 +502,38 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_300Light',
     letterSpacing: -0.14,
     color: Colors.secondary,
-    paddingBottom: Spacing.s,
+  },
+
+  // ── Bite Insight+ note (Figma "Banner") ───────────────────────────────────
+  plusNote: {
+    marginTop: Spacing.s,
+    backgroundColor: Colors.background,
+    borderRadius: Radius.m,
+    padding: Spacing.s,
+    // Room for the Plus chip in the top right corner.
+    paddingRight: 86,
+    gap: Spacing.xs,
+  },
+  plusNoteTitle: {
+    fontSize: 16,
+    lineHeight: 18,
+    fontWeight: '700',
+    fontFamily: 'Figtree_700Bold',
+    letterSpacing: -0.32,
+    color: Colors.primary,
+  },
+  plusNoteText: {
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: '300',
+    fontFamily: 'Figtree_300Light',
+    letterSpacing: -0.14,
+    color: Colors.secondary,
+  },
+  plusNoteBadge: {
+    position: 'absolute',
+    top: Spacing.s,
+    right: Spacing.s,
   },
 
   // ── Footer ────────────────────────────────────────────────────────────────
