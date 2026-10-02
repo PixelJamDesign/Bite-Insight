@@ -15,7 +15,7 @@
     "cfSubtype": "CF Management"
   },
   "question": {
-    "healthCondition": "Do you have any health condition?",
+    "healthCondition": "Do you have any health conditions?",
     "allergies": "Do you have any allergies?",
     "dietaryPreferences": "Do you have any dietary preferences?",
     "healthConditionFamily": "Do they have any health conditions?",

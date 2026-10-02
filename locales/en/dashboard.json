@@ -14,7 +14,7 @@
   "dailyInsight": "Daily Insight!",
   "suitableFor": "Suitable for:",
   "setupRequired": "Setup Required",
-  "setupMessage": "Add your Supabase URL and anon key to the .env file, then restart the app.\n\nSettings → API in your Supabase dashboard.",
+  "setupMessage": "Add your Supabase URL and anon key to the .env file, then restart the app.\n\nYou'll find them under Settings → API in your Supabase dashboard.",
   "fallbackInitials": "??",
   "scannedHeading": "Scanned items",
   "scannedSubtitle_one": "You've scanned <b>{{count}} item</b> today",

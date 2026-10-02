@@ -18,7 +18,7 @@
       "titleLiked": "You currently have no liked ingredients",
       "titleDisliked": "You currently have no disliked ingredients",
       "titleFlagged": "You currently have no flagged ingredients",
-      "descriptionLiked": "To make your meal planning easier, rate some of your favourite ingredients on the dashboard. When you use the Insight Scanner, we'll spotlight them and suggest tasty recipes you'll love!",
+      "descriptionLiked": "To make your meal planning easier, rate some of your favourite ingredients on the dashboard. When you use the Food Scanner, we'll spotlight them and suggest tasty recipes you'll love!",
       "descriptionDisliked": "Rate ingredients on the dashboard to build your disliked list. We'll make sure to flag them whenever they appear in a product.",
       "descriptionFlagged": "Flag ingredients from the dashboard or scan results to highlight them in red whenever they appear in a product."
     },

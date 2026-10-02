@@ -5,7 +5,7 @@
   },
   "intro": {
     "cardTitle": "Before we begin…",
-    "cardBody": "Let's take a moment to walk you through the app and show you how to make the most of it. We'll go step-by-step, so it's easy to follow!",
+    "cardBody": "Let's take a moment to walk you through the app and show you how to make the most of it. We'll go step by step, so it's easy to follow!",
     "letsBegin": "Let's begin!"
   },
   "steps": {
@@ -17,7 +17,7 @@
     "food_scanner": {
       "section": "Food Scanner",
       "title": "The heart of our app is the Food Scanner.",
-      "subtitle": "It really is as simple as tapping the food scanner in the tab nav and scanning the barcode."
+      "subtitle": "It really is as simple as tapping the Food Scanner in the tab nav and scanning the barcode."
     },
     "personalised_insights": {
       "section": "Personalised Insights",
