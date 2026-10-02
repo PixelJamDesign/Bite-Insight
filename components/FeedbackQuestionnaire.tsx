@@ -38,7 +38,7 @@ import { BlurScrim } from '@/components/BlurScrim';
 import CheckedIcon from '@/assets/icons/checkbox-checked.svg';
 import ChatIcon from '@/assets/icons/feedback/chat.svg';
 import HeartIcon from '@/assets/icons/feedback/heart.svg';
-import StarIcon from '@/assets/icons/feedback/star.svg';
+import ToastHeartIcon from '@/assets/icons/feedback/toast-heart.svg';
 
 // Frosted glass for the toast, so it reads on any background. Expo Go
 // can't load the native blur; there the tint is more solid instead.
@@ -238,7 +238,7 @@ function ThanksToast({ onDone }: { onDone: () => void }) {
           <View style={[StyleSheet.absoluteFill, BlurView ? styles.toastTint : styles.toastTintNoBlur]} />
         </View>
         <View style={styles.toastText}>
-          <StarIcon width={18} height={18} />
+          <ToastHeartIcon width={18} height={18} />
           <Text style={styles.toastBold}>Thank you</Text>
           <Text style={styles.toastLight} numberOfLines={1}>
             for your feedback!
@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.full,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.7)',
+    borderColor: '#aad4cd',
   },
   toastTint: {
     backgroundColor: 'rgba(226, 241, 238, 0.6)',
