@@ -36,7 +36,7 @@ import { Radius } from '@/constants/theme';
 
 const ICON_FAMILY  = require('@/assets/icons/upsell/card-family.png');
 const ICON_FLAG    = require('@/assets/icons/upsell/card-flag.png');
-const ICON_RECIPES = require('@/assets/icons/upsell/card-recipes.png');
+const ICON_MEAL_PLAN = require('@/assets/icons/upsell/card-meal-plan.png');
 const ICON_BARCODE = require('@/assets/icons/upsell/card-barcode.png');
 
 const SLIDE_DURATION_MS = 620;   // length of each horizontal slide
@@ -53,6 +53,11 @@ interface CardData {
 
 const CARDS: CardData[] = [
   {
+    icon: ICON_MEAL_PLAN,
+    title: 'Plan your meals\nfor the week',
+    body: 'Plan any day of the week and see how each meal fits your health profile.',
+  },
+  {
     icon: ICON_FAMILY,
     title: 'Create and manage\nfamily profiles',
     body: "Each person you add has their own preferences, allergies and conditions.",
@@ -61,11 +66,6 @@ const CARDS: CardData[] = [
     icon: ICON_FLAG,
     title: 'Flag ingredients you\nwant to avoid',
     body: "Tell us what to watch for and we'll flag it on every scan.",
-  },
-  {
-    icon: ICON_RECIPES,
-    title: 'Create and share recipes with other Bite Insight+ members.',
-    body: 'Swap meal ideas in the Bite Insight+ recipe community.',
   },
   {
     icon: ICON_BARCODE,

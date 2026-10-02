@@ -29,15 +29,15 @@ const ICON_BARCODE  = require('@/assets/icons/upsell/barcode.webp');
 const ICON_FREE     = require('@/assets/icons/upsell/plus.webp');
 
 const FEATURES = [
+  { icon: ICON_MEAL_PLAN, label: 'Plan your meals for the week with our Meal Planner' },
   { icon: ICON_FAMILY,  label: 'Create and manage family profiles' },
-  { icon: ICON_FLAG,    label: 'Report ingredients you want to avoid' },
-  { icon: ICON_MEAL_PLAN, label: 'Plan meals for the whole week' },
   {
     icon: ICON_BARCODE,
-    label: 'Global Barcode Scanner',
+    label: 'Barcode scanning for global products',
     subLabel: '(Access to over 4.2 million products - Powered by a global food database)',
   },
-  { icon: ICON_FREE,    label: 'Plus everything in the free version' },
+  { icon: ICON_FLAG,    label: 'Flag ingredients you want to avoid' },
+  { icon: ICON_FREE,    label: 'Plus, everything in the free version' },
 ];
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
