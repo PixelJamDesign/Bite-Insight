@@ -36,6 +36,7 @@ import { PlusBadge } from '@/components/PlusBadge';
 import { CameraIcon } from '@/components/MenuIcons';
 import { MealBlock } from '@/components/MealBlock';
 import { ScanCard } from '@/components/ScanCard';
+import { DismissibleRow } from '@/components/DismissibleRow';
 import { DashboardEmptyCard } from '@/components/DashboardEmptyCard';
 import { openScanResult } from '@/lib/openScan';
 import { IconButton } from '@/components/IconButton';
@@ -326,6 +327,16 @@ export default function HomeDashboard() {
     }, [loadRecentScans]),
   );
 
+  // Swipe to delete a scan: same as the History list. Reload afterwards so
+  // the next scan of the day moves up into the freed slot.
+  async function removeScan(id: string) {
+    setRecentScans((prev) => prev.filter((s) => s.id !== id));
+    setScansToday((n) => Math.max(0, n - 1));
+    const { error } = await supabase.from('scans').delete().eq('id', id);
+    if (error) console.warn('[Dashboard] Scan delete failed:', error.message);
+    loadRecentScans();
+  }
+
   // Today's meal plan for the dashboard card. Loaded on its own so a
   // failure here never holds up the rest of the dashboard.
   const [todayMeals, setTodayMeals] = useState<Meal[]>([]);
@@ -380,9 +391,12 @@ export default function HomeDashboard() {
   }
 
   async function removeMeal(meal: Meal) {
+    // Take it off the list straight away (a swipe expects that); reload
+    // either way so a failed delete puts it back.
+    setTodayMeals((prev) => prev.filter((m) => m.id !== meal.id));
     const ok = await deleteMeal(meal.id);
+    loadTodayMeals();
     if (ok) {
-      loadTodayMeals();
       showToast({ message: `Removed "${meal.name}" from your plan`, variant: 'info' });
     } else {
       showToast({ message: 'Could not remove this meal. Please try again.', variant: 'error' });
@@ -684,8 +698,12 @@ export default function HomeDashboard() {
             ) : (
               <>
                 {todayMeals.slice(0, DASHBOARD_MEAL_LIMIT).map((meal) => (
-                  <MealBlock
+                  <DismissibleRow
                     key={meal.id}
+                    onDismiss={() => removeMeal(meal)}
+                    accessibilityLabel={`Remove ${meal.name} from your plan`}
+                  >
+                  <MealBlock
                     meal={meal}
                     impact={todayImpact.byMeal[meal.id]}
                     metrics={todayImpact.metrics}
@@ -700,6 +718,7 @@ export default function HomeDashboard() {
                     onPress={() => openInPlanner(meal)}
                     style={styles.mealBlock}
                   />
+                  </DismissibleRow>
                 ))}
                 {todayMeals.length > DASHBOARD_MEAL_LIMIT && (
                   <TouchableOpacity
@@ -747,7 +766,9 @@ export default function HomeDashboard() {
               />
             ) : (
               recentScans.map((scan) => (
-                <ScanCard key={scan.id} scan={scan} onPress={() => openScanResult(scan)} />
+                <DismissibleRow key={scan.id} onDismiss={() => removeScan(scan.id)} accessibilityLabel="Delete scan">
+                  <ScanCard scan={scan} onPress={() => openScanResult(scan)} />
+                </DismissibleRow>
               ))
             )}
           </Animated.View>

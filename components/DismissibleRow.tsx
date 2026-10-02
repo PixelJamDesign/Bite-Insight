@@ -78,6 +78,9 @@ export function DismissibleRow({
       onSwipeableWillClose={() => { triggeredRef.current = false; }}
       overshootRight
       rightThreshold={40}
+      // Let the card slide out past its own edge (and keep its shadow)
+      // rather than being cut off at the list's side margin.
+      containerStyle={styles.container}
     >
       {children}
     </ReanimatedSwipeable>
@@ -137,6 +140,7 @@ function RightAction({
 }
 
 const styles = StyleSheet.create({
+  container: { overflow: 'visible' },
   // Full row height so the circular button can centre vertically against the
   // card, regardless of how tall the card is.
   actionContainer: {
