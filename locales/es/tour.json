@@ -18,6 +18,16 @@
       "section": "Food Scanner",
       "title": "El corazón de nuestra app es el Food Scanner.",
       "subtitle": "Es tan simple como tocar el Food Scanner en la barra de navegación y escanear el código de barras."
+    },
+    "personalised_insights": {
+      "section": "Información personalizada",
+      "title": "¡Esta es tu información alimentaria personalizada!",
+      "subtitle": "Aquí tienes tu información alimentaria personalizada. Todo adaptado a tu perfil, en un solo lugar."
+    },
+    "ingredient_preferences": {
+      "section": "Preferencias de ingredientes",
+      "title": "¡Indica qué ingredientes te gustan, no te gustan o quieres marcar!",
+      "subtitle": "Personaliza tu experiencia diciéndonos qué ingredientes te encantan, evitas o quieres vigilar."
     }
   },
   "progress": {

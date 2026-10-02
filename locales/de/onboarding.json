@@ -1,13 +1,13 @@
 {
   "step": {
-    "about": "Um",
-    "aboutYou": "Über Dich",
+    "about": "Über",
+    "aboutYou": "Über dich",
     "aboutThem": "Über sie",
     "health": "Gesundheitszustand",
     "nutrients": "Nährstoff-Beobachtungsliste",
     "allergies": "Allergien",
     "dietary": "Ernährungspräferenzen",
-    "ingredients": "Ingredient Preferences",
+    "ingredients": "Zutaten-Vorlieben",
     "ibsSubtype": "RDS-Typ",
     "pregnancy": "Schwangerschaft",
     "conflicts": "Prüfen",

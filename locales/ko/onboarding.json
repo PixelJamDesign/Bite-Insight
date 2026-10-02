@@ -1,13 +1,13 @@
 {
   "step": {
-    "about": "에 대한",
+    "about": "정보",
     "aboutYou": "당신에 대해",
     "aboutThem": "그들에 대하여",
     "health": "건강 상태",
     "nutrients": "영양소 관심 목록",
     "allergies": "알레르기",
     "dietary": "선호하는 식단",
-    "ingredients": "Ingredient Preferences",
+    "ingredients": "성분 선호도",
     "ibsSubtype": "IBS 유형",
     "pregnancy": "임신",
     "conflicts": "확인",

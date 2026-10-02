@@ -18,6 +18,16 @@
       "section": "Food Scanner",
       "title": "我们应用的核心是 Food Scanner。",
       "subtitle": "操作非常简单：点击标签导航中的 Food Scanner，扫描条形码即可。"
+    },
+    "personalised_insights": {
+      "section": "个性化洞察",
+      "title": "这是你的个性化食品洞察！",
+      "subtitle": "你的个性化食品洞察都在这里。所有内容都根据你的资料定制，集中在一个地方。"
+    },
+    "ingredient_preferences": {
+      "section": "成分偏好",
+      "title": "喜欢、不喜欢或标记成分！",
+      "subtitle": "告诉我们你喜欢、想避开或想留意的成分，打造你的专属体验。"
     }
   },
   "progress": {

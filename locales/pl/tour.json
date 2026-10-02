@@ -18,6 +18,16 @@
       "section": "Food Scanner",
       "title": "Sercem naszej aplikacji jest Food Scanner.",
       "subtitle": "To naprawdę proste: wystarczy dotknąć Food Scanner na pasku nawigacji i zeskanować kod kreskowy."
+    },
+    "personalised_insights": {
+      "section": "Spersonalizowane informacje",
+      "title": "Oto twoje spersonalizowane informacje o żywności!",
+      "subtitle": "Tutaj znajdziesz spersonalizowane informacje o żywności. Wszystko dopasowane do twojego profilu, w jednym miejscu."
+    },
+    "ingredient_preferences": {
+      "section": "Preferencje składników",
+      "title": "Polub, odrzuć lub oznacz składniki!",
+      "subtitle": "Dostosuj aplikację, mówiąc nam, które składniki lubisz, których unikasz, a które chcesz mieć na oku."
     }
   },
   "progress": {

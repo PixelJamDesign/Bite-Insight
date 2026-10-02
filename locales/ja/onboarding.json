@@ -1,13 +1,13 @@
 {
   "step": {
-    "about": "について",
+    "about": "基本情報",
     "aboutYou": "あなたについて",
     "aboutThem": "彼らについて",
     "health": "健康状態",
     "nutrients": "栄養素ウォッチリスト",
     "allergies": "アレルギー",
     "dietary": "食事の好み",
-    "ingredients": "Ingredient Preferences",
+    "ingredients": "原材料の好み",
     "ibsSubtype": "IBSのタイプ",
     "pregnancy": "妊娠",
     "conflicts": "確認",

@@ -18,6 +18,16 @@
       "section": "Food Scanner",
       "title": "アプリの中心機能はFood Scannerです。",
       "subtitle": "タブナビゲーションのFood Scannerをタップしてバーコードをスキャンするだけです。"
+    },
+    "personalised_insights": {
+      "section": "パーソナライズされたインサイト",
+      "title": "あなた専用の食品インサイトです！",
+      "subtitle": "あなた専用の食品インサイトはここにあります。プロフィールに合わせた情報をひとつの場所で確認できます。"
+    },
+    "ingredient_preferences": {
+      "section": "原材料の好み",
+      "title": "原材料を「好き」「嫌い」「フラグ」で管理しましょう！",
+      "subtitle": "好きな原材料、避けたい原材料、注意したい原材料を教えて、アプリをあなた好みにしましょう。"
     }
   },
   "progress": {

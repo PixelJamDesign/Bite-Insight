@@ -18,6 +18,16 @@
       "section": "Food Scanner",
       "title": "Het hart van onze app is de Food Scanner.",
       "subtitle": "Het is echt zo simpel als op de Food Scanner tikken in de tabnavigatie en de barcode scannen."
+    },
+    "personalised_insights": {
+      "section": "Persoonlijke inzichten",
+      "title": "Dit zijn je persoonlijke voedingsinzichten!",
+      "subtitle": "Hier vind je je persoonlijke voedingsinzichten. Alles afgestemd op je profiel, op één plek."
+    },
+    "ingredient_preferences": {
+      "section": "Ingrediëntvoorkeuren",
+      "title": "Ingrediënten leuk vinden, niet leuk vinden of markeren!",
+      "subtitle": "Maak de app persoonlijk door ons te vertellen welke ingrediënten je lekker vindt, vermijdt of in de gaten wilt houden."
     }
   },
   "progress": {

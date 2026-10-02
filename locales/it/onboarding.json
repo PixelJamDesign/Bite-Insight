@@ -1,13 +1,13 @@
 {
   "step": {
-    "about": "Di",
+    "about": "Informazioni",
     "aboutYou": "A proposito di te",
     "aboutThem": "Su di loro",
     "health": "Condizioni di salute",
     "nutrients": "Lista di controllo dei nutrienti",
     "allergies": "Allergie",
     "dietary": "Preferenze dietetiche",
-    "ingredients": "Ingredient Preferences",
+    "ingredients": "Preferenze sugli ingredienti",
     "ibsSubtype": "Tipo di SII",
     "pregnancy": "Gravidanza",
     "conflicts": "Verifica",

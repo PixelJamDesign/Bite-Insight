@@ -18,6 +18,16 @@
       "section": "Food Scanner",
       "title": "Das Herzstück unserer App ist der Food Scanner.",
       "subtitle": "Es ist wirklich so einfach: Tippe auf den Food Scanner in der Tab-Navigation und scanne den Barcode."
+    },
+    "personalised_insights": {
+      "section": "Persönliche Einblicke",
+      "title": "Das sind deine persönlichen Lebensmittel-Einblicke!",
+      "subtitle": "Hier findest du deine persönlichen Einblicke zu Lebensmitteln. Alles auf dein Profil zugeschnitten, an einem Ort."
+    },
+    "ingredient_preferences": {
+      "section": "Zutaten-Vorlieben",
+      "title": "Zutaten mögen, nicht mögen oder markieren!",
+      "subtitle": "Passe die App an, indem du uns sagst, welche Zutaten du magst, meidest oder im Blick behalten willst."
     }
   },
   "progress": {

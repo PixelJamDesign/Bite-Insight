@@ -1,13 +1,13 @@
 {
   "step": {
-    "about": "O",
+    "about": "Informacje",
     "aboutYou": "O Tobie",
     "aboutThem": "O nich",
     "health": "Warunki zdrowotne",
     "nutrients": "Lista obserwowanych składników odżywczych",
     "allergies": "Alergie",
     "dietary": "Preferencje dietetyczne",
-    "ingredients": "Ingredient Preferences",
+    "ingredients": "Preferencje składników",
     "ibsSubtype": "Typ IBS",
     "pregnancy": "Ciąża",
     "conflicts": "Sprawdź",

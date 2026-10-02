@@ -1,13 +1,13 @@
 {
   "step": {
-    "about": "عن",
+    "about": "نبذة",
     "aboutYou": "عنك",
     "aboutThem": "عنهم",
     "health": "الظروف الصحية",
     "nutrients": "قائمة مراقبة المغذيات",
     "allergies": "الحساسية",
     "dietary": "التفضيلات الغذائية",
-    "ingredients": "Ingredient Preferences",
+    "ingredients": "تفضيلات المكونات",
     "ibsSubtype": "نوع القولون العصبي",
     "pregnancy": "الحمل",
     "conflicts": "مراجعة",
