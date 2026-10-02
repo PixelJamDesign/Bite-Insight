@@ -131,7 +131,7 @@ Reuse these before creating new components:
 | `MealTotalsList` | `@/components/MealTotalsList` | A `MealNutrition` total as the shared `NutritionRows` stack (planner day totals) |
 | `IconButton` | `@/components/IconButton` | Figma Icon Button: `size` regular (48) / small (36), `variant` onTeal / onWhite, optional `badge` |
 | `MoreMenu` | `@/components/MoreMenu` | ⋯ button with actions — system menu on iOS (SwiftUI Menu, fixed order) & Android (Expo UI MenuView), ActionsSheet on web. Items show in the same order everywhere. `size` small (36, default) / regular (48) |
-| `FrostedHeader` / `HeaderEdge` | `@/components/HeaderEdge` | THE treatment for content scrolling behind any header (see "Scroll-under-header effect" below). Never hand-roll a gradient or blur under a header |
+| `FrostedHeader` / `HeaderEdge` / `FrostedFooter` | `@/components/HeaderEdge` | THE treatment for content scrolling behind any header or pinned footer (see "Scroll-under-header effect" below). Never hand-roll a gradient or blur under a header or footer |
 | `FadingScrollView` | `@/components/FadingScrollView` | ScrollView for bottom sheets: no hard edges — top blurs and fades once scrolled, bottom fades while there is more below. `fadeColor` for non-white sheets |
 | `ActionsSheet` | `@/components/ActionsSheet` | Titled bottom sheet of action rows (RecipeActionsSheet layout) |
 | `AlertCard` | `@/components/AlertCard` | Figma alert (3190:5985): `tone` warning / caution / info, label pill + bold message |
