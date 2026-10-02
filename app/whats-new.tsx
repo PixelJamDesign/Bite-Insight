@@ -18,6 +18,7 @@ import FlagIcon from '@/assets/icons/whats-new/flag.svg';
 import ProfileAdditionsIcon from '@/assets/icons/whats-new/profile-additions.svg';
 import AccuracyIcon from '@/assets/icons/whats-new/accuracy.svg';
 import WaveIcon from '@/assets/icons/whats-new/wave.svg';
+import SparklesIcon from '@/assets/icons/whats-new/sparkles.svg';
 import Constants from 'expo-constants';
 import { useTranslation } from 'react-i18next';
 import { Colors, Spacing, Radius, Shadows } from '@/constants/theme';
@@ -26,7 +27,7 @@ import { supabase } from '@/lib/supabase';
 import { PlusBadge } from '@/components/PlusBadge';
 import { FrostedHeader, useScrollEdge } from '@/components/HeaderEdge';
 import { MenuNotificationsIcon } from '@/components/MenuIcons';
-import { DashboardIcon, MealPlanIcon } from '@/components/TabIcons';
+import { MealPlanIcon } from '@/components/TabIcons';
 
 // ── Constants ───────────────────────────────────────────────────────────────
 
@@ -131,12 +132,9 @@ function AppleIcon({ width = 28 }: { width?: number; height?: number }) {
   );
 }
 
-// Tab bar glyphs, wrapped to the card-icon's width/height signature.
+// Tab bar glyph, wrapped to the card-icon's width/height signature.
 function PlannerIcon({ width = 28 }: { width?: number; height?: number }) {
   return <MealPlanIcon color={Colors.primary} size={width} />;
-}
-function NewLookIcon({ width = 28 }: { width?: number; height?: number }) {
-  return <DashboardIcon color={Colors.primary} size={width} />;
 }
 
 // v2.0.0 — the Meal Planner and the new look.
@@ -163,7 +161,7 @@ const CARDS: CardData[] = [
   {
     badge: 'Updated!',
     title: 'A Fresh New Look',
-    icon: NewLookIcon,
+    icon: SparklesIcon,
     description: "We've redesigned Bite Insight so it's easier to find your way around.",
     subsections: [
       {
