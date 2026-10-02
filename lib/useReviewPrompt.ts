@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/auth';
 const THRESHOLDS = [20, 40];
 const STORAGE_KEY_COMPLETED = 'review_prompt_completed'; // user said "yes!"
 const STORAGE_KEY_DISMISS_COUNT = 'review_prompt_dismiss_count'; // how many times dismissed
+const STORAGE_KEY_DECLINED = 'review_prompt_declined'; // user said "not really"
 // Debug menu: show the prompt on the next product page, whatever the count.
 const STORAGE_KEY_FORCE = 'review_prompt_force';
 
@@ -18,7 +19,7 @@ export async function forceReviewPrompt() {
 
 /** Debug menu: forget the user's earlier answers so the prompt can fire again. */
 export async function resetReviewPrompt() {
-  await AsyncStorage.multiRemove([STORAGE_KEY_COMPLETED, STORAGE_KEY_DISMISS_COUNT, STORAGE_KEY_FORCE]);
+  await AsyncStorage.multiRemove([STORAGE_KEY_COMPLETED, STORAGE_KEY_DISMISS_COUNT, STORAGE_KEY_DECLINED, STORAGE_KEY_FORCE]);
 }
 
 // Store identifiers, used to deep-link the user straight into the review
@@ -88,6 +89,10 @@ export function useReviewPrompt() {
       const completed = await AsyncStorage.getItem(STORAGE_KEY_COMPLETED);
       if (completed === 'true') return;
 
+      // Said "not really"? Don't keep asking.
+      const declined = await AsyncStorage.getItem(STORAGE_KEY_DECLINED);
+      if (declined === 'true') return;
+
       // How many times have they dismissed?
       const rawDismissCount = await AsyncStorage.getItem(STORAGE_KEY_DISMISS_COUNT);
       const dismissCount = rawDismissCount ? parseInt(rawDismissCount, 10) : 0;
@@ -122,12 +127,18 @@ export function useReviewPrompt() {
     checkEligibility();
   }, [checkEligibility]);
 
-  /** User tapped "not now" — increment dismiss count, ask again at next threshold */
+  /** User tapped "Ask me later" — increment dismiss count, ask again at next threshold */
   const dismissReviewPrompt = useCallback(async () => {
     setShowReviewPrompt(false);
     const raw = await AsyncStorage.getItem(STORAGE_KEY_DISMISS_COUNT);
     const current = raw ? parseInt(raw, 10) : 0;
     await AsyncStorage.setItem(STORAGE_KEY_DISMISS_COUNT, String(current + 1));
+  }, []);
+
+  /** User tapped "Not really" — never ask again. */
+  const declineReviewPrompt = useCallback(async () => {
+    setShowReviewPrompt(false);
+    await AsyncStorage.setItem(STORAGE_KEY_DECLINED, 'true');
   }, []);
 
   /** User tapped "yes, I love it!" — mark complete, deep-link to the
@@ -142,6 +153,7 @@ export function useReviewPrompt() {
     showReviewPrompt,
     recheckAfterScan,
     dismissReviewPrompt,
+    declineReviewPrompt,
     completeReviewPrompt,
   };
 }
