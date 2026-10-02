@@ -17,9 +17,10 @@
  *   it frosts over as it reaches the top of the list and fades into the
  *   header colour.
  *
- *   FrostedFooter — the same material for a bar pinned to the bottom (the
- *   menu footer): frost fills the bar and eases out over HEADER_EDGE_HEIGHT
- *   above it.
+ *   FrostedFooter — for a bar pinned to the bottom (the menu footer). The
+ *   bar itself is solid, so its small text always sits on a clean surface;
+ *   content frosts over and fades into it over HEADER_EDGE_HEIGHT above.
+ *   (A see-through bar went grey over the dark Plus card.)
  *
  * Blur: @sbaiahmed1/react-native-blur's ProgressiveBlurView — iOS variable
  * blur, Android QmBlurView, web layered backdrop-filter. Expo Go can't load
@@ -163,7 +164,7 @@ interface FrostedFooterProps {
   style?: StyleProp<ViewStyle>;
 }
 
-/** Frosted glass for a bar pinned over the bottom of the content, easing out above it. */
+/** Solid bar pinned over the bottom of the content, with a frosted edge above it. */
 export function FrostedFooter({ color = Colors.background, style }: FrostedFooterProps) {
   const [height, setHeight] = useState(0);
   const plateau = height > 0 ? height / (height + HEADER_EDGE_HEIGHT) : 0.7;
@@ -174,7 +175,7 @@ export function FrostedFooter({ color = Colors.background, style }: FrostedFoote
       onLayout={(e: LayoutChangeEvent) => setHeight(Math.round(e.nativeEvent.layout.height))}
     >
       <View style={styles.footerFrostBox}>
-        <Frost color={color} plateau={plateau} topAlpha={TINT} fromBottom />
+        <Frost color={color} plateau={plateau} topAlpha={1} fromBottom />
       </View>
     </View>
   );
