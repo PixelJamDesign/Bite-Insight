@@ -13,8 +13,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Spacing, Radius, Shadows, Typography } from '@/constants/theme';
+import { Colors, Spacing, Shadows, Typography } from '@/constants/theme';
 import { useSheetAnimation } from '@/lib/useSheetAnimation';
+import { OptionCard } from '@/components/OptionCard';
 
 export type AddSource = 'search' | 'scan' | 'history' | 'recipe';
 
@@ -78,59 +79,34 @@ export function AddIngredientOptions({
   return (
     <View style={styles.options}>
       {includeRecipes && (
-        <Option
+        <OptionCard
           icon="restaurant-outline"
           title="Choose a recipe"
           subtitle="Pick from your recipe book"
           onPress={() => onPick('recipe')}
         />
       )}
-      <Option
+      <OptionCard
         icon="search"
         title="Search foods"
         subtitle="Browse the Open Food Facts database"
         onPress={() => onPick('search')}
       />
       {includeScan && (
-        <Option
+        <OptionCard
           icon="barcode-outline"
           title="Scan a barcode"
           subtitle="Use the camera to scan a product"
           onPress={() => onPick('scan')}
         />
       )}
-      <Option
+      <OptionCard
         icon="time-outline"
         title="Add from scan history"
         subtitle="Pick from your recent scans"
         onPress={() => onPick('history')}
       />
     </View>
-  );
-}
-
-function Option({
-  icon,
-  title,
-  subtitle,
-  onPress,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  title: string;
-  subtitle: string;
-  onPress: () => void;
-}) {
-  return (
-    <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.85}>
-      <View style={styles.rowIcon}>
-        <Ionicons name={icon} size={22} color={Colors.secondary} />
-      </View>
-      <View style={styles.rowInfo}>
-        <Text style={styles.rowTitle}>{title}</Text>
-        <Text style={styles.rowSub}>{subtitle}</Text>
-      </View>
-      <Ionicons name="chevron-forward" size={18} color={Colors.secondary} />
-    </TouchableOpacity>
   );
 }
 
@@ -181,36 +157,5 @@ const styles = StyleSheet.create({
   },
   options: {
     gap: 8,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    backgroundColor: Colors.surface.secondary,
-    borderWidth: 1,
-    borderColor: '#aad4cd',
-    borderRadius: Radius.m,
-    padding: Spacing.s,
-    ...Shadows.level4,
-  },
-  rowIcon: {
-    width: 44, height: 44,
-    borderRadius: Radius.m,
-    backgroundColor: Colors.surface.tertiary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  rowInfo: { flex: 1, gap: 2 },
-  rowTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
-  },
-  rowSub: {
-    fontSize: 12,
-    fontWeight: '300',
-    fontFamily: 'Figtree_300Light',
-    color: Colors.secondary,
   },
 });

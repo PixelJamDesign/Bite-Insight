@@ -22,6 +22,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { OptionCard } from '@/components/OptionCard';
 import { ActionSearchIcon } from '@/components/MenuIcons';
 import { TextField } from '@/components/TextField';
 import { LottieLoader } from '@/components/LottieLoader';
@@ -196,40 +197,19 @@ export function AddToRecipeSheet({ visible, onClose, snapshot, barcode }: Props)
           {/* Top actions */}
           <View style={styles.topActions}>
             {hasDraft && (
-              <TouchableOpacity
-                style={[styles.actionRow, styles.actionRowPrimary]}
+              <OptionCard
+                icon="add"
+                title={`Add to "${draft.draft?.name || 'draft recipe'}"`}
+                subtitle="Continue building your current recipe"
                 onPress={handleAddToCurrentDraft}
-                activeOpacity={0.85}
-              >
-                <View style={[styles.actionIcon, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
-                  <Ionicons name="add" size={20} color="#fff" />
-                </View>
-                <View style={styles.actionInfo}>
-                  <Text style={[styles.actionTitle, { color: '#fff' }]}>
-                    Add to "{draft.draft?.name || 'draft recipe'}"
-                  </Text>
-                  <Text style={[styles.actionSub, { color: 'rgba(255,255,255,0.8)' }]}>
-                    Continue building your current recipe
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color="#fff" />
-              </TouchableOpacity>
+              />
             )}
-
-            <TouchableOpacity
-              style={styles.actionRow}
+            <OptionCard
+              icon="add-circle-outline"
+              title="Start a new recipe"
+              subtitle="Build a recipe starting with this product"
               onPress={handleStartNewDraft}
-              activeOpacity={0.85}
-            >
-              <View style={styles.actionIcon}>
-                <Ionicons name="add-circle-outline" size={22} color={Colors.secondary} />
-              </View>
-              <View style={styles.actionInfo}>
-                <Text style={styles.actionTitle}>Start a new recipe</Text>
-                <Text style={styles.actionSub}>Build a recipe starting with this product</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color={Colors.secondary} />
-            </TouchableOpacity>
+            />
           </View>
 
           {/* Existing recipes */}
@@ -343,42 +323,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.s,
     gap: 8,
     marginBottom: Spacing.s,
-  },
-  actionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: Colors.surface.secondary,
-    borderWidth: 1,
-    borderColor: '#aad4cd',
-    borderRadius: Radius.m,
-    padding: Spacing.s,
-    ...Shadows.level4,
-  },
-  actionRowPrimary: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  actionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: Radius.m,
-    backgroundColor: Colors.surface.tertiary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionInfo: { flex: 1, gap: 2 },
-  actionTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
-  },
-  actionSub: {
-    fontSize: 12,
-    fontWeight: '300',
-    fontFamily: 'Figtree_300Light',
-    color: Colors.secondary,
   },
 
   existingHeader: {

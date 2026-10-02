@@ -17,17 +17,18 @@ import {
   StyleSheet,
   TouchableOpacity,
   FlatList,
-  Image,
   ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { ScanCard } from '@/components/ScanCard';
+import { IconButton } from '@/components/IconButton';
+import AddIcon from '@/assets/icons/meal-plan/add.svg';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { useDraftRecipe } from '@/lib/draftRecipeContext';
 import { snapshotFromScanAsync } from '@/lib/recipes';
-import { Colors, Spacing, Radius, Typography } from '@/constants/theme';
+import { Colors, Spacing, Typography } from '@/constants/theme';
 import { MenuArrowLeftIcon } from '@/components/MenuIcons';
 import { LottieLoader } from '@/components/LottieLoader';
 import { HeaderEdge, HEADER_EDGE_AT_TOP, useScrollEdge } from '@/components/HeaderEdge';
@@ -120,40 +121,32 @@ export default function PickScanScreen() {
               paddingBottom: insets.bottom + Spacing.l,
             }}
             ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
-            renderItem={({ item }) => {
-              const isBusy = busyScanId === item.id;
-              return (
-                <TouchableOpacity
-                  style={[styles.row, isBusy && styles.rowBusy]}
-                  onPress={() => handlePick(item)}
-                  activeOpacity={0.85}
-                  disabled={Boolean(busyScanId)}
-                >
-                  <View style={styles.thumb}>
-                    {item.image_url ? (
-                      <Image source={{ uri: item.image_url }} style={styles.thumbImage} />
-                    ) : (
-                      <Ionicons name="nutrition-outline" size={20} color={Colors.secondary} />
-                    )}
-                  </View>
-                  <View style={styles.info}>
-                    <Text style={styles.name} numberOfLines={1}>
-                      {item.product_name}
-                    </Text>
-                    {item.brand && (
-                      <Text style={styles.brand} numberOfLines={1}>
-                        {item.brand}
-                      </Text>
-                    )}
-                  </View>
-                  {isBusy ? (
-                    <ActivityIndicator color={Colors.secondary} />
-                  ) : (
-                    <Ionicons name="chevron-forward" size={18} color={Colors.secondary} />
-                  )}
-                </TouchableOpacity>
-              );
-            }}
+            renderItem={({ item }) => (
+              // The Scan History card, with a + like the meal planner's
+              // Add from scan history.
+              <ScanCard
+                scan={item}
+                onPress={() => handlePick(item)}
+                disabled={Boolean(busyScanId)}
+                dimmed={busyScanId === item.id}
+                trailing={
+                  <IconButton
+                    size="small"
+                    variant="onWhite"
+                    icon={
+                      busyScanId === item.id ? (
+                        <ActivityIndicator size="small" color={Colors.secondary} />
+                      ) : (
+                        <AddIcon width={20} height={20} />
+                      )
+                    }
+                    onPress={() => handlePick(item)}
+                    disabled={Boolean(busyScanId)}
+                    accessibilityLabel={`Add ${item.product_name}`}
+                  />
+                }
+              />
+            )}
           />
           <HeaderEdge scrollY={edge.scrollY} style={HEADER_EDGE_AT_TOP} />
         </View>
@@ -206,40 +199,5 @@ const styles = StyleSheet.create({
     fontFamily: 'Figtree_300Light',
     color: Colors.secondary,
     textAlign: 'center',
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: Colors.surface.secondary,
-    borderWidth: 1,
-    borderColor: '#aad4cd',
-    borderRadius: Radius.l,
-    paddingHorizontal: Spacing.s,
-    paddingVertical: Spacing.s,
-  },
-  rowBusy: { opacity: 0.6 },
-  thumb: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.m,
-    backgroundColor: Colors.surface.tertiary,
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  thumbImage: { width: '100%', height: '100%' },
-  info: { flex: 1, gap: 2 },
-  name: {
-    fontSize: 14,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
-  },
-  brand: {
-    fontSize: 12,
-    fontWeight: '300',
-    fontFamily: 'Figtree_300Light',
-    color: Colors.secondary,
   },
 });

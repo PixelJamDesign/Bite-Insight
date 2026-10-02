@@ -29,6 +29,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useKeyboardHeight } from '@/lib/useKeyboardHeight';
 import { Ionicons } from '@expo/vector-icons';
+import { OptionCard } from '@/components/OptionCard';
 import { Colors } from '@/constants/theme';
 import { IconButton } from '@/components/IconButton';
 import { supabase } from '@/lib/supabase';
@@ -161,31 +162,19 @@ export function InviteFamilyMemberSheet({
           <View style={styles.body}>
             {mode === 'choice' ? (
               <>
-                <TouchableOpacity style={styles.option} activeOpacity={0.8} onPress={() => setMode('email')}>
-                  <View style={styles.optionIcon}>
-                    <Ionicons name="mail-outline" size={22} color={Colors.secondary} />
-                  </View>
-                  <View style={styles.optionText}>
-                    <Text style={styles.optionTitle}>Enter their email</Text>
-                    <Text style={styles.optionSub}>Best if you know the email on their account</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color={Colors.secondary} />
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.option} activeOpacity={0.8} onPress={handleShareLink} disabled={busy}>
-                  <View style={styles.optionIcon}>
-                    {busy ? (
-                      <ActivityIndicator size="small" color={Colors.secondary} />
-                    ) : (
-                      <Ionicons name="link-outline" size={22} color={Colors.secondary} />
-                    )}
-                  </View>
-                  <View style={styles.optionText}>
-                    <Text style={styles.optionTitle}>Share a link</Text>
-                    <Text style={styles.optionSub}>Send via Messages, WhatsApp, anywhere</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color={Colors.secondary} />
-                </TouchableOpacity>
+                <OptionCard
+                  icon="mail-outline"
+                  title="Enter their email"
+                  subtitle="Best if you know the email on their account"
+                  onPress={() => setMode('email')}
+                />
+                <OptionCard
+                  icon="link-outline"
+                  title="Share a link"
+                  subtitle="Send via Messages, WhatsApp, anywhere"
+                  onPress={handleShareLink}
+                  busy={busy}
+                />
               </>
             ) : (
               <>
@@ -255,38 +244,6 @@ const styles = StyleSheet.create({
     lineHeight: 21,
   },
   body: { paddingHorizontal: 24, paddingTop: 8, gap: 12 },
-  option: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-    backgroundColor: Colors.surface.tertiary,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#aad4cd',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-  },
-  optionIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  optionText: { flex: 1, gap: 2 },
-  optionTitle: {
-    fontSize: 16,
-    fontFamily: 'Figtree_700Bold',
-    color: Colors.primary,
-    letterSpacing: -0.32,
-  },
-  optionSub: {
-    fontSize: 13,
-    fontFamily: 'Figtree_300Light',
-    color: Colors.secondary,
-    letterSpacing: -0.13,
-  },
   input: {
     backgroundColor: Colors.surface.tertiary,
     borderRadius: 12,
