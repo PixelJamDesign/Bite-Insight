@@ -26,6 +26,7 @@ import { supabase } from '@/lib/supabase';
 import { PlusBadge } from '@/components/PlusBadge';
 import { FrostedHeader, useScrollEdge } from '@/components/HeaderEdge';
 import { MenuNotificationsIcon } from '@/components/MenuIcons';
+import { DashboardIcon, MealPlanIcon } from '@/components/TabIcons';
 
 // ── Constants ───────────────────────────────────────────────────────────────
 
@@ -127,35 +128,48 @@ function AppleIcon({ width = 28 }: { width?: number; height?: number }) {
   );
 }
 
-// v1.8.2 — new conditions/allergies, and the biggest ingredient update yet.
+// Tab bar glyphs, wrapped to the card-icon's width/height signature.
+function PlannerIcon({ width = 28 }: { width?: number; height?: number }) {
+  return <MealPlanIcon color={Colors.primary} size={width} />;
+}
+function NewLookIcon({ width = 28 }: { width?: number; height?: number }) {
+  return <DashboardIcon color={Colors.primary} size={width} />;
+}
+
+// v2.0.0 — the Meal Planner and the new look.
 const CARDS: CardData[] = [
   {
-    badge: 'New Additions!',
-    title: 'New Conditions, Allergies & Diets',
-    icon: ProfileAdditionsIcon,
+    badge: 'New!',
+    title: 'Meal Planner',
+    icon: PlannerIcon,
+    plus: true,
     description:
-      "You spoke, and we listened. We've updated the health conditions, allergies and diets to now include:",
+      "Plan what you're eating for any day of the week. Add products you've scanned or your own recipes, and we'll check each meal against your health profile before you eat it.",
     subsections: [
-      { heading: 'Health Conditions', bullets: ['Asthma', 'Candida Overgrowth (SIFO)'] },
-      { heading: 'Allergies', bullets: ['Yeast Intolerance'] },
+      {
+        heading: 'What you can do:',
+        bullets: [
+          { title: 'Plan your meals', sub: "Today's plan is free for everyone. With Bite Insight+ you can plan the whole week." },
+          { title: 'See how a meal suits you', sub: "Meals turn amber or red when they don't fit your profile, and we'll tell you why." },
+          { title: 'Keep track of your day', sub: 'Mark meals as eaten and see your totals for the day.' },
+          { title: 'Save a meal as a recipe', sub: 'Found a meal that works for you? Save it and plan it again later.' },
+        ],
+      },
     ],
   },
   {
-    badge: 'New Additions!',
-    title: '50+ New Ingredients!',
-    icon: AppleIcon,
-    description:
-      'Our biggest ingredient update since we launched the app, all here to give you better insight.',
+    badge: 'Updated!',
+    title: 'A Fresh New Look',
+    icon: NewLookIcon,
+    description: "We've redesigned Bite Insight so it's easier to find your way around.",
     subsections: [
       {
-        heading: 'Ingredients and categories added:',
+        heading: "What's changed:",
         bullets: [
-          { title: 'Artificial Sweeteners', sub: 'Including Aspartame, Sucralose, Xylitol, Acesulfame K and more.' },
-          { title: 'Colours', sub: 'Including Titanium Dioxide, Tartrazine, Sunset Yellow, Caramel Colour and more.' },
-          { title: 'Preservatives', sub: 'Including Sodium Nitrite and Nitrate, Sulphites, Sodium Benzoate, Potassium Sorbate and more.' },
-          { title: 'Sugars & Syrups', sub: 'Including Agave Syrup, Corn Syrup, Fructose, Glucose Syrup, Golden Syrup, Invert Sugar, Maltodextrin and more.' },
-          { title: 'Yeasts', sub: "Including Brewer's Yeast, Dried Yeast, Nutritional Yeast, Yeast Extract and Malt Extract." },
-          { title: 'Fermented', sub: 'Including Kombucha, Miso, Sauerkraut, Soy Sauce, Vinegar and Malt Vinegar.' },
+          { title: 'New dashboard', sub: "Today's meals and your recent scans, together on one screen." },
+          { title: 'Meal Planner tab', sub: 'Your planner now has its own spot in the tab bar.' },
+          { title: 'Easier to get around', sub: 'Every screen has a back button, and titles tuck away as you scroll.' },
+          { title: 'Clearer product pages', sub: 'Nutrition starts with what matters for your profile. Tap ⋯ to add a product to a meal or a recipe.' },
         ],
       },
     ],
@@ -212,9 +226,9 @@ export default function WhatsNewScreen() {
         <Text style={styles.greetingName}>{firstName}</Text>
 
         {/* ── Headline ── */}
-        <Text style={styles.headline}>We've made some updates!</Text>
+        <Text style={styles.headline}>Welcome to Bite Insight 2.0</Text>
         <Text style={styles.subtitle}>
-          Thanks to your feedback we've updated Bite Insight to improve your experience.
+          This is our biggest update yet, and a lot of it came from your feedback. Here's what's new.
         </Text>
 
         {/* ── Cards ── */}
