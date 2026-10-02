@@ -25,6 +25,7 @@ import { PolicySheet } from './PolicySheet';
 import { PlusBadge } from './PlusBadge';
 import { IconButton } from './IconButton';
 import Constants from 'expo-constants';
+import { FEATURES } from '@/constants/features';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FrostedHeader } from './HeaderEdge';
 import { titleCollapse } from './headerMotion';
@@ -334,7 +335,9 @@ function SettingsScreen({ goBack, onNavigate, onOpenPolicy, onGo }: { goBack: ()
       <View style={styles.navList}>
         <NavItem icon={<MenuLockIcon color={Colors.secondary} />} label={t('settings.security')} onPress={() => onNavigate('security')} chevron />
         {/* <NavItem icon={<MenuNotificationsIcon color={Colors.secondary} />} label={t('settings.notifications')} onPress={() => {}} /> */}
-        <NavItem icon={<Ionicons name="pulse" size={22} color={Colors.secondary} />} label={t('settings.connectedDevices')} onPress={() => onGo('/connected-devices')} chevron />
+        {FEATURES.dexcom && (
+          <NavItem icon={<Ionicons name="pulse" size={22} color={Colors.secondary} />} label={t('settings.connectedDevices')} onPress={() => onGo('/connected-devices')} chevron />
+        )}
         <NavItem icon={<MenuHelpIcon color={Colors.secondary} />} label={t('settings.helpSupport')} onPress={() => onNavigate('help')} chevron />
         <NavItem icon={<MenuPrivacyIcon color={Colors.secondary} />} label={t('settings.privacyPolicy')} onPress={() => onOpenPolicy('privacy')} />
         <NavItem icon={<MenuCookieIcon color={Colors.secondary} />} label={t('settings.cookiePolicy')} onPress={() => onOpenPolicy('cookie')} />

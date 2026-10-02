@@ -10,6 +10,8 @@
  * app → edge function → token refresh → Dexcom API.
  */
 import { useCallback, useState } from 'react';
+import { Redirect } from 'expo-router';
+import { FEATURES } from '@/constants/features';
 import {
   View,
   Text,
@@ -49,7 +51,7 @@ function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-export default function ConnectedDevicesScreen() {
+function ConnectedDevicesScreen() {
   const insets = useSafeAreaInsets();
   const { showToast } = useToast();
 
@@ -538,3 +540,9 @@ const styles = StyleSheet.create({
     color: '#c02e30',
   },
 });
+
+/** Dexcom is switched off for this build (constants/features.ts). */
+export default function ConnectedDevicesScreenRoute() {
+  if (!FEATURES.dexcom) return <Redirect href="/(tabs)/dashboard" />;
+  return <ConnectedDevicesScreen />;
+}

@@ -9,17 +9,25 @@
  * on to the connections screen.
  */
 import { useEffect } from 'react';
+import { Redirect } from 'expo-router';
+import { FEATURES } from '@/constants/features';
 import * as WebBrowser from 'expo-web-browser';
 import { router } from 'expo-router';
 import { LottieLoader } from '@/components/LottieLoader';
 
 WebBrowser.maybeCompleteAuthSession();
 
-export default function DexcomConnectedScreen() {
+function DexcomConnectedScreen() {
   useEffect(() => {
     const id = setTimeout(() => router.replace('/connected-devices' as never), 300);
     return () => clearTimeout(id);
   }, []);
 
   return <LottieLoader type="loading" />;
+}
+
+/** Dexcom is switched off for this build (constants/features.ts). */
+export default function DexcomConnectedScreenRoute() {
+  if (!FEATURES.dexcom) return <Redirect href="/(tabs)/dashboard" />;
+  return <DexcomConnectedScreen />;
 }

@@ -132,6 +132,7 @@ export function FamilyImpactSheet({
                     avatarUrl={member.avatarUrl}
                     initials={initialsFrom(member.name)}
                     size={80}
+                    initialsStyle={styles.avatarInitials}
                   />
                 </View>
                 <View style={styles.memberText}>
@@ -343,7 +344,17 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
+    backgroundColor: Colors.accent,
+    // Centres the initials when there's no photo.
+    alignItems: 'center',
+    justifyContent: 'center',
     overflow: 'hidden',
+  },
+  avatarInitials: {
+    fontSize: 28,
+    fontFamily: 'Figtree_700Bold',
+    color: '#fff',
+    letterSpacing: -0.5,
   },
   memberText: { flex: 1, gap: 8, justifyContent: 'center' },
   memberName: {
