@@ -12,7 +12,7 @@
     "logOut": "Abmelden"
   },
   "footer": {
-    "version": "ver. 1.8.2",
+    "version": "ver. {{version}}",
     "reportProblem": "Melden Sie ein Problem"
   },
   "ingredients": {

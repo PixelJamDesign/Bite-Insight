@@ -12,7 +12,7 @@
     "logOut": "退出"
   },
   "footer": {
-    "version": "版本。 1.8.2",
+    "version": "版本。 {{version}}",
     "reportProblem": "报告问题"
   },
   "ingredients": {

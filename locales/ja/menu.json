@@ -12,7 +12,7 @@
     "logOut": "ログアウト"
   },
   "footer": {
-    "version": "バージョン1.8.2",
+    "version": "バージョン{{version}}",
     "reportProblem": "問題を報告する"
   },
   "ingredients": {

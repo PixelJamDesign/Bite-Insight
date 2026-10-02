@@ -213,6 +213,14 @@ function WhatsNewGuard() {
     }
   }, [navigationState?.key, session, journeyLoading, onboardingStep, currentSegment]);
 
+  // Once the screen is showing, the redirect has done its job. Without this,
+  // "Go to dashboard" lands on (tabs) with needsWhatsNew still true and the
+  // Redirect below fires again before the re-check above can clear it, so
+  // the user bounces straight back to What's new.
+  useEffect(() => {
+    if (currentSegment === 'whats-new') setNeedsWhatsNew(false);
+  }, [currentSegment]);
+
   if (!needsWhatsNew || currentSegment !== '(tabs)') return null;
 
   return <Redirect href="/whats-new" />;

@@ -12,7 +12,7 @@
     "logOut": "Finalizar la sesión"
   },
   "footer": {
-    "version": "ver. 1.8.2",
+    "version": "ver. {{version}}",
     "reportProblem": "Informar un problema"
   },
   "ingredients": {

@@ -12,7 +12,7 @@
     "logOut": "تسجيل الخروج"
   },
   "footer": {
-    "version": "الاصدار. 1.8.2",
+    "version": "الاصدار. {{version}}",
     "reportProblem": "الإبلاغ عن مشكلة"
   },
   "ingredients": {

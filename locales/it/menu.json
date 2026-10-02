@@ -12,7 +12,7 @@
     "logOut": "Esci"
   },
   "footer": {
-    "version": "ver. 1.8.2",
+    "version": "ver. {{version}}",
     "reportProblem": "Segnala un problema"
   },
   "ingredients": {

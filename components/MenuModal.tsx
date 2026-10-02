@@ -24,6 +24,8 @@ import { ConfirmSheet } from './ConfirmSheet';
 import { PolicySheet } from './PolicySheet';
 import { PlusBadge } from './PlusBadge';
 import { IconButton } from './IconButton';
+import Constants from 'expo-constants';
+import { LinearGradient } from 'expo-linear-gradient';
 import { FrostedHeader } from './HeaderEdge';
 import { titleCollapse } from './headerMotion';
 import Logo from '@/assets/images/logo.svg';
@@ -236,11 +238,21 @@ function NavItem({ icon, label, onPress, chevron = false, plus = false }: NavIte
   );
 }
 
-function Footer() {
+/** Version from app.json, so the footer never goes stale. */
+const APP_VERSION = (Constants.expoConfig?.version as string | undefined) ?? '';
+
+/** Version + "Report a problem", pinned to the bottom of the menu. */
+function Footer({ bottomInset }: { bottomInset: number }) {
   const { t } = useTranslation('menu');
   const { showDebugMenu } = useDebugMenu();
   return (
-    <View style={styles.footer}>
+    <View style={[styles.footer, { paddingBottom: bottomInset + 12 }]}>
+      {/* Content scrolling behind fades out above the row */}
+      <LinearGradient
+        colors={['rgba(255,255,255,0)', '#ffffff']}
+        style={styles.footerFade}
+        pointerEvents="none"
+      />
       {/* 3-second long-press on the version footer opens the hidden
           debug menu. Available in all builds (incl. TestFlight + App
           Store) so QA can drive sheet triggers and reset state on
@@ -251,7 +263,7 @@ function Footer() {
         delayLongPress={3000}
         activeOpacity={1}
       >
-        <Text style={styles.footerText}>{t('footer.version')}</Text>
+        <Text style={styles.footerText}>{t('footer.version', { version: APP_VERSION })}</Text>
       </TouchableOpacity>
       <TouchableOpacity activeOpacity={0.7} onPress={() => Linking.openURL('https://biteinsight.co.uk/report.html')}>
         <Text style={[styles.footerText, styles.footerLink]}>{t('footer.reportProblem')}</Text>
@@ -1788,7 +1800,6 @@ function MainScreen({
         </View>
         <UpsellBanner />
       </View>
-      <Footer />
     </>
   );
 }
@@ -1966,19 +1977,19 @@ export function MenuModal({ onClose, onNavigate }: MenuModalProps) {
       return <MainScreen onNavigate={(sc) => navigate(sc)} onGo={handleNavigate} onLogout={handleLogout} />;
     }
     if (s === 'ingredients') {
-      return <><IngredientsScreen goBack={() => navigate('main', true)} onGo={handleNavigate} /><Footer /></>;
+      return <IngredientsScreen goBack={() => navigate('main', true)} onGo={handleNavigate} />;
     }
     if (s === 'account') {
-      return <><AccountScreen goBack={() => navigate('main', true)} onGo={handleNavigate} onNavigate={(sc) => navigate(sc)} /><Footer /></>;
+      return <AccountScreen goBack={() => navigate('main', true)} onGo={handleNavigate} onNavigate={(sc) => navigate(sc)} />;
     }
     if (s === 'settings') {
-      return <><SettingsScreen goBack={() => navigate('main', true)} onNavigate={(sc) => navigate(sc)} onOpenPolicy={setPolicyType} onGo={handleNavigate} /><Footer /></>;
+      return <SettingsScreen goBack={() => navigate('main', true)} onNavigate={(sc) => navigate(sc)} onOpenPolicy={setPolicyType} onGo={handleNavigate} />;
     }
     if (s === 'marketing') {
-      return <><MarketingPreferencesScreen goBack={() => navigate('settings', true)} /><Footer /></>;
+      return <MarketingPreferencesScreen goBack={() => navigate('settings', true)} />;
     }
     if (s === 'mydata') {
-      return <><MyDataScreen goBack={() => navigate('settings', true)} /><Footer /></>;
+      return <MyDataScreen goBack={() => navigate('settings', true)} />;
     }
     if (s === 'offlinedb') {
       // Offline database screen omits the Footer (version + report-a-problem)
@@ -1987,16 +1998,17 @@ export function MenuModal({ onClose, onNavigate }: MenuModalProps) {
       return <OfflineDatabaseScreen goBack={() => navigate('settings', true)} />;
     }
     if (s === 'password') {
-      return <><ChangePasswordScreen goBack={() => navigate('security', true)} /><Footer /></>;
+      return <ChangePasswordScreen goBack={() => navigate('security', true)} />;
     }
     if (s === 'help') {
-      return <><HelpSupportScreen goBack={() => navigate('settings', true)} onGo={handleNavigate} /><Footer /></>;
+      return <HelpSupportScreen goBack={() => navigate('settings', true)} onGo={handleNavigate} />;
     }
-    return <><SecurityScreen goBack={() => navigate('settings', true)} onNavigate={(s) => navigate(s)} /><Footer /></>;
+    return <SecurityScreen goBack={() => navigate('settings', true)} onNavigate={(s) => navigate(s)} />;
   }
 
   const sharedScrollProps = {
-    contentContainerStyle: [styles.scrollContent, { paddingTop: headerHeight, paddingBottom: 32 + (Platform.OS === 'android' ? insets.bottom : 0) }] as any,
+    // Bottom padding clears the pinned footer (FOOTER_HEIGHT + safe area).
+    contentContainerStyle: [styles.scrollContent, { paddingTop: headerHeight, paddingBottom: FOOTER_HEIGHT + insets.bottom + 24 }] as any,
     showsVerticalScrollIndicator: false,
     scrollEventThrottle: 16,
   };
@@ -2043,6 +2055,11 @@ export function MenuModal({ onClose, onNavigate }: MenuModalProps) {
         </Animated.ScrollView>
       </View>
 
+      {/* Pinned footer (the offline database page keeps its own focus) */}
+      {(frontIsA ? slotAScreen : slotBScreen) !== 'offlinedb' && (
+        <Footer bottomInset={insets.bottom} />
+      )}
+
       {/* Frosted glass behind the bar (the bar itself is drawn, transparent,
           by the screen that opened the menu) */}
       <FrostedHeader
@@ -2066,6 +2083,8 @@ export function MenuModal({ onClose, onNavigate }: MenuModalProps) {
 
 /** Bar drawn over the menu: 24 top gap + 48 buttons + 16. */
 const MENU_BAR_HEIGHT = 88;
+/** Pinned footer row, before the safe area: 12 + 16 text + 12. */
+const FOOTER_HEIGHT = 40;
 
 const styles = StyleSheet.create({
   barFrost: {
@@ -2151,12 +2170,24 @@ const styles = StyleSheet.create({
     lineHeight: 30,
   },
   footer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 8,
-    paddingBottom: 8,
-    marginTop: 'auto',
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    backgroundColor: '#ffffff',
+    zIndex: 3,
+  },
+  footerFade: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: -24,
+    height: 24,
   },
   footerText: {
     fontSize: 13,
