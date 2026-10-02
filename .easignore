@@ -1,3 +1,7 @@
+# ── Native Android: generated on EAS from app.json (CNG). The local
+#    folder is a stale SDK 54 prebuild and is gitignored. ──
+/android
+
 # ── Dependencies & caches ──
 node_modules/
 .expo/
