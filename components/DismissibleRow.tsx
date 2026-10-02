@@ -30,8 +30,9 @@ import Reanimated, {
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Radius } from '@/constants/theme';
 
-/** Space the open row makes for the trash button. */
-const ACTION_WIDTH = 72;
+/** Space the open row makes for the trash button: wide enough to hide a
+ *  scan card's Nutri-score badge (about 75pt in from its right edge). */
+const ACTION_WIDTH = 84;
 /** A little give past fully open, so the drag doesn't hit a wall. */
 const OVERDRAG = 16;
 /** How far a swipe has to go before the row stays open. */
