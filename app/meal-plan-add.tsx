@@ -204,7 +204,7 @@ export default function AddToMealPlanScreen() {
                   recipe={item}
                   disabled={Boolean(busyId)}
                   // The card opens the recipe to look over; + adds it.
-                  onPress={() => router.push(`/recipes/${item.id}` as never)}
+                  onPress={() => router.push(`/recipes/${item.id}?addToMeal=1` as never)}
                   onAdd={() => setPending({ kind: 'recipe', recipe: item })}
                 />
               )}

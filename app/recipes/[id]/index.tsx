@@ -61,6 +61,11 @@ import { deriveDietaryTags } from '@/lib/dietaryTags';
 import { DietaryTagsRow } from '@/components/DietaryTagsRow';
 import { LottieLoader } from '@/components/LottieLoader';
 import { AddToMealPlanSheet } from '@/components/AddToMealPlanSheet';
+import { QuantityPickerSheet } from '@/components/QuantityPickerSheet';
+import { FrostedFooter } from '@/components/HeaderEdge';
+import { Button } from '@/components/Button';
+import { useDraftMeal } from '@/lib/draftMealContext';
+import { draftItemFromRecipe } from '@/lib/mealPlan';
 import ArrowLeftIcon from '@/assets/icons/recipe-header/arrow-left.svg';
 import LikeThumbIcon from '@/assets/icons/recipe-header/like-thumb.svg';
 import type {
@@ -92,8 +97,16 @@ const STROKE = '#aad4cd';
 
 type NutritionMode = 'serving' | 'per100';
 
+/** Button (56) + top padding (16), before the safe-area inset. */
+const ADD_FOOTER_HEIGHT = 72;
+
 export default function RecipeDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, addToMeal } = useLocalSearchParams<{ id: string; addToMeal?: string }>();
+  // Opened from the meal planner's "Choose a recipe": a pinned
+  // "Add to meal" button adds it to the meal being built.
+  const draftMeal = useDraftMeal();
+  const canAddToMeal = addToMeal === '1' && draftMeal.draft !== null;
+  const [servingsOpen, setServingsOpen] = useState(false);
   const { session } = useAuth();
   const { isPlus } = useSubscription();
   const { showUpsell } = useUpsellSheet();
@@ -514,7 +527,9 @@ export default function RecipeDetailScreen() {
     <View style={styles.safe}>
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: insets.bottom + 48 }}
+        contentContainerStyle={{
+          paddingBottom: insets.bottom + (canAddToMeal ? ADD_FOOTER_HEIGHT + 24 : 48),
+        }}
         showsVerticalScrollIndicator={false}
       >
         {/* ── Hero ───────────────────────────────────────────────────── */}
@@ -776,6 +791,32 @@ export default function RecipeDetailScreen() {
           )}
         </View>
       </ScrollView>
+
+      {canAddToMeal && (
+        <View style={[styles.addFooter, { paddingBottom: insets.bottom + 16 }]}>
+          <FrostedFooter color="#ffffff" style={StyleSheet.absoluteFill} />
+          <Button label="Add to meal" onPress={() => setServingsOpen(true)} />
+        </View>
+      )}
+      <QuantityPickerSheet
+        visible={servingsOpen}
+        title="How many servings?"
+        saveLabel="Add to meal"
+        servingsMode
+        value={1}
+        unit="g"
+        onClose={() => setServingsOpen(false)}
+        onSave={(servings) => {
+          setServingsOpen(false);
+          draftMeal.addItem(draftItemFromRecipe(currentRecipe, servings));
+          // Once the sheet has slid away (two Modals at once freezes iOS),
+          // close this recipe and Choose a recipe, back to the meal.
+          setTimeout(() => {
+            if (router.canDismiss()) router.dismiss(2);
+            else safeBack();
+          }, 350);
+        }}
+      />
 
       {/* Owner viewing their own recipe → Edit / Duplicate / Share to
           community / Share with friend / Delete. Viewer on another
@@ -1221,6 +1262,15 @@ function formatKcal(kcal: number | null | undefined): string {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.surface.secondary },
+  // Pinned "Add to meal" bar (when opened from the meal planner).
+  addFooter: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingTop: 16,
+    paddingHorizontal: 24,
+  },
   loadingWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   emptyText: {
     fontSize: 16,
