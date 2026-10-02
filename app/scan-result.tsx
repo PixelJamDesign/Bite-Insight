@@ -13,6 +13,7 @@ import {
   Animated,
   LayoutAnimation,
   Linking,
+  Alert,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -63,6 +64,7 @@ import { MoreMenu } from '@/components/MoreMenu';
 import MealPlanActionIcon from '@/assets/icons/recipe-actions/meal-plan.svg';
 import RecipeActionIcon from '@/assets/icons/recipe-actions/recipe.svg';
 import EditActionIcon from '@/assets/icons/recipe-actions/edit.svg';
+import TrashActionIcon from '@/assets/icons/recipe-actions/trash.svg';
 import { buildProductSnapshot } from '@/lib/recipes';
 import { ImageViewer } from '@/components/ImageViewer';
 import { FrostedHeader, useScrollEdge } from '@/components/HeaderEdge';
@@ -1940,6 +1942,26 @@ export default function ScanResultScreen() {
   // Only link the scan when we were given a real scans.id.
   const productScanId =
     typeof p.scanId === 'string' && /^[0-9a-f-]{36}$/i.test(p.scanId) ? p.scanId : null;
+  // Only for a saved scan (opened from history or the dashboard).
+  function removeFromHistory() {
+    if (!productScanId) return;
+    Alert.alert('Remove from history?', "It won't show in your scan history any more.", [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Remove',
+        style: 'destructive',
+        onPress: async () => {
+          const { error } = await supabase.from('scans').delete().eq('id', productScanId);
+          if (error) {
+            Alert.alert("Couldn't remove it", 'Please try again.');
+            return;
+          }
+          handleBack();
+        },
+      },
+    ]);
+  }
+
   function planThisProduct() {
     draftMeal.startNew(toDateKey(new Date()), nowRoundedTime());
     draftMeal.addItem(
@@ -2021,6 +2043,19 @@ export default function ScanResultScreen() {
                   iconSize: 20,
                   onPress: openImproveDetails,
                 },
+                ...(productScanId
+                  ? [
+                      {
+                        key: 'remove',
+                        label: 'Remove from history',
+                        subtitle: 'Takes this scan out of your history',
+                        systemImage: 'trash' as const,
+                        Icon: TrashActionIcon,
+                        destructive: true,
+                        onPress: removeFromHistory,
+                      },
+                    ]
+                  : []),
               ]}
             />
           )}
