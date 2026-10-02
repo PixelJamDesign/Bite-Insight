@@ -25,6 +25,8 @@ import FoodCarousel from '@/components/FoodCarousel';
 function StepVideo({ source, style }: { source: any; style: any }) {
   const player = useVideoPlayer(source, (p) => {
     p.loop = true;
+    // Muted, not just volume 0: browsers only autoplay muted video.
+    p.muted = true;
     p.volume = 0;
     p.play();
   });
