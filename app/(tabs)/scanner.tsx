@@ -68,6 +68,8 @@ export default function ScannerScreen() {
   const insets = useSafeAreaInsets();
   const lastScan = useRef<string | null>(null);
   const scanLock = useRef(false);
+  /** The How much? sheet slides out in 200ms; wait for it before leaving. */
+  const PICKER_EXIT_MS = 350;
 
   // Bottom offset to position action bar above the tab bar
   // Tab bar: paddingTop(32) + pill(60) + paddingBottom(insets.bottom+8) + gap(8)
@@ -570,10 +572,15 @@ export default function ScannerScreen() {
       }),
     );
     showToast({ message: `Added ${picked.name} to your meal`, variant: 'success', durationMs: 2000 });
-    // The scanner tab stays mounted — drop the meal params so the next
-    // ordinary scan isn't added to a meal as well.
-    router.setParams({ addToMeal: undefined, returnTo: undefined } as never);
-    router.replace(returnTo as never);
+    // Go back only once the How much? sheet has finished closing: the
+    // planner reopens the Plan a meal sheet as soon as it's in view, and
+    // two Modals presenting/dismissing at once freezes iOS.
+    setTimeout(() => {
+      // The scanner tab stays mounted — drop the meal params so the next
+      // ordinary scan isn't added to a meal as well.
+      router.setParams({ addToMeal: undefined, returnTo: undefined } as never);
+      router.replace(returnTo as never);
+    }, PICKER_EXIT_MS);
   }
 
   function renderPlanSheet() {
