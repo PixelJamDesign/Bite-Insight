@@ -127,6 +127,17 @@ const SEARCH_API = 'https://search.openfoodfacts.org/search';
 // Fallback to classic CGI if Search-a-Licious fails
 const SEARCH_CGI_PATH = 'openfoodfacts.org/cgi/search.pl';
 
+/** One row per barcode. Parallel searches can return the same product
+ *  more than once, and a repeated barcode is a repeated list key. */
+function uniqueByCode<T extends { code: string }>(list: T[]): T[] {
+  const seen = new Set<string>();
+  return list.filter((p) => {
+    if (seen.has(p.code)) return false;
+    seen.add(p.code);
+    return true;
+  });
+}
+
 export default function FoodSearchScreen() {
   const { t } = useTranslation('scanner');
   const router = useRouter();
@@ -155,7 +166,10 @@ export default function FoodSearchScreen() {
       }),
     );
     showToast({ message: `Added ${picked.name} to your meal`, variant: 'success', durationMs: 2000 });
-    router.back();
+    // Go back only once the How much? sheet has finished closing (200ms):
+    // the planner reopens the Plan a meal sheet as soon as it's in view,
+    // and two Modals presenting/dismissing at once freezes iOS.
+    setTimeout(() => router.back(), 350);
   }
   const pickMode = params.addToRecipe === '1' || mealMode;
   const insets = useSafeAreaInsets();
@@ -617,7 +631,7 @@ export default function FoodSearchScreen() {
         if (fresh.length > 0) {
           anyResults = true;
           setResults(prev => {
-            const merged = [...prev, ...fresh];
+            const merged = uniqueByCode([...prev, ...fresh]);
             // Re-sort everything by relevance to the original search term
             return processResults(merged, searchTerm);
           });
@@ -747,7 +761,7 @@ export default function FoodSearchScreen() {
           (p) => p.code && !existingCodes.has(p.code),
         );
         if (fresh.length > 0) {
-          setResults((prev) => [...prev, ...fresh]);
+          setResults((prev) => uniqueByCode([...prev, ...fresh]));
           return;
         }
         if (!more) return;
