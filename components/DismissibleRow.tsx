@@ -1,155 +1,147 @@
 /**
  * DismissibleRow — wraps a list row with the standard app-wide
- * swipe-to-delete gesture (iOS Mail style).
+ * swipe-to-delete gesture.
  *
- *   - Short swipe → red circular trash button reveals; tap to dismiss.
- *   - Full drag-left (past `longSwipeThreshold` of the screen width) →
- *     dismisses directly, no tap needed.
+ *   - Swipe left → the card narrows from the right, just enough to show a
+ *     red circular trash button beside it. Tap the button to dismiss.
+ *   - Swipe right, or tap the card, to close it again.
  *
- * Built on RNGH's ReanimatedSwipeable so the gesture and the full-swipe
- * detection both run on the UI thread (Reanimated). The classic Animated
- * Swipeable drove the drag natively, so reading the drag distance from JS
- * to trigger the full-swipe threw a native/JS driver conflict — Reanimated
- * sidesteps that entirely.
+ * The card shrinks rather than sliding off, so its image and title stay in
+ * view. A swipe never deletes on its own: deleting always takes a tap on
+ * the button.
  *
- * Used by the notifications inbox and the scan history.
+ * Pan gesture + Reanimated, so the drag runs on the UI thread. The pan only
+ * claims horizontal drags, so the list still scrolls normally.
+ *
+ * Used by the notifications inbox, the scan history and the dashboard.
  */
-import { useCallback, useRef, type ReactNode } from 'react';
-import { Dimensions, StyleSheet, TouchableOpacity } from 'react-native';
-import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
+import { useCallback, useRef, useState, type ReactNode } from 'react';
+import { Pressable, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Reanimated, {
   runOnJS,
-  useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
-  type SharedValue,
+  withSpring,
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
+/** Space the open row makes for the trash button. */
+const ACTION_WIDTH = 72;
+/** A little give past fully open, so the drag doesn't hit a wall. */
+const OVERDRAG = 16;
+/** How far a swipe has to go before the row stays open. */
+const OPEN_THRESHOLD = 32;
+const SPRING = { damping: 22, stiffness: 260, mass: 0.8 };
 
 interface DismissibleRowProps {
   /** Card content goes here. Usually a TouchableOpacity. */
   children: ReactNode;
-  /** Fired once per gesture — via tap on the trash button or a full
-   *  drag-left past the threshold. */
+  /** Fired when the trash button is tapped. */
   onDismiss: () => void;
-  /** Full-swipe auto-dismiss threshold as a fraction of screen width.
-   *  Default 0.6 — far enough to feel deliberate. */
-  longSwipeThreshold?: number;
   accessibilityLabel?: string;
 }
 
 export function DismissibleRow({
   children,
   onDismiss,
-  longSwipeThreshold = 0.6,
   accessibilityLabel = 'Dismiss',
 }: DismissibleRowProps) {
-  // The full-swipe worklet can bridge to JS on consecutive frames, and a tap
-  // can race it — only the first dismiss should land. The row unmounts on
-  // dismiss (the caller removes it from the list), so no close() is needed.
+  // Only the first tap should land; the row unmounts once the caller
+  // removes it from the list.
   const triggeredRef = useRef(false);
-  const longSwipePx = SCREEN_WIDTH * longSwipeThreshold;
+  const [open, setOpen] = useState(false);
+
+  // How far the card has been pulled in from the right (0 = closed).
+  const reveal = useSharedValue(0);
+  const startReveal = useSharedValue(0);
+
+  const close = useCallback(() => {
+    reveal.value = withSpring(0, SPRING);
+    setOpen(false);
+  }, [reveal]);
 
   const handleDismiss = useCallback(() => {
     if (triggeredRef.current) return;
     triggeredRef.current = true;
     onDismiss();
+    // Normally the row is gone by now. If the caller kept it (say the delete
+    // failed), let it be used again.
+    setTimeout(() => {
+      triggeredRef.current = false;
+    }, 600);
   }, [onDismiss]);
 
-  const renderRightActions = useCallback(
-    (progress: SharedValue<number>, translation: SharedValue<number>) => (
-      <RightAction
-        progress={progress}
-        translation={translation}
-        longSwipePx={longSwipePx}
-        onDismiss={handleDismiss}
-        accessibilityLabel={accessibilityLabel}
-      />
-    ),
-    [handleDismiss, longSwipePx, accessibilityLabel],
-  );
+  const pan = Gesture.Pan()
+    .activeOffsetX([-12, 12])
+    .failOffsetY([-10, 10])
+    .onStart(() => {
+      startReveal.value = reveal.value;
+    })
+    .onUpdate((e) => {
+      const next = startReveal.value - e.translationX;
+      reveal.value = Math.min(ACTION_WIDTH + OVERDRAG, Math.max(0, next));
+    })
+    .onEnd((e) => {
+      const shouldOpen = e.velocityX < -400 || (e.velocityX < 400 && reveal.value > OPEN_THRESHOLD);
+      reveal.value = withSpring(shouldOpen ? ACTION_WIDTH : 0, SPRING);
+      runOnJS(setOpen)(shouldOpen);
+    });
 
-  return (
-    <ReanimatedSwipeable
-      renderRightActions={renderRightActions}
-      onSwipeableWillClose={() => { triggeredRef.current = false; }}
-      overshootRight
-      rightThreshold={40}
-      // Let the card slide out past its own edge (and keep its shadow)
-      // rather than being cut off at the list's side margin.
-      containerStyle={styles.container}
-    >
-      {children}
-    </ReanimatedSwipeable>
-  );
-}
-
-function RightAction({
-  progress,
-  translation,
-  longSwipePx,
-  onDismiss,
-  accessibilityLabel,
-}: {
-  progress: SharedValue<number>;
-  translation: SharedValue<number>;
-  longSwipePx: number;
-  onDismiss: () => void;
-  accessibilityLabel: string;
-}) {
-  // UI-thread guard so we bridge to JS at most once per gesture.
-  const fired = useSharedValue(false);
-
-  // Fade the red circle in with swipe progress (0 at rest → 1 once revealed).
-  const iconStyle = useAnimatedStyle(() => ({
-    opacity: Math.min(1, Math.max(0, progress.value)),
+  const cardStyle = useAnimatedStyle(() => ({
+    marginRight: reveal.value,
   }));
 
-  // Full drag-left → dismiss directly once the row passes the threshold.
-  useAnimatedReaction(
-    () => translation.value,
-    (value) => {
-      if (value < -longSwipePx) {
-        if (!fired.value) {
-          fired.value = true;
-          runOnJS(onDismiss)();
-        }
-      } else {
-        // Re-arm if the user pulls back before the threshold.
-        fired.value = false;
-      }
-    },
-  );
+  // The button fades and grows in as the space beside the card opens up.
+  const actionStyle = useAnimatedStyle(() => {
+    const t = Math.min(1, reveal.value / ACTION_WIDTH);
+    return { opacity: t, transform: [{ scale: 0.6 + 0.4 * t }] };
+  });
 
   return (
-    <Reanimated.View style={[styles.actionContainer, iconStyle]}>
-      <TouchableOpacity
-        style={styles.defaultAction}
-        onPress={onDismiss}
-        activeOpacity={0.85}
-        accessibilityRole="button"
-        accessibilityLabel={accessibilityLabel}
-      >
-        <Ionicons name="trash-outline" size={22} color="#fff" />
-      </TouchableOpacity>
-    </Reanimated.View>
+    <GestureDetector gesture={pan}>
+      <View>
+        <Reanimated.View
+          style={[styles.action, actionStyle]}
+          // The hidden button can't be hit by accident.
+          pointerEvents={open ? 'auto' : 'none'}
+        >
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={handleDismiss}
+            activeOpacity={0.85}
+            accessibilityRole="button"
+            accessibilityLabel={accessibilityLabel}
+          >
+            <Ionicons name="trash-outline" size={22} color="#fff" />
+          </TouchableOpacity>
+        </Reanimated.View>
+        <Reanimated.View style={cardStyle}>
+          {children}
+          {/* While open, a tap on the card closes it instead of opening it. */}
+          {open && (
+            <Pressable style={StyleSheet.absoluteFill} onPress={close} accessibilityLabel="Close" />
+          )}
+        </Reanimated.View>
+      </View>
+    </GestureDetector>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { overflow: 'visible' },
-  // Full row height so the circular button can centre vertically against the
-  // card, regardless of how tall the card is.
-  actionContainer: {
-    width: 72,
-    height: '100%',
+  // Full row height so the circular button centres against the card,
+  // however tall the card is.
+  action: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    right: 0,
+    width: ACTION_WIDTH,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  defaultAction: {
+  actionButton: {
     backgroundColor: Colors.status.negative,
     width: 44,
     height: 44,
